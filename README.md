@@ -1,4 +1,0 @@
-MSMB
-====
-
-MultiState Model Builder
