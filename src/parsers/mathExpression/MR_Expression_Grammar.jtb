@@ -1,0 +1,386 @@
+/**
+ * JTB template file created by SF JavaCC plugin 1.5.17+ wizard for JTB 1.4.0.2+ and JavaCC 1.5.0+
+ */options{  JDK_VERSION = "1.5";  STATIC = false;
+  JTB_JD=true;
+  JTB_F=true;
+  JTB_PRINTER=true;
+  JTB_P="parsers.mathExpression";
+  JTB_W=false; //Do not overwrite existing files}
+
+/*|  < #LETTER:   ["A"-"Z", "_", "a"-"z","'"]  | < ESCAPE > >*/
+/*|  < ESCAPE :  "\\" [	".", ",", ";", ":", "<", ">", "|", "&",
+						"!", "?", "@", "#", "$", "%", "^",
+						"+", "-", "*", "/", "~", "`", 
+						"("  , ")"  ,  "{"  ,  "}", " ", "[", "]",
+					 	"\\", "\""]  > */PARSER_BEGIN(MR_Expression_Parser)package parsers.mathExpression;
+import  parsers.mathExpression.syntaxtree.*;import  parsers.mathExpression.visitor.*;
+import java.io.*;
+
+
+public class MR_Expression_Parser {
+ 	/*public final String[] escapable = { ".", ",", ";", ":", "<", ">", "|", "&",
+						"!", "?", "@", "#", "$", "%", "^",
+						"+", "-", "*", "/", "~", "`", 
+						"("  , ")"  ,  "{"  ,  "}", " ", "[", "]", 
+					 	"\\", "\""
+						};		*/			  public static void main(String args [])  {
+    try    {      
+       String expression = new String("1*floor(Time/tau)");
+      InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  MR_Expression_Parser react = new MR_Expression_Parser(is);
+  	  CompleteExpression start = react.CompleteExpression();
+      DepthFirstVoidVisitor v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+       String expression2 = new String("asdf < sdf && (a < 3 && a > 4)");
+      InputStream is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  MR_Expression_Parser react2 = new MR_Expression_Parser(is2);
+  	  CompleteExpression start2 = react2.CompleteExpression();
+      DepthFirstVoidVisitor v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+      expression2 = new String("\"funaasdf \"(PAR v, PAR t)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  CompleteFunctionDeclaration start3 = react2.CompleteFunctionDeclaration();
+      v2 = new MyVisitor();
+      start3.accept(v2);
+      System.out.println("...................................");
+
+       expression2 = new String("k1*a^b");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+      expression2 = new String("k1 * a^b");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("NaN");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+          } catch(Exception ex)  {
+    ex.printStackTrace();  }   	  }}
+
+class MyVisitor extends DepthFirstVoidVisitor
+{
+  public void visit(NodeToken n)
+  {
+    
+    System.out.println("visit " + MR_Expression_ParserConstants.tokenImage[n.kind] + "-->" + n.tokenImage);
+  }
+		  
+}
+PARSER_END(MR_Expression_Parser)SKIP :{  " "| "\t"| "\n"| "\r"| < "//" (~[ "\n", "\r" ])*    (      "\n"    | "\r"    | "\r\n"    ) >| < "/*" (~[ "*" ])* "*"    (      ~[ "/" ] (~[ "*" ])* "*"    )*    "/" >}
+/* RESERVED WORDS AND LITERALS */
+
+TOKEN :
+{
+  < IF: "if" >
+| < THEN: "then" >
+| < ELSE: "else" >
+
+| < FALSE: < FALSE_1> | < FALSE_2> | < FALSE_3> >
+| < TRUE: < TRUE_1> | < TRUE_2> | < TRUE_3>>
+| < #TRUE_1 : "true">
+| < #TRUE_2 : "True">
+| < #TRUE_3 : "TRUE">
+| < #FALSE_1 : "false">
+| < #FALSE_2 : "False">
+| < #FALSE_3 : "FALSE">
+| < TIME: "Time">
+
+| < TYPE_PAR :  "PAR" >
+| < TYPE_VAR :  "VAR" >
+| < TYPE_SUB :  "SUB" >
+| < TYPE_PROD :  "PROD" >
+| < TYPE_MOD :  "MOD" > 
+| < TYPE_SITE :  "SITE" >
+| < TYPE_VOL :  "VOL" >
+
+| < EXTENSION_CONC :  ".c" >
+| < EXTENSION_PARTICLE :  ".p" >
+| < EXTENSION_TRANS :  ".t" >
+| < EXTENSION_INIT :  ".i" >
+| < EXTENSION_RATE :  ".r" >
+| < EXTENSION_SPECIES :  ".sp" >
+| < EXTENSION_GLOBALQ :  ".gq" >
+| < EXTENSION_COMPARTMENT :  ".cmp" >
+| < MY_SPECIAL_EXTENSION :  ".*MY*SPECIAL*EXTENSION" >
+| < SUM: "SUM">
+| < FLOOR: "floor">
+| < SQRT: "sqrt">
+| < EXP: "exp">
+| < LOG: "log">
+| < NAN: "NaN" | "Nan" | "nan" | "NAn" | "naN" | "nAn" | "nAN" | "NAN">
+| < CONST_AVOGADRO : "%NA%" >
+| < CONST_QUANTITY_CONV_FACTOR : "%QFC%" >
+| < CONST_MODEL_TIME : "%ModTime%" >
+| < CONST_MODEL_TIME_INITIAL : "%ModTime.i%" >
+}
+/* NUMBERS */
+
+TOKEN :
+{
+  < INTEGER_LITERAL:  (["0"-"9"])+ >
+|
+  < FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])?
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])?
+      | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])?
+      | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+}
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+   < IDENTIFIER: < STRING_LITERAL > |  <LETTER> (<LETTER>|<DIGIT>)* >
+|  < #LETTER:   ["A"-"Z", "_", "a"-"z", "'"] >
+|  < #DIGIT:   ["0"-"9"]  >
+|  <# STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+}
+
+
+/* SEPARATORS */
+
+TOKEN :
+{
+  < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| < COMMA: "," >
+| < COLON: ":" >
+| < DOT: "." >
+}
+
+/* OPERATORS */
+
+TOKEN :
+{
+  < PLUS: "+" >
+| < MINUS: "-" >
+| < TIMES: "*" >
+| < DIV: "/" >
+| < ASSIGN: "=" >
+| < GT: ">" >
+| < LT: "<" >
+| < BANG: "!" >
+| < CARET: "^" >
+| < PERC: "%" >
+| < EQ: "==" >
+| < LEQ: "<=" >
+| < GEQ: ">=" >
+| < NE: "!=" >
+| < OR: "||" >
+| < AND: "&&" >
+}
+
+
+/*****************************************
+ * THE MULTIREMI EXPRESSION GRAMMAR STARTS HERE *
+ *****************************************/ 
+void CompleteExpression() : {} {
+  Expression() <EOF>
+}
+
+void SingleFunctionCall() : {} {
+ Name() < LPAREN >  ArgumentList() <  RPAREN > <EOF>
+}
+
+void CompleteFunctionDeclaration() :{} {
+  FunctionDeclarator() <EOF>}
+
+void FunctionDeclarator() :
+{}
+{
+  <IDENTIFIER> (FormalParameters())? 
+}
+
+void FormalParameters() :
+{}
+{
+  "(" [ FormalParameter() ( "," FormalParameter() )* ] ")"
+} 
+
+void FormalParameter() :
+{}
+{
+  PrimitiveType() VariableDeclaratorId()
+}
+
+void PrimitiveType() :{}
+{
+  < TYPE_PAR >
+| < TYPE_VAR >
+| < TYPE_SUB >
+| < TYPE_PROD >
+| < TYPE_MOD >
+| < TYPE_SITE >
+| < TYPE_VOL >
+}
+
+
+void VariableDeclaratorId() :{}
+{
+   <IDENTIFIER> 
+}
+
+
+void Expression() :{}
+{
+  AdditiveExpression() ( RelationalOperator() Expression() (LOOKAHEAD(2) LogicalOperator() Expression())*)?
+} 
+
+void RelationalOperator() :{}
+{
+	(LOOKAHEAD(2)  < ASSIGN >  |< EQ > ) |  < LT > | < GT > | < GEQ > | < LEQ >
+}
+
+void LogicalOperator() :{}
+{
+  < AND > | < OR > 
+}
+
+
+void AdditiveExpression() :
+{}
+{
+  MultiplicativeExpression() ( ( < PLUS > | < MINUS > ) MultiplicativeExpression() )*
+}
+
+void MultiplicativeExpression() :
+{}
+{
+  PowerExpression() ( ( < TIMES > | < DIV > ) PowerExpression() )*
+}
+
+
+void PowerExpression() :
+{}
+{
+  UnaryExpression() ( ( < CARET > ) UnaryExpression() )* 
+}
+
+void UnaryExpression() :{}
+{
+  ( < PLUS > | < MINUS > ) UnaryExpression()
+|
+  UnaryExpressionNotPlusMinus()
+}
+
+void UnaryExpressionNotPlusMinus() :{}
+{
+  < BANG > UnaryExpression()
+|
+  PrimaryExpression()
+}
+
+void PrimaryExpression() :{}
+{
+  PrimaryPrefix() 
+}
+
+void PrimaryPrefix() :
+{}
+{
+  Literal()
+|
+  < LPAREN > Expression() <  RPAREN >
+|
+  SpeciesReferenceOrFunctionCall()
+
+| MultistateSum()
+}
+
+void MultistateSum() : {}
+
+{
+  < SUM > < LPAREN >   ArgumentList() <  RPAREN >}
+
+
+void Name() : {}
+{	
+	  <IDENTIFIER> (LOOKAHEAD(2)PossibleExtensions())?
+	  | < TIME > | < FLOOR>   | < LOG > | < EXP > | < NAN >
+}
+
+void SpeciesReferenceOrFunctionCall_prefix() :{}
+{
+   Name() [< LPAREN > [  ArgumentList() ] <  RPAREN >]
+ }
+
+
+void SpeciesReferenceOrFunctionCall() :{}
+{
+	SpeciesReferenceOrFunctionCall_prefix() ((PossibleExtensions()))*
+}
+
+void PossibleExtensions() :{}
+{      (      < EXTENSION_CONC > 	| < EXTENSION_COMPARTMENT > | < EXTENSION_PARTICLE >
+  	| < EXTENSION_TRANS > | < EXTENSION_INIT > 	| < EXTENSION_RATE >
+  	| < EXTENSION_SPECIES >  | < EXTENSION_GLOBALQ >
+  	| < MY_SPECIAL_EXTENSION >
+	) (LOOKAHEAD(2)PossibleExtensions())* }
+
+void Literal() :{}
+{
+  <INTEGER_LITERAL>
+|
+  <FLOATING_POINT_LITERAL>
+|
+  BooleanLiteral()
+}
+
+void BooleanLiteral() :{}
+{
+  < TRUE > |  < FALSE >
+}
+
+
+void ArgumentList() :{}
+{
+ LOOKAHEAD(2)  MultistateSites_list()
+|
+AdditiveExpression() ( < COMMA > AdditiveExpression() )*
+ 
+}
+
+
+void MultistateSite() :{}
+{
+   Name() < LBRACE > Name()  < RBRACE > }
+
+void MultistateSites_list() :{}
+{
+  MultistateSite()  (< SEMICOLON >  MultistateSite())*}

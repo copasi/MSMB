@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_runnable_jar" name="Create Runnable Jar for Project MultiReMI with Jar-in-Jar Loader">
+    <!--ANT 1.7 is required                                        -->
+	<!-- set global properties for this build -->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	<basename property="project.name" file="MultiStateModelBuilder"/>
+	<property name="src" location="${basedir}/src"/>
+	<property name="build" location="${basedir}/build"/>
+	<property name="dist"  location="${basedir}/${project.name}_dist"/>
+	<property name="libs" value="${basedir}\libs"/>
+
+	<path id="classpath">
+	        <fileset dir="${libs}" includes="**/*.jar"/>
+	    	<fileset dir="${java.home}\lib" includes="**/*.jar"/>			
+	</path>
+	
+	<target name="dir.check">
+	    <condition property="dir.exists">
+	      <available file="${directory}" type="dir"/>
+	    </condition>
+	  </target>
+	
+		
+	 <!-- Properties set: unix-like (if it is unix or linux), x64 (if it is 64-bits), register- size (32 or 64) -->
+	    <target name="check-architecture" depends="check-family,check-register" >
+	        <echo>Register size: ${register-size}</echo>
+	        <echo>OS Family: ${os-family}</echo>
+	    </target>
+
+	    <target name="check-family" >
+	        <condition property="os-family" value="unix">
+	            <os family="unix" />
+	        </condition>
+      	   <condition property="os-family" value="windows">
+	    	           <os family="windows" />
+	    	</condition>
+	    
+	    	<condition property="unix">
+	            <os family="unix" />
+	        </condition>
+	        <condition property="windows">
+	    	      <os family="windows" />
+	    	</condition>
+	    
+	    </target>
+
+	    <target name="check-register" depends="reg-unix,reg-windows">
+	    </target>
+
+	    <!-- Test under GNU/Linux -->
+	    <target name="reg-unix" if="unix">
+	        <exec dir="." executable="uname" outputproperty="result">
+	            <arg line="-m"/>
+	        </exec>
+
+	        <!-- String ends in 64 -->
+	        <condition property="x64">
+	            <matches string="${result}" pattern="^.*64$"/>
+	        </condition>
+
+	        <condition property="register-size" value="64" else="32">
+	            <isset property="x64"/>
+	        </condition>
+	    </target>
+
+	    <!-- Test under MS/Windows-->
+	    <target name="reg-windows" if="windows">
+	        <!-- 64 bit Windows versions have the variable "ProgramFiles(x86)" -->
+	        <exec dir="." executable="cmd" outputproperty="result">
+	            <arg line="/c SET ProgramFiles(x86)"/>
+	        </exec>
+
+	    <!-- String ends in "Program Files (x86)" -->
+	        <condition property="x64">
+	            <matches string="${result}" pattern="^.*=.*Program Files \(x86\)"/>
+	        </condition>
+
+	        <condition property="register-size" value="64" else="32">
+	            <isset property="x64"/>
+	        </condition>
+	    </target> 
+	
+
+	<target name="init">
+	    <!-- Create the build directory structure used by compile -->
+	    <mkdir dir="${build}"/>
+		<mkdir dir="${dist}"/>
+		<if>
+				<equals arg1="${os-family}" arg2="windows" />
+						<then>
+							<if>
+							<equals arg1="${register-size}" arg2="32" />
+							<then>
+								<copy overwrite="true" file="CopasiLibs/copasi35_java6_win32/copasi.jar" todir="${libs}"/>
+							</then>
+							<else>
+								<copy overwrite="true" file="CopasiLibs/copasi35_java6_win64/copasi.jar" todir="${libs}"/>
+							</else>
+							</if>
+						</then>
+				<else>
+				<if>
+				<equals arg1="${os-family}" arg2="unix" />
+				<then>
+					<if>
+					<equals arg1="${register-size}" arg2="32" />
+						<then>
+							<copy overwrite="true" file="CopasiLibs/copasi35_java6_linux_x86/copasi.jar" todir="${libs}"/>
+						</then>
+						<else>
+							<copy overwrite="true" file="CopasiLibs/copasi35_java6_linux_x64/copasi.jar" todir="${libs}"/>
+						</else>
+					</if>
+				</then>
+				<else>
+					<if>
+					<equals arg1="${register-size}" arg2="32" />
+						<then>
+							<copy overwrite="true" file="CopasiLibs/copasi35_java5_macosx105_x86_ppc32/copasi.jar" todir="${libs}"/>
+						</then>
+						<else>
+							<copy overwrite="true" file="CopasiLibs/copasi35_java6_macosx106_x86_x64/copasi.jar" todir="${libs}"/>
+						</else>
+					</if>
+				</else>
+				</if>
+				</else>
+			</if>			
+	</target>
+
+	  <target name="compile" depends="clean,init"  description="compile the source " >
+	    <!-- Compile the java code from ${src} into ${build} -->
+	    <javac srcdir="${src}" nowarn="on" destdir="${build}" classpathref="classpath">
+	    </javac>
+	  	<copy todir="${build}\gui\images"><fileset dir="${src}\gui\images"></fileset></copy>
+	  </target>
+
+	 <target name="clean"     description="clean up" >
+	    <!-- Delete the ${build} and ${dist} directory trees -->
+	    <delete dir="${build}"/>
+	    <delete dir="${dist}"/>
+	  </target>
+
+    <target name="create_run_jar_packJar" depends="check-architecture,compile">
+         <jar destfile="${dist}/${project.name}.jar">
+            <manifest>
+                <attribute name="Main-Class" value="gui.MainGui"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+        		   <fileset dir="${build}"/>
+    	   		   <zipfileset excludes="META-INF/*.SF" src="libs/copasi.jar"/>
+    	           <zipfileset excludes="META-INF/*.SF" src="libs/djep-full-latest.jar"/>
+    	           <zipfileset excludes="META-INF/*.SF" src="libs/guava-r09.jar"/>
+    	           <zipfileset excludes="META-INF/*.SF" src="libs/junit.jar"/>
+    	           <zipfileset excludes="META-INF/*.SF" src="libs/swingx-all-1.6.3.jar"/>
+                   <zipfileset excludes="META-INF/*.SF" src="libs/lablib-checkboxtree-3.2.jar"/>
+                   <zipfileset excludes="META-INF/*.SF" src="libs/autocomplete.jar"/>
+                   <zipfileset excludes="META-INF/*.SF" src="libs/commons-lang3-3.1.jar"/>
+          	</jar>
+
+    </target>
+	
+	
+	<target name="create_runnable_jar" depends="create_run_jar_packJar"> 
+		<if>
+		<equals arg1="${os-family}" arg2="windows" />
+		<then>
+			<if>
+				<equals arg1="${register-size}" arg2="32" />
+				<then>
+					<copy file="CopasiLibs/copasi35_java6_win32/CopasiJava.dll" todir="${dist}"/>
+				</then>
+				<else>
+					<copy file="CopasiLibs/copasi35_java6_win64/CopasiJava.dll" todir="${dist}"/>
+				</else>
+			</if>
+		</then>
+		<else>
+			<if>
+			<equals arg1="${os-family}" arg2="unix" />
+				<then>
+				<if>
+					<equals arg1="${register-size}" arg2="32" />
+						<then>
+							<copy file="CopasiLibs/copasi35_java6_linux_x86/libCopasiJava.so" todir="${dist}"/>
+						</then>
+						<else>
+							<copy file="CopasiLibs/copasi35_java6_linux_x64/libCopasiJava.so" todir="${dist}"/>
+						</else>
+				</if>
+				</then>
+			<else> <!--mac -->
+				<if>
+					<equals arg1="${register-size}" arg2="32" />
+					<then>
+						<copy file="CopasiLibs/copasi35_java5_macosx105_x86_ppc32/libCopasiJava.jnilib" todir="${dist}"/>
+					</then>
+					<else>
+						<copy file="CopasiLibs/copasi35_java6_macosx106_x86_x64/libCopasiJava.jnilib" todir="${dist}"/>
+					</else>
+				</if>
+			</else>
+			</if>
+		</else>
+		</if>
+	</target>
+</project>
+	

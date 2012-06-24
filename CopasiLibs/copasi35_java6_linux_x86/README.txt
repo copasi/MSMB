@@ -1,0 +1,1 @@
+Only win64 have the updated language bindings with Events.getAssignment fixed.

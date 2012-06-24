@@ -1,0 +1,16 @@
+libs/copasi.jar
+build/
+MultiStateModelBuilder_dist/
+
+#Temp files
+*.log
+
+#Java temp files
+*.class
+
+#LaTeX temp files
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.pdf
