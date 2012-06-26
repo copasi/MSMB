@@ -1500,7 +1500,11 @@ public class Constants {
 			SHOW_ALL_FUNCTIONS("ShowAllAvailableFunctions"), 
 			COLOR_DEFAULTS("BorderColorDefaults"), 
 			COLOR_MAJOR("BackgroundColorMajor"), 
-			COLOR_HIGHLIGHT("BackgroundColorHighlight");
+			COLOR_HIGHLIGHT("BackgroundColorHighlight"), 
+			FONT_SIZE("FontSize"), 
+			AUTOSAVE_PATH("AutosavePath"), 
+			AUTOSAVE_TIME("AutosaveTimeMin"), 
+			AUTOSAVE_ACTIVE("AutosaveActive");
 			
 			public final String description;
 			   

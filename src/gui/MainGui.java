@@ -79,7 +79,7 @@ public class MainGui extends JFrame{
 			tables.add(jTableGlobalQ);
 			tables.add(jTableReactions);
 			tables.add(jTableSpecies);
-
+			System.out.println("\nin setCustomFont");
 			for (CustomJTable table : tables) {
 				System.out.println("\n table ");
 				for(int i = 0; i < table.getColumnCount(); i++) {
@@ -130,6 +130,22 @@ public class MainGui extends JFrame{
 	public static Color color_debug_warnings = Constants.vt_orange;
 	public static Color color_debug_problems = Constants.vt_red_1;
 	public static Color color_cell_to_highlight = Color.YELLOW;
+	private String autosavePath = new String();
+	private int autosaveTimeMilliseconds = 5*60*1000;
+	private boolean isAutosaveActive = true;
+
+	public boolean isAutosaveActive() { return isAutosaveActive;}
+	public void setAutosaveActive(boolean value) {isAutosaveActive = value;}
+	public void setAutosaveTimeMin(Integer value) {autosaveTimeMilliseconds = value*60*1000;}
+	public int getAutosaveTimeMin() {	return autosaveTimeMilliseconds/(1000*60);}
+	public int getAutosaveTime() {	return autosaveTimeMilliseconds;}
+	public String getAutosaveDirectory() { return autosavePath;	}
+	public void setAutosaveDirectory(String s ) {  
+		autosavePath = new String(s.trim());
+		if(autosavePath.length()==0) return;
+		if(!autosavePath.endsWith("/")) autosavePath +="/";
+	}
+	
 	
 	static StatusBar statusBar = null;
 	private String file_RecentFiles = new String();
@@ -235,6 +251,7 @@ public class MainGui extends JFrame{
 
 	private boolean autoMergeSpecies = false;
 	private RecordAutosave recordAutosave;
+	private JMenuItem menu_reverse;
 
 	public static boolean importFromTables = false;
 	
@@ -309,6 +326,13 @@ public class MainGui extends JFrame{
 							jTextAreaODEs.setText("");
 							scrollPaneTextAreaODEs.revalidate();
 						}
+			        }
+			        if(menu_reverse!= null) {
+				        if(sel != Constants.TitlesTabs.REACTIONS.index) {
+				        	 menu_reverse.setEnabled(false);
+				        } else {
+				        	menu_reverse.setEnabled(true);
+				        }
 			        }
 			    }
 			});
@@ -806,7 +830,10 @@ public class MainGui extends JFrame{
 	        
 	        TableColumn reactionStringColumn = jTableReactions.getColumnModel().getColumn(Constants.ReactionsColumns.REACTION.index);
 	        reactionStringColumn.setCellRenderer(new EditableCellRenderer());
-		
+	        reactionStringColumn.setCellEditor(new UnquotingCellEditor());
+			
+	        
+	    	
 	        reactionStringColumn = jTableReactions.getColumnModel().getColumn(Constants.ReactionsColumns.KINETIC_LAW.index);
 	        reactionStringColumn.setCellRenderer(new EditableCellRenderer());
 	        
@@ -1192,6 +1219,18 @@ public class MainGui extends JFrame{
 			JMenu menu2 = new JMenu("Edit");
 			jMenuBar.add(menu2);
 
+
+			menu_reverse = new JMenuItem("Add reverse reaction...");
+			menu_reverse.setEnabled(true);
+			menu_reverse.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_MASK));
+			menu_reverse.addActionListener(new ActionListener(){
+	            public void actionPerformed(ActionEvent arg0) {
+	            	addReverseReaction();
+	            }
+			});
+			menu2.add(menu_reverse);
+			
+			
 			JMenuItem del = new JMenuItem("Delete element...");
 			del.setEnabled(true);
 			del.addActionListener(new ActionListener(){
@@ -1301,6 +1340,95 @@ public class MainGui extends JFrame{
 	
 	
 	
+	protected void addReverseReaction() {
+		int sel = jTableReactions.getSelectedRow();
+		if(sel == -1) {
+			JOptionPane.showMessageDialog(this,"Automatic reverse reaction definition: \nYou must select the row containig the reaction for which you want to define the reverse!", "No reaction selected!", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		String current = (String) tableReactionmodel.getValueAt(sel, Constants.ReactionsColumns.REACTION.index);
+		current = current.trim();
+		//I don't have a data structure to store reaction
+		//once I will have that I will define a method "getReverse" but now I have to parse the string and reverse it manually
+		
+		if(current.length() ==0) {
+			JOptionPane.showMessageDialog(this,"Automatic reverse reaction definition: \nThe reaction you want to reverse is empty!", "Empty reaction selected!", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		
+		boolean parseErrors = false;
+		Vector metabolites = new Vector();
+		try{ 
+			metabolites = CellParsers.parseReaction(multiModel,current,sel);
+		} catch(Exception ex) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+			parseErrors = true;
+			metabolites.add(new Vector());
+			metabolites.add(new Vector());
+			metabolites.add(new Vector());
+		}
+		if(parseErrors) {
+			JOptionPane.showMessageDialog(this,"Automatic reverse reaction definition: \nParse error in "+current, "Parse error!", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		Vector subs = (Vector)metabolites.get(0);
+		Vector prod =(Vector)metabolites.get(1);
+		Vector mod = (Vector)metabolites.get(2);
+	
+		String reverse = new String();
+		
+		for(int i = 0; i < prod.size()-1; i++) {
+			String s = (String)prod.get(i);
+			reverse += s + " + ";
+		}
+		if(prod.size()>=1) reverse += prod.get(prod.size()-1);
+		
+		reverse += " -> ";
+		for(int i = 0; i < subs.size()-1; i++) {
+			String s = (String)subs.get(i);
+			reverse += s + " + ";
+		}
+		if(subs.size()>=1) reverse += subs.get(subs.size()-1);
+		
+		
+		if(mod.size() >0) {
+			reverse = reverse.trim();
+			reverse += "; ";
+			for(int i = 0; i < mod.size()-1; i++) {
+				String s = (String)mod.get(i);
+				reverse += s + " ";
+			}
+			if(mod.size()>=1) reverse += mod.get(mod.size()-1);
+		}
+		reverse = reverse.trim();
+		
+		addReaction(sel, reverse);
+	}
+
+	private void addReaction(int selRow, String reverse) {
+		Vector<String> newReaction = new Vector<String>();
+		newReaction.add("reverse_"+new Integer(selRow+1).toString());
+		newReaction.add(reverse);
+		tableReactionmodel.insertRow(selRow, newReaction.toArray());
+		jTableReactions.revalidate();
+		try {
+			updateModelFromTable(selRow, Constants.ReactionsColumns.REACTION.index);
+			 DebugMessage dm = new DebugMessage();
+			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+			 dm.setProblem("Reverse reaction "+reverse+ " has been added by default");
+			 dm.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
+			 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
+			 dm.setOrigin_row(selRow+2);
+			 MainGui.addDebugMessage_ifNotPresent(dm);
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+		
+		
+	}
+
 	protected MutablePair<FoundElementToDelete, DefaultMutableTreeTableNode> collectDeleteTreeTableModel() {
 			int whichTab = -1;
 			CustomJTable table = null;
@@ -2440,6 +2568,9 @@ public class MainGui extends JFrame{
 		String equation = ((String)tableReactionmodel.getValueAt(row,  Constants.ReactionsColumns.KINETIC_LAW.index)).trim();
 		String exp = ((String)tableReactionmodel.getValueAt(row,  Constants.ReactionsColumns.EXPANDED.index)).trim();
 		String notes = ((String)tableReactionmodel.getValueAt(row,  Constants.ReactionsColumns.NOTES.index)).trim();
+		
+		if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.REACTIONS.description, nrow+1);
+		
 		if(reaction_string.trim().length() == 0) return;
 		
 		boolean oldAutocompleteWithDefaults = autocompleteWithDefaults;
@@ -3358,6 +3489,16 @@ public class MainGui extends JFrame{
 	     				jTableReactions.revalidate();
 	     		}
     		}
+	     	if(dm.getPriority()==DebugConstants.PriorityType.DEFAULTS.priorityCode) {
+    			TableCellRenderer ren = jTableReactions.getCellRenderer(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			if(ren instanceof EditableCellRenderer) {
+    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
+    				if(asError) edi.cell_has_defaults(dm.getOrigin_row()-1);
+    				else edi.cell_no_defaults(dm.getOrigin_row()-1);
+    				jTableReactions.revalidate();
+    			}
+			
+    		}
 	    }
 	   
 		
@@ -3370,21 +3511,28 @@ public class MainGui extends JFrame{
 	
 	
 	public static void clear_debugMessages_defaults_relatedWith(String table, int nrow) throws Exception {
-		//HashMap<String, DebugMessage> remaining_messages = new HashMap<String, DebugMessage>();
+		
+		
+		HashMap<String, DebugMessage> remaining_messages = new HashMap<String, DebugMessage>();
 		Iterator it = debugMessages.keySet().iterator();
 		while(it.hasNext()){
 			String key = (String) it.next();
 			DebugMessage dm = (DebugMessage)(debugMessages.get(key));
 	    	int origin_row = dm.getOrigin_row();
 	    	String origin_table= dm.getOrigin_table();
-	    	if(origin_row == nrow-1 && 
-	    			origin_table.compareTo(table)==0 && 
-	    			dm.getPriority() ==DebugConstants.PriorityType.DEFAULTS.priorityCode) {
-	    			it.remove();
-	    			recolorCell(dm, true);
-	    	}
+	    	if(origin_row != nrow-1 || origin_table.compareTo(table)!=0 || 
+	    			dm.getPriority() !=DebugConstants.PriorityType.DEFAULTS.priorityCode) {
+	    			remaining_messages.put(key,dm);
+	    	} else {
+	    		recolorCell(debugMessages.get(key),false);
+	       	}
 		}
+		
+		debugMessages.clear();
+		debugMessages.putAll(remaining_messages);
+		//printDebugMessages();
 		updateDebugTab();
+		
 	}
 	
 	public static void clear_debugMessages_relatedWith_row(int nrow) throws Exception {
@@ -5277,6 +5425,8 @@ public class MainGui extends JFrame{
 
 	protected static boolean copiedSignature = false;
 
+
+
 	
 	
 	public static void applyDeleteActions(TreeTableNode root) {
@@ -5424,28 +5574,12 @@ public class MainGui extends JFrame{
 		return multiModel.getMultistateInitials();
 	}
 
-	
-	long autosaveTime_milliseconds = 5000;
-	public void setAutosaveTime(Integer value) {autosaveTime_milliseconds = value*60*1000;}
-	public long getAutosaveTime() {	return autosaveTime_milliseconds;}
-
-	String autosaveDirectory = new String();
-	public String getAutosaveDirectory() { return autosaveDirectory;	}
-	public void setAutosaveDirectory(String s ) {  
-		autosaveDirectory = new String(s);
-		if(!autosaveDirectory.endsWith("/")) autosaveDirectory +="/";
+	public String getAutosaveBaseName() {
+		System.out.println("GEEEEEEEEEENERATE NEW TEMP NAME WITH NAME MODEL ~AROUND?");
+		return null;
 	}
-	
-	public void stopAutosave() {
-		recordAutosave.stopAutosave();
-		statusBar.setMessage("AUTOSAVIIIIIING ended: files available at "+recordAutosave.getPath());
-		statusBar.setBackground(Color.green);
-	}
-	
-	String autosaveBaseName = new String();
-	public String getAutosaveBaseName() { return autosaveBaseName;	}
-	public void setAutosaveBaseName(String s ) {  	autosaveBaseName = new String(s); }
 
+	
 }  
 
 

@@ -161,6 +161,19 @@ public class PreferencesFrame extends JDialog {
 		});
 	}
 	
+	
+	@Override
+	public void setVisible(boolean b) {
+		super.setVisible(b);
+		if(btnNewButton!=null){
+			btnNewButton.doClick();
+			btnNewButton.setSelected(true);
+			btnNewButton_1.setSelected(false);
+			btnNewButton_2.setSelected(false);
+			btnNewButton_3.setSelected(false);
+		}
+	}
+	
 	public PreferencesFrame(MainGui gui) {
 
 		this.setTitle("Preferences...");
@@ -174,8 +187,8 @@ public class PreferencesFrame extends JDialog {
 		this.gui = gui;
 		initComponents();
 
-		
-		//tabbedPane.setSelectedIndex(0);
+		btnNewButton.doClick();
+
 	}
 
 	private Component getColorChooser() {
@@ -620,6 +633,10 @@ public class PreferencesFrame extends JDialog {
 		btnNewButton = new JButton("General behavior");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				btnNewButton.setSelected(true);
+				btnNewButton_1.setSelected(false);
+				btnNewButton_2.setSelected(false);
+				btnNewButton_3.setSelected(false);
 				panelRight.removeAll();
 				panelRight.add(scrollPaneBehavior, BorderLayout.CENTER);
 				panelRight.revalidate();
@@ -638,6 +655,10 @@ public class PreferencesFrame extends JDialog {
 		btnNewButton_1 = new JButton("Default values");
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				btnNewButton.setSelected(false);
+				btnNewButton_1.setSelected(true);
+				btnNewButton_2.setSelected(false);
+				btnNewButton_3.setSelected(false);
 				panelRight.removeAll();
 				panelRight.add(scrollPaneDefaults, BorderLayout.CENTER);
 				panelRight.revalidate();
@@ -654,6 +675,10 @@ public class PreferencesFrame extends JDialog {
 		btnNewButton_3 = new JButton("Autosave");
 		btnNewButton_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				btnNewButton.setSelected(false);
+				btnNewButton_1.setSelected(false);
+				btnNewButton_2.setSelected(false);
+				btnNewButton_3.setSelected(true);
 				panelRight.removeAll();
 				panelRight.add(scrollPaneDirectories, BorderLayout.CENTER);
 				panelRight.revalidate();
@@ -670,6 +695,10 @@ public class PreferencesFrame extends JDialog {
 		btnNewButton_2 = new JButton("Fonts and Colors");
 		btnNewButton_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				btnNewButton.setSelected(false);
+				btnNewButton_1.setSelected(false);
+				btnNewButton_2.setSelected(true);
+				btnNewButton_3.setSelected(false);
 				panelRight.removeAll();
 				panelRight.add(scrollPaneColorPalette, BorderLayout.CENTER);
 				panelRight.revalidate();
@@ -690,70 +719,7 @@ public class PreferencesFrame extends JDialog {
 		scrollPaneDirectories.setViewportView(panelDirectories);
 		panelDirectories.setLayout(new BorderLayout(0, 0));
 		
-		panel_4 = new JPanel();
-		panel_4.setBorder(new TitledBorder(null, "Workspace options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		//panelDirectories.add(panel_4, BorderLayout.NORTH);
-		panel_4.setLayout(new GridLayout(0, 1, 0, 0));
-		
-		panel_13 = new JPanel();
-		FlowLayout flowLayout_4 = (FlowLayout) panel_13.getLayout();
-		flowLayout_4.setAlignment(FlowLayout.LEFT);
-		panel_4.add(panel_13);
-		
-		lblBaseWorkingDirectory = new JLabel("Base working directory");
-		panel_13.add(lblBaseWorkingDirectory);
-		
-		textField_4 = new JTextField();
-		textField_4.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				updateAutosavePath();
-			}
-			public void removeUpdate(DocumentEvent e) {
-				updateAutosavePath();
-			}
-			public void insertUpdate(DocumentEvent e) {
-				updateAutosavePath();
-			
-			}
-			private void updateAutosavePath() {
-				gui.setAutosaveDirectory(textField_4.getText());
-			}
-
-			
-		});
-		panel_13.add(textField_4);
-		textField_4.setColumns(10);
-		
 	
-		
-		btnBrowse_1 = new JButton("Browse...");
-		btnBrowse_1.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				 int returnVal = fileChooser.showOpenDialog(null);
-                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                     File file = fileChooser.getSelectedFile();
-                     textField_4.setText(file.getAbsolutePath());
-                 }
-				
-			}
-		});
-		panel_13.add(btnBrowse_1);
-		
-		panel_12 = new JPanel();
-		FlowLayout flowLayout_5 = (FlowLayout) panel_12.getLayout();
-		flowLayout_5.setAlignment(FlowLayout.LEFT);
-		panel_4.add(panel_12);
-		
-		lblDirectoryForBug = new JLabel("Directory for Bug report");
-		panel_12.add(lblDirectoryForBug);
-		
-		textField_3 = new JTextField();
-		panel_12.add(textField_3);
-		textField_3.setColumns(10);
-		
-		btnBrowse = new JButton("Browse...");
-		panel_12.add(btnBrowse);
-		
 		panel_7 = new JPanel();
 		panelDirectories.add(panel_7, BorderLayout.CENTER);
 		
@@ -816,7 +782,7 @@ public class PreferencesFrame extends JDialog {
 		spinner_1 = new JSpinner();
 		spinner_1.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				gui.setAutosaveTime((Integer)spinner_1.getValue());
+				gui.setAutosaveTimeMin((Integer)spinner_1.getValue());
 			}
 		});
 		spinner_1.setModel(new SpinnerNumberModel(5, 1, 30, 1));
@@ -844,6 +810,7 @@ public class PreferencesFrame extends JDialog {
 				
 				panelAutosave.revalidate();
 				panelAutosave.repaint();
+				if(gui!=null)gui.setAutosaveActive(sel);
 			}
 		});
 		chckbxNewCheckBox.setSelected(true);
@@ -1142,6 +1109,24 @@ public class PreferencesFrame extends JDialog {
 				MainGui.color_cell_with_errors = new Color(Integer.parseInt(value),true);
 				continue;
 			} 
+			if(name.compareTo(Constants.Preferences.FONT_SIZE.description)==0) {
+				slider.setValue(Integer.parseInt(value));
+				MainGui.customFont = MainGui.customFont.deriveFont(Float.parseFloat(value));
+				continue;
+			} 
+			if(name.compareTo(Constants.Preferences.AUTOSAVE_PATH.description)==0) {
+				textFieldDirectoryAutosave.setText(value);
+				continue;
+			} 
+			if(name.compareTo(Constants.Preferences.AUTOSAVE_TIME.description)==0) {
+				spinner_1.setValue(Integer.parseInt(value));
+				continue;
+			} 
+			if(name.compareTo(Constants.Preferences.AUTOSAVE_ACTIVE.description)==0) {
+				chckbxNewCheckBox.setSelected(Boolean.parseBoolean(value));
+				continue;
+			} 
+			
 		}
 	}
 
@@ -1197,6 +1182,22 @@ public class PreferencesFrame extends JDialog {
 
 			out.write(Constants.Preferences.COLOR_HIGHLIGHT.description+Constants.Preferences.SEPARATOR.description);
 			out.write(new Integer(MainGui.color_cell_to_highlight.getRGB()).toString());
+			out.write(System.getProperty("line.separator"));
+			
+			out.write(Constants.Preferences.FONT_SIZE.description+Constants.Preferences.SEPARATOR.description);
+			out.write(new Integer(MainGui.customFont.getSize()).toString());
+			out.write(System.getProperty("line.separator"));
+			
+			out.write(Constants.Preferences.AUTOSAVE_ACTIVE.description+Constants.Preferences.SEPARATOR.description);
+			out.write(new Boolean(gui.isAutosaveActive()).toString());
+			out.write(System.getProperty("line.separator"));
+			
+			out.write(Constants.Preferences.AUTOSAVE_PATH.description+Constants.Preferences.SEPARATOR.description);
+			out.write(gui.getAutosaveDirectory());
+			out.write(System.getProperty("line.separator"));
+			
+			out.write(Constants.Preferences.AUTOSAVE_TIME.description+Constants.Preferences.SEPARATOR.description);
+			out.write(new Integer(gui.getAutosaveTimeMin()).toString());
 			out.write(System.getProperty("line.separator"));
 
 			out.flush();

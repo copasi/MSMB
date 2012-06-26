@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="create_runnable_jar" name="Create Runnable Jar for Project MultiReMI with Jar-in-Jar Loader">
+<project default="create_runnable_jar" name="Create Runnable Jar for Project MultiStateModelBuilder">
     <!--ANT 1.7 is required                                        -->
 	<!-- set global properties for this build -->
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>

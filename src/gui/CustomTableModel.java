@@ -161,7 +161,28 @@ public class CustomTableModel extends DefaultTableModel {
 	}
 	
 	
+	@Override
+	public void insertRow(int row, Vector rowData) {
+		if(rowData.size() > 0) {
+     		Vector newR = new Vector();
+     		newR.add(row+1);
+        	newR.addAll(rowData);
+        	for(int i=newR.size(); i < this.getColumnCount(); i++) {
+        		newR.add(new String(""));
+        	}
+        	data.insertElementAt(newR, row+1);
+        	
+        	changeNumerationBelow(row+1);
+        	fireTableDataChanged(); 
+		}	
+	}
 	
+	private void changeNumerationBelow(int i) {
+		for(;i < data.size();i++) {
+			((Vector)(data.get(i))).setElementAt(i+1, 0);
+		}
+	}
+
 	public void removeAddEmptyRow_Listener() {
 			isActive_AddEmptyRow = false;
 			this.removeTableModelListener(addEmptyRow_CustomTableModelListener);
@@ -711,10 +732,7 @@ class CustomJTable extends JTable
 		colLast.setWidth(40);
 		
 		
-		//JTableHeader header =  this.getTableHeader();
-	    ///header.setReorderingAllowed(false);
-	    //AAAAAAAAAAAAAAACTIVATE BACK BUT LOOK WHY IF I REORDER LINES THEN THE ADDEMPTYROW AT THE END IS NOT BEHAVING CORRECTLY
-	    
+		
 	    if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0)this.setAutoCreateRowSorter(true); 
 	    
 	    putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
@@ -830,19 +848,7 @@ class CustomJTable extends JTable
 		         		popupMenu.add(setCurrentAsEditable);
 		         		
 		         		
-		         	   /* popupMenu.addSeparator();
-		         	    JMenuItem colorExpression = new JMenuItem("Show colored parsed expression");
-		         	    colorExpression.addActionListener(new ActionListener() {
-							@Override
-							public void actionPerformed(ActionEvent e) {
-									MainGui.coloredExpressionFrame.setExpressionAndShow((String) model.getValueAt(row, col));
-				    	     
-							}
-						});
-		         		popupMenu.add(colorExpression);
-		         	*/
-		         		
-		            	 editableListener.setTable(model.getTableName());
+		         		 editableListener.setTable(model.getTableName());
 			             editableListener.setRow(row);
 			             editableListener.setColumn(col);
 			             expandedListener.setTable(model.getTableName());
@@ -899,7 +905,8 @@ class CustomJTable extends JTable
 		//this.addHighlighter(HighlighterFactory.createAlternateStriping(Color.white,Constants.color_shading_table));
 		this.setColumnSelectionAllowed(false);
 		//this.setSortable(false);
-		
+
+		this.getTableHeader().setReorderingAllowed(false);
 		/*KeyStroke paste = KeyStroke.getKeyStrokeKeyEvent.VK_V,ActionEvent.CTRL_MASK,false);
 	    this.registerKeyboardAction(new ActionListener() {
 			@Override
@@ -963,12 +970,9 @@ class CustomJTable extends JTable
 					return c;
 				}
 			}
+			
+			
 			if(renderer instanceof EditableCellRenderer) {
-
-				if(this.isRowSelected(rowIndex)) {
-					c.setForeground(MainGui.color_selected_row);
-					c.setFont(getFont().deriveFont(Font.BOLD));
-				}
 				if(this.model.disabledCell.contains(rowIndex+"_"+vColIndex)) {
 					c.setBackground(Constants.vt_blues_1);
 					if(this.model.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) c.setForeground(Color.BLACK);
@@ -992,6 +996,26 @@ class CustomJTable extends JTable
 				}
 				
 				if(customFont!=null) c.setFont(customFont);
+				if(this.isRowSelected(rowIndex)) {
+					c.setBackground(MainGui.color_cell_to_highlight);
+					c.setFont(c.getFont().deriveFont(Font.BOLD));
+					if(vColIndex== 0) {
+						c.setForeground(Color.BLACK);
+					}
+				} else {
+					if(vColIndex== 0) {
+						c.setBackground(MainGui.color_shading_table);
+						c.setForeground(Color.BLACK);
+					}
+					else {
+						if (rowIndex % 2 != 0) {
+							c.setBackground(MainGui.color_shading_table);
+						} else {
+							c.setBackground(Color.white);
+						}
+					 }
+				}
+				
 				return c;
 			}
 			
@@ -1011,14 +1035,25 @@ class CustomJTable extends JTable
 			c.setBackground(UIManager.getColor("TableHeader.background"));
 		}
 		
+		if(customFont!=null) c.setFont(customFont);
+		
 		if(this.isRowSelected(rowIndex)) {
-			c.setForeground(MainGui.color_selected_row);
-			c.setFont(getFont().deriveFont(Font.BOLD));
+			c.setBackground(MainGui.color_cell_to_highlight);
+			c.setFont(c.getFont().deriveFont(Font.BOLD));
+			c.setForeground(Color.BLACK);
 		} else {
-			c.setForeground(getForeground());
+			if(vColIndex== 0) {
+				c.setBackground(MainGui.color_shading_table);
+			}
+			else {
+				if (rowIndex % 2 != 0) {
+					c.setBackground(MainGui.color_shading_table);
+				} else {
+					c.setBackground(Color.white);
+				}
+			 }
 		}
 		
-		if(customFont!=null) c.setFont(customFont);
 		return c;
 		
 		
@@ -1064,7 +1099,8 @@ class UnquotingCellEditor extends JTextField implements TableCellEditor{
 		}
 		
 		if(customFont!=null) this.setFont(customFont);
-		return this;  
+		return this;
+		
 	}  
 
 	public void cancelCellEditing(){  
@@ -1198,16 +1234,17 @@ class EditableCellRenderer extends DefaultTableCellRenderer {
 				}
 				else if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {	mod = MainGui.tableReactionmodel;	}
 
-				if(def != null) {
+				/*if(def != null) {
 					if(mod.getValueAt(row, column).toString().compareTo(def)==0)	row_with_default = this.cells_with_defaults.contains(row);
 					else row_with_default = false;
 				} else {
 					row_with_default = false;
-				}
+				}*/
 			
 			
 			
-			if(row_with_default) {
+			//if(row_with_default) {
+			if(this.cells_with_defaults.contains(row)){
 				//setBorder(BorderFactory.createSoftBevelBorder(BevelBorder.RAISED, Constants.color_cell_with_errors, Constants.color_cell_with_errors));
 				Border compound = null;
 				Border redline = BorderFactory.createLineBorder(MainGui.color_border_defaults,3);
