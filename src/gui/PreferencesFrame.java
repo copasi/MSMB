@@ -1027,7 +1027,6 @@ public class PreferencesFrame extends JDialog {
 			MainGui.showAllAvailableFunctions = false;
 		}
 		MainGui.updateFunctionsView();
-
 	}
 
 	public void updateStatusDialogWindow() {
@@ -1116,14 +1115,17 @@ public class PreferencesFrame extends JDialog {
 			} 
 			if(name.compareTo(Constants.Preferences.AUTOSAVE_PATH.description)==0) {
 				textFieldDirectoryAutosave.setText(value);
+				gui.setAutosaveDirectory(value);
 				continue;
 			} 
 			if(name.compareTo(Constants.Preferences.AUTOSAVE_TIME.description)==0) {
 				spinner_1.setValue(Integer.parseInt(value));
+				gui.setAutosaveTimeMin(Integer.parseInt(value));
 				continue;
 			} 
 			if(name.compareTo(Constants.Preferences.AUTOSAVE_ACTIVE.description)==0) {
 				chckbxNewCheckBox.setSelected(Boolean.parseBoolean(value));
+				gui.setAutosaveActive(Boolean.parseBoolean(value));
 				continue;
 			} 
 			

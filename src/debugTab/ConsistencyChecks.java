@@ -268,7 +268,7 @@ public class ConsistencyChecks {
 				Vector<?> metabolites = new Vector<Object>();
 				Vector<?> singleConfigurations = new Vector<Object>();
 				try{ 
-					metabolites = CellParsers.parseReaction(multiModel,string_reaction,i);
+					metabolites = CellParsers.parseReaction(multiModel,string_reaction,i+1);
 					singleConfigurations = multiModel.expandReaction(metabolites,i);
 				} catch(Exception ex) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();

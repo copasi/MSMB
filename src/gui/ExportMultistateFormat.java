@@ -16,19 +16,18 @@ import utility.Constants;
 class ExportMultistateFormat {
 
 	private static File file = null;
-	public final static String MULTISTATE_SUFFIX = ".multis";
 	static MainGui  mainW;
 	
 	public static void setMainGui(MainGui mainGui){	mainW = mainGui; }
 	
 	public static void setFile(File f) {
 		file = f;
-		if(!file.getName().endsWith(MULTISTATE_SUFFIX)) file = new File(file.getAbsoluteFile()+MULTISTATE_SUFFIX);
+		if(!file.getName().endsWith(Constants.MULTISTATE_FILE_EXTENSION)) file = new File(file.getAbsoluteFile()+Constants.MULTISTATE_FILE_EXTENSION);
 	}
 	
 	public static void exportMultistateFormat(boolean withProgressBar) {
 		try {
-			if(withProgressBar && file!= null) mainW.createAndShowProgressBarFrame(file.getName());
+			if(withProgressBar && file!= null && mainW!=null) mainW.createAndShowProgressBarFrame(file.getName());
 			
 			ObjectOutput out = new ObjectOutputStream(new FileOutputStream(file,false));
 			
@@ -46,7 +45,7 @@ class ExportMultistateFormat {
 			tables.set(Constants.TitlesTabs.COMPARTMENTS.index, MainGui.tableCompartmentsmodel);
 			
 			for(int t = 0; t < tables.size(); t++) {
-				mainW.progress(10+t*10);
+				if(mainW!=null)mainW.progress(10+t*10);
 				Vector<Vector<String>> singleTable = new Vector<Vector<String>>();
 				CustomTableModel tablemodel = tables.get(t);
 				if(tablemodel==null) continue;
@@ -73,8 +72,10 @@ class ExportMultistateFormat {
 			tables_multistateInitials.left = data;
 			
 			
-			tables_multistateInitials.right = mainW.getMultistateInitials();
-			mainW.progress(80);
+			if(mainW!=null) {
+				tables_multistateInitials.right = mainW.getMultistateInitials();
+				mainW.progress(80);
+			}
 			
 			
 			out.writeObject(tables_multistateInitials);
@@ -82,10 +83,12 @@ class ExportMultistateFormat {
 			out.writeObject(MainGui.debugMessages);
 			
 			out.close();
-			mainW.progress(100);
+			if(mainW!=null)mainW.progress(100);
 		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				e.printStackTrace();
 		}
+		
 	}
 	@SuppressWarnings("unchecked")
 	public static HashMap<String, HashMap<String, String>> importMultistateFormat() {

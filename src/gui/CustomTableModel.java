@@ -988,10 +988,13 @@ class CustomJTable extends JTable
 					c.setForeground(getForeground());
 				}
 				if(rowIndex== getRowCount()-1 && this.getValueAt(rowIndex, vColIndex).toString().trim().length() ==0) {
-					if (rowIndex % 2 != 0) {
-						c.setBackground(MainGui.color_shading_table);
-					} else {
-						c.setBackground(Color.white);
+					if(c.getBackground() != MainGui.color_cell_with_errors)
+					{
+						if (rowIndex % 2 != 0) {
+							c.setBackground(MainGui.color_shading_table);
+						} else {
+							c.setBackground(Color.white);
+						}
 					}
 				}
 				
@@ -1008,12 +1011,15 @@ class CustomJTable extends JTable
 						c.setForeground(Color.BLACK);
 					}
 					else {
+						if(c.getBackground() != MainGui.color_cell_with_errors)
+						{
 						if (rowIndex % 2 != 0) {
 							c.setBackground(MainGui.color_shading_table);
 						} else {
 							c.setBackground(Color.white);
 						}
 					 }
+					}
 				}
 				
 				return c;
@@ -1022,10 +1028,13 @@ class CustomJTable extends JTable
 		if(this.model.disabledCell.contains(rowIndex+"_"+vColIndex)) {
 			c.setBackground(Constants.vt_blues_1);
 		}else {
+			if(c.getBackground() != MainGui.color_cell_with_errors)
+			{
 			if (rowIndex % 2 != 0) {
 				c.setBackground(MainGui.color_shading_table);
 			} else {
 				c.setBackground(Color.white);
+			}
 			}
 		}
 		
@@ -1046,12 +1055,16 @@ class CustomJTable extends JTable
 				c.setBackground(MainGui.color_shading_table);
 			}
 			else {
+				if(c.getBackground() != MainGui.color_cell_with_errors)
+				{
 				if (rowIndex % 2 != 0) {
 					c.setBackground(MainGui.color_shading_table);
 				} else {
 					c.setBackground(Color.white);
 				}
+				}
 			 }
+				
 		}
 		
 		return c;

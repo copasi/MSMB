@@ -2896,6 +2896,7 @@ public class MultiModel {
 	}
 	
 	
+	
 	public String getDifferentialEquations(List listFunctionToCompact) throws Exception {
 		 // Check if species:
 	      // i)   is a constant

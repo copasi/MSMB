@@ -1139,6 +1139,15 @@ public class Constants {
 		public static final String COPASI_REFERENCE_RATE_PARTICLE_NUM   = new String("ParticleNumberRate");
 		
 		
+		public static final String AUTOSAVE_TMP_PREFIX = new String("#_");
+		public static final String AUTOSAVE_TMP_SUFFIX = new String("_autosaved");
+		public static final String AUTOSAVE_SESSION_PREFIX = new String("_start_session_");
+		public static final String AUTOSAVE_SESSION_SUFFIX = new String("_autosaved");
+		public static final String AUTOSAVE_UNTITLED = new String("untitled");
+		
+		public final static String MULTISTATE_FILE_EXTENSION = ".multis";
+		
+		
 		public static final Vector<String> volumeUnits;
 		static {
 			volumeUnits = new Vector<String>();
@@ -1519,7 +1528,7 @@ public class Constants {
 		      // caret position for a match against known completions. This is all
 		      // that is needed in the majority of cases.
 		 public static   DefaultCompletionProvider provider = new DefaultCompletionProvider();
-
+		
 		 static{
 		      // A BasicCompletion is just
 		      // a straightforward word completion.

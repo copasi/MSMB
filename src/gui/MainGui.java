@@ -54,6 +54,21 @@ public class MainGui extends JFrame{
 		if(customFont!=null) {
 			customFont = new Font(customFont.getName(), Font.PLAIN, size);
 
+			/*for(int i = 0; i < jMenuBar.getComponentCount();i++) {
+				Component c = jMenuBar.getComponent(i);
+				if(c instanceof JMenu) {
+					JMenu menu = ((JMenu)c);
+					menu.setFont(customFont);
+					for(int i1 = 0; i1 < menu.getMenuComponentCount();i1++) {
+						Component c1 = menu.getMenuComponent(i1);
+						if(c1 instanceof JMenuItem) {
+							JMenuItem menu1 = ((JMenuItem)c1);
+							menu1.setFont(customFont);
+						}
+					}
+				}
+			}*/
+			
 			jTabGeneral.setFont(customFont);
 
 			statusBar.setFont(customFont);
@@ -136,14 +151,20 @@ public class MainGui extends JFrame{
 
 	public boolean isAutosaveActive() { return isAutosaveActive;}
 	public void setAutosaveActive(boolean value) {isAutosaveActive = value;}
-	public void setAutosaveTimeMin(Integer value) {autosaveTimeMilliseconds = value*60*1000;}
+	public void setAutosaveTimeMin(Integer value) {
+		recordAutosave.stopAutosave();
+		autosaveTimeMilliseconds = value*60*1000;
+		recordAutosave.startAutosave();
+	}
 	public int getAutosaveTimeMin() {	return autosaveTimeMilliseconds/(1000*60);}
 	public int getAutosaveTime() {	return autosaveTimeMilliseconds;}
 	public String getAutosaveDirectory() { return autosavePath;	}
 	public void setAutosaveDirectory(String s ) {  
+		recordAutosave.stopAutosave();
 		autosavePath = new String(s.trim());
-		if(autosavePath.length()==0) return;
-		if(!autosavePath.endsWith("/")) autosavePath +="/";
+		if(autosavePath.length()!=0 && !autosavePath.endsWith("/")) autosavePath +="/";
+		recordAutosave.startAutosave();
+		return;
 	}
 	
 	
@@ -252,6 +273,10 @@ public class MainGui extends JFrame{
 	private boolean autoMergeSpecies = false;
 	private RecordAutosave recordAutosave;
 	private JMenuItem menu_reverse;
+	private JMenuItem itemPrintPDF;
+	private JMenu menuFile;
+	private JMenu menuEdit;
+	private String inputFile = new String(Constants.AUTOSAVE_UNTITLED);
 
 	public static boolean importFromTables = false;
 	
@@ -1033,8 +1058,8 @@ public class MainGui extends JFrame{
 	
 	private JMenuBar getJJMenuBar() throws Exception {
 			jMenuBar = new JMenuBar();
-			JMenu menu = new JMenu("File");
-			jMenuBar.add(menu);
+			menuFile = new JMenu("File");
+			jMenuBar.add(menuFile);
 
 			JMenuItem item = new JMenuItem("New");
 			item.addActionListener(new ActionListener(){
@@ -1062,7 +1087,7 @@ public class MainGui extends JFrame{
 	        			                    "No",
 	        			                    "Cancel"};
 	        			int n = JOptionPane.showOptionDialog(frame,
-	        			    "Model \""+modelName+"\" has been modified. Do you want to save the changes?",
+	        			    "Model \""+inputFile+"\" has been modified. Do you want to save the changes?",
 	        			    "Question",
 	        			    JOptionPane.YES_NO_CANCEL_OPTION,
 	        			    JOptionPane.QUESTION_MESSAGE,
@@ -1098,27 +1123,32 @@ public class MainGui extends JFrame{
 	            	
 	            }
 			});
-			menu.add(item);
+			menuFile.add(item);
 
-			JMenuItem importMultistateFormat = new JMenuItem("Open ("+ExportMultistateFormat.MULTISTATE_SUFFIX+") ...");
+			JMenuItem importMultistateFormat = new JMenuItem("Open ("+Constants.MULTISTATE_FILE_EXTENSION+") ...");
 			importMultistateFormat.addActionListener(new ActionListener() {
 	            public void actionPerformed(ActionEvent arg0) {
 	            	JFileChooser fileChooser = new JFileChooser();
 	        		
 	        		int returnVal = fileChooser.showOpenDialog(null);
 	                if (returnVal == JFileChooser.APPROVE_OPTION) {
-	                    File file = fileChooser.getSelectedFile();
+	                	deleteTempAutosave();
+		            	recordAutosave.stopAutosave();
+		            	File file = fileChooser.getSelectedFile();
+	                    inputFile = file.getName().substring(0,file.getName().lastIndexOf("."));
 	                    donotCleanDebugMessages = true;
 	                    importTablesMultistateFormat(file);
 	                    donotCleanDebugMessages = false;
-	                }
+	                    
+	                    startAutosave();
+	                 }
 		            
 	            }
 			}
 			);
-			menu.add(importMultistateFormat);
+			menuFile.add(importMultistateFormat);
 
-			JMenuItem saveMultistateFormat = new JMenuItem("Save as ("+ExportMultistateFormat.MULTISTATE_SUFFIX+") ...");
+			JMenuItem saveMultistateFormat = new JMenuItem("Save as ("+Constants.MULTISTATE_FILE_EXTENSION+") ...");
 			saveMultistateFormat.addActionListener(new ActionListener() {
 	            public void actionPerformed(ActionEvent arg0) {
 	            	 exportTables(true);
@@ -1126,8 +1156,8 @@ public class MainGui extends JFrame{
 	            }
 			}
 			);
-			menu.add(saveMultistateFormat);
-			menu.addSeparator();
+			menuFile.add(saveMultistateFormat);
+			menuFile.addSeparator();
 			
 			JMenuItem item2 = new JMenuItem("Import CPS...");
 			Vector ext = new Vector();
@@ -1148,7 +1178,7 @@ public class MainGui extends JFrame{
 	            }
 			}
 			);
-			menu.add(item2);
+			menuFile.add(item2);
 
 			JMenuItem item3 = new JMenuItem("Import SBML...");
 			Vector sbml = new Vector();
@@ -1171,7 +1201,7 @@ public class MainGui extends JFrame{
 	            }
 			}
 			);
-			menu.add(item3);
+			menuFile.add(item3);
 			
 			JMenuItem itemSaveCPS = new JMenuItem("Export CPS...");
 			itemSaveCPS.addActionListener(new ActionListener() {
@@ -1190,8 +1220,55 @@ public class MainGui extends JFrame{
 			}
 			);
 			
-			menu.add(itemSaveCPS);
-			menu.addSeparator();
+			menuFile.add(itemSaveCPS);
+			menuFile.addSeparator();
+			
+			
+			
+			itemPrintPDF = new JMenuItem("Print tables to PDF...");
+			itemPrintPDF.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK));
+			itemPrintPDF.addActionListener(new ActionListener() {
+		        public void actionPerformed(ActionEvent arg0) {
+		        	JFileChooser fileChooser = new JFileChooser();
+	        		int returnVal = fileChooser.showOpenDialog(null);
+	                if (returnVal == JFileChooser.APPROVE_OPTION) {
+	                    File file = fileChooser.getSelectedFile();
+		        			Vector<Object> all = new Vector<Object>();
+		        			all.add(tableReactionmodel);
+		        			all.add(tableSpeciesmodel);
+		        			all.add(tableGlobalQmodel);
+		        			all.add(tableFunctionsmodel);
+		        			all.add(tableCompartmentsmodel);
+		        			all.add(tableEventsmodel);
+		        			
+		        			
+		        			
+		        			all.add(comboBox_unitVolume.getSelectedItem().toString());
+		        			all.add(comboBox_unitTime.getSelectedItem().toString());
+		        			all.add(comboBox_unitQuantity.getSelectedItem().toString());
+		        			all.add(exportConcentration);
+		        			all.add(quantityIsConc);
+		        			
+		        			all.add(debugMessages);
+		            			
+		                	PrintTablesToPDF pdf = new PrintTablesToPDF();
+		                	pdf.setModelName(modelName);
+		                	try {
+		                		pdf.createPdf(file, all);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+		            	 
+		     
+
+		        }
+		        }
+			}
+			);
+			menuFile.add(itemPrintPDF);
+			
+			menuFile.addSeparator();
+			
 			preferencesMenu = new JMenuItem("Preferences...");
 			preferencesMenu.addActionListener(new ActionListener() {
 				 public void actionPerformed(ActionEvent arg0) {
@@ -1199,25 +1276,25 @@ public class MainGui extends JFrame{
 				 }
 
 			});
-			menu.add(preferencesMenu);
-			menu.addSeparator();
+			menuFile.add(preferencesMenu);
+			menuFile.addSeparator();
 			
 			recentMenu = new JMenu("Recent Files");
-			menu.add(recentMenu);
+			menuFile.add(recentMenu);
 			loadRecentFiles();
 			
-			menu.addSeparator();
+			menuFile.addSeparator();
 			JMenuItem itemN = new JMenuItem("Exit");
 			itemN.addActionListener(new ActionListener() {
 				 public void actionPerformed(ActionEvent arg0) {
 						exit();
 				 }
 			});
-			menu.add(itemN);
+			menuFile.add(itemN);
 			
 			
-			JMenu menu2 = new JMenu("Edit");
-			jMenuBar.add(menu2);
+			menuEdit = new JMenu("Edit");
+			jMenuBar.add(menuEdit);
 
 
 			menu_reverse = new JMenuItem("Add reverse reaction...");
@@ -1228,7 +1305,7 @@ public class MainGui extends JFrame{
 	            	addReverseReaction();
 	            }
 			});
-			menu2.add(menu_reverse);
+			menuEdit.add(menu_reverse);
 			
 			
 			JMenuItem del = new JMenuItem("Delete element...");
@@ -1241,10 +1318,10 @@ public class MainGui extends JFrame{
 	            	df.show();
 	            }
 			});
-			menu2.add(del);
+			menuEdit.add(del);
 			
 			
-			menu2.addSeparator();
+			menuEdit.addSeparator();
 			JMenuItem itemMultiValidate =  new JMenuItem("Validate", KeyEvent.VK_A);
 			KeyStroke ctrlAKeyStroke = KeyStroke.getKeyStroke("control A");
 		    itemMultiValidate.setAccelerator(ctrlAKeyStroke);
@@ -1260,7 +1337,7 @@ public class MainGui extends JFrame{
 
 			});
 		
-			menu2.add(itemMultiValidate);
+			menuEdit.add(itemMultiValidate);
 			
 			multiBuilderFrame = new MultistateBuilderFrame(this);
         	multiBuilderFrame.setModal(true);
@@ -1292,8 +1369,8 @@ public class MainGui extends JFrame{
 	                jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
 	            }
 			});
-			menu2.add(itemMultiBuilder);
-			menu2.addSeparator();
+			menuEdit.add(itemMultiBuilder);
+			menuEdit.addSeparator();
 			
 			
 			
@@ -1305,7 +1382,7 @@ public class MainGui extends JFrame{
 	            	System.out.println("Move up row");
 	            }
 			});
-			menu2.add(itemMU);
+			menuEdit.add(itemMU);
 			
 			JMenuItem itemMD = new JMenuItem("Move row down");
 			itemMD.setEnabled(false);
@@ -1315,7 +1392,7 @@ public class MainGui extends JFrame{
 	            	System.out.println("Move down row");
 	            }
 			});
-			menu2.add(itemMD);
+			menuEdit.add(itemMD);
 			
 		
 			
@@ -1340,6 +1417,14 @@ public class MainGui extends JFrame{
 	
 	
 	
+	protected void startAutosave() {
+		File outputfile = new File(getAutosaveDirectory()+"_start_session_"+getAutosaveBaseName()+".multis");
+		ExportMultistateFormat.setFile(outputfile);
+        ExportMultistateFormat.exportMultistateFormat(false);
+		recordAutosave.startAutosave();
+		setCustomFont(customFont.getSize());
+	}
+
 	protected void addReverseReaction() {
 		int sel = jTableReactions.getSelectedRow();
 		if(sel == -1) {
@@ -3227,7 +3312,7 @@ public class MainGui extends JFrame{
 			}
 			
 			loadedExisting = true;
-			modelName = new String(multiModel.getSBMLid());
+			//modelName = new String(multiModel.getSBMLid());
 			preferenceFrame.updateStatusAutocomplete();
 			try {
 				validateMultiModel(false,false);
@@ -3792,7 +3877,7 @@ public class MainGui extends JFrame{
 			                    "No",
 			                    "Cancel"};
 			int n = JOptionPane.showOptionDialog(frame,
-			    "Model \""+modelName+"\" has been modified. Do you want to save the changes?",
+			    "Model \""+inputFile+"\" has been modified. Do you want to save the changes?",
 			    "Question",
 			    JOptionPane.YES_NO_CANCEL_OPTION,
 			    JOptionPane.QUESTION_MESSAGE,
@@ -3811,21 +3896,54 @@ public class MainGui extends JFrame{
 				
 				try {
 					saveCPS(file,true);
+					deleteTempAutosave();
 					System.exit(0);
 				} catch (Exception e) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 				}
 			} else if(n==1) {
+				deleteTempAutosave();
 				System.exit(0);
 			} else if(n == 2) {
 				return;
 			}
 			
 		} else {
+			deleteTempAutosave();
 			System.exit(0);
 		}
 		
 		
+	}
+
+	private void deleteTempAutosave() {
+		recordAutosave.stopAutosave();
+		System.gc();
+		
+		try{
+		String fileName = recordAutosave.getOutputFileCompleteName();
+	    
+	    File f = new File(fileName);
+
+	    // Make sure the file or directory exists and isn't write protected
+	    if (!f.exists()) throw new IllegalArgumentException("Delete: no such file or directory: " + fileName);
+	    if (!f.canWrite())  throw new IllegalArgumentException("Delete: write protected: " + fileName);
+
+	    // If it is a directory, make sure it is empty
+	    if (f.isDirectory()) {
+	    	String[] files = f.list();
+	      if (files.length > 0)     throw new IllegalArgumentException(    "Delete: directory not empty: " + fileName);
+	    }
+
+	    // Attempt to delete it
+	    boolean success = f.delete();
+
+	    if (!success)
+	      throw new IllegalArgumentException("Delete: deletion failed");
+		} catch (Exception e) {
+			//nothing to do, not successful in deleting the temp but I can go on
+			//e.printStackTrace();
+		}
 	}
 
 	private void addRecents(File f) {
@@ -4664,7 +4782,7 @@ public class MainGui extends JFrame{
 		
 		frame = this;
 		preferenceFrame = new PreferencesFrame(this);
-		
+		recordAutosave = new RecordAutosave(this);
 		
 		
 		setSize(700, 539);
@@ -4721,11 +4839,51 @@ public class MainGui extends JFrame{
 			jTableReactions.getTableHeader().setFont(customFont);
 			jTableSpecies.getTableHeader().setFont(customFont);
 			}
+			
+			
+		loadLastAutosavedIfExists();	
+			
 	}
 	
 	
 	
 	
+	private void loadLastAutosavedIfExists() {
+		String dirName = recordAutosave.getPath();
+		
+		File dir = new File(dirName);
+		File[] files = dir.listFiles(new FilenameFilter() { 
+            public boolean accept(File dir, String filename)
+                 {  return 
+                		 filename.startsWith(Constants.AUTOSAVE_TMP_PREFIX) 
+                		 && filename.endsWith(Constants.AUTOSAVE_TMP_SUFFIX+Constants.MULTISTATE_FILE_EXTENSION)
+                		 && filename.compareTo(Constants.AUTOSAVE_TMP_PREFIX+Constants.AUTOSAVE_UNTITLED+Constants.AUTOSAVE_TMP_SUFFIX+Constants.MULTISTATE_FILE_EXTENSION)!=0;    		 }
+		});
+
+		if(files.length > 0) {
+			
+			Object[] options = {"Yes",
+			                    "No"};
+			int n = JOptionPane.showOptionDialog(frame,
+			    "The previous session was not terminated properly. Do you want to recover the last available model?",
+			    "Question",
+			    JOptionPane.YES_NO_CANCEL_OPTION,
+			    JOptionPane.QUESTION_MESSAGE,
+			    null,
+			    options,
+			    options[0]);
+			if(n==0) {//yes
+				
+			} else if(n==1) { //no
+				for(int i = 0; i < files.length; i++) {
+					files[i].delete();
+				}
+				return;
+			} 
+		}
+
+	}
+
 	public static void ackSelectedDebugMessage() throws Exception {
 		clear_debugMessages_relatedWith(toBeAck_debugMessage.getOrigin_table(), toBeAck_debugMessage.getPriority(), toBeAck_debugMessage.getOrigin_row(), toBeAck_debugMessage.getOrigin_col());
 		old_acknowledged.add(toBeAck_debugMessage.getOrigin_table()+"@"+toBeAck_debugMessage.getPriority()+"_"+toBeAck_debugMessage.getOrigin_row()+"_"+toBeAck_debugMessage.getOrigin_col());
@@ -5575,8 +5733,7 @@ public class MainGui extends JFrame{
 	}
 
 	public String getAutosaveBaseName() {
-		System.out.println("GEEEEEEEEEENERATE NEW TEMP NAME WITH NAME MODEL ~AROUND?");
-		return null;
+		return this.inputFile ;
 	}
 
 	
