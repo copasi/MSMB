@@ -88,10 +88,11 @@ public class MultistateSpecies extends Species {
 			 }
 			  
 		 } catch(MySyntaxException ex) {
-			// ex.printStackTrace();
+			 ex.printStackTrace();
 			throw new MySyntaxException(ex.getColumn(),"Problem parsing species:"+ex.getMessage(), Constants.TitlesTabs.SPECIES.description);
 
 		 } catch (Exception e) {
+			 e.printStackTrace();
 			throw new MySyntaxException(Constants.SpeciesColumns.NAME.index,"Problem parsing species: "+e.getMessage(), Constants.TitlesTabs.SPECIES.description);
 
 		}

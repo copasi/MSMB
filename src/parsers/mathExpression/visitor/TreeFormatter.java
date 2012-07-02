@@ -584,14 +584,15 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   /**
    * name -> Name()<br>
    * nodeToken -> < LBRACE ><br>
-   * name1 -> Name()<br>
+   * nodeChoice -> ( %0 Name()<br>
+   * .......... .. | %1 Literal() )<br>
    * nodeToken1 -> < RBRACE ><br>
    */
   @Override
   public void visit(final MultistateSite n) {
     n.name.accept(this);
     n.nodeToken.accept(this);
-    n.name1.accept(this);
+    n.nodeChoice.accept(this);
     n.nodeToken1.accept(this);
   }
 

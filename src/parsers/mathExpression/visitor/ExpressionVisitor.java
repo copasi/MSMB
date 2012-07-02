@@ -130,8 +130,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 				expression += ")";
 			}
 		}catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
-			e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			throw e;
 		}
 		//System.out.println("after: "+expression);

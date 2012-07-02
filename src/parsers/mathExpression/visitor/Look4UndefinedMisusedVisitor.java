@@ -6,9 +6,15 @@ import model.Species;
 import parsers.mathExpression.MR_Expression_ParserConstants;
 import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import parsers.mathExpression.syntaxtree.*;
+import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import parsers.multistateSpecies.ParseException;
+import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
+import parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 
 import gui.MainGui;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.*;
 
 import utility.Constants;
@@ -79,11 +85,11 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 				
 				} else {
 					//System.out.println("SPECIES: "+ToStringVisitor.toString(n)); // to print complete "multistate" definition
-					
-					if(name.toLowerCase().compareTo(Constants.NAN_STRING) != 0
+					if(isMultistateSpeciesDefined(n)) {
+						//ok multistate species existing
+					} else if(name.toLowerCase().compareTo(Constants.NAN_STRING) != 0
 							&& multiModel.getWhereNameIsUsed(name)==null) {
-						
-						if(!missing.contains(name))	missing.add(name);
+						if(!misused.contains(ToStringVisitor.toString(n))&&!missing.contains(name))	missing.add(name);
 					}
 				}
 			}
@@ -99,9 +105,48 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 	}
 	  
 	 
+	private boolean isMultistateSpeciesDefined(SpeciesReferenceOrFunctionCall_prefix n) {
+		String element = ToStringVisitor.toString(n);
+		 InputStream is = new ByteArrayInputStream(element.getBytes());
+		 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+		 try {
+			CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+			MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
+	
+			start.accept(v);
+			MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(v.getSpeciesName());
+		
+			if(sp.containsSpecificConfiguration(element)) return true;
+			else {
+				misused.add(element);
+				return false;
+			}
+			
+			/*//to check if that is a state existing from the sp definition
+			MultistateSpeciesVisitor v2 = new MultistateSpeciesVisitor(multiModel,sp);
+			 start.accept(v2);
+			 String exp = v2.getProductExpansion();
+			 
+			 
+			 
+			 if(exp != null && v.getExceptions().size() == 0) { return true; }
+			 else {
+				 return false;
+			 }
+			*/
+		 } catch (Exception e) {
+			//	e.printStackTrace();
+				return false;
+			}
+	}
+
+
 	private int indexSum = -1;
 	Vector<SumExpansion> sumExpansion = new Vector<SumExpansion>();
-
+	
+	public Vector<SumExpansion> getSumExpansions() {
+		return sumExpansion;
+	}
 
 	@Override
 	public void visit(MultistateSum n) {
@@ -359,6 +404,8 @@ class SumExpansion {
 	Vector<String> sites = new Vector<String>();
 	Vector<Vector<String>> sitesStates = new Vector<Vector<String>>();
 	String species_name = new String();
+	Vector<Species> elementsSum = null;
+	
 	
 	public SumExpansion(String name) {
 		species_name = name;
@@ -383,6 +430,23 @@ class SumExpansion {
 		}*/
 		String ret = printCompleteSum();
 		return  ret;
+	}
+	
+	
+	public Vector<Species> getSpeciesSum(){
+		try {
+			MultistateSpecies ms = new MultistateSpecies(null, new String(species_name));
+			for(int i = 0; i < sites.size(); i++) {
+				ms.addSite_vector( sites.get(i),sitesStates.get(i));
+			}
+			
+			elementsSum = ms.getExpandedSpecies(null);
+		} catch (Exception e) {
+			
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+		}
+		
+		return elementsSum;
 	}
 	
 	public String printCompleteSum() {

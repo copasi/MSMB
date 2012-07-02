@@ -533,8 +533,8 @@ public class MultiModel {
 					reaction.setReversible(false);
 					reaction.setNotes((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.NOTES.index));
 				
-					String rateLaw = ((String)tableReactionmodel.getValueAt(i, 4)).trim();
-					String kineticType = ((String)tableReactionmodel.getValueAt(i, 3)).trim();
+					String rateLaw = ((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.KINETIC_LAW.index)).trim();
+					String kineticType = ((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).trim();
 					reaction = generateKineticLaw(reaction,i, expandedReaction, rateLaw, kineticType, model);
 					
 				}

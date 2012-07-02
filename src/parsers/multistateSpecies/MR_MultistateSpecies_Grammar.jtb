@@ -221,7 +221,7 @@ void MultistateSpecies_SiteSingleElement() throws ParseException:
 void MultistateSpecies_SiteSingleElement_Range() throws ParseException:
 {}
 {
-	< NUMBER > < RANGE_SEPARATOR > < NUMBER > 
+	< NUMBER > (" ")* < RANGE_SEPARATOR > (" ")* < NUMBER > 
 }
 
 

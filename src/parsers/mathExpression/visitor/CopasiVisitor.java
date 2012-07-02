@@ -3,7 +3,11 @@ package parsers.mathExpression.visitor;
 import parsers.mathExpression.MR_Expression_Parser;
 import parsers.mathExpression.MR_Expression_ParserConstants;
 import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
+import parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import parsers.mathExpression.syntaxtree.*;
+import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
+import parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 import utility.Constants;
 
 import gui.MainGui;
@@ -22,6 +26,7 @@ import java.util.Vector;
 import model.Function;
 import model.MultiModel;
 import model.MultistateSpecies;
+import model.Species;
 
 import org.COPASI.CCompartment;
 import org.COPASI.CCopasiObjectName;
@@ -61,6 +66,12 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 		super.visit(n);
 	}
 	
+	@Override
+	public void visit(MultistateSum n) {
+		if(isSumMultistate(ToStringVisitor.toString(n))) {
+			printSumMultistate(ToStringVisitor.toString(n));
+		}
+	}
 	
 	boolean nodeIsAFunctionCall = false;
 	@Override
@@ -80,6 +91,8 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				} else {
 					//System.out.println("SPECIES: "+ToStringVisitor.toString(n)); // to print complete "multistate" definition
 					nodeIsAFunctionCall = false;
+					
+				
 				}
 			}
 		} else {
@@ -95,53 +108,59 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 			super.visit(n);
 			String element = ToStringVisitor.toString(n);
 			if(nodeIsAFunctionCall) {
-				String funName  = new String();
-				try {
-					InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
-					MR_Expression_Parser parser = new MR_Expression_Parser(is);
-					CompleteExpression root;
-					root = parser.CompleteExpression();
-					GetFunctionNameVisitor name = new GetFunctionNameVisitor();
-					root.accept(name);
-					funName  = name.getFunctionName();
-					if(funName.length()==0) return;
-					Function f = multiModel.getFunctionByName(funName);
-					copasiExpression += funName+"(";
-				} catch(Exception ex) {
-					if(funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.FLOOR))==0 ||
-					   funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SQRT))==0 ||
-					   funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXP))==0 ||
-					   funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG))==0) {
+				
+					String funName  = new String();
+
+					try {
+						InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
+						MR_Expression_Parser parser = new MR_Expression_Parser(is);
+						CompleteExpression root;
+						root = parser.CompleteExpression();
+						GetFunctionNameVisitor name = new GetFunctionNameVisitor();
+						root.accept(name);
+						funName  = name.getFunctionName();
+						if(funName.length()==0) return;
+						Function f = multiModel.getFunctionByName(funName);
 						copasiExpression += funName+"(";
+					} catch(Exception ex) {
+						if(funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.FLOOR))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SQRT))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXP))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG))==0) {
+							copasiExpression += funName+"(";
+						}
+						else {
+							if(!isMultistateSpeciesDefined(ToStringVisitor.toString(n.speciesReferenceOrFunctionCall_prefix))) {
+								throw ex;
+							}
+
+						}
 					}
-					else {
-						throw ex;
+
+
+					InputStream is2 = new ByteArrayInputStream(element.getBytes("UTF-8"));
+					MR_Expression_Parser parser2 = new MR_Expression_Parser(is2);
+					CompleteExpression root2 = parser2.CompleteExpression();
+					GetFunctionParametersVisitor v = new GetFunctionParametersVisitor();
+					root2.accept(v);
+					Vector<String> parametersActuals = v.getActualParameters();
+
+					for(int i = 0; i < parametersActuals.size(); i++) {
+						InputStream isR = new ByteArrayInputStream(parametersActuals.get(i).getBytes("UTF-8"));
+						MR_Expression_Parser parserR = new MR_Expression_Parser(isR);
+						CompleteExpression rootR = parserR.CompleteExpression();
+						CopasiVisitor vis = new CopasiVisitor(model,multiModel,conc,isInitialExpression);
+						rootR.accept(vis);
+						if(vis.getExceptions().size() == 0) {
+							String copasiExpr  = vis.getCopasiExpression();
+							copasiExpression += copasiExpr+",";
+						} else {
+							this.exceptions.addAll(vis.exceptions);
+						}
 					}
-				}
+					copasiExpression = copasiExpression.substring(0, copasiExpression.length()-1);
+					copasiExpression += ")";
 				
-	
-				InputStream is2 = new ByteArrayInputStream(element.getBytes("UTF-8"));
-				MR_Expression_Parser parser2 = new MR_Expression_Parser(is2);
-				CompleteExpression root2 = parser2.CompleteExpression();
-				GetFunctionParametersVisitor v = new GetFunctionParametersVisitor();
-				root2.accept(v);
-				Vector<String> parametersActuals = v.getActualParameters();
-				
-				for(int i = 0; i < parametersActuals.size(); i++) {
-					InputStream isR = new ByteArrayInputStream(parametersActuals.get(i).getBytes("UTF-8"));
-					MR_Expression_Parser parserR = new MR_Expression_Parser(isR);
-					CompleteExpression rootR = parserR.CompleteExpression();
-					CopasiVisitor vis = new CopasiVisitor(model,multiModel,conc,isInitialExpression);
-					rootR.accept(vis);
-					if(vis.getExceptions().size() == 0) {
-						String copasiExpr  = vis.getCopasiExpression();
-						copasiExpression += copasiExpr+",";
-					} else {
-						this.exceptions.addAll(vis.exceptions);
-					}
-				}
-				copasiExpression = copasiExpression.substring(0, copasiExpression.length()-1);
-				copasiExpression += ")";
 			} else {
 				generateCopasiElement(element);
 			}
@@ -152,13 +171,79 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	}
 	
 	
+	
+	private void printSumMultistate(String element) {
+		
+		 try {
+			  InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
+			  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is);
+			  CompleteExpression root = parser.CompleteExpression();
+			  Look4UndefinedMisusedVisitor multistateSum = new Look4UndefinedMisusedVisitor(multiModel);
+			  root.accept(multistateSum);
+			  Vector<SumExpansion> sum = multistateSum.getSumExpansions();
+			 for(int i = 0; i < sum.size(); i++) {
+				  copasiExpression += "(";
+				 SumExpansion el = sum.get(i);
+				  Vector<Species> species = el.getSpeciesSum();
+				  for(int j =0; j < species.size()-1; j++){
+					  generateCopasiElement(species.get(j).getDisplayedName());
+					  copasiExpression += " + ";
+				}
+				  generateCopasiElement(species.get(species.size()-1).getDisplayedName());
+				  copasiExpression += ")";
+			  }
+			
+			  
+		  }catch (Exception e) {
+			 return ;
+		}
+		return ;
+	}
+
+	private boolean isSumMultistate(String element) {
+		 try {
+			  InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
+			  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is);
+			  CompleteExpression root = parser.CompleteExpression();
+			  Look4UndefinedMisusedVisitor multistateSum = new Look4UndefinedMisusedVisitor(multiModel);
+			  root.accept(multistateSum);
+			  //Vector<SumExpansion> sum = multistateSum.getSumExpansions();
+			  return true;
+		  }catch (Exception e) {
+			 return false;
+		}
+	}
+
+	private boolean isMultistateSpeciesDefined(String element) {
+		 InputStream is = new ByteArrayInputStream(element.getBytes());
+		 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+		 try {
+			CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+			MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
+	
+			start.accept(v);
+			MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(v.getSpeciesName());
+		
+			if(sp.containsSpecificConfiguration(element)) return true;
+			else {
+				exceptions.add(new ParseException("Model yet not complete. Element "+element+" not found"));
+				return false;
+			}
+		
+		 } catch (Exception e) {
+			//	e.printStackTrace();
+				return false;
+		}
+	}
+	
 	public void generateCopasiElement(String element) {
 		//String element = ToStringVisitor.toString(n);
 		String element_copasiTerm = new String();
 		if(element.compareTo(Constants.TIME_STRING) ==0) {
 			element_copasiTerm = model.getObject(new CCopasiObjectName("Reference=Time")).getCN().getString();
 		} 
-		else {
+		else  if(!isMultistateSpeciesDefined(element)) {
+			
 			int index = -1;
 			GetElementWithExtensions name = null;
 			try{
@@ -177,7 +262,6 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				String element_kind_quantifier = getKindQuantifier(extensions);
 				String element_timing_quantifier = getTimingQuantifier(extensions);
 				String element_quantity_quantifier = getQuantityQuantifier(extensions);
-			
 			
 			//String element_substring = new String(element);
 			//String element_timing_quantifier = null;//endWithTimingQuantifier(element);
@@ -262,7 +346,67 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 					} 
 				}
 			}
+		} else {
+			try {
+				InputStream is = new ByteArrayInputStream(element.getBytes());
+				MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+				CompleteMultistateSpecies_Operator start;
+				start = react.CompleteMultistateSpecies_Operator();
+				MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
+
+				start.accept(v);
+				MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(v.getSpeciesName());
+				
+				
+				int index = this.findMetabolite(element,false);
+				
+				//TOOOOO DOOOOOO
+				
+				String element_kind_quantifier = null; //getKindQuantifier(extensions);
+				String element_timing_quantifier = null;//getTimingQuantifier(extensions);
+				String element_quantity_quantifier = null; //getQuantityQuantifier(extensions);
+			
+				if(index!= -1) { //species
+					CMetab metab = model.getMetabolite(index);
+					if(element_quantity_quantifier == null && element_timing_quantifier == null) {
+						if(!conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
+						else element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
+					} else {
+						if(element_timing_quantifier == null) {
+							if (element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
+							else if(element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
+						}else if(element_quantity_quantifier == null) {
+							if(element_timing_quantifier.compareTo(".i")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".t")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".r")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".i")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".t")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".r")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumberRate")).getCN().getString();
+						}
+						else if(element_timing_quantifier.compareTo(".i")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".i")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".t")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".t")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".r")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumberRate")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".r")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
+						
+					}
+				} else {
+					throw new Exception("problem exporting multistate species");
+				}
+				
+				
+			} catch (Exception e) {
+
+				e.printStackTrace();
+				exceptions.add(e);
+			}
+		
+			
 		}
+		
+		
+		
 		if(element_copasiTerm.length() == 0) exceptions.add(new ParseException("Model yet not complete. Element "+element+" not found"));
 		copasiExpression+="<"+element_copasiTerm+">";
 	}

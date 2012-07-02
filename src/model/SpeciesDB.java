@@ -200,6 +200,7 @@ public class SpeciesDB {
 			}
 			return 0;
 		} catch (MySyntaxException ex) {
+			
 			multiModel.addNamedElement(name, Constants.TitlesTabs.SPECIES.index);
 			speciesIndexes.put(name, index);
 			if(ex.getColumn()==Constants.SpeciesColumns.EXPRESSION.index && expression.trim().length() >0) {

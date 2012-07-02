@@ -152,6 +152,8 @@ public class CellParsers {
 				  }
 			  }
 		 } catch (parsers.mathExpression.ParseException e) {
+			 
+			 
 			 //e.printStackTrace();
 			 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
 		}

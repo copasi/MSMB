@@ -679,7 +679,8 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * <p>
    * name -> Name()<br>
    * nodeToken -> < LBRACE ><br>
-   * name1 -> Name()<br>
+   * nodeChoice -> ( %0 Name()<br>
+   * .......... .. | %1 Literal() )<br>
    * nodeToken1 -> < RBRACE ><br>
    *
    * @param n the node to visit
@@ -692,8 +693,9 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     n.name.accept(this, argu);
     // nodeToken -> < LBRACE >
     n.nodeToken.accept(this, argu);
-    // name1 -> Name()
-    n.name1.accept(this, argu);
+    // nodeChoice -> ( %0 Name()
+    // .......... .. | %1 Literal() )
+    n.nodeChoice.accept(this, argu);
     // nodeToken1 -> < RBRACE >
     n.nodeToken1.accept(this, argu);
     return nRes;

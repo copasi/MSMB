@@ -7,7 +7,9 @@ import parsers.multistateSpecies.visitor.*;
  * JTB node class for the production MultistateSpecies_SiteSingleElement_Range:<br>
  * Corresponding grammar :<br>
  * nodeToken -> < NUMBER ><br>
+ * nodeListOptional -> ( " " )*<br>
  * nodeToken1 -> < RANGE_SEPARATOR ><br>
+ * nodeListOptional1 -> ( " " )*<br>
  * nodeToken2 -> < NUMBER ><br>
  */
 public class MultistateSpecies_SiteSingleElement_Range implements INode {
@@ -16,7 +18,13 @@ public class MultistateSpecies_SiteSingleElement_Range implements INode {
   public NodeToken nodeToken;
 
   /** A child node */
+  public NodeListOptional nodeListOptional;
+
+  /** A child node */
   public NodeToken nodeToken1;
+
+  /** A child node */
+  public NodeListOptional nodeListOptional1;
 
   /** A child node */
   public NodeToken nodeToken2;
@@ -30,11 +38,15 @@ public class MultistateSpecies_SiteSingleElement_Range implements INode {
    * @param n0 first child node
    * @param n1 next child node
    * @param n2 next child node
+   * @param n3 next child node
+   * @param n4 next child node
    */
-  public MultistateSpecies_SiteSingleElement_Range(final NodeToken n0, final NodeToken n1, final NodeToken n2) {
+  public MultistateSpecies_SiteSingleElement_Range(final NodeToken n0, final NodeListOptional n1, final NodeToken n2, final NodeListOptional n3, final NodeToken n4) {
     nodeToken = n0;
-    nodeToken1 = n1;
-    nodeToken2 = n2;
+    nodeListOptional = n1;
+    nodeToken1 = n2;
+    nodeListOptional1 = n3;
+    nodeToken2 = n4;
   }
 
   /**
@@ -42,11 +54,15 @@ public class MultistateSpecies_SiteSingleElement_Range implements INode {
    *
    * @param n0 first child node
    * @param n1 next child node
+   * @param n2 next child node
+   * @param n3 next child node
    */
-  public MultistateSpecies_SiteSingleElement_Range(final NodeToken n0, final NodeToken n1) {
+  public MultistateSpecies_SiteSingleElement_Range(final NodeToken n0, final NodeListOptional n1, final NodeListOptional n2, final NodeToken n3) {
     nodeToken = n0;
+    nodeListOptional = n1;
     nodeToken1 = new NodeToken(":");
-    nodeToken2 = n1;
+    nodeListOptional1 = n2;
+    nodeToken2 = n3;
   }
 
   /**

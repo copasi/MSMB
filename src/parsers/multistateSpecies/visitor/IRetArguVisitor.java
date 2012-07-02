@@ -164,7 +164,9 @@ public interface IRetArguVisitor<R, A> {
    * Visits a {@link MultistateSpecies_SiteSingleElement_Range} node, whose children are the following :
    * <p>
    * nodeToken -> < NUMBER ><br>
+   * nodeListOptional -> ( " " )*<br>
    * nodeToken1 -> < RANGE_SEPARATOR ><br>
+   * nodeListOptional1 -> ( " " )*<br>
    * nodeToken2 -> < NUMBER ><br>
    *
    * @param n the node to visit

@@ -278,7 +278,9 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * Visits a {@link MultistateSpecies_SiteSingleElement_Range} node, whose children are the following :
    * <p>
    * nodeToken -> < NUMBER ><br>
+   * nodeListOptional -> ( " " )*<br>
    * nodeToken1 -> < RANGE_SEPARATOR ><br>
+   * nodeListOptional1 -> ( " " )*<br>
    * nodeToken2 -> < NUMBER ><br>
    *
    * @param n the node to visit
@@ -289,8 +291,12 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     R nRes = null;
     // nodeToken -> < NUMBER >
     n.nodeToken.accept(this, argu);
+    // nodeListOptional -> ( " " )*
+    n.nodeListOptional.accept(this, argu);
     // nodeToken1 -> < RANGE_SEPARATOR >
     n.nodeToken1.accept(this, argu);
+    // nodeListOptional1 -> ( " " )*
+    n.nodeListOptional1.accept(this, argu);
     // nodeToken2 -> < NUMBER >
     n.nodeToken2.accept(this, argu);
     return nRes;

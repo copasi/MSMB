@@ -229,7 +229,9 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
    * Visits a {@link MultistateSpecies_SiteSingleElement_Range} node, whose children are the following :
    * <p>
    * nodeToken -> < NUMBER ><br>
+   * nodeListOptional -> ( " " )*<br>
    * nodeToken1 -> < RANGE_SEPARATOR ><br>
+   * nodeListOptional1 -> ( " " )*<br>
    * nodeToken2 -> < NUMBER ><br>
    *
    * @param n the node to visit
@@ -237,8 +239,12 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
   public void visit(final MultistateSpecies_SiteSingleElement_Range n) {
     // nodeToken -> < NUMBER >
     n.nodeToken.accept(this);
+    // nodeListOptional -> ( " " )*
+    n.nodeListOptional.accept(this);
     // nodeToken1 -> < RANGE_SEPARATOR >
     n.nodeToken1.accept(this);
+    // nodeListOptional1 -> ( " " )*
+    n.nodeListOptional1.accept(this);
     // nodeToken2 -> < NUMBER >
     n.nodeToken2.accept(this);
   }

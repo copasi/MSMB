@@ -67,6 +67,13 @@ public class MR_Expression_Parser {
       v2 = new MyVisitor();
       start2.accept(v2);
       System.out.println("...................................");
+      expression2 = new String("cdh1(p{1})");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
     }
     catch (Exception ex) {
       ex.printStackTrace();
@@ -1030,18 +1037,29 @@ MultistateSite MultistateSite() :
   Name n0 = null;
   NodeToken n1 = null;
   Token n2 = null;
-  Name n3 = null;
-  NodeToken n4 = null;
-  Token n5 = null;
+  NodeChoice n3 = null;
+  Name n4 = null;
+  Literal n5 = null;
+  NodeToken n6 = null;
+  Token n7 = null;
 }
 {
   n0 = Name()
   n2 = < LBRACE >
   { n1 = JTBToolkit.makeNodeToken(n2); }
-  n3 = Name()
-  n5 = < RBRACE >
-  { n4 = JTBToolkit.makeNodeToken(n5); }
-  { return new MultistateSite(n0, n1, n3, n4); }
+  (
+    (
+      n4 = Name()
+      { n3 = new NodeChoice(n4, 0, 2); }
+    |
+      n5 = Literal()
+      { n3 = new NodeChoice(n5, 1, 2); }
+    )
+    
+  )
+  n7 = < RBRACE >
+  { n6 = JTBToolkit.makeNodeToken(n7); }
+  { return new MultistateSite(n0, n1, n3, n6); }
 }
 
 MultistateSites_list MultistateSites_list() :

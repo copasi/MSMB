@@ -1999,6 +1999,7 @@ public class MainGui extends JFrame{
 			
 			return sbmlID;
 		} catch (Exception e) {
+			e.printStackTrace();
 			Object[] options = {"Save as .multis", "Cancel"};
 			final JOptionPane optionPane = new JOptionPane(
 					e.getMessage(),
@@ -2981,6 +2982,14 @@ public class MainGui extends JFrame{
 				for(int j = 1; j < ncol; j++) {
 					String element = tableModel.getValueAt(i, j).toString().trim();
 					if(element.length() == 0) {
+						if(table_name.compareTo(Constants.TitlesTabs.SPECIES.description)==0 &&
+							j==Constants.SpeciesColumns.INITIAL_QUANTITY.index) {
+							String type = tableModel.getValueAt(i, Constants.SpeciesColumns.TYPE.index).toString().trim();
+							if(type.compareTo(Constants.SpeciesType.MULTISTATE.description)==0)
+								to_be_removed.add(table_name);
+								to_be_removed.add((i+1));
+								to_be_removed.add((j));
+						}
 						to_be_added.add(table_name);
 						to_be_added.add((i+1));
 						to_be_added.add((j));
@@ -3495,6 +3504,74 @@ public class MainGui extends JFrame{
 		updateDebugTab();
 	}
 	
+	
+	private static void decolorRow(int row, String table) throws Exception {
+		if(table.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
+			for(int col = 1; col < Constants.species_columns.size(); col++) {
+	    		TableCellRenderer ren = jTableSpecies.getCellRenderer(row,col);
+	    			if(ren instanceof EditableCellRenderer) {
+	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
+	    				edi.cell_no_defaults(row);
+						jTableSpecies.revalidate();
+	    			} 
+				}
+			}
+		else if(table.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+			for(int col = 1; col < Constants.reactions_columns.size(); col++) {
+	    		TableCellRenderer ren = jTableReactions.getCellRenderer(row,col);
+	    			if(ren instanceof EditableCellRenderer) {
+	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
+	    				edi.cell_no_defaults(row);
+	    				jTableReactions.revalidate();
+	    			} 
+				}
+			}	
+		else if(table.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
+			for(int col = 1; col < Constants.globalQ_columns.size(); col++) {
+	    		TableCellRenderer ren = jTableGlobalQ.getCellRenderer(row,col);
+	    			if(ren instanceof EditableCellRenderer) {
+	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
+	    				edi.cell_no_defaults(row);
+	    				jTableGlobalQ.revalidate();
+	    			} 
+				}
+			}	
+		
+		else if(table.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {
+			for(int col = 1; col < Constants.compartments_columns.size(); col++) {
+	    		TableCellRenderer ren = jTableCompartments.getCellRenderer(row,col);
+	    			if(ren instanceof EditableCellRenderer) {
+	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
+	    				edi.cell_no_defaults(row);
+	    				jTableCompartments.revalidate();
+	    			} 
+				}
+			}	
+		
+		else if(table.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {
+			for(int col = 1; col < Constants.events_columns.size(); col++) {
+	    		TableCellRenderer ren = jTableEvents.getCellRenderer(row,col);
+	    			if(ren instanceof EditableCellRenderer) {
+	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
+	    				edi.cell_no_defaults(row);
+	    				jTableEvents.revalidate();
+	    			} 
+				}
+			}	
+		
+		else if(table.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {
+			for(int col = 1; col < Constants.functions_columns.size(); col++) {
+	    		TableCellRenderer ren = jTableFunctions.getCellRenderer(row,col);
+	    			if(ren instanceof EditableCellRenderer) {
+	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
+	    				edi.cell_no_defaults(row);
+	    				jTableFunctions.revalidate();
+	    			} 
+				}
+			}	
+	}
+	
+	
 	private static void recolorCell(DebugMessage dm, boolean asError) throws Exception {
 		if(dm==null) return;
 		if(dm.getOrigin_table().compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
@@ -3619,6 +3696,7 @@ public class MainGui extends JFrame{
 		updateDebugTab();
 		
 	}
+	
 	
 	public static void clear_debugMessages_relatedWith_row(int nrow) throws Exception {
 		String table =  jTabGeneral.getTitleAt(jTabGeneral.getSelectedIndex());
@@ -3897,12 +3975,16 @@ public class MainGui extends JFrame{
 				try {
 					saveCPS(file,true);
 					deleteTempAutosave();
+					recordAutosave.stopAutosave();
+					this.dispose();
 					System.exit(0);
 				} catch (Exception e) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 				}
 			} else if(n==1) {
 				deleteTempAutosave();
+				recordAutosave.stopAutosave();
+				this.dispose();
 				System.exit(0);
 			} else if(n == 2) {
 				return;
@@ -3910,6 +3992,8 @@ public class MainGui extends JFrame{
 			
 		} else {
 			deleteTempAutosave();
+			recordAutosave.stopAutosave();
+			this.dispose();
 			System.exit(0);
 		}
 		
@@ -4873,8 +4957,16 @@ public class MainGui extends JFrame{
 			    options,
 			    options[0]);
 			if(n==0) {//yes
-				
-			} else if(n==1) { //no
+				String fileName = files[0].getName();
+				int from = fileName.indexOf(Constants.AUTOSAVE_TMP_PREFIX) + Constants.AUTOSAVE_TMP_PREFIX.length();
+				int to = fileName.lastIndexOf(Constants.AUTOSAVE_TMP_SUFFIX);
+				String fileWithoutPrefixSuffix =fileName.substring(from,to);
+				inputFile = fileWithoutPrefixSuffix;
+                donotCleanDebugMessages = true;
+                importTablesMultistateFormat(files[0]);
+                donotCleanDebugMessages = false;
+                startAutosave();
+         	} else if(n==1) { //no
 				for(int i = 0; i < files.length; i++) {
 					files[i].delete();
 				}
@@ -5294,10 +5386,11 @@ public class MainGui extends JFrame{
 	}
 
 	public static boolean isCellWithMultipleView(String tableName, int row, int col) {
-		
+		if(col==0) return false;
 		if(tableName.compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && col==Constants.ReactionsColumns.KINETIC_LAW.index) return true;
 		
 		else if(tableName.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
+			
 			EditableCellRenderer edi  = (EditableCellRenderer) jTableSpecies.getCellRenderer(row,col);
 			if(edi.isCellWithError(row)) return false;
 			if(col==Constants.SpeciesColumns.INITIAL_QUANTITY.index) return true;
@@ -5616,8 +5709,11 @@ public class MainGui extends JFrame{
 						continue;
 					}
 				
-					clear_debugMessages_relatedWith_row(currentIndexToDelete);
- 					moveUpRow_references_debugMessages(currentIndexToDelete);
+					clear_debugMessages_relatedWith_row(currentIndexToDelete+1);
+					decolorRow(currentIndexToDelete, element.getTableDescription());
+					
+					
+ 					moveUpRow_references_debugMessages(currentIndexToDelete+1);
  				
 					switch(whichTab) {
 						case 0:  multiModel.removeReaction(currentIndexToDelete);

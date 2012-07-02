@@ -646,7 +646,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * <p>
    * name -> Name()<br>
    * nodeToken -> < LBRACE ><br>
-   * name1 -> Name()<br>
+   * nodeChoice -> ( %0 Name()<br>
+   * .......... .. | %1 Literal() )<br>
    * nodeToken1 -> < RBRACE ><br>
    *
    * @param n the node to visit
@@ -658,8 +659,9 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     n.name.accept(this);
     // nodeToken -> < LBRACE >
     n.nodeToken.accept(this);
-    // name1 -> Name()
-    n.name1.accept(this);
+    // nodeChoice -> ( %0 Name()
+    // .......... .. | %1 Literal() )
+    n.nodeChoice.accept(this);
     // nodeToken1 -> < RBRACE >
     n.nodeToken1.accept(this);
     return nRes;

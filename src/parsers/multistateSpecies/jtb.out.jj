@@ -415,19 +415,37 @@ MultistateSpecies_SiteSingleElement_Range MultistateSpecies_SiteSingleElement_Ra
   // --- JTB generated node declarations ---
   NodeToken n0 = null;
   Token n1 = null;
-  NodeToken n2 = null;
-  Token n3 = null;
-  NodeToken n4 = null;
-  Token n5 = null;
+  NodeListOptional n2 = new NodeListOptional();
+  NodeToken n3 = null;
+  Token n4 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
+  NodeListOptional n7 = new NodeListOptional();
+  NodeToken n8 = null;
+  Token n9 = null;
+  NodeToken n10 = null;
+  Token n11 = null;
 }
 {
   n1 = < NUMBER >
   { n0 = JTBToolkit.makeNodeToken(n1); }
-  n3 = < RANGE_SEPARATOR >
-  { n2 = JTBToolkit.makeNodeToken(n3); }
-  n5 = < NUMBER >
-  { n4 = JTBToolkit.makeNodeToken(n5); }
-  { return new MultistateSpecies_SiteSingleElement_Range(n0, n2, n4); }
+  (
+    n4 = " "
+    { n3 = JTBToolkit.makeNodeToken(n4); }
+    { n2.addNode(n3); }
+  )*
+  { n2.nodes.trimToSize(); }
+  n6 = < RANGE_SEPARATOR >
+  { n5 = JTBToolkit.makeNodeToken(n6); }
+  (
+    n9 = " "
+    { n8 = JTBToolkit.makeNodeToken(n9); }
+    { n7.addNode(n8); }
+  )*
+  { n7.nodes.trimToSize(); }
+  n11 = < NUMBER >
+  { n10 = JTBToolkit.makeNodeToken(n11); }
+  { return new MultistateSpecies_SiteSingleElement_Range(n0, n2, n5, n7, n10); }
 }
 
 MultistateSpecies_SiteName MultistateSpecies_SiteName() throws ParseException :

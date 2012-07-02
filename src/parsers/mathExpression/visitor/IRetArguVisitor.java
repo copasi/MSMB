@@ -416,7 +416,8 @@ public interface IRetArguVisitor<R, A> {
    * <p>
    * name -> Name()<br>
    * nodeToken -> < LBRACE ><br>
-   * name1 -> Name()<br>
+   * nodeChoice -> ( %0 Name()<br>
+   * .......... .. | %1 Literal() )<br>
    * nodeToken1 -> < RBRACE ><br>
    *
    * @param n the node to visit

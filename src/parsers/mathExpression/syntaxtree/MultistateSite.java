@@ -8,7 +8,8 @@ import parsers.mathExpression.visitor.*;
  * Corresponding grammar :<br>
  * name -> Name()<br>
  * nodeToken -> < LBRACE ><br>
- * name1 -> Name()<br>
+ * nodeChoice -> ( %0 Name()<br>
+ * .......... .. | %1 Literal() )<br>
  * nodeToken1 -> < RBRACE ><br>
  */
 public class MultistateSite implements INode {
@@ -20,7 +21,7 @@ public class MultistateSite implements INode {
   public NodeToken nodeToken;
 
   /** A child node */
-  public Name name1;
+  public NodeChoice nodeChoice;
 
   /** A child node */
   public NodeToken nodeToken1;
@@ -36,10 +37,10 @@ public class MultistateSite implements INode {
    * @param n2 next child node
    * @param n3 next child node
    */
-  public MultistateSite(final Name n0, final NodeToken n1, final Name n2, final NodeToken n3) {
+  public MultistateSite(final Name n0, final NodeToken n1, final NodeChoice n2, final NodeToken n3) {
     name = n0;
     nodeToken = n1;
-    name1 = n2;
+    nodeChoice = n2;
     nodeToken1 = n3;
   }
 
@@ -49,10 +50,10 @@ public class MultistateSite implements INode {
    * @param n0 first child node
    * @param n1 next child node
    */
-  public MultistateSite(final Name n0, final Name n1) {
+  public MultistateSite(final Name n0, final NodeChoice n1) {
     name = n0;
     nodeToken = new NodeToken("{");
-    name1 = n1;
+    nodeChoice = n1;
     nodeToken1 = new NodeToken("}");
   }
 

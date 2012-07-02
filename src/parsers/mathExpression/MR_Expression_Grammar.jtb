@@ -71,6 +71,16 @@ public class MR_Expression_Parser {
       v2 = new MyVisitor();
       start2.accept(v2);
       System.out.println("...................................");
+
+
+      
+      expression2 = new String("cdh1(p{1})");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
           } catch(Exception ex)  {
     ex.printStackTrace();  }   	  }}
 
@@ -379,7 +389,7 @@ AdditiveExpression() ( < COMMA > AdditiveExpression() )*
 
 void MultistateSite() :{}
 {
-   Name() < LBRACE > Name()  < RBRACE > }
+   Name() < LBRACE > (Name() | Literal() )  < RBRACE > }
 
 void MultistateSites_list() :{}
 {
