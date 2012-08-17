@@ -104,7 +104,10 @@ public class Species {
 		try {
 			Vector<Vector<String>> undef_misused = CellParsers.parseExpression_getUndefMisused(m,compartment, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.COMPARTMENT.description);
 		} catch (Exception ex) {
-			throw ex;
+			if(m.getComp(compartment)!=null) {
+				this.compartment = compartment;	
+			}
+			throw ex;	
 		}	
 		
 		if(m.getComp(compartment)!=null) {

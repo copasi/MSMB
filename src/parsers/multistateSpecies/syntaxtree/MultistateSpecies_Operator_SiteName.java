@@ -8,9 +8,7 @@ import parsers.multistateSpecies.visitor.*;
  * Corresponding grammar :<br>
  * nodeChoice -> . %0 < STRING_LITERAL ><br>
  * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
- * .......... .. . .. | &1 < NUMBER ><br>
- * .......... .. . .. | &2 < OPEN_R ><br>
- * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+ * .......... .. . .. | &1 < NUMBER > )+<br>
  */
 public class MultistateSpecies_Operator_SiteName implements INode {
 

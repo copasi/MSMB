@@ -56,7 +56,6 @@ public class PreferencesFrame extends JDialog {
 
 	
 	private static final long serialVersionUID = 1L;
-	private JCheckBox jCheckBoxHighlightCellOpenIssues = null;
 	private JCheckBox jCheckBoxAutocomplete = null;
 	private JCheckBox jCheckBoxDialogWindow = null;
 	private JCheckBox jCheckBoxShowAllAvailableFunctions = null;
@@ -64,7 +63,8 @@ public class PreferencesFrame extends JDialog {
 
 	private javax.swing.ButtonGroup buttonGroup1;
 	private javax.swing.ButtonGroup buttonGroup2;
-	private javax.swing.JCheckBox jCheckBoxPopUpWarnings;
+//	private JCheckBox jCheckBoxHighlightCellOpenIssues = null;
+//	private javax.swing.JCheckBox jCheckBoxPopUpWarnings;
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JPanel jPanel2;
 	private javax.swing.JRadioButton jRadioButton1;
@@ -78,7 +78,6 @@ public class PreferencesFrame extends JDialog {
 	private JButton jButtonOK;
 	private JButton jButtonRestoreDefaults;
 	private JPanel panelColors;
-	private JColorChooser colorchooser;
 	private JPanel panelButtons;
 	private JPanel contentPanel;
 	private JScrollPane scrollPaneColorPalette;
@@ -140,6 +139,8 @@ public class PreferencesFrame extends JDialog {
 	private JPanel panel_14;
 	private JPanel panel_15;
 	private JCheckBox chckbxNewCheckBox;
+	private JButton btnNewButton_4;
+	private JPanel panel_vtpalette;
 	/**
 	 * Launch the application.
 	 */
@@ -191,110 +192,7 @@ public class PreferencesFrame extends JDialog {
 
 	}
 
-	private Component getColorChooser() {
-		UIManager.put("ColorChooser.swatchesNameText", "Sample colors"); 
-		UIManager.put("ColorChooser.hsvNameText", "Hue, Saturation and Value"); 
 
-
-		colorchooser = new JColorChooser();
-		colorchooser.setPreviewPanel(new JPanel());
-
-		// Retrieve the current set of panels
-		AbstractColorChooserPanel[] oldPanels = colorchooser.getChooserPanels();
-		for (int i=2; i<oldPanels.length; i++) {
-
-			colorchooser.removeChooserPanel(oldPanels[i]);
-		}
-
-		colorchooser.getSelectionModel().addChangeListener(new ChangeListener() {
-
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				Color newColor = colorchooser.getColor();
-				MainGui.color_border_defaults = newColor;
-				//colorchooserPreview.setBackground(newColor);
-				if(currentLabel!= null) {
-					if(currentLabel.getText().contains("Border")) {
-						currentLabel.setBorder(new LineBorder(newColor, 3));
-					} else {
-						currentLabel.setBackground(newColor);
-					}
-				}
-			}
-		});
-
-		currentLabel = null;
-		colorchooserPreview = new JPanel();
-
-		MouseListener pickLabelToChange_listener = new MouseListener() {
-			public void mouseClicked(MouseEvent e) { 
-				if(e.getSource().equals(labelDefaults)) radioButton_labelDefaults.setSelected(true);
-				if(e.getSource().equals(labelMajourIssues)) radioButton_labelMajorIssues.setSelected(true);
-				if(e.getSource().equals(labelHightlight)) radioButton_labelHighlight.setSelected(true);
-			}
-			public void mousePressed(MouseEvent e) {}
-			public void mouseReleased(MouseEvent e) {}
-			public void mouseEntered(MouseEvent e) {}
-			public void mouseExited(MouseEvent e) {}
-		};
-
-		labelDefaults = new JLabel(" Border cell with Default value ");
-		labelDefaults.setBorder(new LineBorder(MainGui.color_border_defaults, 3));
-		labelDefaults.addMouseListener(pickLabelToChange_listener);
-		colorchooserPreview.setLayout(new GridLayout(0, 3, 0, 0));
-
-		radioButton_labelDefaults = new JRadioButton("");
-		radioButton_labelDefaults.setHorizontalAlignment(SwingConstants.CENTER);
-
-		radioButton_labelMajorIssues = new JRadioButton("");
-		radioButton_labelMajorIssues.setHorizontalAlignment(SwingConstants.CENTER);
-
-		radioButton_labelHighlight = new JRadioButton("");
-		radioButton_labelHighlight.setHorizontalAlignment(SwingConstants.CENTER);
-		colorchooserPreview.add(labelDefaults);
-
-		labelMajourIssues = new JLabel(" Background cell with Major Issue ");
-		labelMajourIssues.setBackground(MainGui.color_cell_with_errors);
-
-
-		labelMajourIssues.setOpaque(true);
-		labelMajourIssues.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
-		labelMajourIssues.addMouseListener(pickLabelToChange_listener);
-		colorchooserPreview.add(labelMajourIssues);
-
-		labelHightlight = new JLabel(" Background Highlighted cell ");
-		labelHightlight.setBackground(MainGui.color_cell_to_highlight);
-		labelHightlight.setOpaque(true);
-		labelHightlight.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
-		labelHightlight.addMouseListener(pickLabelToChange_listener);
-		colorchooserPreview.add(labelHightlight);
-		colorchooser.setPreviewPanel(colorchooserPreview);
-
-		buttonGroup2 = new ButtonGroup();
-		buttonGroup2.add(radioButton_labelDefaults);
-		buttonGroup2.add(radioButton_labelMajorIssues);
-		buttonGroup2.add(radioButton_labelHighlight);
-
-		colorchooserPreview.add(radioButton_labelDefaults);
-		colorchooserPreview.add(radioButton_labelMajorIssues);
-		colorchooserPreview.add(radioButton_labelHighlight);
-
-
-		radioButton_labelDefaults.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {		if(radioButton_labelDefaults.isSelected()) currentLabel = labelDefaults;	}
-		});
-		radioButton_labelHighlight.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {		if(radioButton_labelHighlight.isSelected()) currentLabel = labelHightlight;	}
-		});
-		radioButton_labelMajorIssues.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {		if(radioButton_labelMajorIssues.isSelected()) currentLabel = labelMajourIssues;	}
-		});
-		radioButton_labelDefaults.setSelected(false);
-		radioButton_labelHighlight.setSelected(false);
-		radioButton_labelMajorIssues.setSelected(false);
-
-		return colorchooser;
-	}
 
 	private void initComponents() {
 
@@ -304,8 +202,8 @@ public class PreferencesFrame extends JDialog {
 
 		panelColors = new JPanel();
 		panelColors.setLayout(new BorderLayout(0, 0));
-		panelColors.add(getColorChooser());
-
+		
+		
 		//tabbedPane.addTab("Colors", null, panelColors, null);
 
 		panelButtons = new JPanel();
@@ -329,7 +227,7 @@ public class PreferencesFrame extends JDialog {
 
 		panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(null, "VT palette", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelColors.add(panel_1, BorderLayout.SOUTH);
+		panelColors.add(panel_1, BorderLayout.EAST);
 		
 		panelFontSize = new JPanel();
 		panelFontSize.setBorder(new TitledBorder(null, "Fonts", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -361,7 +259,15 @@ public class PreferencesFrame extends JDialog {
 		panelFontSize.add(slider);
 		MouseListener pickColorBackground_listener = new MouseListener() {
 			public void changeColor(MouseEvent e) {
-				colorchooser. getSelectionModel().setSelectedColor(((JComponent)(e.getSource())).getBackground());
+				Color newColor = ((JComponent)(e.getSource())).getBackground();
+				if(newColor!= null) {
+					if(currentLabel.getText().contains("Border")) {
+						currentLabel.setBorder(new LineBorder(newColor, 3));
+					} else {
+						currentLabel.setBackground(newColor);
+					}
+				}
+				
 			}
 
 			@Override
@@ -408,21 +314,112 @@ public class PreferencesFrame extends JDialog {
 		colors.add(Constants.vt_cream_2);
 		colors.add(Constants.vt_cream_3);
 		colors.add(Constants.vt_cream_4);
-
-
+		panel_vtpalette = new JPanel();
+		panel_1.setLayout(new BorderLayout(3, 3));
+		
 		for(int i = 0; i < colors.size(); i++) {
 			JLabel lblNewLabel = new JLabel("     ");
 			lblNewLabel.setOpaque(true);
 			lblNewLabel.setBackground(colors.get(i));
 			lblNewLabel.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
 			lblNewLabel.addMouseListener(pickColorBackground_listener);
-			panel_1.add(lblNewLabel);
+			panel_vtpalette.add(lblNewLabel);
 		}
+		GridLayout gr2 = new GridLayout();
+		gr2.setRows(4);
+		gr2.setHgap(3);
+		gr2.setVgap(3);
+		
+		panel_vtpalette.setLayout(gr2);
+		
+		btnNewButton_4 = new JButton("More Colors...");
+		btnNewButton_4.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				showColorChooser();
+			}
+		});
+		panel_1.add(btnNewButton_4, BorderLayout.SOUTH);
+		panel_1.add(panel_vtpalette, BorderLayout.CENTER);
+		
+		panel_1.add(panel_vtpalette);
+		
 
 
 
 
+		colorchooserPreview = new JPanel();
 
+		MouseListener pickLabelToChange_listener = new MouseListener() {
+			public void mouseClicked(MouseEvent e) { 
+				if(e.getSource().equals(labelDefaults)) radioButton_labelDefaults.setSelected(true);
+				if(e.getSource().equals(labelMajourIssues)) radioButton_labelMajorIssues.setSelected(true);
+				if(e.getSource().equals(labelHightlight)) radioButton_labelHighlight.setSelected(true);
+			}
+			public void mousePressed(MouseEvent e) {}
+			public void mouseReleased(MouseEvent e) {}
+			public void mouseEntered(MouseEvent e) {}
+			public void mouseExited(MouseEvent e) {}
+		};
+
+		labelDefaults = new JLabel(" Border cell with Default value ");
+		labelDefaults.setBorder(new LineBorder(MainGui.color_border_defaults, 3));
+		labelDefaults.addMouseListener(pickLabelToChange_listener);
+		colorchooserPreview.setLayout(new GridLayout(0, 2, 0, 0));
+		colorchooserPreview.add(labelDefaults);
+
+		labelMajourIssues = new JLabel(" Background cell with Major Issue ");
+		labelMajourIssues.setBackground(MainGui.color_cell_with_errors);
+
+		buttonGroup2 = new ButtonGroup();
+		
+		
+		labelMajourIssues.setOpaque(true);
+		labelMajourIssues.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
+		labelMajourIssues.addMouseListener(pickLabelToChange_listener);
+		
+				radioButton_labelDefaults = new JRadioButton("");
+				radioButton_labelDefaults.setHorizontalAlignment(SwingConstants.CENTER);
+				buttonGroup2.add(radioButton_labelDefaults);
+				
+						colorchooserPreview.add(radioButton_labelDefaults);
+						
+						
+								radioButton_labelDefaults.addItemListener(new ItemListener() {
+									public void itemStateChanged(ItemEvent e) {		if(radioButton_labelDefaults.isSelected()) currentLabel = labelDefaults;	}
+								});
+								radioButton_labelDefaults.setSelected(false);
+		colorchooserPreview.add(labelMajourIssues);
+
+		panelColors.add(colorchooserPreview, BorderLayout.WEST);
+		
+		
+		labelHightlight = new JLabel(" Background Highlighted cell ");
+		labelHightlight.setBackground(MainGui.color_cell_to_highlight);
+		labelHightlight.setOpaque(true);
+		labelHightlight.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
+		labelHightlight.addMouseListener(pickLabelToChange_listener);
+						
+								radioButton_labelMajorIssues = new JRadioButton("");
+								radioButton_labelMajorIssues.setHorizontalAlignment(SwingConstants.CENTER);
+								buttonGroup2.add(radioButton_labelMajorIssues);
+								colorchooserPreview.add(radioButton_labelMajorIssues);
+								radioButton_labelMajorIssues.addItemListener(new ItemListener() {
+									public void itemStateChanged(ItemEvent e) {		if(radioButton_labelMajorIssues.isSelected()) currentLabel = labelMajourIssues;	}
+								});
+								radioButton_labelMajorIssues.setSelected(false);
+		colorchooserPreview.add(labelHightlight);
+				
+						radioButton_labelHighlight = new JRadioButton("");
+						radioButton_labelHighlight.setHorizontalAlignment(SwingConstants.CENTER);
+						buttonGroup2.add(radioButton_labelHighlight);
+						colorchooserPreview.add(radioButton_labelHighlight);
+						radioButton_labelHighlight.addItemListener(new ItemListener() {
+							public void itemStateChanged(ItemEvent e) {		if(radioButton_labelHighlight.isSelected()) currentLabel = labelHightlight;	}
+						});
+						radioButton_labelHighlight.setSelected(false);
+		//colorchooser.setPreviewPanel(colorchooserPreview);
+
+		
 
 		jButtonRestoreDefaults = new JButton("Restore original Defaults");
 		panelButtons.add(jButtonRestoreDefaults);
@@ -817,15 +814,14 @@ public class PreferencesFrame extends JDialog {
 		panel_15.add(chckbxNewCheckBox);
 
 		panelRight = new JPanel();
-		panelRight.setBackground(Color.YELLOW);
 		panelMain.add(panelRight, BorderLayout.CENTER);
 
 		panelBehavior = new javax.swing.JPanel();
 		jPanel1 = new javax.swing.JPanel();
 		jCheckBoxAutocomplete = new javax.swing.JCheckBox();
 		jCheckBoxDialogWindow = new javax.swing.JCheckBox();
-		jCheckBoxHighlightCellOpenIssues = new javax.swing.JCheckBox();
-		jCheckBoxPopUpWarnings = new javax.swing.JCheckBox();
+	//	jCheckBoxHighlightCellOpenIssues = new javax.swing.JCheckBox();
+	//	jCheckBoxPopUpWarnings = new javax.swing.JCheckBox();
 		jCheckBoxShowAllAvailableFunctions = new javax.swing.JCheckBox();
 		jPanel2 = new javax.swing.JPanel();
 		jRadioButton1 = new javax.swing.JRadioButton();
@@ -841,12 +837,7 @@ public class PreferencesFrame extends JDialog {
 		jCheckBoxAutocomplete.setName("jCheckBoxAutocomplete");
 
 		jCheckBoxDialogWindow.setText("Show pop-up when Species are defined by the tool"); 
-		jCheckBoxDialogWindow.addChangeListener(new javax.swing.event.ChangeListener() {
-			public void stateChanged(javax.swing.event.ChangeEvent evt) {
-				jCheckBox2StateChanged(evt);
-			}
-		});
-
+		
 		jCheckBoxShowAllAvailableFunctions.setText("Show all available functions"); 
 		// jCheckBoxShowAllAvailableFunctions.setEnabled(false);
 		jCheckBoxShowAllAvailableFunctions.addItemListener(new ItemListener() {
@@ -875,10 +866,10 @@ public class PreferencesFrame extends JDialog {
 		});
 		jCheckBoxShowAllAvailableFunctions.setSelected(true);
 
-		jCheckBoxHighlightCellOpenIssues.setText("Highlight all cells with open issues");
+	/*	jCheckBoxHighlightCellOpenIssues.setText("Highlight all cells with open issues");
 		jCheckBoxHighlightCellOpenIssues.setEnabled(false);
 		jCheckBoxPopUpWarnings.setText("Show pop-up windows for warning messages");
-		jCheckBoxPopUpWarnings.setEnabled(false);
+		jCheckBoxPopUpWarnings.setEnabled(false);*/
 		javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
 		jPanel1.setLayout(jPanel1Layout);
 		jPanel1Layout.setHorizontalGroup(
@@ -890,10 +881,10 @@ public class PreferencesFrame extends JDialog {
 								.addComponent(jCheckBoxDialogWindow)
 								.addGroup(jPanel1Layout.createSequentialGroup()
 												)
-																																.addComponent(jCheckBoxPopUpWarnings)
-																						.addComponent(jCheckBoxHighlightCellOpenIssues)
-																						.addComponent(jCheckBoxShowAllAvailableFunctions))
-																						.addContainerGap(6, Short.MAX_VALUE))
+								//.addComponent(jCheckBoxPopUpWarnings)
+								//.addComponent(jCheckBoxHighlightCellOpenIssues)
+								.addComponent(jCheckBoxShowAllAvailableFunctions))
+								.addContainerGap(6, Short.MAX_VALUE))
 				);
 		jPanel1Layout.setVerticalGroup(
 				jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -903,10 +894,10 @@ public class PreferencesFrame extends JDialog {
 						.addComponent(jCheckBoxDialogWindow)
 						.addGap(7, 7, 7)
 						
-																				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-																				.addComponent(jCheckBoxPopUpWarnings)
-																				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-																				.addComponent(jCheckBoxHighlightCellOpenIssues)
+																				//.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+																				//.addComponent(jCheckBoxPopUpWarnings)
+																				//.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+																				//.addComponent(jCheckBoxHighlightCellOpenIssues)
 																				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
 																				.addComponent(jCheckBoxShowAllAvailableFunctions)
 																				.addContainerGap(6, Short.MAX_VALUE))
@@ -976,7 +967,8 @@ public class PreferencesFrame extends JDialog {
 				);
 		//tabbedPane.addTab("General", mainPanel);
 		scrollPaneBehavior = new JScrollPane();
-		panelRight.add(scrollPaneDirectories, BorderLayout.CENTER);
+		//panelRight.add(scrollPaneDirectories, BorderLayout.CENTER);
+		panelRight.add(scrollPaneColorPalette, BorderLayout.CENTER);
 		scrollPaneBehavior.setViewportView(panelBehavior);
 
 		panelBehavior.setLayout(new BorderLayout(0, 0));
@@ -1001,15 +993,33 @@ public class PreferencesFrame extends JDialog {
 	}
 	
 
+	protected void showColorChooser() {
+		Color initial = null;
+		if(currentLabel!= null) {
+			if(currentLabel.getText().contains("Border")) {
+				initial = ((LineBorder)(currentLabel.getBorder())).getLineColor();
+			} else {
+				initial = currentLabel.getBackground();
+			}
+		}
+		Color newColor = JColorChooser.showDialog(this, "Color chooser", initial);
+		if(newColor!= null) {
+			if(currentLabel.getText().contains("Border")) {
+				currentLabel.setBorder(new LineBorder(newColor, 3));
+			} else {
+				currentLabel.setBackground(newColor);
+			}
+		}
+		
+	}
+
+
 	protected void renamingOptionChanged(int i) {
 		MainGui.renamingOption = i;
 
 	}
 
-	private void jCheckBox2StateChanged(javax.swing.event.ChangeEvent evt) {                                        
-		// TODO add your handling code here:
-	}                                       
-
+	
 
 
 	public void updateStatusAutocomplete() {

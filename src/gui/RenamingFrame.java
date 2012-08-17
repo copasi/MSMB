@@ -15,6 +15,8 @@ import utility.GridLayout2;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import javax.swing.JButton;
@@ -24,7 +26,7 @@ import javax.swing.event.DocumentListener;
 
 import debugTab.FoundElement;
 
-public class RenamingFrame extends JDialog {
+public class RenamingFrame extends JDialog implements WindowListener{
 
 	private static final long serialVersionUID = 1L;
 	private JPanel jContentPane = null;
@@ -41,21 +43,30 @@ public class RenamingFrame extends JDialog {
 	private JLabel jLabelComment;
 	
 	private JButton jButtonRename = null;
+	private JButton jButtonBack = null;
 	
 	
+	private String fromTable = new String();
+	private int rowDeclaration = -1;
 	private String from = new String();
 	private String to = new String();
 	private Vector<FoundElement> foundElements = new Vector<FoundElement>();
+	private String closingOperation  = new String();
+
 
 	
 	public RenamingFrame(MainGui owner) {
 		super();
 		initialize();
+		 this.addWindowListener(this);
+
 	}
 	
-	public void setRenamingString(String from, String to) {
+	public void setRenamingString(String from, String to, String fromTable, int rowDeclaration) {
 		this.from = from;
 		this.to = to;
+		this.fromTable = fromTable;
+		this.rowDeclaration = rowDeclaration;
 	}
 	
 	public void clearAll() {
@@ -164,8 +175,13 @@ public class RenamingFrame extends JDialog {
 			jButtonNone.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					Component[] comps = jPanel.getComponents();
-					for(Component c: comps ){
-						if(c instanceof JCheckBox) ((JCheckBox)c).setSelected(false);
+					boolean first = true;
+					for(int i = 0; i < comps.length; i++ ){
+						if(comps[i] instanceof JCheckBox) {
+							if(!first) {
+								((JCheckBox)comps[i]).setSelected(false); 
+							} else { first = false; }
+						}
 					}
 				}
 
@@ -183,14 +199,15 @@ public class RenamingFrame extends JDialog {
 			
 			jButtonRename = new JButton("Rename");
 			//jButton.setBounds(new Rectangle(this.size().width-100-17, 228, 100, 26));
-			jButtonRename.setBounds(new Rectangle(this.getSize().width-80-17, 228+20+6+20+6+6, 80, 26));
+			jButtonRename.setBounds(new Rectangle(this.getSize().width-80-17, 228+20+6+20+6+6+6, 80, 26));
 			jButtonRename.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
-					MainGui.autocompleteWithDefaults = false;
-					MainGui.applyRenaming(collectRenamingElements());
 					boolean oldAutocompleteWithDefaults = MainGui.autocompleteWithDefaults;
-					MainGui.revalidateExpressions(collectElements_noRenaming());
+					MainGui.autocompleteWithDefaults = false;
+					MainGui.applyRenaming(collectRenamingElements()); 
+					MainGui.revalidateExpressions(foundElements); 
 					MainGui.autocompleteWithDefaults = oldAutocompleteWithDefaults;
+					closingOperation = "Rename";
 					setVisible(false);
 				}
 
@@ -199,10 +216,41 @@ public class RenamingFrame extends JDialog {
 			});
 			jContentPane.add(jButtonRename, null);
 			
+			
+			jButtonBack = new JButton("Back");
+			jButtonBack.setBounds(new Rectangle(11, 228+20+6+20+6+6+6, 80, 26));
+			jButtonBack.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					closingCancel();
+				}
+
+			
+
+			});
+			jContentPane.add(jButtonBack, null);
+			
 		}
 		return jContentPane;
 	}
-
+	
+	private void closingCancel() {
+		boolean oldAutocompleteWithDefaults = MainGui.autocompleteWithDefaults;
+		MainGui.autocompleteWithDefaults = false;
+		MainGui.undoRenaming(fromTable, rowDeclaration, jLabelOriginalName.getText());
+		MainGui.autocompleteWithDefaults = oldAutocompleteWithDefaults;
+		closingOperation = "Cancel";
+		this.setVisible(false);
+	}
+	public void windowClosed(WindowEvent e){ closingCancel(); }
+	
+	
+public String getClosingOperation() {
+		
+		return closingOperation;
+	}
+	
+	
+	
 	private Vector<Vector<Comparable>> collectRenamingElements() {
 		Vector<Vector<Comparable>> ret = new Vector<Vector<Comparable>>();
 		for(int i = 0, jj = 0; i < jPanel.getComponentCount();i++) {
@@ -236,6 +284,9 @@ public class RenamingFrame extends JDialog {
 		return ret;
 	}
 	
+	
+	
+	
 	private JScrollPane getJScrollPane() {
 		if (jScrollPane == null) {
 			jScrollPane = new JScrollPane();
@@ -266,7 +317,7 @@ public class RenamingFrame extends JDialog {
 		
 		gridLayout = new GridLayout2();
 		int nparam = found.size();
-		if(nparam < 5) gridLayout.setRows(5);
+		if(nparam+2 < 5) gridLayout.setRows(5);
 		else gridLayout.setRows(nparam+2);
 		
 		gridLayout.setHgap(2);
@@ -292,7 +343,10 @@ public class RenamingFrame extends JDialog {
 			foundCB.setText(MainGui.getCellContent(found.get(i)));
 			
 			foundCB.setToolTipText(MainGui.getRowContent(found.get(i)));
-
+			if(i==0) {
+				rowDeclaration = found.get(i).getRow();
+				foundCB.setEnabled(false);
+			}
 			
 			jPanel.add(foundCB);
 			if(i==0) jPanel.add(new JLabel("Used in"));	
@@ -363,6 +417,43 @@ public class RenamingFrame extends JDialog {
 		}
 		MainGui.applyRenaming(collectRenamingElements());
 	}
+
+	@Override
+	public void windowOpened(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosing(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowIconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowActivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	
 
 

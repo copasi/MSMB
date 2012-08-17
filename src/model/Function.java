@@ -90,9 +90,9 @@ public class Function implements Comparable<Function> {
 	
 	public Function() {}
 	
-	public Function(String name) throws Exception { 
+	public Function(String stringName) throws Exception { 
 		
-		InputStream is = new ByteArrayInputStream(name.getBytes("UTF-8"));
+		InputStream is = new ByteArrayInputStream(stringName.getBytes("UTF-8"));
 		MR_Expression_Parser parser = new MR_Expression_Parser(is);
 		CompleteFunctionDeclaration root = parser.CompleteFunctionDeclaration();
 		GetFunctionNameVisitor nameV = new GetFunctionNameVisitor();
@@ -102,10 +102,10 @@ public class Function implements Comparable<Function> {
 			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong function definition", Constants.TitlesTabs.FUNCTIONS.description);
 		}
 		
-		int start = name.indexOf(funName)+funName.length();
-		int end = name.length()-1;
+		int start = stringName.indexOf(funName)+funName.length();
+		int end = stringName.length()-1;
 		if(start < end) {
-			String parameters = name.substring(start+1, end);
+			String parameters = stringName.substring(start+1, end);
 			if(parameters != null && parameters.length()>0) {
 				assignParameterRoles(parameters);
 				this.completeFunSignatureInTable = true;
@@ -514,6 +514,27 @@ public class Function implements Comparable<Function> {
 		if(this.getType() == CFunction.PreDefined && o.getType() == CFunction.UserDefined) return 1;
 		if(this.getType() == CFunction.UserDefined && o.getType() == CFunction.PreDefined) return -1;
 		return 0;
+	}
+
+
+	public void setName(String newName) throws Exception {
+		InputStream is = new ByteArrayInputStream(newName.getBytes("UTF-8"));
+		MR_Expression_Parser parser = new MR_Expression_Parser(is);
+		CompleteFunctionDeclaration root = parser.CompleteFunctionDeclaration();
+		GetFunctionNameVisitor nameV = new GetFunctionNameVisitor();
+		root.accept(nameV);
+		String funName  = nameV.getFunctionName();
+		if(funName.length()==0) {
+			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong function definition", Constants.TitlesTabs.FUNCTIONS.description);
+		}
+		
+		int start = newName.indexOf(funName)+funName.length();
+		int end = newName.length()-1;
+		if(start < end) {
+			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong function definition: this method is used to set only the pure name of the function", Constants.TitlesTabs.FUNCTIONS.description);
+		}
+			
+		this.name = new String(funName);
 	}
 
 

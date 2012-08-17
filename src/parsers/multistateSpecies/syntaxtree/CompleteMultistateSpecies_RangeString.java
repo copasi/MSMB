@@ -4,27 +4,41 @@ package parsers.multistateSpecies.syntaxtree;
 import parsers.multistateSpecies.visitor.*;
 
 /**
- * JTB node class for the production MultistateSpecies_Operator_SiteSingleState:<br>
+ * JTB node class for the production CompleteMultistateSpecies_RangeString:<br>
  * Corresponding grammar :<br>
- * nodeChoice -> . %0 < STRING_LITERAL ><br>
- * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
- * .......... .. . .. | &1 < NUMBER > )+<br>
+ * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
+ * nodeToken -> < EOF ><br>
  */
-public class MultistateSpecies_Operator_SiteSingleState implements INode {
+public class CompleteMultistateSpecies_RangeString implements INode {
 
   /** A child node */
-  public NodeChoice nodeChoice;
+  public MultistateSpecies_SiteSingleElement multistateSpecies_SiteSingleElement;
+
+  /** A child node */
+  public NodeToken nodeToken;
 
   /** The serial version uid */
   private static final long serialVersionUID = 144L;
 
   /**
-   * Constructs the node with its child node.
+   * Constructs the node with all its children nodes.
    *
-   * @param n0 the child node
+   * @param n0 first child node
+   * @param n1 next child node
    */
-  public MultistateSpecies_Operator_SiteSingleState(final NodeChoice n0) {
-    nodeChoice = n0;
+  public CompleteMultistateSpecies_RangeString(final MultistateSpecies_SiteSingleElement n0, final NodeToken n1) {
+    multistateSpecies_SiteSingleElement = n0;
+    nodeToken = n1;
+  }
+
+  /**
+   * Constructs the node with only its non NodeToken child node(s).
+   *
+   * @param n0 first child node
+   */
+  public CompleteMultistateSpecies_RangeString(final MultistateSpecies_SiteSingleElement n0) {
+    multistateSpecies_SiteSingleElement = n0;
+    nodeToken = new NodeToken("");
   }
 
   /**

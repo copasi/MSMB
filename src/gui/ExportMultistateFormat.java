@@ -52,6 +52,7 @@ class ExportMultistateFormat {
 				for(int i = 0; i < tablemodel.getRowCount()-1; i++) {
 					Vector<String> row = new Vector<String>();
 		    		for(int j = 0; j < tablemodel.getColumnCount(); j++) {
+		    			if(tablemodel.getValueAt(i, j)==null) continue;
 		    			String value = tablemodel.getValueAt(i, j).toString();
 		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0 && j == Constants.CompartmentsColumns.NAME.index && value.trim().length() == 0) {row=null; break;}
 		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.EVENTS.description)==0 && j == Constants.EventsColumns.TRIGGER.index && value.trim().length() == 0) {row=null; break;}
@@ -81,6 +82,17 @@ class ExportMultistateFormat {
 			out.writeObject(tables_multistateInitials);
 			
 			out.writeObject(MainGui.debugMessages);
+			
+			
+			Vector<String> modelProperties = new Vector<String>();
+			modelProperties.add(MainGui.modelName);
+			modelProperties.add(new Integer(MainGui.volumeUnit).toString());
+			modelProperties.add(new Integer(MainGui.timeUnit).toString());
+			modelProperties.add(new Integer(MainGui.quantityUnit).toString());
+			modelProperties.add(new Boolean(MainGui.exportConcentration).toString());
+			modelProperties.add(new Boolean(MainGui.quantityIsConc).toString());
+			
+			out.writeObject(modelProperties);
 			
 			out.close();
 			if(mainW!=null)mainW.progress(100);
@@ -120,9 +132,21 @@ class ExportMultistateFormat {
 		
 			
 			multistateInitials = tables_multistateInitials.right;
+			
+					
+			Vector<String> modelProperties = (Vector<String>)in.readObject();
+			
+			MainGui.modelName = modelProperties.get(0);
+			MainGui.volumeUnit = Integer.parseInt(modelProperties.get(1));
+			MainGui.timeUnit = Integer.parseInt(modelProperties.get(2));
+			MainGui.quantityUnit = Integer.parseInt(modelProperties.get(3));
+			MainGui.exportConcentration = Boolean.parseBoolean(modelProperties.get(4));
+			MainGui.quantityIsConc = Boolean.parseBoolean(modelProperties.get(5));
+			
 			in.close();
 		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				e.printStackTrace();
 		}
 		
 		return multistateInitials;
@@ -201,7 +225,7 @@ class ExportMultistateFormat {
 	
 	//I have to export the complete signature for all the functions if I want to be able to
 	//import from txt in a correct way!!!
-	private static void writeTableFunctions(CustomTableModel tablemodel, String file) throws IOException{
+	private static void writeTableFunctions(CustomTableModel tablemodel, String file) throws Exception{
 		BufferedWriter buffout= new BufferedWriter(new FileWriter(file));
 		PrintWriter out = new PrintWriter(buffout);
 		

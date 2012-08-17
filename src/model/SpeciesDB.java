@@ -10,6 +10,7 @@ import parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import parsers.mathExpression.syntaxtree.CompleteExpression;
 import parsers.mathExpression.visitor.Look4UndefinedMisusedVisitor;
 import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
 import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 
@@ -30,11 +31,17 @@ public class SpeciesDB {
 		public int addChangeSpecies(int index, String sbmlID, String name, HashMap<String, String> initialQuant, int type, String compartment, String expression, boolean fromMultistateBuilder, String notes, boolean autoMergeSpecies,boolean parseExpression) throws Exception {
 	
 		Integer ind;
-		if(name.contains("(")) { 
-			ind = speciesIndexes.get(name.substring(0, name.indexOf("(")));
+		if(CellParsers.isMultistateSpeciesName(name)) {
+			ind = speciesIndexes.get(new MultistateSpecies(multiModel,name).getSpeciesName());
 		} else {
 			ind = speciesIndexes.get(name);
 		}
+		/*if(name.contains("(")) { 
+			ind = speciesIndexes.get(name.substring(0, name.indexOf("(")));
+		} else {
+			ind = speciesIndexes.get(name);
+		}*/
+			
 		if(ind != null && ind != index && !name.contains("(")) { // the name is already assigned to another species
 			//the case of multistate is handled later because it can be the case of multiple states that need to be merged
 			Throwable cause = new Throwable(name);
@@ -50,7 +57,8 @@ public class SpeciesDB {
 		}
 		
 		try{
-			if(name.contains("(")) {
+			//if(name.contains("(")) {
+			if(CellParsers.isMultistateSpeciesName(name)) {
 				if(ind == null) {
 					MultistateSpecies s = new MultistateSpecies(multiModel,name);
 					s.setInitialQuantity(initialQuant);
@@ -115,7 +123,7 @@ public class SpeciesDB {
 					speciesVector.put(ind,m_old);
 					speciesIndexes.put(m_old.getSpeciesName(), ind);
 					multiModel.addNamedElement(m_old.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
-					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.description, ind);
+					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.description, ind+1);
 					return -ind;
 				} else {
 					if(old instanceof Species) {
@@ -167,8 +175,9 @@ public class SpeciesDB {
 				return speciesVector.size()-1;
 				
 			} else { //species already defined
-				if(!name.contains("(")) { 
-					if(index >= speciesVector.size() || index == -1) { // the user is trying to define a regular species with a name of already existing multistate species
+				//if(!name.contains("(")) { 
+				if(!CellParsers.isMultistateSpeciesName(name)) {
+						if(index >= speciesVector.size() || index == -1) { // the user is trying to define a regular species with a name of already existing multistate species
 						Throwable cause = new Throwable(name);
 						throw new ClassNotFoundException("A species already exists with that name", cause);
 					}
@@ -182,9 +191,7 @@ public class SpeciesDB {
 					s.setInitialQuantity(multiModel,initialQuant.get(name));
 					if(parseExpression == true) s.setExpression(multiModel,expression);
 					else s.setExpression_withoutParsing(expression);
-					//speciesVector.set(index, s);
-					//speciesIndexes.put(name, index);
-					
+				
 					speciesIndexes.put(name, index);
 					speciesVector.put(index,s);
 					multiModel.addNamedElement(name, Constants.TitlesTabs.SPECIES.index);
@@ -220,7 +227,7 @@ public class SpeciesDB {
 					  
 				}
 				if(undef != null){
-					 if(undef.size()==1 && undef.get(0).compareTo(name)==0) { //just self reference in ode/expression and it is allowed
+					 if( undef.size() ==0 || (undef.size()==1 && undef.get(0).compareTo(name)==0)) { //just self reference in ode/expression and it is allowed
 						return addChangeSpecies(index, sbmlID, name, initialQuant,  type, compartment, expression, fromMultistateBuilder, notes, autoMergeSpecies,false);
 					}
 					throw ex;
@@ -370,12 +377,15 @@ public class SpeciesDB {
 	}
 
 
-	public boolean containsSpecies(String speciesName) {
 	
+
+	public boolean containsSpecies(String speciesName, boolean isFromReaction) {
+		String justName = new String();
 		try{
-			MultistateSpecies m = new MultistateSpecies(multiModel,speciesName);
-			speciesName = m.getSpeciesName();
+			MultistateSpecies m = new MultistateSpecies(multiModel,speciesName,isFromReaction);
+			justName = m.getSpeciesName();
 		} catch (Exception e) {
+			//e.printStackTrace();
 			//this function can be used also to check if Cdh1(++(p)) exist... so I have to analyze name with operators too.
 			 InputStream is;
 			try {
@@ -384,14 +394,21 @@ public class SpeciesDB {
 				 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
 				 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
 				 start.accept(v);
-				 speciesName = v.getSpeciesName();
+				 justName = v.getSpeciesName();
 			} catch (Exception e1) {
-			
+				//e1.printStackTrace();
 			}
 			
 		} 
-			return this.speciesIndexes.containsKey(speciesName);
 		
+		
+		
+		return this.speciesIndexes.containsKey(justName);
+		
+	}
+
+	public boolean containsSpecies(String speciesName) {
+		return containsSpecies(speciesName,false);
 	}
 
 
@@ -486,6 +503,38 @@ public class SpeciesDB {
 			}
 		}
 	
+	}
+
+	public Integer getSpeciesIndex(String name) {
+		String speciesName = new String();
+		 InputStream is;
+		try {
+			is = new ByteArrayInputStream(name.getBytes("UTF-8"));
+			 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
+			 start.accept(v);
+			 speciesName = v.getSpeciesName();
+		} catch (Exception e1) {
+		
+		}
+
+		return speciesIndexes.get(speciesName);
+	}
+
+	public Vector<MultistateSpecies> getAllMultistateSpecies() {
+		Vector<MultistateSpecies> ret = new Vector();
+		for(int i = 0; i < speciesVector.size(); i++) {
+			Species s = speciesVector.get(i);
+			if(s!=null) {
+				if(s instanceof MultistateSpecies) {
+					MultistateSpecies m = (MultistateSpecies) s;
+					ret.add(m);
+					
+				}
+			}
+		}
+		return ret;
 	}
 
 	

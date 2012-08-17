@@ -11,8 +11,7 @@ import parsers.multistateSpecies.visitor.*;
  * .......... .. . .. | &1 < CLOSED_C ><br>
  * .......... .. . .. | &2 < OPEN_R ><br>
  * .......... .. . .. | &3 < CLOSED_R ><br>
- * .......... .. . .. | &4 < RANGE_SEPARATOR ><br>
- * .......... .. . .. | &5 < SITE_STATES_SEPARATOR > )+<br>
+ * .......... .. . .. | &4 < SITE_STATES_SEPARATOR > )+<br>
  */
 public class MultistateSpecies_SiteName implements INode {
 

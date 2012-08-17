@@ -482,14 +482,14 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   /**
    * nodeToken -> < SUM ><br>
    * nodeToken1 -> < LPAREN ><br>
-   * argumentList -> ArgumentList()<br>
+   * argumentList_MultistateSum -> ArgumentList_MultistateSum()<br>
    * nodeToken2 -> < RPAREN ><br>
    */
   @Override
   public void visit(final MultistateSum n) {
     n.nodeToken.accept(this);
     n.nodeToken1.accept(this);
-    n.argumentList.accept(this);
+    n.argumentList_MultistateSum.accept(this);
     n.nodeToken2.accept(this);
   }
 
@@ -533,15 +533,18 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   }
 
   /**
-   * nodeChoice -> ( %0 < EXTENSION_CONC ><br>
-   * .......... .. | %1 < EXTENSION_COMPARTMENT ><br>
-   * .......... .. | %2 < EXTENSION_PARTICLE ><br>
-   * .......... .. | %3 < EXTENSION_TRANS ><br>
-   * .......... .. | %4 < EXTENSION_INIT ><br>
-   * .......... .. | %5 < EXTENSION_RATE ><br>
-   * .......... .. | %6 < EXTENSION_SPECIES ><br>
-   * .......... .. | %7 < EXTENSION_GLOBALQ ><br>
-   * .......... .. | %8 < MY_SPECIAL_EXTENSION > )<br>
+   * nodeChoice -> ( %00 < EXTENSION_CONC ><br>
+   * .......... .. | %01 < EXTENSION_COMPARTMENT ><br>
+   * .......... .. | %02 < EXTENSION_PARTICLE ><br>
+   * .......... .. | %03 < EXTENSION_TRANS ><br>
+   * .......... .. | %04 < EXTENSION_INIT ><br>
+   * .......... .. | %05 < EXTENSION_RATE ><br>
+   * .......... .. | %06 < EXTENSION_SPECIES ><br>
+   * .......... .. | %07 < EXTENSION_GLOBALQ ><br>
+   * .......... .. | %08 < EXTENSION_FUNCTION ><br>
+   * .......... .. | %09 < EXTENSION_REACTION ><br>
+   * .......... .. | %10 < EXTENSION_FLUX ><br>
+   * .......... .. | %11 < MY_SPECIAL_EXTENSION > )<br>
    * nodeListOptional -> ( PossibleExtensions() )*<br>
    */
   @Override
@@ -579,6 +582,81 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   @Override
   public void visit(final ArgumentList n) {
     n.nodeChoice.accept(this);
+  }
+
+  /**
+   * name -> Name()<br>
+   * nodeOptional -> [ ArgumentList_MultistateSum_Selectors() ]<br>
+   */
+  @Override
+  public void visit(final ArgumentList_MultistateSum n) {
+    n.name.accept(this);
+    if (n.nodeOptional.present()) {
+      n.nodeOptional.accept(this);
+    }
+  }
+
+  /**
+   * nodeToken -> < SEMICOLON ><br>
+   * selector -> Selector()<br>
+   * nodeListOptional -> ( #0 < SEMICOLON > #1 Selector() )*<br>
+   */
+  @Override
+  public void visit(final ArgumentList_MultistateSum_Selectors n) {
+    n.nodeToken.accept(this);
+    n.selector.accept(this);
+    if (n.nodeListOptional.present()) {
+      processList(n.nodeListOptional);
+    }
+  }
+
+  /**
+   * name -> Name()<br>
+   * nodeOptional -> [ %0 SiteSelector_postFix()<br>
+   * ............ .. | %1 CoeffFunction_postFix() ]<br>
+   */
+  @Override
+  public void visit(final Selector n) {
+    n.name.accept(this);
+    if (n.nodeOptional.present()) {
+      n.nodeOptional.accept(this);
+    }
+  }
+
+  /**
+   * nodeToken -> < LBRACE ><br>
+   * nodeChoice -> ( %0 Name()<br>
+   * .......... .. | %1 Literal() )<br>
+   * nodeOptional -> ( %0 ( #0 < COMMA ><br>
+   * ............ .. . #1 ( &0 Name()<br>
+   * ............ .. . .. | &1 Literal() ) )+<br>
+   * ............ .. | %1 ( #0 < COLON ><br>
+   * ............ .. . .. . #1 ( &0 Name()<br>
+   * ............ .. . .. . .. | &1 Literal() ) ) )?<br>
+   * nodeToken1 -> < RBRACE ><br>
+   */
+  @Override
+  public void visit(final SiteSelector_postFix n) {
+    n.nodeToken.accept(this);
+    n.nodeChoice.accept(this);
+    if (n.nodeOptional.present()) {
+      n.nodeOptional.accept(this);
+    }
+    n.nodeToken1.accept(this);
+  }
+
+  /**
+   * nodeToken -> < LPAREN ><br>
+   * nodeOptional -> [ ArgumentList() ]<br>
+   * nodeToken1 -> < RPAREN ><br>
+   */
+  @Override
+  public void visit(final CoeffFunction_postFix n) {
+    n.nodeToken.accept(this);
+    if (n.nodeOptional.present()) {
+      n.nodeOptional.accept(this);
+    }
+    n.nodeToken1.accept(this);
   }
 
   /**

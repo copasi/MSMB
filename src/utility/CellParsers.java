@@ -2,6 +2,7 @@ package utility;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -24,6 +25,11 @@ import debugTab.*;
 import model.*;
 import parsers.mathExpression.syntaxtree.*;
 import parsers.mathExpression.visitor.*;
+import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
+import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
+import parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
+import parsers.multistateSpecies.visitor.MultistateSpecies_UndefinedSitesVisitor;
 import utility.Constants.BooleanType;
 import gui.*;
 
@@ -82,6 +88,37 @@ public class CellParsers {
 	public Node substitute(Node parsedExpression, String[] names,	Node[] substitutions) throws ParseException {
 		return parser.substitute(parsedExpression, names, substitutions);
 	}
+	
+	
+	
+	public static boolean isMultistateSpeciesName(String name) {
+		InputStream is;
+		try {
+			is = new ByteArrayInputStream(name.getBytes("UTF-8"));
+			 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(null);
+			 start.accept(v);
+			 return v.isRealMultiStateSpecies(); 
+		} catch (Exception e1) {
+			try {
+				is = new ByteArrayInputStream(name.getBytes("UTF-8"));
+			
+				MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies start = react.CompleteMultistateSpecies();
+			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(null);
+			 start.accept(v);
+			 return v.isRealMultiStateSpecies(); 
+			 
+			} catch (Exception e) {
+				//e.printStackTrace();
+				return false;
+			}
+		}
+
+	
+	}
+
 	
 	public static String replaceVariableInExpression(String original, String find, String replacement) {
 		
@@ -146,10 +183,14 @@ public class CellParsers {
 				  
 				  if(undef.size() != 0 || misused.size() != 0) {
 					    String message = new String();
-						if(undef.size() >0) message += "The following elements are used but never declared: " + undef.toString();
+						if(undef.size() >0) {
+							 message += "The following elements are used but never declared: " + undef.toString();
+						}
 						if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
 						throw new MySyntaxException(column_tab, message,table_descr);
-				  }
+				  } 
+				  
+				
 			  }
 		 } catch (parsers.mathExpression.ParseException e) {
 			 
@@ -427,11 +468,10 @@ public class CellParsers {
 		    }
 		   
 		    subs_prod_mod.addAll(v.getAll_asString());
-		    
-		    //IF I HAVE MULTISTATE SPECIES I HAVE TO MAKE SURE THAT PRODUCTS MAKE SENSE W.R.T. REACTANTS... 
-		    //I DON'T KNOW IF IT IS CHECKED SOMEWHERE ELSEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-		    
+		      
 		} catch(Exception ex) {
+			ex.printStackTrace();
+			
 			 DebugMessage dm = new DebugMessage();
 			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
 			 dm.setProblem("Reaction not following the correct syntax: FIIIIIIIIIIIIIIIIIIX MESSAGE"+ex.getMessage());
@@ -653,6 +693,36 @@ public class CellParsers {
 		ret = ret.replace(" le ", "<=");
 	
 		return ret;
+	}
+
+
+	public static boolean isMultistateSpeciesName_withUndefinedStates(String name) {
+		if(name.trim().length() ==0) return false;
+		InputStream is;
+		try {
+			is = new ByteArrayInputStream(name.getBytes("UTF-8"));
+			 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies start = react.CompleteMultistateSpecies();
+			 MultistateSpecies_UndefinedSitesVisitor v = new MultistateSpecies_UndefinedSitesVisitor(null);
+			 start.accept(v);
+			 return v.isMultistateSpeciesName_withUndefinedStates(); 
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			try {
+				is = new ByteArrayInputStream(name.getBytes("UTF-8"));
+			
+				MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+			 MultistateSpecies_UndefinedSitesVisitor v = new MultistateSpecies_UndefinedSitesVisitor(null);
+			 start.accept(v);
+			 return v.isMultistateSpeciesName_withUndefinedStates(); 
+			 
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+
 	}
 	
 	

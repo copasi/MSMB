@@ -274,8 +274,9 @@ public class ConsistencyChecks {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 					 DebugMessage dm = new DebugMessage();
 					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-					 dm.setProblem("Problem parsing the reaction string. Species name uses characters not allowed.");
-					 dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
+					// dm.setProblem("Problem parsing the reaction string. Species name uses characters not allowed.");
+					dm.setProblem("Problem parsing the reaction string. " + ex.getMessage());
+				    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
 					 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
 					 dm.setOrigin_row(i+1);
 					 MainGui.addDebugMessage_ifNotPresent(dm,false);

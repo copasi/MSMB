@@ -279,7 +279,7 @@ public interface IVoidArguVisitor<A> {
    * <p>
    * nodeToken -> < SUM ><br>
    * nodeToken1 -> < LPAREN ><br>
-   * argumentList -> ArgumentList()<br>
+   * argumentList_MultistateSum -> ArgumentList_MultistateSum()<br>
    * nodeToken2 -> < RPAREN ><br>
    *
    * @param n the node to visit
@@ -329,15 +329,18 @@ public interface IVoidArguVisitor<A> {
   /**
    * Visits a {@link PossibleExtensions} node, whose children are the following :
    * <p>
-   * nodeChoice -> ( %0 < EXTENSION_CONC ><br>
-   * .......... .. | %1 < EXTENSION_COMPARTMENT ><br>
-   * .......... .. | %2 < EXTENSION_PARTICLE ><br>
-   * .......... .. | %3 < EXTENSION_TRANS ><br>
-   * .......... .. | %4 < EXTENSION_INIT ><br>
-   * .......... .. | %5 < EXTENSION_RATE ><br>
-   * .......... .. | %6 < EXTENSION_SPECIES ><br>
-   * .......... .. | %7 < EXTENSION_GLOBALQ ><br>
-   * .......... .. | %8 < MY_SPECIAL_EXTENSION > )<br>
+   * nodeChoice -> ( %00 < EXTENSION_CONC ><br>
+   * .......... .. | %01 < EXTENSION_COMPARTMENT ><br>
+   * .......... .. | %02 < EXTENSION_PARTICLE ><br>
+   * .......... .. | %03 < EXTENSION_TRANS ><br>
+   * .......... .. | %04 < EXTENSION_INIT ><br>
+   * .......... .. | %05 < EXTENSION_RATE ><br>
+   * .......... .. | %06 < EXTENSION_SPECIES ><br>
+   * .......... .. | %07 < EXTENSION_GLOBALQ ><br>
+   * .......... .. | %08 < EXTENSION_FUNCTION ><br>
+   * .......... .. | %09 < EXTENSION_REACTION ><br>
+   * .......... .. | %10 < EXTENSION_FLUX ><br>
+   * .......... .. | %11 < MY_SPECIAL_EXTENSION > )<br>
    * nodeListOptional -> ( PossibleExtensions() )*<br>
    *
    * @param n the node to visit
@@ -379,6 +382,72 @@ public interface IVoidArguVisitor<A> {
    * @param argu the user argument
    */
   public void visit(final ArgumentList n, final A argu);
+
+  /**
+   * Visits a {@link ArgumentList_MultistateSum} node, whose children are the following :
+   * <p>
+   * name -> Name()<br>
+   * nodeOptional -> [ ArgumentList_MultistateSum_Selectors() ]<br>
+   *
+   * @param n the node to visit
+   * @param argu the user argument
+   */
+  public void visit(final ArgumentList_MultistateSum n, final A argu);
+
+  /**
+   * Visits a {@link ArgumentList_MultistateSum_Selectors} node, whose children are the following :
+   * <p>
+   * nodeToken -> < SEMICOLON ><br>
+   * selector -> Selector()<br>
+   * nodeListOptional -> ( #0 < SEMICOLON > #1 Selector() )*<br>
+   *
+   * @param n the node to visit
+   * @param argu the user argument
+   */
+  public void visit(final ArgumentList_MultistateSum_Selectors n, final A argu);
+
+  /**
+   * Visits a {@link Selector} node, whose children are the following :
+   * <p>
+   * name -> Name()<br>
+   * nodeOptional -> [ %0 SiteSelector_postFix()<br>
+   * ............ .. | %1 CoeffFunction_postFix() ]<br>
+   *
+   * @param n the node to visit
+   * @param argu the user argument
+   */
+  public void visit(final Selector n, final A argu);
+
+  /**
+   * Visits a {@link SiteSelector_postFix} node, whose children are the following :
+   * <p>
+   * nodeToken -> < LBRACE ><br>
+   * nodeChoice -> ( %0 Name()<br>
+   * .......... .. | %1 Literal() )<br>
+   * nodeOptional -> ( %0 ( #0 < COMMA ><br>
+   * ............ .. . #1 ( &0 Name()<br>
+   * ............ .. . .. | &1 Literal() ) )+<br>
+   * ............ .. | %1 ( #0 < COLON ><br>
+   * ............ .. . .. . #1 ( &0 Name()<br>
+   * ............ .. . .. . .. | &1 Literal() ) ) )?<br>
+   * nodeToken1 -> < RBRACE ><br>
+   *
+   * @param n the node to visit
+   * @param argu the user argument
+   */
+  public void visit(final SiteSelector_postFix n, final A argu);
+
+  /**
+   * Visits a {@link CoeffFunction_postFix} node, whose children are the following :
+   * <p>
+   * nodeToken -> < LPAREN ><br>
+   * nodeOptional -> [ ArgumentList() ]<br>
+   * nodeToken1 -> < RPAREN ><br>
+   *
+   * @param n the node to visit
+   * @param argu the user argument
+   */
+  public void visit(final CoeffFunction_postFix n, final A argu);
 
   /**
    * Visits a {@link MultistateSite} node, whose children are the following :

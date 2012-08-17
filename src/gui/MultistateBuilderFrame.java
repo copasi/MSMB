@@ -199,7 +199,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 			jPanelsites.setBorder(BorderFactory.createTitledBorder(null, "Sites:", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, UIManager.getFont("Label.font"), new Color(51, 51, 51)));
 			jLabel3b = new JLabel();
 			jLabel3b.setEnabled(false);
-			jLabel3b.setBounds(new Rectangle(276, 35, 15, 50));
+			jLabel3b.setBounds(new Rectangle(280, 35, 15, 50));
 			jLabel3b.setText("} ");
 			jLabel3b.setFont(new Font("Arial", Font.PLAIN, 15));
 			jPanelsites.add(jLabel3b, null);
@@ -219,7 +219,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 			lblWarning.setBounds(11, 110, 339, 30);
 			jPanelsites.add(lblWarning);
 			
-			jRadioBoolean = new JRadioButton("boolean (TRUE, FALSE)");
+			jRadioBoolean = new JRadioButton("boolean {TRUE, FALSE}c");
 			jRadioBoolean.setEnabled(false);
 			jRadioBoolean.addItemListener(new ItemListener() {
 				public void itemStateChanged(ItemEvent e) {
@@ -230,7 +230,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 					}
 				}
 			});
-			jRadioBoolean.setBounds(129, 50, 141, 23);
+			jRadioBoolean.setBounds(129, 50, 144, 23);
 			jPanelsites.add(jRadioBoolean);
 			
 						
@@ -686,6 +686,10 @@ public class MultistateBuilderFrame extends JDialog	 {
 			panel.add(getJPanelConcentrationSpecies(), BorderLayout.CENTER);
 		}
 		return panel;
+	}
+
+	public void selectInitialQuantityTab() {
+		jTabbedPane.setSelectedIndex(1);
 	}
 }  
 

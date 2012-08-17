@@ -41,7 +41,7 @@ public class MR_Expression_Parser {
       start2.accept(v2);
       System.out.println("...................................");
 
-      expression2 = new String("\"funaasdf \"(PAR v, PAR t)");
+      expression2 = new String("\"funaasdf \"(GLQ v, GLQ t)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  react2 = new MR_Expression_Parser(is2);
   	  CompleteFunctionDeclaration start3 = react2.CompleteFunctionDeclaration();
@@ -74,7 +74,45 @@ public class MR_Expression_Parser {
 
 
       
-      expression2 = new String("cdh1(p{1})");
+      expression2 = new String("cdh1(p{1})"); 
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+     expression2 = new String("SUM(Cdh1)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      
+       expression2 = new String("SUM(Cdh1;p)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+       expression2 = new String("SUM(Cdh1;p{2,3})");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+       expression2 = new String("SUM(Cdh1;p{2,3}; weight(p,k1))");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+       expression2 = new String("SUM(Cdh1;p{0:10};q)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  react2 = new MR_Expression_Parser(is2);
   	  start2 = react2.CompleteExpression();
@@ -112,7 +150,7 @@ TOKEN :
 | < #FALSE_3 : "FALSE">
 | < TIME: "Time">
 
-| < TYPE_PAR :  "PAR" >
+| < TYPE_PAR :  "GLQ" >
 | < TYPE_VAR :  "VAR" >
 | < TYPE_SUB :  "SUB" >
 | < TYPE_PROD :  "PROD" >
@@ -125,9 +163,12 @@ TOKEN :
 | < EXTENSION_TRANS :  ".t" >
 | < EXTENSION_INIT :  ".i" >
 | < EXTENSION_RATE :  ".r" >
-| < EXTENSION_SPECIES :  ".sp" >
-| < EXTENSION_GLOBALQ :  ".gq" >
+| < EXTENSION_SPECIES :  ".spc" >
+| < EXTENSION_GLOBALQ :  ".glq" >
 | < EXTENSION_COMPARTMENT :  ".cmp" >
+| < EXTENSION_REACTION :  ".rct" >
+| < EXTENSION_FUNCTION :  ".fnc" >
+| < EXTENSION_FLUX :  ".f" >
 | < MY_SPECIAL_EXTENSION :  ".*MY*SPECIAL*EXTENSION" >
 | < SUM: "SUM">
 | < FLOOR: "floor">
@@ -336,7 +377,7 @@ void PrimaryPrefix() :
 void MultistateSum() : {}
 
 {
-  < SUM > < LPAREN >   ArgumentList() <  RPAREN >}
+  < SUM > < LPAREN > ArgumentList_MultistateSum() <  RPAREN >}
 
 
 void Name() : {}
@@ -360,6 +401,8 @@ void PossibleExtensions() :{}
 {      (      < EXTENSION_CONC > 	| < EXTENSION_COMPARTMENT > | < EXTENSION_PARTICLE >
   	| < EXTENSION_TRANS > | < EXTENSION_INIT > 	| < EXTENSION_RATE >
   	| < EXTENSION_SPECIES >  | < EXTENSION_GLOBALQ >
+  	| < EXTENSION_FUNCTION > | < EXTENSION_REACTION >
+	| < EXTENSION_FLUX >
   	| < MY_SPECIAL_EXTENSION >
 	) (LOOKAHEAD(2)PossibleExtensions())* }
 
@@ -380,12 +423,41 @@ void BooleanLiteral() :{}
 
 void ArgumentList() :{}
 {
- LOOKAHEAD(2)  MultistateSites_list()
+ LOOKAHEAD(2)  MultistateSites_list() 
 |
 AdditiveExpression() ( < COMMA > AdditiveExpression() )*
  
 }
 
+void ArgumentList_MultistateSum() :{}
+{
+ 	Name()  [ ArgumentList_MultistateSum_Selectors() ]
+}
+
+
+void ArgumentList_MultistateSum_Selectors() :{}
+{
+	< SEMICOLON > Selector() (< SEMICOLON > Selector())*
+}
+
+void Selector() :{} 
+{
+ 	Name()	//name of the site or of the function
+ 	 [  SiteSelector_postFix() | //it's a site, and those are the extremes
+ 	    CoeffFunction_postFix() ]	//it's a function and those are the parameters
+	
+}
+
+void SiteSelector_postFix() : {}
+{
+ < LBRACE >  (Name() | Literal() )
+  (    ( < COMMA >  (Name() | Literal())  )+ |
+  ( < COLON >  (Name() | Literal())  )
+  )?
+   < RBRACE >}
+
+void CoeffFunction_postFix():{}{
+  < LPAREN > [  ArgumentList() ] <  RPAREN >}
 
 void MultistateSite() :{}
 {

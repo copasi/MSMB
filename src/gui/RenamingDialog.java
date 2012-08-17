@@ -63,7 +63,7 @@ public class RenamingDialog extends JDialog {
 		setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		setModal(true);
 		setResizable(false);
-		setTitle("Conflicting name");
+		setTitle("Existing name");
 		setBounds(100, 100, 454, 221);
 		Icon icon = UIManager.getIcon("OptionPane.warningIcon");
 		getContentPane().setLayout(new BorderLayout());
@@ -136,7 +136,7 @@ public class RenamingDialog extends JDialog {
 			{
 				String cancelButtonText = new String();
 				if(actionsType == Constants.MERGE_SPECIES || actionsType == Constants.DELETE_SPECIES_AND_REDIRECT) {
-					cancelButtonText = "Cancel";
+					cancelButtonText = "Go back and provide New Name";
 				}
 				else cancelButtonText = "OK";
 				JButton cancelButton = new JButton(cancelButtonText);

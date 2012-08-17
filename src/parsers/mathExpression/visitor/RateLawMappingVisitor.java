@@ -117,7 +117,13 @@ public class RateLawMappingVisitor extends DepthFirstVoidVisitor {
 				fun = new String();
 			}
 			if(fun.length() >0) {
-				Function f = multiModel.getFunctionByName(fun);
+				Function f = null;
+				try {
+					f = multiModel.getFunctionByName(fun);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				if(f==null) exceptions.add(new ParseException("Undefined function: "+fun));
 				else {
 					addMapping_singleFunctionCall(row,ToStringVisitor.toString(n));

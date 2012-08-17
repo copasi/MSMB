@@ -271,10 +271,14 @@ public class AutocompleteDB {
 
 	public DefaultCompletionProvider getDefaultCompletionProvider(char trigger, String element, boolean isInitialExpression) {
 		boolean endWithDot = false;
+		
+		
+		System.out.println("element before " +element);
 		if(element.endsWith(".")) {
 			endWithDot = true;
 			element = element.substring(0,element.length()-1);
 		}
+		System.out.println("element after " +element);
 		
 		if(element.length() ==0) {
 			if(trigger == '%') {
@@ -286,7 +290,6 @@ public class AutocompleteDB {
 							String shortD = optionShortDescription.get(completions.get(i));
 							String summary = optionSummary.get(completions.get(i));
 							ret.addCompletion(new BasicCompletion(ret, completions.get(i).substring(1)+" ",shortD, summary)); // substring because I have to get rid of the first char that has already been typed to trigger this
-							
 						}
 					}
 				}
@@ -317,12 +320,15 @@ public class AutocompleteDB {
 			}
 		}
 		
+		System.out.println("definedInTables: before " +definedInTables);
+		System.out.println("element " +element);
+		
 		if(definedInTables==null) {
 			definedInTables = multiModel.getWhereNameIsUsed(element);	
 		}
 		
 		Vector<String> completions = new Vector<String>();
-		
+		System.out.println("definedInTables: " +definedInTables);
 		if(definedInTables.size() == 1) {
 			String where = new String();
 			if(definedInTables.get(0).intValue()==Constants.TitlesTabs.SPECIES.index) where =  Constants.TitlesTabs.SPECIES.description;
@@ -348,9 +354,11 @@ public class AutocompleteDB {
 			if(confl_S) conflicts += "_S";
 			
 			completions.addAll(completionOptions.get(conflicts));
-			
+			System.out.println("completionOptions: " +completionOptions);
+			System.out.println("conflicts: " +conflicts);
 		}
 		
+	
 		
 		
 		DefaultCompletionProvider ret = new DefaultCompletionProvider();

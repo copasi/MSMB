@@ -4,41 +4,20 @@ import parsers.mathExpression.MR_Expression_Parser;
 import parsers.mathExpression.MR_Expression_ParserConstants;
 import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import parsers.mathExpression.syntaxtree.*;
-import utility.CellParsers;
 import utility.Constants;
 
 import gui.MainGui;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
 import model.Function;
 import model.MultiModel;
-import model.MultistateSpecies;
-
-import org.COPASI.CCompartment;
-import org.COPASI.CCopasiObjectName;
-import org.COPASI.CMetab;
-import org.COPASI.CModel;
-import org.COPASI.CModelValue;
-import org.nfunk.jep.Node;
 import org.nfunk.jep.ParseException;
-
-import debugTab.DebugConstants;
-import debugTab.DebugMessage;
-import debugTab.SimilarityStrings;
 
 
 public class ExpressionVisitor extends DepthFirstVoidVisitor {
@@ -104,7 +83,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	}
 	
 	public void generateFunctionCall(String element) throws Exception {
-		//System.out.println("before: "+expression);
 		try {
 			InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
 			MR_Expression_Parser parser = new MR_Expression_Parser(is);
@@ -183,7 +161,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 					InputStream isR = new ByteArrayInputStream(parametersActuals.get(i).getBytes("UTF-8"));
 					MR_Expression_Parser parserR = new MR_Expression_Parser(isR);
 					CompleteExpression rootR = parserR.CompleteExpression();
-					ExpressionVisitor vis = new ExpressionVisitor(listFunctionToCompact,multiModel);
+					ExpressionVisitor vis = new ExpressionVisitor(listFunctionToCompact,multiModel,false);
 					rootR.accept(vis);
 					if(vis.getExceptions().size() == 0) {
 						String copasiExpr  = vis.getExpression();
@@ -311,7 +289,8 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 		//System.out.println("in generateElement:" + element);
 		//String element = ToStringVisitor.toString(n);
 		String element_newView = new String();
-		if(element.compareTo(Constants.TIME_STRING) ==0) {
+		if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0 
+				||element.compareTo(MR_Expression_ParserConstantsNOQUOTES.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0) {
 			element_newView = element;
 		} 
 		else {
@@ -349,12 +328,12 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 				}
 				int table = where.get(0);
 				if(table == Constants.TitlesTabs.SPECIES.index) {
-					element_newView += MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES);
+					if(elementsExpanded) element_newView += MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES);
 					isASpecies= true;
 				} else if(table == Constants.TitlesTabs.GLOBALQ.index) {
-					element_newView += MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ);
+					if(elementsExpanded) element_newView += MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ);
 				} else if(table == Constants.TitlesTabs.COMPARTMENTS.index) {
-					element_newView += MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT);
+					if(elementsExpanded) element_newView += MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT);
 				}
 			} else {
 				if(element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES))==0){
@@ -376,8 +355,8 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 							table != Constants.TitlesTabs.GLOBALQ.index) {
 						exceptions.add(  new ParseException("Element "+element+" is supposed to have a .gq extension"));
 					} else {
-						element_newView += element_kind_quantifier;
-					}
+						if(elementsExpanded) element_newView += element_kind_quantifier;
+					}	
 				}
 				else {
 					System.out.println("WHEEEEEEEEEEERE > 1... SEE WHAT TO DO...");
@@ -385,13 +364,13 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			}
 
 
-
-			if(element_timing_quantifier == null) {
-				element_newView += MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_TRANS);
-			} else {
-				element_newView +=element_timing_quantifier;
+			if(elementsExpanded) {
+				if(element_timing_quantifier == null) {
+					element_newView += MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_TRANS);
+				} else {
+					element_newView +=element_timing_quantifier;
+				}
 			}
-
 			if(isASpecies) {
 				if(element_quantity_quantifier == null ) {
 					if(MainGui.exportConcentration) element_newView +=MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_CONC);

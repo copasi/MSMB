@@ -5,6 +5,7 @@ import model.MultistateSpecies;
 import model.Species;
 import parsers.mathExpression.MR_Expression_ParserConstants;
 import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
+import parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import parsers.mathExpression.syntaxtree.*;
 import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
 import parsers.multistateSpecies.ParseException;
@@ -17,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
 
+import utility.CellParsers;
 import utility.Constants;
 
 public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
@@ -25,6 +27,8 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		private String returnName;
 		private boolean getSubName;
 		MultiModel multiModel = null;
+		
+		Vector<String> tempSiteName = new Vector<String>(); //used to collect variable associated to the SITE type for function, so that to the multiModel they look as named Element and they will not be flagged as missing. If they are really missing SUM is going to realize that
 	
 	   public Look4UndefinedMisusedVisitor(MultiModel mm)  {
 		   missing = new Vector<String>();
@@ -35,6 +39,13 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		public Vector<String> getMisusedElements() {	return misused;	}
 		public Vector<String> getUndefinedElements() {	return missing;	}
 		
+		@Override
+		public void visit(CompleteExpression n) {
+			super.visit(n);
+			for(int i = 0; i< tempSiteName.size(); i++){
+				multiModel.removeNamedElement(tempSiteName.get(i), -1);
+			}
+		}
 		
 		@Override
 		public void visit(Name n) {
@@ -64,10 +75,22 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		if(n.nodeOptional.present())  {
 			NodeOptional nodeOptional = (NodeOptional) ((NodeSequence) n.nodeOptional.node).nodes.get(1);
 			if(nodeOptional.node==null){
+				
 				//System.out.println("FUNCTION CALL (0): "+name);
 			//	Function f = multiModel.getFunctionByName(name);
-				Function f = multiModel.getFunctionByName(ToStringVisitor.toString(n.name.nodeChoice.choice));
-				if(f==null) {	if(!missing.contains(name))	missing.add(name); }
+				
+					Function f = null;
+					try {
+						f = multiModel.getFunctionByName(ToStringVisitor.toString(n.name.nodeChoice.choice));
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					if(f==null) {	
+						if(!isKeyword(ToStringVisitor.toString(n.name.nodeChoice.choice))) {
+							if(!missing.contains(name))	missing.add(name); 
+						}
+					}
 			}
 			else {
 				if(!isMultistateSitesList(nodeOptional.node)) {
@@ -76,9 +99,17 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					name = ToStringVisitor.toString(n.name.nodeChoice.choice);
 					
 					
-						Function f = multiModel.getFunctionByName(name);
+						Function f = null;
+						try {
+							f = multiModel.getFunctionByName(name);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						if(f==null){	
-							if(!missing.contains(name))	missing.add(name); }
+							if(!isKeyword(ToStringVisitor.toString(n.name.nodeChoice.choice))) {
+								if(!missing.contains(name))	missing.add(name); }
+							}
 						else{
 							checkParameterUsage((ArgumentList)nodeOptional.node,f);
 						}
@@ -87,15 +118,15 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					//System.out.println("SPECIES: "+ToStringVisitor.toString(n)); // to print complete "multistate" definition
 					if(isMultistateSpeciesDefined(n)) {
 						//ok multistate species existing
-					} else if(name.toLowerCase().compareTo(Constants.NAN_STRING) != 0
+					} else if(!isKeyword(name)	
 							&& multiModel.getWhereNameIsUsed(name)==null) {
 						if(!misused.contains(ToStringVisitor.toString(n))&&!missing.contains(name))	missing.add(name);
 					}
 				}
 			}
 		} else {
-			//System.out.println("SPECIES: "+ToStringVisitor.toString(n));
-			if(name.toLowerCase().compareTo(Constants.NAN_STRING) != 0
+			//System.out.println("SPECIES qui: "+ToStringVisitor.toString(n));
+			if(!isKeyword(name)		
 					&& multiModel.getWhereNameIsUsed(name)==null) {
 				if(!missing.contains(name))	
 					missing.add(name);
@@ -105,6 +136,16 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 	}
 	  
 	 
+	private boolean isKeyword(String name) {
+		if(name.toLowerCase().compareTo(Constants.NAN_STRING) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.FLOOR)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SQRT)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXP)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG)) == 0) return true;
+		return false;
+	}
+
 	private boolean isMultistateSpeciesDefined(SpeciesReferenceOrFunctionCall_prefix n) {
 		String element = ToStringVisitor.toString(n);
 		 InputStream is = new ByteArrayInputStream(element.getBytes());
@@ -149,19 +190,49 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 	}
 
 	@Override
-	public void visit(MultistateSum n) {
-		checkParameterUsage_SUM(n.argumentList);
-		System.out.println(sumExpansion);
+	public void visit(ArgumentList_MultistateSum n) {
+		
+		MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(ToStringVisitor.toString(n.name));
+	
+		if(sp== null) {
+			missing.add("\nFunction \"SUM\" is misformed. The multistate species "+ToStringVisitor.toString(n.name)+" does not exist.");
+			return;
+		}
+		
+		if(n.nodeOptional.present()) {
+			ArgumentList_MultistateSum_Selectors sel = (ArgumentList_MultistateSum_Selectors) ((NodeOptional) n.nodeOptional).node;
+			indexSum++;
+			checkParameterUsage_SUM(sp.getSpeciesName(),sel);
+		} else { //all sites, all states, no weight
+			SumExpansion se = null;
+			boolean modify = false;
+			if(indexSum > -1 && indexSum < sumExpansion.size()) {
+				modify = true;
+				se = sumExpansion.get(indexSum);
+			}
+			if(se==null) se = new SumExpansion(sp.getDisplayedName(), multiModel);
+			Iterator it = sp.getSitesNames().iterator();
+			while(it.hasNext()){
+				String siteName = (String) it.next();
+				se.addSite(siteName);
+				Vector states = sp.getSiteStates_complete(siteName);
+				se.addStates(siteName, states);
+			}
+			
+			if(modify)sumExpansion.set(indexSum,se);
+			else sumExpansion.add(se);
+		}
+		System.out.println("print sumExpansion "+sumExpansion);
 	}
 	
 	
-	private void checkParameterUsage_SUM(ArgumentList node) {
+	/*private void checkParameterUsage_SUM(ArgumentList_MultistateSum_Selectors node) {
 		indexSum++;
 		int found = getNumberArguments(node);
 		/*if(found something about the number of parameters????) {
 			misused.add("\nFunction "+f.getName()+" should have "+types.size()+ " parameters and not "+ found + " as in "+f.getName() + "("+ToStringVisitor.toString(node)+")");
 			return;
-		}*/
+		}*
 		MultistateSpecies multi_sp = null;
 		for(int i = 0; i < found;) {
 			INode elementNode = null;
@@ -184,7 +255,9 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					try{
 						i = onlyName(element2, i,multi_sp);
 					} catch(Exception ex2) {
-						sumExpansion.remove(indexSum);
+						try{
+							i = onlyName(element2, i,multi_sp);
+						} catch(Exception ex2) {sumExpansion.remove(indexSum);
 						indexSum--;
 						misused.add("\nFunction \"SUM\" is misformed");
 						return;
@@ -200,9 +273,195 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 
 		return;
 
+	}*/
+
+	
+	
+	private void checkParameterUsage_SUM(String speciesName, ArgumentList_MultistateSum_Selectors node) {
+		int nselectors = node.nodeListOptional.size();
+		boolean res = checkSelector(speciesName, node.selector, 0, nselectors);
+			if(res) {
+				for(int i = 0; i < nselectors; i++){
+					INode element = node.nodeListOptional.elementAt(i);
+					Selector elementNode = (Selector) ((NodeSequence) element).nodes.get(1); //0 is the semicolon
+					res = checkSelector(speciesName, elementNode, i+1,nselectors);
+					if(!res) break;
+				}
+			}
+			System.out.println("print sumExpansion inside"+sumExpansion);
 	}
 
-	private int onlyName(INode element2, int i, MultistateSpecies multi_sp) throws Exception {
+	
+	
+	
+	
+	private boolean checkSelector(String speciesName, Selector selector, int i, int nselectors) {
+		String nameSiteOrFuN = ToStringVisitor.toString(selector.name);
+		MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(speciesName);
+		
+		if(!selector.nodeOptional.present()) {//name it's a site, no ranges
+			if(!sp.getSitesNames().contains(nameSiteOrFuN)) {
+				misused.add("\nFunction \"SUM\" is misformed. The site "+nameSiteOrFuN+" does not exist for species "+speciesName+".");
+				return false;
+			}
+			else {
+				SumExpansion se = null;
+				boolean modify = false;
+				if(indexSum > -1 && indexSum < sumExpansion.size()) {
+					modify = true;
+					se = sumExpansion.get(indexSum);
+				}
+				if(se==null) se = new SumExpansion(sp.getDisplayedName(), multiModel);
+				se.addSite(nameSiteOrFuN);
+				Vector states = sp.getSiteStates_complete(nameSiteOrFuN);
+				se.addStates(nameSiteOrFuN, states);
+				
+				if(modify)sumExpansion.set(indexSum,se);
+				else sumExpansion.add(se);
+				return true;
+			}
+		}
+		
+		if( ((NodeChoice)(selector.nodeOptional.node)).which == 1 &&
+					i != nselectors) {
+			misused.add("\nFunction \"SUM\" is misformed. The weight function "+nameSiteOrFuN+" should be the last element in the list of selectors.");
+			return false;
+		}
+		
+		if( ((NodeChoice)(selector.nodeOptional.node)).which == 0) { //site selector
+			SiteSelector_postFix siteSel = (SiteSelector_postFix) ((NodeChoice)(selector.nodeOptional.node)).choice;
+			Vector<String> listedStates = new Vector<String>();
+			String stateFirst = ToStringVisitor.toString(siteSel.nodeChoice);
+			listedStates.add(stateFirst);
+			
+			
+			boolean range = false;
+			NodeChoice sequenceOrRange = (NodeChoice)siteSel.nodeOptional.node;
+			if(sequenceOrRange.which == 0) {//sequence
+				
+				int quanti = ((NodeSequence)(sequenceOrRange.choice)).nodes.size();
+				System.out.println("ce ne sono altri   "+quanti);
+				//I HAVE TO EXTACT ALL THE ELEMENTS
+			} else { // range
+				String stateSecond = ToStringVisitor.toString(((NodeSequence)(sequenceOrRange.choice)).nodes.get(1));
+				listedStates.add(stateSecond);
+				range = true;
+			}
+			
+			
+			Vector states = sp.getSiteStates_complete(nameSiteOrFuN);
+			System.out.println("listedStates "+listedStates);
+			System.out.println("existing  "+states);
+			
+			
+			for(int i1 = 0; i1< listedStates.size(); i1++) {
+				if( states.indexOf(listedStates.get(i1)) == -1) {
+					misused.add("\nFunction \"SUM\" is misformed. The site's state "+listedStates.get(i1)+" does not exist for site "+nameSiteOrFuN+".");
+					return false;
+				}
+			}
+			
+			if(	range ) {
+				if(!sp.isCircular(nameSiteOrFuN) &&
+						states.indexOf(listedStates.get(0)) > states.indexOf(listedStates.get(1))) {
+						misused.add("\nFunction \"SUM\" is misformed. The site's state "+listedStates.get(0)+" should precede the site's state "+listedStates.get(1)+" for site "+nameSiteOrFuN+".");
+						return false;
+				}
+				if(!sp.isCircular(nameSiteOrFuN)) {
+					String rangeMin = listedStates.get(0);
+					String rangeMax = listedStates.get(1);
+					listedStates.clear();
+					int index = states.indexOf(rangeMin);
+					do {
+						listedStates.add(states.get(index).toString());
+						index++;
+					}while(index !=  states.indexOf(rangeMax)+1);
+					
+				} else { //circular
+					String first = listedStates.get(0);
+					String last = listedStates.get(1);
+					listedStates.clear();
+					int indexFirst = states.indexOf(first);
+					int indexLast = states.indexOf(last);
+					for(int i1 = indexFirst; i1 < states.size(); i1++) {
+						listedStates.add(states.get(i1).toString());
+					}
+					for(int i1 = 0; i1 <= indexLast; i1++) {
+						listedStates.add(states.get(i1).toString());
+					}
+				}
+				
+			}
+			
+			/*String stateMax = ToStringVisitor.toString(siteSel.nodeChoice1);
+			if( states.indexOf(stateFirst) == -1) {
+				misused.add("\nFunction \"SUM\" is misformed. The site's state "+stateMin+" does not exist for site "+nameSiteOrFuN+".");
+				return false;
+			}
+			if( states.indexOf(stateMax) == -1) {
+				misused.add("\nFunction \"SUM\" is misformed. The site's state "+stateMax+" does not exist for site "+nameSiteOrFuN+".");
+				return false;
+			}
+			
+			if( states.indexOf(stateMin) > states.indexOf(stateMax)) {
+				misused.add("\nFunction \"SUM\" is misformed. The site's state "+stateMin+" should precede the site's state "+stateMax+" for site "+nameSiteOrFuN+".");
+				return false;
+			}*/
+			
+			SumExpansion se = null;
+			boolean modify = false;
+			if(indexSum > -1 && indexSum < sumExpansion.size()) {
+				modify = true;
+				se = sumExpansion.get(indexSum);
+			}
+			if(se==null) se = new SumExpansion(sp.getDisplayedName(), multiModel);
+			se.addSite(nameSiteOrFuN);
+			//se.addStates(nameSiteOrFuN, new Vector(states.subList(states.indexOf(stateMin), states.indexOf(stateMax)+1)));
+			se.addStates(nameSiteOrFuN, listedStates);
+			if(modify)sumExpansion.set(indexSum,se);
+			else sumExpansion.add(se);
+			
+			return true;
+		}
+		
+		if( ((NodeChoice)(selector.nodeOptional.node)).which == 1) { //weight fun
+			CoeffFunction_postFix weightSel = (CoeffFunction_postFix) ((NodeChoice)(selector.nodeOptional.node)).choice;
+			String functionCall = nameSiteOrFuN+ToStringVisitor.toString(weightSel);
+			try {
+				InputStream is = new ByteArrayInputStream(functionCall.getBytes("UTF-8"));
+				MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is);
+				CompleteExpression root;
+				root = parser.CompleteExpression();
+				Look4UndefinedMisusedVisitor undefVisitor = new Look4UndefinedMisusedVisitor(multiModel);
+				root.accept(undefVisitor);
+				Vector<String> undef = undefVisitor.getUndefinedElements();
+				Vector<String> misused2 = undefVisitor.getMisusedElements();
+				if(undef.size() > 0) { missing.addAll(undef); return false;}
+				if(misused2.size() > 0) { misused.addAll(undef); return false;}
+				
+				
+				SumExpansion se = null;
+				boolean modify = false;
+				if(indexSum > -1 && indexSum < sumExpansion.size()) {
+					modify = true;
+					se = sumExpansion.get(indexSum);
+				}
+				if(se==null) se = new SumExpansion(sp.getDisplayedName(), multiModel);
+				se.addWeightFun(nameSiteOrFuN, weightSel);
+				if(modify)sumExpansion.set(indexSum,se);
+				else sumExpansion.add(se);
+				
+			} catch (Exception e) {
+				misused.add("\nFunction \"SUM\" is misformed. Problems parsing the weight function "+functionCall+".");
+				return false;
+			}
+			
+		}
+		return true;
+		
+	}
+
+/*	private int onlyName(INode element2, int i, MultistateSpecies multi_sp) throws Exception {
 		INode elementNode = null;
 		if(element2 instanceof NodeListOptional) {
 			NodeSequence seq = (NodeSequence) ((NodeListOptional) element2).nodes.get(i-1);
@@ -288,7 +547,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		i++;
 		return i;
 	}
-
+*/
 
 
 
@@ -317,6 +576,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 				continue; //I DON'T CHECK ANYTHING... and it's THE ONLY type that allows SOMETHING to BE AN EXPRESSION WITHOUT RAISING ANY PROBLEM
 			}
 			else {
+			
 				String element = ToStringVisitor.toString(elementNode);
 				/*Integer definedInTable = multiModel.getWhereNameIsUsed(element);
 				if(definedInTable==null) {//it means that is a number or an expression... and if the function requires something else than a variable, this is not allowed
@@ -334,6 +594,18 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					}
 				}*/
 				 //TOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO CHECK... IF A NAME IS USED IN MORE THAN ONE SOMEWHERE THERE SHOULD BE THE CHECK THAT A SUFFIX EXISTS.... PROBABLY NOT HERE...
+				
+				if(Constants.FunctionParamType.SITE.signatureType.compareTo(types.get(i))==0) {
+					try {
+						multiModel.addNamedElement(element, -1); //temporary add the name as defined so that following visit will find it existing
+						tempSiteName.add(element);
+					} catch (Exception e) {
+						
+						e.printStackTrace();
+					}
+					continue; //I DON'T CHECK ANYTHING HERE...I should check the usage parsing the SUM
+				}
+				
 				Vector<Integer> definedInTable = multiModel.getWhereNameIsUsed(element);
 				if(definedInTable==null){//it means that is a number or an expression... and if the function requires something else than a variable, this is not allowed
 					if(!missing.contains(element)) { // because if it is missing it is also misused, but the user should see only the missing error
@@ -406,11 +678,20 @@ class SumExpansion {
 	String species_name = new String();
 	Vector<Species> elementsSum = null;
 	
+	String weightFunctionName = new String();
+	CoeffFunction_postFix coeffFunctionArgumentList = null;
+	MultiModel multiModel = null;
 	
-	public SumExpansion(String name) {
+	public SumExpansion(String name, MultiModel mm) {
 		species_name = name;
+		multiModel = mm;
 	}
 	
+	public void addWeightFun(String functionName, CoeffFunction_postFix argumentList) {
+		weightFunctionName = functionName;
+		coeffFunctionArgumentList = argumentList;
+	}
+
 	void addSite(String name) {
 		if(!sites.contains(name)) sites.add(name);
 	}
@@ -433,17 +714,102 @@ class SumExpansion {
 	}
 	
 	
+	public Vector<String> getWeightFun() {
+		Vector ret = new Vector<String>();
+		try {
+			for(int i = 0; i < elementsSum.size(); i++){
+				Species current = elementsSum.get(i);
+				String currentWeightFun;
+				currentWeightFun = weightFunWithCurrentSpecies(new MultistateSpecies(null,current.getDisplayedName()));
+				if(currentWeightFun!=null) ret.add(currentWeightFun);
+			}
+
+		} catch (Exception e) {
+			return null;
+		}
+		return ret;
+	}
+	
+	private String weightFunWithCurrentSpecies(MultistateSpecies current) {
+		String ret = new String();
+		try {
+			if(weightFunctionName == null || weightFunctionName.length() == 0) return null;
+			Function f = multiModel.getFunctionByName(weightFunctionName);
+			Vector<String> types = f.getParametersTypes();
+			
+			ArgumentList node = (ArgumentList) coeffFunctionArgumentList.nodeOptional.node; 
+			
+			for(int i = 0; i < types.size(); i++) {
+				INode elementNode = null;
+				if(i ==0) elementNode = ((NodeSequence)(node.nodeChoice.choice)).nodes.get(0);
+				else {
+					INode element2 = ((NodeSequence)(node.nodeChoice.choice)).nodes.get(1);
+					if(element2 instanceof NodeListOptional) {
+						NodeSequence seq = (NodeSequence) ((NodeListOptional) element2).nodes.get(i-1);
+						elementNode = seq.nodes.get(1); // because the first should be the separator ,
+					}
+				
+				}
+
+				if(Constants.FunctionParamType.SITE.signatureType.compareTo(types.get(i))==0) {
+					String element = ToStringVisitor.toString(elementNode);
+					if(!current.getSitesNames().contains(element)) {
+						throw new Exception("Site "+element+ " used in weight function "+weightFunctionName + " does not exist in species" +current.getDisplayedName());
+					}
+					Vector states = current.getSiteStates_complete(element);
+					
+					 boolean allNumbers = true;
+				     
+				     for(int i1 = 0; i1 < states.size(); i1++) { //are they all numbers?
+				    	 try {
+				    		 Integer.parseInt((String)states.get(i1));	    	 
+				    	 } catch(Exception ex) {
+				    		 if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+				    		 allNumbers = false;
+				    		 break;
+				    	 }
+				     }
+				     if(!allNumbers) {
+							throw new Exception("Site "+element+ " used in weight function "+weightFunctionName + " contains non-integer values and cannot be used as a parameter in weight function.");
+					 }
+				     
+				     
+				     String original = weightFunctionName+ToStringVisitor.toString(coeffFunctionArgumentList);
+				     String find = element;
+				     String replacement = current.getSiteStates_complete(element).get(0).toString();
+				    		 
+				     ret = CellParsers.replaceVariableInExpression(original,find,replacement);
+				     //System.out.println("finalExpr "+finalExpr);
+				     
+				}
+				else {
+					continue; //all the other type should be ok because of the other checkParameter
+				
+				}
+
+			}
+
+		} catch (Exception e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+		}
+		return ret;
+		//return weightFunctionName+ToStringVisitor.toString(weightFunctionArgumentList);
+	}
+	
+	
+
 	public Vector<Species> getSpeciesSum(){
 		try {
 			MultistateSpecies ms = new MultistateSpecies(null, new String(species_name));
 			for(int i = 0; i < sites.size(); i++) {
-				ms.addSite_vector( sites.get(i),sitesStates.get(i));
+				ms.addSite_vector(sites.get(i),sitesStates.get(i));
 			}
 			
 			elementsSum = ms.getExpandedSpecies(null);
 		} catch (Exception e) {
 			
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
+				e.printStackTrace();
 		}
 		
 		return elementsSum;
@@ -453,24 +819,26 @@ class SumExpansion {
 		String ret = new String();
 		
 		try {
-			MultistateSpecies ms = new MultistateSpecies(null, new String(species_name));
-			for(int i = 0; i < sites.size(); i++) {
-				ms.addSite_vector( sites.get(i),sitesStates.get(i));
-			}
 			
-			Vector<Species> spec = ms.getExpandedSpecies(null);
+			Vector<Species> spec = getSpeciesSum();
+			Vector<String> weight = getWeightFun();
 			for(int i = 0; i < spec.size()-1; i++) {
 				Species s = spec.get(i);
+				if(weight!= null &&  weight.size()==spec.size() && weight.get(i).length() > 0) {	ret += weight.get(i) + " * ";	}
 				ret += s.getDisplayedName() + " + ";
 			}
+			if(weight!= null &&  weight.size()==spec.size() && weight.get(spec.size()-1).length()>0) {	ret += weight.get(spec.size()-1) + " * ";	}
 			ret += spec.get(spec.size()-1).getDisplayedName();
 			
 		} catch (Exception e) {
-			
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)		e.printStackTrace();
 		}
 		
 		
 		return ret;
 	}
+	
+	
+	
+	
 }

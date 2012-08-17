@@ -8,7 +8,7 @@ import parsers.mathExpression.visitor.*;
  * Corresponding grammar :<br>
  * nodeToken -> < SUM ><br>
  * nodeToken1 -> < LPAREN ><br>
- * argumentList -> ArgumentList()<br>
+ * argumentList_MultistateSum -> ArgumentList_MultistateSum()<br>
  * nodeToken2 -> < RPAREN ><br>
  */
 public class MultistateSum implements INode {
@@ -20,7 +20,7 @@ public class MultistateSum implements INode {
   public NodeToken nodeToken1;
 
   /** A child node */
-  public ArgumentList argumentList;
+  public ArgumentList_MultistateSum argumentList_MultistateSum;
 
   /** A child node */
   public NodeToken nodeToken2;
@@ -36,10 +36,10 @@ public class MultistateSum implements INode {
    * @param n2 next child node
    * @param n3 next child node
    */
-  public MultistateSum(final NodeToken n0, final NodeToken n1, final ArgumentList n2, final NodeToken n3) {
+  public MultistateSum(final NodeToken n0, final NodeToken n1, final ArgumentList_MultistateSum n2, final NodeToken n3) {
     nodeToken = n0;
     nodeToken1 = n1;
-    argumentList = n2;
+    argumentList_MultistateSum = n2;
     nodeToken2 = n3;
   }
 
@@ -48,10 +48,10 @@ public class MultistateSum implements INode {
    *
    * @param n0 first child node
    */
-  public MultistateSum(final ArgumentList n0) {
+  public MultistateSum(final ArgumentList_MultistateSum n0) {
     nodeToken = new NodeToken("SUM");
     nodeToken1 = new NodeToken("(");
-    argumentList = n0;
+    argumentList_MultistateSum = n0;
     nodeToken2 = new NodeToken(")");
   }
 

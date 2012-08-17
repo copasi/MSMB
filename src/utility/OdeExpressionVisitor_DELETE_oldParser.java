@@ -2,33 +2,16 @@ package utility;
 
 import model.Function;
 import model.MultiModel;
-import model.MultistateSpecies;
-import model.Species;
-
-import org.COPASI.CCompartment;
-import org.COPASI.CCopasiObjectName;
-import org.COPASI.CMetab;
-import org.COPASI.CModel;
-import org.COPASI.CModelValue;
 import org.lsmp.djep.xjep.*;
 import org.nfunk.jep.*;
 import org.nfunk.jep.function.Exp;
 import org.nfunk.jep.function.If;
-import org.nfunk.jep.type.*;
-
-import debugTab.DebugConstants;
-import debugTab.DebugMessage;
-import debugTab.SimilarityStrings;
 import gui.MainGui;
 
 import java.io.PrintStream;
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
 import java.util.Vector;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -408,7 +391,13 @@ private Hashtable specialRules = new Hashtable();
 			}
 		}
 			
-		Function f = multiModel.getFunctionByName(fun);
+		Function f = null;
+		try {
+			f = multiModel.getFunctionByName(fun);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		Vector actuals = new Vector();
 		PrintVisitor pv = new PrintVisitor();

@@ -18,6 +18,7 @@ import parsers.chemicalReaction.syntaxtree.CompleteSpeciesWithCoefficient;
 import parsers.chemicalReaction.visitor.ExtractSubProdModVisitor;
 import parsers.mathExpression.MR_Expression_Parser;
 import parsers.mathExpression.MR_Expression_ParserConstants;
+import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import parsers.mathExpression.syntaxtree.CompleteExpression;
 import parsers.mathExpression.syntaxtree.SingleFunctionCall;
 import parsers.mathExpression.visitor.CopasiVisitor;
@@ -25,6 +26,8 @@ import parsers.mathExpression.visitor.ExpressionVisitor;
 import parsers.mathExpression.visitor.GetFunctionNameVisitor;
 import parsers.mathExpression.visitor.GetUsedVariablesInEquation;
 import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import parsers.multistateSpecies.MR_MultistateSpecies_ParserConstantsNOQUOTES;
+import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
 import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 
@@ -37,7 +40,9 @@ public class MultiModel {
 	
 	private HashMap<String, Vector<Integer>> allNamedElements = new HashMap<String, Vector<Integer>>(); // name + list of indices of tables where the name is already defined
 	public Vector<Integer> getWhereNameIsUsed(String name) { 
-		return allNamedElements.get(name);
+		Vector ret = allNamedElements.get(name);
+		if(ret!= null && ret.size() > 0) return ret;
+		return null;
 	}
 	
 	public void addNamedElement(String name, Integer tableIndex) throws Exception { 
@@ -58,8 +63,10 @@ public class MultiModel {
 	public void removeNamedElement(String name, Integer fromTable) {
 			if(name.trim().length()==0) return; 
 			Vector<Integer> where = getWhereNameIsUsed(name);
-			where.removeElement(fromTable);
-			allNamedElements.put(name, where);
+			if(where!=null) {
+				where.removeElement(fromTable);
+				allNamedElements.put(name, where);
+			}
 	}
 	
 	public void removeAllNamedElement(Collection<String> names) {
@@ -85,7 +92,7 @@ public class MultiModel {
 	public int getNumReactions(){
 		int counter = 0;
 		for(int i = 0; i < tableReactionmodel.getRowCount()-1 ; i++ ) {
-			String string_reaction = ((String)tableReactionmodel.getValueAt(i, 2));
+			String string_reaction = ((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.REACTION.index));
 			if(string_reaction.trim().length() <= 0) continue;
 			counter++;
 		}
@@ -105,7 +112,7 @@ public class MultiModel {
 	
 	ObjectStdVector changedObjects = new ObjectStdVector();
 	
-	CCopasiDataModel copasiDataModel;
+	public CCopasiDataModel copasiDataModel;
 	private String copasiDataModelSBML_ID = new String("");
 	
 	//public static long indexCopasiDataModel = -1;
@@ -151,7 +158,6 @@ public class MultiModel {
 		String name = species.printCompleteDefinition();
 		
 		int n = this.speciesDB.addChangeSpecies(row+1, new String(), name,species.getInitialQuantity_multi(), species.getType(), species.getCompartment(), species.getExpression(),fromMultistateBuilder, new String(),autoMergeSpecies,true);
-		//this.checkSimilarityName(name, n);
 	}
 	
 	public int findCompartment(String name) {
@@ -279,7 +285,7 @@ public class MultiModel {
             assert metab != null;
             if(!key) {
 	            String current = metab.getObjectName();
-	            int level_similarity = 1;
+	          /*  int level_similarity = 1;
 	            if(!current.contains("(") && !name.contains("(") &&
 	            	SimilarityStrings.damlev(current, name)!= 0 &&
 	                SimilarityStrings.damlev(current, name) <= level_similarity) {
@@ -289,9 +295,8 @@ public class MultiModel {
 	        		dm.setProblem("Species "+ name + " and " + current + " have a degree of similarity lower than "+level_similarity+"\n. Two species have been added but maybe a misstype has occurred in the definition of the two species.");
 	        		dm.setPriority(DebugConstants.PriorityType.SIMILARITY.priorityCode);
 	        		dm.setOrigin_col(1);
-	        		
 	        		//MainGui.debugMessages.add(dm);
-	        	}
+	        	}*/
 	            if(name.compareTo(current) == 0) return i;
             } else {
             	String current = metab.getKey();
@@ -585,26 +590,33 @@ public class MultiModel {
 		}
 		else {
 			
-			try{
+			try {
 				InputStream is = new ByteArrayInputStream(equation.getBytes("UTF-8"));
 				MR_Expression_Parser parser = new MR_Expression_Parser(is);
-				CompleteExpression root = parser.CompleteExpression();
+				CompleteExpression root;
+				
+					root = parser.CompleteExpression();
+				
 	  			GetUsedVariablesInEquation v = new GetUsedVariablesInEquation();
 	  			root.accept(v);
-	  			if(v.getNames().size() > 1) throw new Exception();
-				newEquation_listOfNewNames.add("");
-				newEquation_listOfNewNames.add(new Vector());
-				return newEquation_listOfNewNames;
+	  			if(v.getNames().size()==0) {
+	  				newEquation_listOfNewNames.add("");
+					newEquation_listOfNewNames.add(new Vector());
+					return newEquation_listOfNewNames;
+	  			}
+	  		
+	  			if(v.isComplexExpression()) {
+	  				MutablePair<String, String> pair = add_globalQ_4_reaction_globalQDB(reactionName, reaction_row, equation);
+					listOfNewNames.add(pair.right);
+					newEquation_listOfNewNames.add(pair.left);
+					newEquation_listOfNewNames.add(listOfNewNames);
+					return newEquation_listOfNewNames;
+				} else {
+					return null;
+				}
 			} catch (Exception e) {
-				//singleFunctionCall = false;
-				
-				MutablePair<String, String> pair = add_globalQ_4_reaction_globalQDB(reactionName, reaction_row, equation);
-				listOfNewNames.add(pair.right);
-				newEquation_listOfNewNames.add(pair.left);
-				newEquation_listOfNewNames.add(listOfNewNames);
 				return newEquation_listOfNewNames;
-			} 
-			
+			}
 		}
 			
 	}
@@ -733,7 +745,7 @@ public class MultiModel {
 		  functionCall = functionCall.replace("_pr","'");
 		  funName_newRateLawExpression.right = functionCall;
 		  
-		  System.out.println("in add_function_4_reaction functionCall = "+functionCall);
+	//	  System.out.println("in add_function_4_reaction functionCall = "+functionCall);
 		  
 		  
 		  try {
@@ -1368,6 +1380,7 @@ public class MultiModel {
 				
 					  Integer usage = fun.parametesRoles.get(nextParam);
 					  if(usage == CFunctionParameter.VARIABLE) usage = CFunctionParameter.PARAMETER;
+					  if(usage == Constants.SITE_FOR_WEIGHT_IN_SUM) usage = CFunctionParameter.PARAMETER;
 					  parame.setUsage(usage);
 				 }
 				  
@@ -1847,7 +1860,9 @@ public class MultiModel {
 	
 	public Vector expandReaction(Vector metabolites, int row) throws Exception {
 		Vector ret = new Vector();
-		
+	//	PROBLEMA IN QUESTOOOOOOOOOOOOOOOOOOOOOO METODO
+	//	SBF(p{0};b{free}) + Whi5(p{0:2};b{free}) -> SBF(b{bound}) + Whi5(b{bound})
+	//	REAZIONE 52
 		Vector subs = (Vector)metabolites.get(0);
 	    Vector prod =(Vector)metabolites.get(1);
 		Vector mod = (Vector)metabolites.get(2);
@@ -1862,6 +1877,7 @@ public class MultiModel {
 				Vector current_expanded = getExpandedStatesReactant(species);
 				if(current_expanded.size() == 1) { 
 					//there is a multistate reactant but with no ranges, so it's like a single species
+					//except that it can still change it's state!! 
 					non_multistate_reactants.add(species);
 					multistate_reactants_single_states.addAll(current_expanded);
 				} else {
@@ -1892,7 +1908,7 @@ public class MultiModel {
 				 InputStream is = new ByteArrayInputStream(pr.getBytes("UTF-8"));
 				 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
 				 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
-				 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,sp);
+				 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,sp,multistate_reactants_single_states);
 				 start.accept(v);
 				 String exp = v.getProductExpansion();
 				 if(exp != null && v.getExceptions().size() == 0) { prod_expanded.add(exp);}
@@ -1934,16 +1950,35 @@ public class MultiModel {
 	
 
 	private Vector getExpandedStatesReactant(String species) throws Exception {
+	/*	Vector<Species> ret = new Vector<Species>();
+		
+		
+		 try {
+			 ret = existing.getExpandedSpecies_Minimum(this,species);
+		
+		 
+		 } catch(Exception ex){
+				throw new ParseException("Model yet not complete. Element "+species+" not found");
+			}
+		
+			return ret;*/
 		Vector<Species> ret = new Vector<Species>();
-		MultistateSpecies temp = new MultistateSpecies(this,species);
-		MultistateSpecies existing = (MultistateSpecies)speciesDB.getSpecies(species.substring(0,species.indexOf("(")));
+		MultistateSpecies temp = new MultistateSpecies(this,species,true);
+		
+		 InputStream is = new ByteArrayInputStream(species.getBytes());
+		 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+		 CompleteMultistateSpecies start = react.CompleteMultistateSpecies();
+		 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this);
+	 	 start.accept(v);
+		 MultistateSpecies existing = (MultistateSpecies) this.getSpecies(v.getSpeciesName());
 		temp.mergeStatesWith_Minimum(existing);
 		return temp.getExpandedSpecies(this);
+
 	}
 
 	
 	
-	private void checkSimilarityName(String name, Integer nrow) {
+	/*private void checkSimilarityName(String name, Integer nrow) {
 		double level_similarity = 1.0;
 	
 		Vector<String> names = this.speciesDB.getAllNames();
@@ -1964,7 +1999,7 @@ public class MultiModel {
        		}
        	}
 		
-	}
+	}*/
 	
 	
 	public void clearCopasiDataModel() {
@@ -2222,6 +2257,9 @@ public class MultiModel {
             if(metab.getStatus() == CMetab.ASSIGNMENT || metab.getStatus() == CMetab.ODE) {
             	row.add(CellParsers.cleanMathematicalExpression(this.buildMRExpression_fromCopasiExpr(metab.getExpression())));
             } else row.add("");
+            
+            
+       	
             row.add(metab.getNotes());
            rows.add(row);
    		  
@@ -2465,7 +2503,9 @@ public class MultiModel {
 		expression = expression.replace(" == ", " eq ");
 		expression = expression.replace(" && ", " and ");
 		expression = expression.replace(" || ", " or ");
-		
+		 
+	
+				
 		StringTokenizer st_elem = new StringTokenizer(expression, "<>");
 		while(st_elem.hasMoreTokens()) {
 			String elem = st_elem.nextToken();
@@ -2492,24 +2532,47 @@ public class MultiModel {
 						else if(real_elem.contains("Compartments")) whichElement = Constants.TitlesTabs.COMPARTMENTS.index;
 						real_elem = real_elem.substring(open_br+1,closed_br);
 					}
+					
+					
+					
 				}
+				
+				if(whichElement == Constants.TitlesTabs.SPECIES.index) real_elem = CellParsers.cleanName(real_elem,true);
+				else real_elem = CellParsers.cleanName(real_elem);
+				
 				st_vector = new StringTokenizer(elem,",");
 				String ref = new String();
 				while(st_vector.hasMoreTokens()) {
 					 ref = st_vector.nextToken();
 					if(ref.contains("Reference")) {
 							ref = ref.substring(ref.indexOf("=")+1);
+							if(whichElement == Constants.TitlesTabs.SPECIES.index) {
+								if(ref.compareTo("Concentration")==0) real_elem += ".c";
+								else if(ref.compareTo("ParticleNumber")==0) real_elem += ".p";
+								else if(ref.compareTo("Rate")==0) real_elem += ".r";
+								else if(ref.compareTo("InitialConcentration")==0) real_elem += ".c.i";
+								else if(ref.compareTo("InitialParticleNumber")==0) real_elem += ".p.i";
+							} else 	if(whichElement == Constants.TitlesTabs.GLOBALQ.index) {
+								if(ref.compareTo("Value")==0) real_elem += "";
+								else if(ref.compareTo("InitialValue")==0) real_elem += ".i";
+								else if(ref.compareTo("Rate")==0) real_elem += ".r";
+							} else 	if(whichElement == Constants.TitlesTabs.COMPARTMENTS.index) {
+								if(ref.compareTo("Volume")==0) real_elem += "";
+								else if(ref.compareTo("InitialVolume")==0) real_elem += ".i";
+								else if(ref.compareTo("Rate")==0) real_elem += ".r";
+							}
 					}		
 				}
-				//System.out.println(ref + " - " +real_elem);
-				if(whichElement == Constants.TitlesTabs.SPECIES.index) ret += CellParsers.cleanName(real_elem,true);
-				else ret += CellParsers.cleanName(real_elem);
 				
+				
+				ret += real_elem;
+				
+				//System.out.println(ref + " - " +real_elem);
 				
 		
 			} else {
 				if(elem.contains(Constants.COPASI_STRING_TIME)){
-					ret+=Constants.TIME_STRING;
+					ret+= MR_Expression_ParserConstantsNOQUOTES.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME];
 				}
 				else ret += elem; //operator or parenthesis
 			}
@@ -2667,11 +2730,23 @@ public class MultiModel {
 			HashMap<String, String> entry_q = new HashMap<String, String>();
 			entry_q.put(name,initialQ);
 			this.speciesDB.addChangeSpecies(nrow,new String(),name,entry_q,Constants.SpeciesType.getCopasiTypeFromDescription(type),compartment,expression,false,notes,autoMergeSpecies,true);
+		
+			if(CellParsers.isMultistateSpeciesName_withUndefinedStates(name)) {
+				   DebugMessage dm = new DebugMessage();
+					dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				    dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
+				    dm.setOrigin_row(nrow);
+					dm.setProblem("Multistate species with undefined states");
+				    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
+					MainGui.addDebugMessage_ifNotPresent(dm);
+				}
+			
 		} catch(MyInconsistencyException ex) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 			exToThrow = ex;
 		}catch(MySyntaxException ex) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				ex.printStackTrace();
 		    DebugMessage dm = new DebugMessage();
 			dm.setOrigin_table(ex.getTable());
 		    dm.setOrigin_col(ex.getColumn());
@@ -2680,6 +2755,7 @@ public class MultiModel {
 		    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
 			MainGui.addDebugMessage_ifNotPresent(dm);
 			parseErrors = true;
+			//MainGui.donotCleanDebugMessages = true;
 			exToThrow = ex;
 		}
 		
@@ -2717,12 +2793,10 @@ public class MultiModel {
 		try{
 			
 			sp.setCompartment(this,compartment);
-			//sp.setInitialAmount(initialAmount);
-			//sp.setInitialConcentration(initialConc);
 			sp.setInitialQuantity(this,initialQ);
 			sp.setType(Constants.SpeciesType.getCopasiTypeFromDescription(type));
 		
-			checkSimilarityName(name, nrow);
+			//checkSimilarityName(name, nrow);
 		} catch(MySyntaxException ex) { // something undefined in the initial quantity/expression of the compartment... but I have to move on with the species definition anyway
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 		    DebugMessage dm = new DebugMessage();
@@ -2756,24 +2830,71 @@ public class MultiModel {
 		for(int i = 0; i < subs.size(); i++){
 			String sp = (String) subs.get(i);
 			Species s = speciesDB.getSpecies(sp);
-			if(s==null) ret.add(sp);
+			if(s==null) {
+				if(CellParsers.isMultistateSpeciesName(sp)) {
+					String autocompletedMultistate = generateAutocompleteMultistateName(sp);
+					ret.add(autocompletedMultistate);
+				} else {
+					ret.add(sp);
+				}
+			}
 		}
 		
 		for(int i = 0; i < prod.size(); i++){
 			String sp = (String) prod.get(i);
 			Species s = speciesDB.getSpecies(sp);
-			if(s==null) ret.add(sp);
+			 if(s==null) {
+				if(CellParsers.isMultistateSpeciesName(sp)) {
+					String autocompletedMultistate = generateAutocompleteMultistateName(sp);
+					ret.add(autocompletedMultistate);
+				} else {
+					ret.add(sp);
+				}
+			}
 		}
 		for(int i = 0; i < mod.size(); i++){
 			String sp = (String) mod.get(i);
 			Species s = speciesDB.getSpecies(sp);
-			if(s==null) ret.add(sp);
+			if(s==null) {
+				if(CellParsers.isMultistateSpeciesName(sp)) {
+					String autocompletedMultistate = generateAutocompleteMultistateName(sp);
+					ret.add(autocompletedMultistate);
+				} else {
+					ret.add(sp);
+				}
+			}
 		}
 		return ret;
 	}
 	
 	
-	public Vector<Vector> updateReaction(Integer nrow,	String name, String reaction_string, String type, String equation, String exp,	String notes, boolean autocompleteWithDefaults) throws Exception{
+	private String generateAutocompleteMultistateName(String sp) {
+		String autocompletedMultistate = new String();
+		try {
+			MultistateSpecies m = new MultistateSpecies(this, sp, true);
+			Set sites = m.getSitesNames();
+			autocompletedMultistate += m.getSpeciesName();
+			autocompletedMultistate += MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.OPEN_R);
+			Iterator itSites = sites.iterator();
+			while(itSites.hasNext()) {
+				String site = itSites.next().toString();
+				autocompletedMultistate += site 
+											+ MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.OPEN_C)
+											+ "?"
+											+ MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.CLOSED_C);
+				autocompletedMultistate += MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.SITE_NAMES_SEPARATOR);
+			}
+			if(sites.size()>0) {
+				autocompletedMultistate = autocompletedMultistate.substring(0,autocompletedMultistate.length()-1);
+			}
+			autocompletedMultistate += MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.CLOSED_R);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return autocompletedMultistate;
+	}
+
+	public Vector<Vector> updateReaction(Integer nrow,	String name, String reaction_string, String type, String equation, String exp,	String notes, boolean autocompleteWithDefaults, boolean actionInColumnName) throws Exception{
 		Vector<Vector> table_rows = new Vector<Vector>();
 		int prev_error_messages = MainGui.debugMessages.size();
 
@@ -2797,7 +2918,7 @@ public class MultiModel {
 
 		if(parseErrors) return null;
 
-		if (autocompleteWithDefaults) {
+		if (autocompleteWithDefaults && actionInColumnName) {
 			Vector subs = (Vector)metabolites.get(0);
 			Vector prod =(Vector)metabolites.get(1);
 			Vector mod = (Vector)metabolites.get(2);
@@ -2806,13 +2927,34 @@ public class MultiModel {
 
 			for(int i = 0; i < subs.size(); i++) {
 				String s = (String)subs.get(i);
-				if(//!s.contains("(") && 
-						this.speciesDB.containsSpecies(s)) {continue;}
+				if(this.speciesDB.containsSpecies(s,true)) {continue;}
+				String speciesName = new String();
+				if(CellParsers.isMultistateSpeciesName(s)) {
+					speciesName = generateAutocompleteMultistateName(s);
+				} else {
+					speciesName = s;
+				}
+				
 				HashMap<String, String> entry_q = new HashMap<String, String>();
 				entry_q.put(s,MainGui.species_defaultInitialValue);
 				
-				indexes_row_species.add(speciesDB.addChangeSpecies(-1,new String(),s,entry_q,CMetab.REACTIONS, MainGui.compartment_default_for_dialog_window, new String(),false,"",true,true));
-				
+				indexes_row_species.add(speciesDB.addChangeSpecies(-1,new String(),speciesName,entry_q,CMetab.REACTIONS, MainGui.compartment_default_for_dialog_window, new String(),false,"",true,true));
+				/*if(CellParsers.isMultistateSpeciesName_withUndefinedStates(name)) {
+					throw new MySyntaxException(Constants.SpeciesColumns.NAME.index, 
+												"Multistate species with undefined states", 
+												Constants.TitlesTabs.SPECIES.description);
+					
+				}*/
+				if(CellParsers.isMultistateSpeciesName_withUndefinedStates(name)) {
+				   DebugMessage dm = new DebugMessage();
+					dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				    dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
+				    dm.setOrigin_row(nrow);
+					dm.setProblem("Multistate species with undefined states");
+				    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
+					MainGui.addDebugMessage_ifNotPresent(dm);
+				}
+					
 			}
 
 			for(int i = 0; i < prod.size(); i++) {
@@ -2847,10 +2989,10 @@ public class MultiModel {
 					table_rows.add(row);
 			
 					MainGui.species_default_for_dialog_window.add(sp.getDisplayedName());
-					this.checkSimilarityName(sp.getSpeciesName(), species_row_index);
+					//this.checkSimilarityName(sp.getSpeciesName(), species_row_index);
 				}
 			}
-
+			
 		}
 		
 		return table_rows;
@@ -2860,7 +3002,7 @@ public class MultiModel {
 			String initial, String expression, String notes) throws Exception {
 		
 		try{
-			return this.compDB.addChangeComp(name, type, initial, expression, notes);
+			return this.compDB.addChangeComp(nrow, name, type, initial, expression, notes);
 		} catch(MySyntaxException ex) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 			    DebugMessage dm = new DebugMessage();
@@ -2926,6 +3068,12 @@ public class MultiModel {
 		
 		for(int i = 1; i < all.size();i++) {
 			Species s = all.get(i);
+			if(s instanceof MultistateSpecies) {
+				ret = "Multi-State species in the model: equation generation not supported.\n\n"+
+					  "The generation of the underlying ODE for multistate systems is coming soon!\n\n"+
+					  "For now you can export the model to COPASI and see the ODE system there! :)";
+				return ret;
+			}
 			String expression = s.getExpression();
 			if(expression.length()>0) {
 				CellParsers.parser.parseExpression(expression);
@@ -2963,7 +3111,7 @@ public class MultiModel {
 	    TreeMap variableToEquationMap = new TreeMap();
 	    for (int i = 0; i < numberOfReactions; i++) {
 	    	String reaction_string = ((String) tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.REACTION.index)).trim();
-	        if(reaction_string.length() == 0) continue; 
+	        if(reaction_string.trim().length() == 0) continue; 
 	    	Vector metabolites = CellParsers.parseReaction(this,reaction_string,i+1);
 	    	Vector subs = (Vector)metabolites.get(0);
 			Vector prod =(Vector)metabolites.get(1);
@@ -3055,19 +3203,58 @@ public class MultiModel {
 		boolean foundMassAction= false;
 		String ret = new String();
 		
+		
 		if(((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).compareTo(Constants.ReactionType.USER_DEFINED.description)==0) { foundUserDefFunction = true; }
 		else if(((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).compareTo(Constants.ReactionType.PRE_DEFINED.description)==0) { foundPredefinedFunction = true; }
 		else if(((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).compareTo(Constants.ReactionType.MASS_ACTION.description)==0) {  foundMassAction = true;    	 }
 
-		CellParsers.parser.parseExpression(currentEquation);
+		/*CellParsers.parser.parseExpression(currentEquation);
 		OdeExpressionVisitor_DELETE_oldParser visitor = new OdeExpressionVisitor_DELETE_oldParser(//i,
 				listFunctionToCompact,this);
 		if(CellParsers.parser.getErrorInfo()!= null) {
 			System.out.println(CellParsers.parser.getErrorInfo());
 			throw new Exception(CellParsers.parser.getErrorInfo());
 		}
-		String expr = visitor.toString(CellParsers.parser.getTopNode());
-		if(visitor.getError()== null)	{
+		String expr = visitor.toString(CellParsers.parser.getTopNode());*/
+		
+		
+		//if(visitor.getError()== null)	{
+			
+		
+		String expr =new String();
+		if(listFunctionToCompact.size()!=0) {
+			if(listFunctionToCompact.size() == funDB.getAllFunctions().size()) {
+					expr = MainGui.getViewIn(Constants.TitlesTabs.REACTIONS.description,i,Constants.ReactionsColumns.KINETIC_LAW.index,Constants.Views.COMPRESSED.index);
+				}
+			else {
+				expr = tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.KINETIC_LAW.index).toString();
+				do {
+					String tmp = new String();
+					try{
+						InputStream is = new ByteArrayInputStream(expr.getBytes("UTF-8"));
+						MR_Expression_Parser parser = new MR_Expression_Parser(is);
+						CompleteExpression root = parser.CompleteExpression();
+						ExpressionVisitor vis = new ExpressionVisitor(listFunctionToCompact,this,false);
+						root.accept(vis);
+						if(vis.getExceptions().size() == 0) {
+							tmp  = vis.getExpression();
+							//System.out.println("qua - "+tmp);
+						} else {
+							throw vis.getExceptions().get(0);
+						}
+
+					}catch (Exception e) {
+						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+					}
+					if(expr.compareTo(tmp)==0) break;
+					expr = tmp;
+			} while(true);
+			}
+		} else {
+			expr = MainGui.getViewIn(Constants.TitlesTabs.REACTIONS.description,i,Constants.ReactionsColumns.KINETIC_LAW.index,Constants.Views.EXPANDED.index);
+		}
+		 
+		if(expr.length() > 0) {
 			if(foundMassAction) {
 				Vector metabolites = CellParsers.parseReaction(this,(String) tableReactionmodel.getValueAt(i,Constants.ReactionsColumns.REACTION.index),i+1);
 				Vector subs = (Vector) metabolites.get(0);
@@ -3083,7 +3270,7 @@ public class MultiModel {
 				ret+=expr;
 			}
 		}
-		else { throw new ParseException(visitor.getErrorsMessage());}
+		else { throw new ParseException("Parsing problem generating the ODE system.");}
 		
 		
 		return ret;
@@ -3196,7 +3383,11 @@ public class MultiModel {
 	}
 	
 	public void removeReaction(int atIndex) throws Exception {
+		
 		tableReactionmodel.removeRow(atIndex);
+		tableReactionmodel.fireTableDataChanged();
+		MainGui.tableReactionmodel.removeRow(atIndex); //TO BE DELETED ONCE REACTION DATA STRUCTURE
+		MainGui.tableReactionmodel.fireTableDataChanged();//TO BE DELETED ONCE REACTION DATA STRUCTURE
 	}
 	
 	public Vector<GlobalQ> getAllGlobalQ() {
@@ -3228,7 +3419,7 @@ public class MultiModel {
 		return compDB.getComp(name);
 	}
 
-	public Function getFunctionByName(String fun) {
+	public Function getFunctionByName(String fun) throws Exception {
 		return funDB.getFunctionByName(fun);
 	}
 
@@ -3254,6 +3445,15 @@ public class MultiModel {
 	public void setMultistateInitials(
 			HashMap<String, HashMap<String, String>> multistateInitials) {
 		if(multistateInitials!= null) speciesDB.setMultistateInitials(multistateInitials);
+	}
+
+	public Integer getSpeciesIndex(String name) {
+		
+		return speciesDB.getSpeciesIndex(name);
+	}
+
+	public Vector<MultistateSpecies> getAllMultistateSpecies() {
+		return speciesDB.getAllMultistateSpecies();
 	}
 	
 }

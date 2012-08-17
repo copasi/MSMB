@@ -25,31 +25,31 @@ public interface MR_MultistateSpecies_ParserConstants {
   /** RegularExpression Id. */
   int PREC = 12;
   /** RegularExpression Id. */
-  int CIRC_L_SHIFT = 13;
+  int CIRCULAR_FLAG = 13;
   /** RegularExpression Id. */
-  int CIRC_R_SHIFT = 14;
+  int BLANK = 14;
   /** RegularExpression Id. */
-  int BLANK = 15;
+  int OPEN_R = 15;
   /** RegularExpression Id. */
-  int OPEN_R = 16;
+  int CLOSED_R = 16;
   /** RegularExpression Id. */
-  int CLOSED_R = 17;
+  int OPEN_C = 17;
   /** RegularExpression Id. */
-  int OPEN_C = 18;
+  int CLOSED_C = 18;
   /** RegularExpression Id. */
-  int CLOSED_C = 19;
+  int RANGE_SEPARATOR = 19;
   /** RegularExpression Id. */
-  int RANGE_SEPARATOR = 20;
+  int SITE_NAMES_SEPARATOR = 20;
   /** RegularExpression Id. */
-  int SITE_NAMES_SEPARATOR = 21;
+  int SITE_STATES_SEPARATOR = 21;
   /** RegularExpression Id. */
-  int SITE_STATES_SEPARATOR = 22;
+  int STRING_LITERAL = 22;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 23;
+  int NUMBER = 23;
   /** RegularExpression Id. */
-  int NUMBER = 24;
+  int MULTI_IDENTIFIER = 24;
   /** RegularExpression Id. */
-  int MULTI_IDENTIFIER = 25;
+  int UNDEFINED_SITE_SYMBOL = 25;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -67,10 +67,9 @@ public interface MR_MultistateSpecies_ParserConstants {
     "\"floor\"",
     "\"sqrt\"",
     "\"log\"",
-    "\"++\"",
-    "\"--\"",
-    "\"<<\"",
-    "\">>\"",
+    "\"succ\"",
+    "\"pred\"",
+    "\"c\"",
     "\" \"",
     "\"(\"",
     "\")\"",
@@ -82,6 +81,7 @@ public interface MR_MultistateSpecies_ParserConstants {
     "<STRING_LITERAL>",
     "<NUMBER>",
     "<MULTI_IDENTIFIER>",
+    "\"?\"",
   };
 
 }

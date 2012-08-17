@@ -6,15 +6,18 @@ import parsers.mathExpression.visitor.*;
 /**
  * JTB node class for the production PossibleExtensions:<br>
  * Corresponding grammar :<br>
- * nodeChoice -> ( %0 < EXTENSION_CONC ><br>
- * .......... .. | %1 < EXTENSION_COMPARTMENT ><br>
- * .......... .. | %2 < EXTENSION_PARTICLE ><br>
- * .......... .. | %3 < EXTENSION_TRANS ><br>
- * .......... .. | %4 < EXTENSION_INIT ><br>
- * .......... .. | %5 < EXTENSION_RATE ><br>
- * .......... .. | %6 < EXTENSION_SPECIES ><br>
- * .......... .. | %7 < EXTENSION_GLOBALQ ><br>
- * .......... .. | %8 < MY_SPECIAL_EXTENSION > )<br>
+ * nodeChoice -> ( %00 < EXTENSION_CONC ><br>
+ * .......... .. | %01 < EXTENSION_COMPARTMENT ><br>
+ * .......... .. | %02 < EXTENSION_PARTICLE ><br>
+ * .......... .. | %03 < EXTENSION_TRANS ><br>
+ * .......... .. | %04 < EXTENSION_INIT ><br>
+ * .......... .. | %05 < EXTENSION_RATE ><br>
+ * .......... .. | %06 < EXTENSION_SPECIES ><br>
+ * .......... .. | %07 < EXTENSION_GLOBALQ ><br>
+ * .......... .. | %08 < EXTENSION_FUNCTION ><br>
+ * .......... .. | %09 < EXTENSION_REACTION ><br>
+ * .......... .. | %10 < EXTENSION_FLUX ><br>
+ * .......... .. | %11 < MY_SPECIAL_EXTENSION > )<br>
  * nodeListOptional -> ( PossibleExtensions() )*<br>
  */
 public class PossibleExtensions implements INode {

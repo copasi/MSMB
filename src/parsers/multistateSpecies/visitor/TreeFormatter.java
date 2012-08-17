@@ -304,6 +304,16 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   }
 
   /**
+   * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
+   * nodeToken -> < EOF ><br>
+   */
+  @Override
+  public void visit(final CompleteMultistateSpecies_RangeString n) {
+    n.multistateSpecies_SiteSingleElement.accept(this);
+    n.nodeToken.accept(this);
+  }
+
+  /**
    * multistateSpecies_Name -> MultistateSpecies_Name()<br>
    * nodeOptional -> ( #0 < OPEN_R > #1 MultistateSpecies_SingleStateDefinition()<br>
    * ............ .. . #2 ( $0 < SITE_NAMES_SEPARATOR > $1 MultistateSpecies_SingleStateDefinition() )* #3 < CLOSED_R > )?<br>
@@ -322,6 +332,7 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
    * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
    * nodeListOptional -> ( #0 < SITE_STATES_SEPARATOR > #1 MultistateSpecies_SiteSingleElement() )*<br>
    * nodeToken1 -> < CLOSED_C ><br>
+   * nodeOptional -> ( < CIRCULAR_FLAG > )?<br>
    */
   @Override
   public void visit(final MultistateSpecies_SingleStateDefinition n) {
@@ -332,6 +343,9 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
       processList(n.nodeListOptional);
     }
     n.nodeToken1.accept(this);
+    if (n.nodeOptional.present()) {
+      n.nodeOptional.accept(this);
+    }
   }
 
   /**
@@ -349,27 +363,42 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   }
 
   /**
-   * nodeChoice -> . %0 < STRING_LITERAL ><br>
-   * .......... .. | %1 MultistateSpecies_SiteSingleElement_Range()<br>
-   * .......... .. | %2 ( &0 < MULTI_IDENTIFIER ><br>
+   * nodeChoice -> ( %0 < STRING_LITERAL ><br>
+   * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
    * .......... .. . .. | &1 < NUMBER ><br>
-   * .......... .. . .. | &2 < OPEN_R ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+   * .......... .. . .. | &2 < OPEN_R > )+ )<br>
+   * nodeOptional -> ( #0 ( " " )* #1 < RANGE_SEPARATOR ><br>
+   * ............ .. . #2 ( " " )*<br>
+   * ............ .. . #3 ( %0 < STRING_LITERAL ><br>
+   * ............ .. . .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
+   * ............ .. . .. . .. | &1 < NUMBER ><br>
+   * ............ .. . .. . .. | &2 < OPEN_R > )+ ) )?<br>
    */
   @Override
   public void visit(final MultistateSpecies_SiteSingleElement n) {
     n.nodeChoice.accept(this);
+    if (n.nodeOptional.present()) {
+      n.nodeOptional.accept(this);
+    }
   }
 
   /**
    * nodeToken -> < NUMBER ><br>
+   * nodeListOptional -> ( " " )*<br>
    * nodeToken1 -> < RANGE_SEPARATOR ><br>
+   * nodeListOptional1 -> ( " " )*<br>
    * nodeToken2 -> < NUMBER ><br>
    */
   @Override
   public void visit(final MultistateSpecies_SiteSingleElement_Range n) {
     n.nodeToken.accept(this);
+    if (n.nodeListOptional.present()) {
+      processList(n.nodeListOptional);
+    }
     n.nodeToken1.accept(this);
+    if (n.nodeListOptional1.present()) {
+      processList(n.nodeListOptional1);
+    }
     n.nodeToken2.accept(this);
   }
 
@@ -379,8 +408,7 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
    * .......... .. . .. | &1 < CLOSED_C ><br>
    * .......... .. . .. | &2 < OPEN_R ><br>
    * .......... .. . .. | &3 < CLOSED_R ><br>
-   * .......... .. . .. | &4 < RANGE_SEPARATOR ><br>
-   * .......... .. . .. | &5 < SITE_STATES_SEPARATOR > )+<br>
+   * .......... .. . .. | &4 < SITE_STATES_SEPARATOR > )+<br>
    */
   @Override
   public void visit(final MultistateSpecies_SiteName n) {
@@ -401,12 +429,10 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   }
 
   /**
-   * nodeChoice -> . %0 #0 MultistateSpecies_Operator_SiteName()<br>
+   * nodeChoice -> . %0 #0 ( &0 < SUCC ><br>
+   * .......... .. . .. .. | &1 < PREC > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R ><br>
+   * .......... .. | %1 #0 MultistateSpecies_Operator_SiteName()<br>
    * .......... .. . .. #1 ( $0 < OPEN_C > $1 MultistateSpecies_Operator_SiteSingleState() $2 < CLOSED_C > )?<br>
-   * .......... .. | %1 #0 ( &0 < SUCC ><br>
-   * .......... .. . .. .. | &1 < PREC ><br>
-   * .......... .. . .. .. | &2 < CIRC_L_SHIFT ><br>
-   * .......... .. . .. .. | &3 < CIRC_R_SHIFT > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R ><br>
    */
   @Override
   public void visit(final MultistateSpecies_Operator_SingleSite n) {
@@ -416,9 +442,7 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   /**
    * nodeChoice -> . %0 < STRING_LITERAL ><br>
    * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
-   * .......... .. . .. | &1 < NUMBER ><br>
-   * .......... .. . .. | &2 < OPEN_R ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+   * .......... .. . .. | &1 < NUMBER > )+<br>
    */
   @Override
   public void visit(final MultistateSpecies_Operator_SiteName n) {
@@ -428,9 +452,7 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   /**
    * nodeChoice -> . %0 < STRING_LITERAL ><br>
    * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
-   * .......... .. . .. | &1 < NUMBER ><br>
-   * .......... .. . .. | &2 < OPEN_R ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+   * .......... .. . .. | &1 < NUMBER > )+<br>
    */
   @Override
   public void visit(final MultistateSpecies_Operator_SiteSingleState n) {

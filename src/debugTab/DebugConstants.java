@@ -5,14 +5,13 @@ public class DebugConstants {
 	public static enum PriorityType {
 		   DEFAULTS(0.0,"Defaults additions"), 
 		   MINOR(1.0,"Minor issues"),
-		   SIMILARITY(1.1,"Similarity between names"),
-		   MINOR_EMPTY(1.2, "Important missing definitions"),
+		   //SIMILARITY(1.2,"Similarity between names"),
+		   MINOR_EMPTY(1.1, "Important missing definitions"),
 		   MAJOR(2.0,"Major issues"),
 		   PARSING(2.1,"Parsing errors"),
 		   INCONSISTENCIES(2.2,"Inconsistencies"),
 		   MISSING(2.3, "Missing definitions"), 
 		   EMPTY(2.4, "Empty field");
-		  // MINOR_EMPTY (1.);
 		   			          
 		   public final double priorityCode;
 		   public final String description;

@@ -14,6 +14,7 @@ import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 
 import parsers.mathExpression.MR_Expression_ParserConstants;
+import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 
 public class Constants {
 	
@@ -136,7 +137,6 @@ public class Constants {
 		
 		public static final int DEFAULT_START_INDEX_LIST_STATES = 1;
 		public static final String COPASI_STRING_TIME = "Reference=Time";
-		public static final String TIME_STRING = "Time";
 		public static final String NAN_STRING = "nan";
 				
 		public static final int RENAMING_OPTION_ALL = 100;
@@ -1006,7 +1006,7 @@ public class Constants {
 		
 		
 		public static enum FunctionParamType {
-			   PARAMETER(0,"Parameter", CFunctionParameter.PARAMETER,"PAR"), 
+			   PARAMETER(0,"Global Quantity", CFunctionParameter.PARAMETER,"GLQ"), 
 			   SUBSTRATE(1,"Substrate", CFunctionParameter.SUBSTRATE,"SUB"),
 			   PRODUCT(2,"Product", CFunctionParameter.PRODUCT,"PROD"),
 			   MODIFIER(3,"Modifier", CFunctionParameter.MODIFIER,"MOD"), 
@@ -1145,7 +1145,7 @@ public class Constants {
 		public static final String AUTOSAVE_SESSION_SUFFIX = new String("_autosaved");
 		public static final String AUTOSAVE_UNTITLED = new String("untitled");
 		
-		public final static String MULTISTATE_FILE_EXTENSION = ".multis";
+		public final static String MULTISTATE_FILE_EXTENSION = ".msmb";
 		
 		
 		public static final Vector<String> volumeUnits;
@@ -1249,17 +1249,7 @@ public class Constants {
 			   
 		};
 		
-		public static enum SiteType {
-			RANGE(0), 
-			BOOLEAN(1),
-			LIST(2);
-			
-			public final int type;
-			   
-			SiteType(int t) {
-				   this.type = t;
-		   }
-		};
+		
 			
 		public static enum UnitTypeTime {	
 			FS("fs", CModel.fs), 
@@ -1528,6 +1518,7 @@ public class Constants {
 		      // caret position for a match against known completions. This is all
 		      // that is needed in the majority of cases.
 		 public static   DefaultCompletionProvider provider = new DefaultCompletionProvider();
+		public static String MULTISTATE_TITLE_TABLE_PDF = new String("Multistate species");
 		
 		 static{
 		      // A BasicCompletion is just

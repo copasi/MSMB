@@ -3,6 +3,7 @@ package parsers.chemicalReaction.visitor;
 import parsers.chemicalReaction.MR_ChemicalReaction_ParserConstants;
 import parsers.chemicalReaction.syntaxtree.*;
 import parsers.mathExpression.MR_Expression_ParserConstants;
+import utility.CellParsers;
 
 import java.util.*;
 
@@ -112,7 +113,7 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 			  }
 		  }
 		  
-		  if(isMultistateSpecies(name)) {
+		 /* if(CellParsers.isMultistateSpeciesName(name)) {
 			  MultistateSpecies r = null;
 			  try {
 				  r = new MultistateSpecies(multiModel,name);
@@ -121,7 +122,7 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 				  return;
 			  }
 			  name = r.printCompleteDefinition();
-		  }
+		  }*/
 
 		  if(use_vector==0) {
 			  substrates.add(new MutablePair(stoichiometry, name));
@@ -137,10 +138,6 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 		  super.visit(n);
 		}
 		
-		private boolean isMultistateSpecies(String name) {
-			return false;
-		}
-
 		@Override
 		public void visit(ListModifiers n) {
 			use_vector = 2;
@@ -188,118 +185,6 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 			return  stoichiometry;
 		}
 		
-		
-/*	@Override
-	public void visit(SpeciesReferenceOrFunctionCall_prefix n) {
-		String name = ToStringVisitor.toString(n.name.nodeChoice.choice);
-		if(n.nodeOptional.present())  {
-			NodeOptional nodeOptional = (NodeOptional) ((NodeSequence) n.nodeOptional.node).nodes.get(1);
-			if(nodeOptional.node==null){
-				//System.out.println("FUNCTION CALL (0): "+name);
-				Function f = MainGui.funDB.getFunctionByName(name);
-				if(f==null) missing.add(name);
-			}
-			else {
-				if(!isMultistateSitesList(nodeOptional.node)) {
-					//System.out.println("FUNCTION CALL ("+getNumberArguments((ArgumentList)nodeOptional.node)+"): " +name);
-					Function f = MainGui.funDB.getFunctionByName(name);
-					if(f==null)	missing.add(name);
-					else{
-						checkParameterUsage((ArgumentList)nodeOptional.node,f);
-						
-					}
-
-				} else {
-					//System.out.println("SPECIES: "+ToStringVisitor.toString(n)); // to print complete "multistate" definition
-					if(MultiModel.getWhereNameIsUsed(name)==null) missing.add(name);
-				}
-			}
-		} else {
-			//System.out.println("SPECIES: "+ToStringVisitor.toString(n));
-			if(MultiModel.getWhereNameIsUsed(name)==null) missing.add(name);
-		}
-		super.visit(n);
-	}
-	  
-	 
-	  
-	 
-
-
-
-	private void checkParameterUsage(ArgumentList node, Function f) {
-		Vector<String> types = f.getParametersTypes();
-		int found = getNumberArguments(node);
-		if(types.size() != found) {
-			misused.add("\nFunction "+f.getName()+" should have "+types.size()+ " parameters and not "+ found + " as in "+f.getName() + "("+ToStringVisitor.toString(node)+")");
-			return;
-		}
-		
-		for(int i = 0; i < found; i++) {
-			
-			INode elementNode = null;
-			if(i ==0) elementNode = ((NodeSequence)(node.nodeChoice.choice)).nodes.get(0);
-			else {
-				INode element2 = ((NodeSequence)(node.nodeChoice.choice)).nodes.get(1);
-				if(element2 instanceof NodeListOptional) {
-					NodeSequence seq = (NodeSequence) ((NodeListOptional) element2).nodes.get(i-1);
-					elementNode = seq.nodes.get(1); // because the first should be the separator ,
-				}
-			
-			}
-
-			if(Constants.FunctionParamType.VARIABLE.signatureType.compareTo(types.get(i))==0) {
-				continue; //I DON'T CHECK ANYTHING... and it's THE ONLY type that allows SOMETHING to BE AN EXPRESSION WITHOUT RAISING ANY PROBLEM
-			}
-			else {
-				String element = ToStringVisitor.toString(elementNode);
-				Integer definedInTable = MultiModel.getWhereNameIsUsed(element);
-				if(definedInTable==null) {//it means that is a number or an expression... and if the function requires something else than a variable, this is not allowed
-					misused.add("Encountered \""+element+"\". Was expecting a "+types.get(i));
-				} else {
-					if (	Constants.FunctionParamType.SUBSTRATE.signatureType.compareTo(types.get(i))==0 ||
-							Constants.FunctionParamType.PRODUCT.signatureType.compareTo(types.get(i))==0	||
-							Constants.FunctionParamType.MODIFIER.signatureType.compareTo(types.get(i))==0) {
-						if(definedInTable!=Constants.TitlesTabs.SPECIES.index) misused.add(element);
-					} else if (Constants.FunctionParamType.PARAMETER.signatureType.compareTo(types.get(i))==0) {
-						if(definedInTable!=Constants.TitlesTabs.GLOBALQ.index) misused.add(element);
-						
-					} else if (Constants.FunctionParamType.VOLUME.signatureType.compareTo(types.get(i))==0) {
-						if(definedInTable!=Constants.TitlesTabs.COMPARTMENTS.index) misused.add(element);
-					}
-				}
-			}
-
-		}
-		return;
-		
-	}
-
-	private int getNumberArguments(ArgumentList node) {
-		int size = ((NodeSequence)(node.nodeChoice.choice)).nodes.size()-1;
-		INode element = ((NodeSequence)(node.nodeChoice.choice)).nodes.get(1);
-		if(element instanceof NodeListOptional) {
-			NodeListOptional optList = (NodeListOptional) element;
-			size += optList.nodes.size();
-		}
-		return size;
-		
-	}
-
-	boolean isMultistateSitesList(INode n) {
-		 if(n instanceof ArgumentList) {
-			 if(((ArgumentList)n).nodeChoice.which ==0){
-				 return true;
-			 }  else return false;
-		 }
-		 else {
-			 System.out.println("ERROR!" + n.getClass());
-			 return false;
-		 }
-	 }
-
-
-*/
 
 
 	

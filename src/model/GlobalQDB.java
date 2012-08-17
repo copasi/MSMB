@@ -179,7 +179,7 @@ public class GlobalQDB {
 	public int getIndex(String name) {
 		return globalQIndexes.get(name);
 	}
-
+	
 	public boolean removeGlobalQ(int toBeRemoved) {
 			int size = globalQVector.keySet().size();
 			globalQIndexes.remove(globalQVector.get(toBeRemoved+1).getName());

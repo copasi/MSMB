@@ -25,13 +25,20 @@ import parsers.multistateSpecies.syntaxtree.*;
 public class MR_MultistateSpecies_Parser {
 
   public static void main(String args[]) {
-    System.out.println("Nothing MR_ChemicalReaction_Parser...");
+    System.out.println("MR_MultistateSpecies_Parser...");
     try {
       String expression = new String("Cdh1(P{1:10})");
       InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
       CompleteMultistateSpecies start = react.CompleteMultistateSpecies();
       DepthFirstVoidVisitor v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("c");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
       expression = new String("Cdh1");
@@ -42,6 +49,13 @@ public class MR_MultistateSpecies_Parser {
       start.accept(v);
       System.out.println("...................................");
       expression = new String("Cdh1(p{1})");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{1};q{4})");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       start = react.CompleteMultistateSpecies();
@@ -62,7 +76,7 @@ public class MR_MultistateSpecies_Parser {
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
-      expression = new String("Cdh1(P{1:4,6,PREC,\"prec\"})");
+      expression = new String("Cdh1(P{1:4,6,PRED,\"pred\"})");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       start = react.CompleteMultistateSpecies();
@@ -70,26 +84,40 @@ public class MR_MultistateSpecies_Parser {
       start.accept(v);
       System.out.println("...................................");
       System.out.println(".......OPERATORS.....................");
-      expression = new String("Cdh1(++(p))");
+      expression = new String("Cdh1(pred(p);pred(q))");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       CompleteMultistateSpecies_Operator op = react.CompleteMultistateSpecies_Operator();
       v = new MyVisitor();
       op.accept(v);
       System.out.println("...................................");
-      expression = new String("Cdh1(--(p);<<(q))");
+      expression = new String("Cdh1(succ(p))");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       op = react.CompleteMultistateSpecies_Operator();
       v = new MyVisitor();
       op.accept(v);
       System.out.println("...................................");
-      expression = new String("Cdh1(>>(\"Time\");<<(q))");
+      expression = new String("Cdh1(succ(\"Time\");pred(q))");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       op = react.CompleteMultistateSpecies_Operator();
       v = new MyVisitor();
       op.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{0:10}c)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{0:10}c;q{true,false})");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
       System.out.println("...................................");
     }
     catch (Exception e) {
@@ -108,11 +136,6 @@ class MyVisitor extends DepthFirstVoidVisitor {
 
   @Override public void visit(MultistateSpecies n) {
     System.out.println("MultistateSpecies");
-    super.visit(n);
-  }
-
-  @Override public void visit(MultistateSpecies_SiteSingleElement_Range n) {
-    System.out.println("RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANGE");
     super.visit(n);
   }
 }
@@ -142,10 +165,9 @@ TOKEN :
 | < FLOOR : "floor" >
 | < SQRT : "sqrt" >
 | < LOG : "log" >
-| < SUCC : "++" >
-| < PREC : "--" >
-| < CIRC_L_SHIFT : "<<" >
-| < CIRC_R_SHIFT : ">>" >
+| < SUCC : "succ" >
+| < PREC : "pred" >
+| < CIRCULAR_FLAG : "c" >
 }
 
 TOKEN :
@@ -160,7 +182,8 @@ TOKEN :
 | < SITE_STATES_SEPARATOR : "," >
 | < STRING_LITERAL : "\"" ( ( ~["\"", "\\", "\n", "\r"] )| ( "\\" ( ["n", "t", "b", "r", "f", "\\", "'", "\""]| ["0"-"7"] ( ["0"-"7"] )?| ["0"-"3"] ["0"-"7"] ["0"-"7"] ) ) )* "\"" >
 | < NUMBER : ( ["0"-"9"] )+ >
-| < MULTI_IDENTIFIER : ( ["A"-"Z", "_", "a"-"z", "'", "<", ">", "|", "&", "!", "?", "@", "#", "$", "%", "^", "+", "*", "-", "/", "~", "`", "[", "]"]| <NUMBER> )+ >
+| < MULTI_IDENTIFIER : ( ["A"-"Z", "_", "a"-"z", "'", "<", ">", "|", "&", "!", "@", "#", "$", "%", "^", "+", "*", "-", "/", "~", "`", "[", "]"]| <NUMBER>| <UNDEFINED_SITE_SYMBOL> )+ >
+| < UNDEFINED_SITE_SYMBOL : "?" >
 }
 
 CompleteMultistateSpecies CompleteMultistateSpecies() :
@@ -212,6 +235,23 @@ CompleteMultistateSpecies_Range CompleteMultistateSpecies_Range() throws ParseEx
     { n1 = JTBToolkit.makeNodeToken(n2); }
   }
   { return new CompleteMultistateSpecies_Range(n0, n1); }
+}
+
+CompleteMultistateSpecies_RangeString CompleteMultistateSpecies_RangeString() throws ParseException :
+{
+  // --- JTB generated node declarations ---
+  MultistateSpecies_SiteSingleElement n0 = null;
+  NodeToken n1 = null;
+  Token n2 = null;
+}
+{
+  n0 = MultistateSpecies_SiteSingleElement()
+  n2 = < EOF > {
+    n2.beginColumn++;
+    n2.endColumn++;
+    { n1 = JTBToolkit.makeNodeToken(n2); }
+  }
+  { return new CompleteMultistateSpecies_RangeString(n0, n1); }
 }
 
 MultistateSpecies MultistateSpecies() throws ParseException :
@@ -274,6 +314,9 @@ MultistateSpecies_SingleStateDefinition MultistateSpecies_SingleStateDefinition(
   MultistateSpecies_SiteSingleElement n8 = null;
   NodeToken n9 = null;
   Token n10 = null;
+  NodeOptional n11 = new NodeOptional();
+  NodeToken n12 = null;
+  Token n13 = null;
 }
 {
   n0 = MultistateSpecies_SiteName()
@@ -292,7 +335,12 @@ MultistateSpecies_SingleStateDefinition MultistateSpecies_SingleStateDefinition(
   { n4.nodes.trimToSize(); }
   n10 = < CLOSED_C >
   { n9 = JTBToolkit.makeNodeToken(n10); }
-  { return new MultistateSpecies_SingleStateDefinition(n0, n1, n3, n4, n9); }
+  (
+    n13 = < CIRCULAR_FLAG >
+    { n12 = JTBToolkit.makeNodeToken(n13); }
+    { n11.addNode(n12); }
+  )?
+  { return new MultistateSpecies_SingleStateDefinition(n0, n1, n3, n4, n9, n11); }
 }
 
 MultistateSpecies_Name MultistateSpecies_Name() throws ParseException :
@@ -315,6 +363,8 @@ MultistateSpecies_Name MultistateSpecies_Name() throws ParseException :
   Token n14 = null;
   NodeToken n15 = null;
   Token n16 = null;
+  NodeToken n17 = null;
+  Token n18 = null;
 }
 {
   (
@@ -326,27 +376,31 @@ MultistateSpecies_Name MultistateSpecies_Name() throws ParseException :
       (
         n6 = < MULTI_IDENTIFIER >
         { n5 = JTBToolkit.makeNodeToken(n6); }
-        { n4 = new NodeChoice(n5, 0, 6); }
+        { n4 = new NodeChoice(n5, 0, 7); }
       |
-        n8 = < CLOSED_R >
+        n8 = < CIRCULAR_FLAG >
         { n7 = JTBToolkit.makeNodeToken(n8); }
-        { n4 = new NodeChoice(n7, 1, 6); }
+        { n4 = new NodeChoice(n7, 1, 7); }
       |
-        n10 = < SITE_NAMES_SEPARATOR >
+        n10 = < CLOSED_R >
         { n9 = JTBToolkit.makeNodeToken(n10); }
-        { n4 = new NodeChoice(n9, 2, 6); }
+        { n4 = new NodeChoice(n9, 2, 7); }
       |
-        n12 = < RANGE_SEPARATOR >
+        n12 = < SITE_NAMES_SEPARATOR >
         { n11 = JTBToolkit.makeNodeToken(n12); }
-        { n4 = new NodeChoice(n11, 3, 6); }
+        { n4 = new NodeChoice(n11, 3, 7); }
       |
-        n14 = < SITE_STATES_SEPARATOR >
+        n14 = < RANGE_SEPARATOR >
         { n13 = JTBToolkit.makeNodeToken(n14); }
-        { n4 = new NodeChoice(n13, 4, 6); }
+        { n4 = new NodeChoice(n13, 4, 7); }
       |
-        n16 = < CLOSED_C >
+        n16 = < SITE_STATES_SEPARATOR >
         { n15 = JTBToolkit.makeNodeToken(n16); }
-        { n4 = new NodeChoice(n15, 5, 6); }
+        { n4 = new NodeChoice(n15, 5, 7); }
+      |
+        n18 = < CLOSED_C >
+        { n17 = JTBToolkit.makeNodeToken(n18); }
+        { n4 = new NodeChoice(n17, 6, 7); }
       )
       { n3.addNode(n4); }
     )+
@@ -362,52 +416,117 @@ MultistateSpecies_SiteSingleElement MultistateSpecies_SiteSingleElement() throws
   NodeChoice n0 = null;
   NodeToken n1 = null;
   Token n2 = null;
-  MultistateSpecies_SiteSingleElement_Range n3 = null;
-  NodeList n4 = new NodeList();
-  NodeChoice n5 = null;
-  NodeToken n6 = null;
-  Token n7 = null;
-  NodeToken n8 = null;
-  Token n9 = null;
-  NodeToken n10 = null;
-  Token n11 = null;
-  NodeToken n12 = null;
-  Token n13 = null;
+  NodeList n3 = new NodeList();
+  NodeChoice n4 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
+  NodeToken n7 = null;
+  Token n8 = null;
+  NodeToken n9 = null;
+  Token n10 = null;
+  NodeOptional n11 = new NodeOptional();
+  NodeSequence n12 = null;
+  NodeListOptional n13 = null;
+  NodeToken n14 = null;
+  Token n15 = null;
+  NodeToken n16 = null;
+  Token n17 = null;
+  NodeListOptional n18 = null;
+  NodeToken n19 = null;
+  Token n20 = null;
+  NodeChoice n21 = null;
+  NodeToken n22 = null;
+  Token n23 = null;
+  NodeList n24 = null;
+  NodeChoice n25 = null;
+  NodeToken n26 = null;
+  Token n27 = null;
+  NodeToken n28 = null;
+  Token n29 = null;
+  NodeToken n30 = null;
+  Token n31 = null;
 }
 {
   (
-    n2 = < STRING_LITERAL >
-    { n1 = JTBToolkit.makeNodeToken(n2); }
-    { n0 = new NodeChoice(n1, 0, 3); }
-  |
-    LOOKAHEAD( 3 )
-    n3 = MultistateSpecies_SiteSingleElement_Range()
-    { n0 = new NodeChoice(n3, 1, 3); }
-  |
+    (
+      n2 = < STRING_LITERAL >
+      { n1 = JTBToolkit.makeNodeToken(n2); }
+      { n0 = new NodeChoice(n1, 0, 2); }
+    |
+      (
+        (
+          n6 = < MULTI_IDENTIFIER >
+          { n5 = JTBToolkit.makeNodeToken(n6); }
+          { n4 = new NodeChoice(n5, 0, 3); }
+        |
+          n8 = < NUMBER >
+          { n7 = JTBToolkit.makeNodeToken(n8); }
+          { n4 = new NodeChoice(n7, 1, 3); }
+        |
+          n10 = < OPEN_R >
+          { n9 = JTBToolkit.makeNodeToken(n10); }
+          { n4 = new NodeChoice(n9, 2, 3); }
+        )
+        { n3.addNode(n4); }
+      )+
+      { n3.nodes.trimToSize(); }
+      { n0 = new NodeChoice(n3, 1, 2); }
+    )
+    
+  )
+  (
+    { n13 = new NodeListOptional(); }
+    { n18 = new NodeListOptional(); }
+    { n24 = new NodeList(); }
+    { n12 = new NodeSequence(4); }
+    (
+      n15 = " "
+      { n14 = JTBToolkit.makeNodeToken(n15); }
+      { n13.addNode(n14); }
+    )*
+    { n13.nodes.trimToSize(); }
+    { n12.addNode(n13); }
+    n17 = < RANGE_SEPARATOR >
+    { n16 = JTBToolkit.makeNodeToken(n17); }
+    { n12.addNode(n16); }
+    (
+      n20 = " "
+      { n19 = JTBToolkit.makeNodeToken(n20); }
+      { n18.addNode(n19); }
+    )*
+    { n18.nodes.trimToSize(); }
+    { n12.addNode(n18); }
     (
       (
-        n7 = < MULTI_IDENTIFIER >
-        { n6 = JTBToolkit.makeNodeToken(n7); }
-        { n5 = new NodeChoice(n6, 0, 4); }
+        n23 = < STRING_LITERAL >
+        { n22 = JTBToolkit.makeNodeToken(n23); }
+        { n21 = new NodeChoice(n22, 0, 2); }
       |
-        n9 = < NUMBER >
-        { n8 = JTBToolkit.makeNodeToken(n9); }
-        { n5 = new NodeChoice(n8, 1, 4); }
-      |
-        n11 = < OPEN_R >
-        { n10 = JTBToolkit.makeNodeToken(n11); }
-        { n5 = new NodeChoice(n10, 2, 4); }
-      |
-        n13 = < RANGE_SEPARATOR >
-        { n12 = JTBToolkit.makeNodeToken(n13); }
-        { n5 = new NodeChoice(n12, 3, 4); }
+        (
+          (
+            n27 = < MULTI_IDENTIFIER >
+            { n26 = JTBToolkit.makeNodeToken(n27); }
+            { n25 = new NodeChoice(n26, 0, 3); }
+          |
+            n29 = < NUMBER >
+            { n28 = JTBToolkit.makeNodeToken(n29); }
+            { n25 = new NodeChoice(n28, 1, 3); }
+          |
+            n31 = < OPEN_R >
+            { n30 = JTBToolkit.makeNodeToken(n31); }
+            { n25 = new NodeChoice(n30, 2, 3); }
+          )
+          { n24.addNode(n25); }
+        )+
+        { n24.nodes.trimToSize(); }
+        { n21 = new NodeChoice(n24, 1, 2); }
       )
-      { n4.addNode(n5); }
-    )+
-    { n4.nodes.trimToSize(); }
-    { n0 = new NodeChoice(n4, 2, 3); }
-  )
-  { return new MultistateSpecies_SiteSingleElement(n0); }
+      
+    )
+    { n12.addNode(n21); }
+    { n11.addNode(n12); }
+  )?
+  { return new MultistateSpecies_SiteSingleElement(n0, n11); }
 }
 
 MultistateSpecies_SiteSingleElement_Range MultistateSpecies_SiteSingleElement_Range() throws ParseException :
@@ -466,8 +585,6 @@ MultistateSpecies_SiteName MultistateSpecies_SiteName() throws ParseException :
   Token n12 = null;
   NodeToken n13 = null;
   Token n14 = null;
-  NodeToken n15 = null;
-  Token n16 = null;
 }
 {
   (
@@ -479,27 +596,23 @@ MultistateSpecies_SiteName MultistateSpecies_SiteName() throws ParseException :
       (
         n6 = < MULTI_IDENTIFIER >
         { n5 = JTBToolkit.makeNodeToken(n6); }
-        { n4 = new NodeChoice(n5, 0, 6); }
+        { n4 = new NodeChoice(n5, 0, 5); }
       |
         n8 = < CLOSED_C >
         { n7 = JTBToolkit.makeNodeToken(n8); }
-        { n4 = new NodeChoice(n7, 1, 6); }
+        { n4 = new NodeChoice(n7, 1, 5); }
       |
         n10 = < OPEN_R >
         { n9 = JTBToolkit.makeNodeToken(n10); }
-        { n4 = new NodeChoice(n9, 2, 6); }
+        { n4 = new NodeChoice(n9, 2, 5); }
       |
         n12 = < CLOSED_R >
         { n11 = JTBToolkit.makeNodeToken(n12); }
-        { n4 = new NodeChoice(n11, 3, 6); }
+        { n4 = new NodeChoice(n11, 3, 5); }
       |
-        n14 = < RANGE_SEPARATOR >
+        n14 = < SITE_STATES_SEPARATOR >
         { n13 = JTBToolkit.makeNodeToken(n14); }
-        { n4 = new NodeChoice(n13, 4, 6); }
-      |
-        n16 = < SITE_STATES_SEPARATOR >
-        { n15 = JTBToolkit.makeNodeToken(n16); }
-        { n4 = new NodeChoice(n15, 5, 6); }
+        { n4 = new NodeChoice(n13, 4, 5); }
       )
       { n3.addNode(n4); }
     )+
@@ -560,81 +673,69 @@ MultistateSpecies_Operator_SingleSite MultistateSpecies_Operator_SingleSite() th
   // --- JTB generated node declarations ---
   NodeChoice n0 = null;
   NodeSequence n1 = null;
-  MultistateSpecies_Operator_SiteName n2 = null;
-  NodeOptional n3 = new NodeOptional();
-  NodeSequence n4 = null;
+  NodeChoice n2 = null;
+  NodeToken n3 = null;
+  Token n4 = null;
   NodeToken n5 = null;
   Token n6 = null;
-  MultistateSpecies_Operator_SiteSingleState n7 = null;
-  NodeToken n8 = null;
-  Token n9 = null;
-  NodeSequence n10 = null;
-  NodeChoice n11 = null;
-  NodeToken n12 = null;
-  Token n13 = null;
-  NodeToken n14 = null;
-  Token n15 = null;
+  NodeToken n7 = null;
+  Token n8 = null;
+  MultistateSpecies_Operator_SiteName n9 = null;
+  NodeToken n10 = null;
+  Token n11 = null;
+  NodeSequence n12 = null;
+  MultistateSpecies_Operator_SiteName n13 = null;
+  NodeOptional n14 = new NodeOptional();
+  NodeSequence n15 = null;
   NodeToken n16 = null;
   Token n17 = null;
-  NodeToken n18 = null;
-  Token n19 = null;
-  NodeToken n20 = null;
-  Token n21 = null;
-  MultistateSpecies_Operator_SiteName n22 = null;
-  NodeToken n23 = null;
-  Token n24 = null;
+  MultistateSpecies_Operator_SiteSingleState n18 = null;
+  NodeToken n19 = null;
+  Token n20 = null;
 }
 {
   (
-    { n1 = new NodeSequence(2); }
-    n2 = MultistateSpecies_Operator_SiteName()
-    { n1.addNode(n2); }
-    (
-      { n4 = new NodeSequence(3); }
-      n6 = < OPEN_C >
-      { n5 = JTBToolkit.makeNodeToken(n6); }
-      { n4.addNode(n5); }
-      n7 = MultistateSpecies_Operator_SiteSingleState()
-      { n4.addNode(n7); }
-      n9 = < CLOSED_C >
-      { n8 = JTBToolkit.makeNodeToken(n9); }
-      { n4.addNode(n8); }
-      { n3.addNode(n4); }
-    )?
-    { n1.addNode(n3); }
-    { n0 = new NodeChoice(n1, 0, 2); }
-  |
-    { n10 = new NodeSequence(4); }
+    { n1 = new NodeSequence(4); }
     (
       (
-        n13 = < SUCC >
-        { n12 = JTBToolkit.makeNodeToken(n13); }
-        { n11 = new NodeChoice(n12, 0, 4); }
+        n4 = < SUCC >
+        { n3 = JTBToolkit.makeNodeToken(n4); }
+        { n2 = new NodeChoice(n3, 0, 2); }
       |
-        n15 = < PREC >
-        { n14 = JTBToolkit.makeNodeToken(n15); }
-        { n11 = new NodeChoice(n14, 1, 4); }
-      |
-        n17 = < CIRC_L_SHIFT >
-        { n16 = JTBToolkit.makeNodeToken(n17); }
-        { n11 = new NodeChoice(n16, 2, 4); }
-      |
-        n19 = < CIRC_R_SHIFT >
-        { n18 = JTBToolkit.makeNodeToken(n19); }
-        { n11 = new NodeChoice(n18, 3, 4); }
+        n6 = < PREC >
+        { n5 = JTBToolkit.makeNodeToken(n6); }
+        { n2 = new NodeChoice(n5, 1, 2); }
       )
       
     )
-    { n10.addNode(n11); }
-    n21 = < OPEN_R >
-    { n20 = JTBToolkit.makeNodeToken(n21); }
-    { n10.addNode(n20); }
-    n22 = MultistateSpecies_Operator_SiteName()
-    { n10.addNode(n22); }
-    n24 = < CLOSED_R >
-    { n23 = JTBToolkit.makeNodeToken(n24); }
-    { n10.addNode(n23); }
-    { n0 = new NodeChoice(n10, 1, 2); }
+    { n1.addNode(n2); }
+    n8 = < OPEN_R >
+    { n7 = JTBToolkit.makeNodeToken(n8); }
+    { n1.addNode(n7); }
+    n9 = MultistateSpecies_Operator_SiteName()
+    { n1.addNode(n9); }
+    n11 = < CLOSED_R >
+    { n10 = JTBToolkit.makeNodeToken(n11); }
+    { n1.addNode(n10); }
+    { n0 = new NodeChoice(n1, 0, 2); }
+  |
+    { n12 = new NodeSequence(2); }
+    n13 = MultistateSpecies_Operator_SiteName()
+    { n12.addNode(n13); }
+    (
+      { n15 = new NodeSequence(3); }
+      n17 = < OPEN_C >
+      { n16 = JTBToolkit.makeNodeToken(n17); }
+      { n15.addNode(n16); }
+      n18 = MultistateSpecies_Operator_SiteSingleState()
+      { n15.addNode(n18); }
+      n20 = < CLOSED_C >
+      { n19 = JTBToolkit.makeNodeToken(n20); }
+      { n15.addNode(n19); }
+      { n14.addNode(n15); }
+    )?
+    { n12.addNode(n14); }
+    { n0 = new NodeChoice(n12, 1, 2); }
   )
   { return new MultistateSpecies_Operator_SingleSite(n0); }
 }
@@ -651,10 +752,6 @@ MultistateSpecies_Operator_SiteName MultistateSpecies_Operator_SiteName() throws
   Token n6 = null;
   NodeToken n7 = null;
   Token n8 = null;
-  NodeToken n9 = null;
-  Token n10 = null;
-  NodeToken n11 = null;
-  Token n12 = null;
 }
 {
   (
@@ -666,19 +763,11 @@ MultistateSpecies_Operator_SiteName MultistateSpecies_Operator_SiteName() throws
       (
         n6 = < MULTI_IDENTIFIER >
         { n5 = JTBToolkit.makeNodeToken(n6); }
-        { n4 = new NodeChoice(n5, 0, 4); }
+        { n4 = new NodeChoice(n5, 0, 2); }
       |
         n8 = < NUMBER >
         { n7 = JTBToolkit.makeNodeToken(n8); }
-        { n4 = new NodeChoice(n7, 1, 4); }
-      |
-        n10 = < OPEN_R >
-        { n9 = JTBToolkit.makeNodeToken(n10); }
-        { n4 = new NodeChoice(n9, 2, 4); }
-      |
-        n12 = < RANGE_SEPARATOR >
-        { n11 = JTBToolkit.makeNodeToken(n12); }
-        { n4 = new NodeChoice(n11, 3, 4); }
+        { n4 = new NodeChoice(n7, 1, 2); }
       )
       { n3.addNode(n4); }
     )+
@@ -700,10 +789,6 @@ MultistateSpecies_Operator_SiteSingleState MultistateSpecies_Operator_SiteSingle
   Token n6 = null;
   NodeToken n7 = null;
   Token n8 = null;
-  NodeToken n9 = null;
-  Token n10 = null;
-  NodeToken n11 = null;
-  Token n12 = null;
 }
 {
   (
@@ -715,19 +800,11 @@ MultistateSpecies_Operator_SiteSingleState MultistateSpecies_Operator_SiteSingle
       (
         n6 = < MULTI_IDENTIFIER >
         { n5 = JTBToolkit.makeNodeToken(n6); }
-        { n4 = new NodeChoice(n5, 0, 4); }
+        { n4 = new NodeChoice(n5, 0, 2); }
       |
         n8 = < NUMBER >
         { n7 = JTBToolkit.makeNodeToken(n8); }
-        { n4 = new NodeChoice(n7, 1, 4); }
-      |
-        n10 = < OPEN_R >
-        { n9 = JTBToolkit.makeNodeToken(n10); }
-        { n4 = new NodeChoice(n9, 2, 4); }
-      |
-        n12 = < RANGE_SEPARATOR >
-        { n11 = JTBToolkit.makeNodeToken(n12); }
-        { n4 = new NodeChoice(n11, 3, 4); }
+        { n4 = new NodeChoice(n7, 1, 2); }
       )
       { n3.addNode(n4); }
     )+

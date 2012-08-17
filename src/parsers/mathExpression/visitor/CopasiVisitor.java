@@ -6,6 +6,7 @@ import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import parsers.mathExpression.syntaxtree.*;
 import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import parsers.multistateSpecies.TokenMgrError;
 import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 import utility.Constants;
@@ -13,14 +14,8 @@ import utility.Constants;
 import gui.MainGui;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
 import model.Function;
@@ -34,10 +29,6 @@ import org.COPASI.CMetab;
 import org.COPASI.CModel;
 import org.COPASI.CModelValue;
 import org.nfunk.jep.ParseException;
-
-import debugTab.DebugConstants;
-import debugTab.DebugMessage;
-import debugTab.SimilarityStrings;
 
 
 public class CopasiVisitor extends DepthFirstVoidVisitor {
@@ -121,6 +112,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 						funName  = name.getFunctionName();
 						if(funName.length()==0) return;
 						Function f = multiModel.getFunctionByName(funName);
+						if(f==null) throw new Exception("FunName not defined");
 						copasiExpression += funName+"(";
 					} catch(Exception ex) {
 						if(funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.FLOOR))==0 ||
@@ -184,11 +176,39 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 			 for(int i = 0; i < sum.size(); i++) {
 				  copasiExpression += "(";
 				 SumExpansion el = sum.get(i);
-				  Vector<Species> species = el.getSpeciesSum();
+				 Vector<String> weights = el.getWeightFun();
+				 Vector<Species> species = el.getSpeciesSum();
 				  for(int j =0; j < species.size()-1; j++){
+					  if(weights!= null &&  weights.size()==species.size() && weights.get(j).length()>0) {
+						  InputStream isR = new ByteArrayInputStream(weights.get(j).getBytes("UTF-8"));
+						  MR_Expression_Parser parserR = new MR_Expression_Parser(isR);
+						  CompleteExpression rootR = parserR.CompleteExpression();
+						  CopasiVisitor vis = new CopasiVisitor(model,multiModel,conc,isInitialExpression);
+						  rootR.accept(vis);
+						  if(vis.getExceptions().size() == 0) {
+								String copasiExpr  = vis.getCopasiExpression();
+								copasiExpression += copasiExpr+"*";
+							} else {
+								this.exceptions.addAll(vis.exceptions);
+							} 
+					  }
 					  generateCopasiElement(species.get(j).getDisplayedName());
 					  copasiExpression += " + ";
 				}
+				  //and for the last element
+				  if(weights!= null &&  weights.size()==species.size() && weights.get(species.size()-1).length()>0) {
+					  InputStream isR = new ByteArrayInputStream(weights.get(species.size()-1).getBytes("UTF-8"));
+					  MR_Expression_Parser parserR = new MR_Expression_Parser(isR);
+					  CompleteExpression rootR = parserR.CompleteExpression();
+					  CopasiVisitor vis = new CopasiVisitor(model,multiModel,conc,isInitialExpression);
+					  rootR.accept(vis);
+					  if(vis.getExceptions().size() == 0) {
+							String copasiExpr  = vis.getCopasiExpression();
+							copasiExpression += copasiExpr+"*";
+						} else {
+							this.exceptions.addAll(vis.exceptions);
+						} 
+				  }
 				  generateCopasiElement(species.get(species.size()-1).getDisplayedName());
 				  copasiExpression += ")";
 			  }
@@ -222,6 +242,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 			MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
 	
 			start.accept(v);
+			if(v.getExceptions().size() > 0) throw v.getExceptions().get(0);
 			MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(v.getSpeciesName());
 		
 			if(sp.containsSpecificConfiguration(element)) return true;
@@ -230,17 +251,20 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				return false;
 			}
 		
-		 } catch (Exception e) {
-			//	e.printStackTrace();
+		 } catch (TokenMgrError e) {
 				return false;
+		} catch (Exception e) {
+			//e.printStackTrace();
+			return false;
 		}
+		
 	}
 	
 	public void generateCopasiElement(String element) {
-		//String element = ToStringVisitor.toString(n);
 		String element_copasiTerm = new String();
-		if(element.compareTo(Constants.TIME_STRING) ==0) {
-			element_copasiTerm = model.getObject(new CCopasiObjectName("Reference=Time")).getCN().getString();
+		if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0 
+			|| element.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) ==0) {
+			element_copasiTerm = model.getObject(new CCopasiObjectName(Constants.COPASI_STRING_TIME)).getCN().getString();
 		} 
 		else  if(!isMultistateSpeciesDefined(element)) {
 			
@@ -263,85 +287,91 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				String element_timing_quantifier = getTimingQuantifier(extensions);
 				String element_quantity_quantifier = getQuantityQuantifier(extensions);
 			
-			//String element_substring = new String(element);
-			//String element_timing_quantifier = null;//endWithTimingQuantifier(element);
-			//String element_quantity_quantifier = null;//endWithQuantityQuantifier(element);
-		/*	if(element_quantity_quantifier!= null) {
-				element_substring = element.substring(0, element.length()-2);
-				element_timing_quantifier = endWithTimingQuantifier(element_substring);
-				if(element_timing_quantifier!=null) {
-					element_substring = element_substring.substring(0, element_substring.length()-2);
-				}
-				System.out.println(element_substring);
-			} else {
-				if(element_timing_quantifier!=null) {
-					element_substring = element.substring(0, element.length()-2);
-					element_quantity_quantifier = endWithQuantityQuantifier(element_substring);
-					if(element_quantity_quantifier!= null) {
-						element_substring = element_substring.substring(0, element_substring.length()-2);
+				try {
+					if(element_kind_quantifier == null || element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES))==0) {
+						index = this.findMetabolite(element_substring,false);
 					}
-					System.out.println(element_substring);
+				} catch (Exception e) {
+					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+					index = -1;
 				}
-			}*/
-			
-			try {
-				if(element_kind_quantifier == null || element_kind_quantifier.compareTo("."+MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES))==0) {
-					index = this.findMetabolite(element_substring,false);
-				}
-			} catch (Exception e) {
-				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-				index = -1;
-			}
 			if(index!= -1) { //species
 				CMetab metab = model.getMetabolite(index);
-				if(element_quantity_quantifier == null && element_timing_quantifier == null) {
-					if(!conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
-					else element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
-				} else {
-					if(element_timing_quantifier == null) {
-						if (element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
-						else if(element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
-					}else if(element_quantity_quantifier == null) {
-						if(element_timing_quantifier.compareTo(".i")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
-						else if(element_timing_quantifier.compareTo(".t")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
-						else if(element_timing_quantifier.compareTo(".r")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
-						else if(element_timing_quantifier.compareTo(".i")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
-						else if(element_timing_quantifier.compareTo(".t")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
-						else if(element_timing_quantifier.compareTo(".r")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumberRate")).getCN().getString();
+				if(!isInitialExpression) {
+					if(element_quantity_quantifier == null && element_timing_quantifier == null) {
+						if(!conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
+						else element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
+					} else {
+						if(element_timing_quantifier == null) {
+							if (element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
+							else if(element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
+						}else if(element_quantity_quantifier == null) {
+							if(element_timing_quantifier.compareTo(".i")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".t")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".r")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".i")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".t")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".r")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumberRate")).getCN().getString();
+						}
+						else if(element_timing_quantifier.compareTo(".i")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".i")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".t")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".t")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".r")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumberRate")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".r")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
+
 					}
-					else if(element_timing_quantifier.compareTo(".i")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
-					else if(element_timing_quantifier.compareTo(".i")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
-					else if(element_timing_quantifier.compareTo(".t")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumber")).getCN().getString();
-					else if(element_timing_quantifier.compareTo(".t")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
-					else if(element_timing_quantifier.compareTo(".r")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=ParticleNumberRate")).getCN().getString();
-					else if(element_timing_quantifier.compareTo(".r")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
-					
+				} else {
+					if(element_quantity_quantifier == null && element_timing_quantifier == null) {
+						if(!conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
+						else element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
+					} else {
+						if(element_timing_quantifier == null) {
+							if (element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
+							else if(element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
+						}else if(element_quantity_quantifier == null) {
+							if(element_timing_quantifier.compareTo(".i")==0 && conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".i")==0 && !conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
+							else element_copasiTerm = null;
+						}
+						else if(element_timing_quantifier.compareTo(".i")==0 && element_quantity_quantifier.compareTo(".c")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".i")==0 && element_quantity_quantifier.compareTo(".p")==0) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
+						else element_copasiTerm = null;
+					}
 				}
 			} else {
-				//MAYBE ALSO THE REST CAN HAVE A DISTINCTION BETWEEN TRANSIENT .t AND .i INITIAL (CHEEEEEEEEEEEEECK)
-				
-				//for now just species are allowed
-				if(element_kind_quantifier == null || element_kind_quantifier.compareTo("."+MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ))==0) {
-						index = this.findGlobalQ(element,false);
+				if(element_kind_quantifier == null || element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ))==0) {
+						index = this.findGlobalQ(element_substring,false);
 				}
 				if(index!= -1) { //parameter
 					CModelValue m = model.getModelValue(index);
 					if(!isInitialExpression) {
-						element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=Value")).getCN().getString();
+						if(element_timing_quantifier==null) element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=Value")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".i")==0) element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=InitialValue")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".t")==0) element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=Value")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".r")==0) element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
+						else element_copasiTerm = null;
 					} else {
-						element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=InitialValue")).getCN().getString();
+						if(element_timing_quantifier==null) element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=InitialValue")).getCN().getString();
+						else if(element_timing_quantifier.compareTo(".i")==0) element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=InitialValue")).getCN().getString();
+						else element_copasiTerm = null;
 					}
 				} else { //compartment?
-					if(element_kind_quantifier == null || element_kind_quantifier.compareTo("."+MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT))==0) {
-						index = this.findCompartment(element,false);
+					if(element_kind_quantifier == null || element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT))==0) {
+						index = this.findCompartment(element_substring,false);
 					}
 					if(index != -1) {
 						CCompartment comp = model.getCompartment(index);
 						if(!isInitialExpression) {
-							element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=Volume")).getCN().getString();
+							if(element_timing_quantifier==null) element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=Volume")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".i")==0) element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=InitialVolume")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".t")==0) element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=Volume")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".r")==0) element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
+							else element_copasiTerm = null;
 						} else {
-							element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=InitialVolume")).getCN().getString();
-										
+							if(element_timing_quantifier==null) element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=InitialVolume")).getCN().getString();
+							else if(element_timing_quantifier.compareTo(".i")==0) element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=InitialVolume")).getCN().getString();
+							else element_copasiTerm = null;
 						}
 					} 
 				}
@@ -356,7 +386,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 
 				start.accept(v);
 				MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(v.getSpeciesName());
-				
+			
 				
 				int index = this.findMetabolite(element,false);
 				
@@ -406,7 +436,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 		}
 		
 		
-		
+		if(element_copasiTerm == null) exceptions.add(new ParseException("Non compatible qualifiers"));
 		if(element_copasiTerm.length() == 0) exceptions.add(new ParseException("Model yet not complete. Element "+element+" not found"));
 		copasiExpression+="<"+element_copasiTerm+">";
 	}
@@ -414,11 +444,11 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	private String getKindQuantifier(Vector<String> extensions) {
 		for(int i = 0; i < extensions.size(); i++) {
 			String ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT);
-			if(extensions.get(i).compareTo(ext)==0) {	return "."+ext;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
 			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES);
-			if(extensions.get(i).compareTo(ext)==0) {	return "."+ext;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
 			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ);
-			if(extensions.get(i).compareTo(ext)==0) {	return "."+ext;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
 		}
 		return null;
 	}
@@ -426,9 +456,9 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	private String getQuantityQuantifier(Vector<String> extensions) {
 		for(int i = 0; i < extensions.size(); i++) {
 				String ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_PARTICLE);
-				if(extensions.get(i).compareTo(ext)==0) {	return "."+ext;	} 
+				if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
 				ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_CONC);
-				if(extensions.get(i).compareTo(ext)==0) {	return "."+ext;	} 
+				if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
 			}
 			return null;
 	}
@@ -436,11 +466,11 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	private String getTimingQuantifier(Vector<String> extensions) {
 		for(int i = 0; i < extensions.size(); i++) {
 			String ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_INIT);
-			if(extensions.get(i).compareTo(ext)==0) {	return "."+ext;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
 			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_RATE);
-			if(extensions.get(i).compareTo(ext)==0) {	return "."+ext;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
 			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_TRANS);
-			if(extensions.get(i).compareTo(ext)==0) {	return "."+ext;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
 		}
 		return null;
 	}

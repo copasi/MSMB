@@ -1,10 +1,12 @@
 package parsers.mathExpression.visitor;
+import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import parsers.mathExpression.syntaxtree.*;
 
 import java.util.*;
 
 public class GetUsedVariablesInEquation extends DepthFirstVoidVisitor {
 	 TreeMap<String, Comparable> names;
+	 boolean complexExpression = false;
 	
 	   public GetUsedVariablesInEquation()  {
 		   names = new  TreeMap<String, Comparable>();
@@ -17,6 +19,7 @@ public class GetUsedVariablesInEquation extends DepthFirstVoidVisitor {
 	public void visit(SpeciesReferenceOrFunctionCall_prefix n) {
 		String name = ToStringVisitor.toString(n.name.nodeChoice.choice);
 		if(n.nodeOptional.present())  {
+			complexExpression = true;
 			NodeOptional nodeOptional = (NodeOptional) ((NodeSequence) n.nodeOptional.node).nodes.get(1);
 			if(nodeOptional.node==null){
 				//System.out.println("FUNCTION CALL (0): "+name);
@@ -38,7 +41,19 @@ public class GetUsedVariablesInEquation extends DepthFirstVoidVisitor {
 		super.visit(n);
 	}
 	  
-	 
+	 @Override
+	public void visit(NodeToken n) {
+		 if(n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.PLUS))==0 ||
+				 n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MINUS))==0 ||
+				 n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.DIV))==0 ||
+				 n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIMES))==0 ||
+				 n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ASSIGN))==0 ||
+				 n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXPONENT))==0 
+			)
+			 { complexExpression = true;
+			 }
+		 super.visit(n);
+	}
 	  
 	 boolean isMultistateSitesList(INode n) {
 		 if(n instanceof ArgumentList) {
@@ -51,6 +66,11 @@ public class GetUsedVariablesInEquation extends DepthFirstVoidVisitor {
 			 return false;
 		 }
 	 }
+
+	public boolean isComplexExpression() {
+		if(names.size() > 1) return true;
+		return complexExpression;
+	}
 
 
 

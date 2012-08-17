@@ -19,7 +19,7 @@ public class MR_MultistateSpecies_Parser
 {
   public static void main(String args [])
   {
-      System.out.println("Nothing MR_ChemicalReaction_Parser...");
+      System.out.println("MR_MultistateSpecies_Parser...");
 
     try
     {
@@ -28,6 +28,13 @@ public class MR_MultistateSpecies_Parser
 	  MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
   	  CompleteMultistateSpecies start = react.CompleteMultistateSpecies();
       DepthFirstVoidVisitor v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+       expression = new String("c");
+	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_MultistateSpecies_Parser(is);
+  	  start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
       expression = new String("Cdh1");
@@ -44,6 +51,14 @@ public class MR_MultistateSpecies_Parser
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
+          expression = new String("Cdh1(p{1};q{4})");
+	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_MultistateSpecies_Parser(is);
+  	  start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+     
       expression = new String("Cdh1(P{1,2,ciao})");
 	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  react = new MR_MultistateSpecies_Parser(is);
@@ -58,7 +73,7 @@ public class MR_MultistateSpecies_Parser
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
-       expression = new String("Cdh1(P{1:4,6,PREC,\"prec\"})");
+       expression = new String("Cdh1(P{1:4,6,PRED,\"pred\"})");
 	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  react = new MR_MultistateSpecies_Parser(is);
   	  start = react.CompleteMultistateSpecies();
@@ -66,21 +81,24 @@ public class MR_MultistateSpecies_Parser
       start.accept(v);
       System.out.println("...................................");
 	 System.out.println(".......OPERATORS.....................");
-       expression = new String("Cdh1(++(p))");
+     //  expression = new String("Cdh1(--(p);<<(q))");
+	   expression = new String("Cdh1(pred(p);pred(q))");
 	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  react = new MR_MultistateSpecies_Parser(is);
-  	  CompleteMultistateSpecies_Operator op = react.CompleteMultistateSpecies_Operator();
+  	   CompleteMultistateSpecies_Operator op = react.CompleteMultistateSpecies_Operator();
       v = new MyVisitor();
       op.accept(v);
       System.out.println("...................................");
-       expression = new String("Cdh1(--(p);<<(q))");
+      // expression = new String("Cdh1(++(p))");
+	   expression = new String("Cdh1(succ(p))");
 	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  react = new MR_MultistateSpecies_Parser(is);
   	   op = react.CompleteMultistateSpecies_Operator();
       v = new MyVisitor();
       op.accept(v);
       System.out.println("...................................");
-      expression = new String("Cdh1(>>(\"Time\");<<(q))");
+     // expression = new String("Cdh1(>>(\"Time\");<<(q))");
+	   expression = new String("Cdh1(succ(\"Time\");pred(q))");
 	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  react = new MR_MultistateSpecies_Parser(is);
   	   op = react.CompleteMultistateSpecies_Operator();
@@ -88,7 +106,20 @@ public class MR_MultistateSpecies_Parser
       op.accept(v);
       System.out.println("...................................");
 
-      
+        expression = new String("Cdh1(p{0:10}c)");
+	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_MultistateSpecies_Parser(is);
+  	  start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+     expression = new String("Cdh1(p{0:10}c;q{true,false})");
+	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_MultistateSpecies_Parser(is);
+  	  start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
       
      }
     catch (Exception e)
@@ -114,36 +145,40 @@ class MyVisitor extends DepthFirstVoidVisitor
     
 	}
 
-		@Override
+	/*	@Override
 	public void visit(MultistateSpecies_SiteSingleElement_Range n) {
 	 System.out.println("RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANGE");
 	 super.visit(n); 
     
 	}
-
-		  
+*/
+			  
 }
 
 
 PARSER_END(MR_MultistateSpecies_Parser)
-SKIP :{"\t"| "\n"| "\r"| < "//" (~[ "\n", "\r" ])*    (      "\n"    | "\r"    | "\r\n"    ) >| < "/*" (~[ "*" ])* "*"    (      ~[ "/" ] (~[ "*" ])* "*"    )*    "/" >}
+SKIP :{"\t" | "\n"| "\r"| < "//" (~[ "\n", "\r" ])*    (      "\n"    | "\r"    | "\r\n"    ) >| < "/*" (~[ "*" ])* "*"    (      ~[ "/" ] (~[ "*" ])* "*"    )*    "/" >}
 
 TOKEN : /* KEYWORDS */
 {
   < TIME: "Time">
 | < SUM: "SUM">
 | < FLOOR: "floor">
-| < SQRT: "sqrt">
+| < SQRT: "sqrt"> 
 | < LOG: "log">
-| < SUCC: "++">
-| < PREC: "--">
-| < CIRC_L_SHIFT: "<<">
-| < CIRC_R_SHIFT: ">>">
+| < SUCC: "succ">
+| < PREC: "pred">
+| < CIRCULAR_FLAG: "c">
+
+//| < CIRC_L_SHIFT: "<<">
+//| < CIRC_R_SHIFT: ">>">
 }
 TOKEN : {
   < BLANK : " ">
 | < OPEN_R : "("> | < CLOSED_R : ")">| < OPEN_C : "{"> | < CLOSED_C : "}">
-| < RANGE_SEPARATOR : ":"> | < SITE_NAMES_SEPARATOR : ";"> | < SITE_STATES_SEPARATOR : ",">
+| < RANGE_SEPARATOR : ":">
+| < SITE_NAMES_SEPARATOR : ";">
+| < SITE_STATES_SEPARATOR : ",">
 | < STRING_LITERAL:
       "\""
       (   (~["\"","\\","\n","\r"])
@@ -158,10 +193,11 @@ TOKEN : /* KEYWORDS */
   >| < NUMBER : ([ "0"-"9" ])+ >
 | < MULTI_IDENTIFIER : (["A"-"Z", "_", "a"-"z","'",
 						"<", ">", "|", "&",
-						"!", "?", "@", "#", "$", "%", "^",
+						"!",  "@", "#", "$", "%", "^",
 						"+", "*", "-", "/", "~", "`", 
 						"[", "]"
-						] | < NUMBER >)+ >
+						] | < NUMBER > | < UNDEFINED_SITE_SYMBOL >)+ >
+| < UNDEFINED_SITE_SYMBOL : "?" >						
 }
 
 void CompleteMultistateSpecies() : {} {
@@ -178,9 +214,14 @@ void CompleteMultistateSpecies_Range()  throws ParseException:
 {}
 {
   MultistateSpecies_SiteSingleElement_Range() < EOF >
+ }
+
+
+void CompleteMultistateSpecies_RangeString()  throws ParseException: 
+{}
+{
+ MultistateSpecies_SiteSingleElement() < EOF > 
 }
-
-
 
 void MultistateSpecies() throws ParseException:
 {}
@@ -192,19 +233,19 @@ void MultistateSpecies() throws ParseException:
   < CLOSED_R >)?
 }
  
-void MultistateSpecies_SingleStateDefinition()throws ParseException:
+void MultistateSpecies_SingleStateDefinition() throws ParseException:
 {}
 {
 MultistateSpecies_SiteName() < OPEN_C >
   				MultistateSpecies_SiteSingleElement() (< SITE_STATES_SEPARATOR > MultistateSpecies_SiteSingleElement())*
-  		< CLOSED_C >
+  		< CLOSED_C > ( < CIRCULAR_FLAG >)?
 }
 
 void MultistateSpecies_Name() throws ParseException:
 {}
 {
    < STRING_LITERAL >
-  | (< MULTI_IDENTIFIER >
+  | (< MULTI_IDENTIFIER > | < CIRCULAR_FLAG >
   		| < CLOSED_R> | < SITE_NAMES_SEPARATOR > | < RANGE_SEPARATOR >
   		| 	< SITE_STATES_SEPARATOR >  | < CLOSED_C >
   	)+
@@ -213,9 +254,8 @@ void MultistateSpecies_Name() throws ParseException:
 void MultistateSpecies_SiteSingleElement() throws ParseException:
 {}
 {
-   < STRING_LITERAL >
-  | LOOKAHEAD(3) MultistateSpecies_SiteSingleElement_Range()  
-  | (< MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R >|  < RANGE_SEPARATOR > )+
+     ( < STRING_LITERAL > | (< MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R >  )+)
+   (  (" ")* < RANGE_SEPARATOR > (" ")* ( < STRING_LITERAL > | (< MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R >  )+) )?
 }
 
 void MultistateSpecies_SiteSingleElement_Range() throws ParseException:
@@ -225,12 +265,15 @@ void MultistateSpecies_SiteSingleElement_Range() throws ParseException:
 }
 
 
+
+
+
 void MultistateSpecies_SiteName() throws ParseException:
 {}
 {
   < STRING_LITERAL >
  | (< MULTI_IDENTIFIER > |
- 	< CLOSED_C > | < OPEN_R >| < CLOSED_R> |  < RANGE_SEPARATOR >  | 	< SITE_STATES_SEPARATOR >
+ 	< CLOSED_C > | < OPEN_R >| < CLOSED_R>  | 	< SITE_STATES_SEPARATOR >
    	)+
  	
 }
@@ -249,24 +292,24 @@ void MultistateSpecies_Operator()  throws ParseException:
 void MultistateSpecies_Operator_SingleSite()  throws ParseException:
 {}
 {
-  	MultistateSpecies_Operator_SiteName() (< OPEN_C>  MultistateSpecies_Operator_SiteSingleState()  < CLOSED_C>)?
-  | (< SUCC > | < PREC > | < CIRC_L_SHIFT > | <  CIRC_R_SHIFT >)
+  (< SUCC > | < PREC > ) //| < CIRC_L_SHIFT > | <  CIRC_R_SHIFT >)
   	< OPEN_R >
   	MultistateSpecies_Operator_SiteName()	
   	< CLOSED_R>
-  
+| 	MultistateSpecies_Operator_SiteName() (< OPEN_C>  MultistateSpecies_Operator_SiteSingleState()  < CLOSED_C>)?
+   
 }
 
 void MultistateSpecies_Operator_SiteName()  throws ParseException:
 {}
 {
  < STRING_LITERAL >
-  | (< MULTI_IDENTIFIER >| < NUMBER > |  < OPEN_R > | < RANGE_SEPARATOR >)+
+  | (< MULTI_IDENTIFIER >| < NUMBER > )+//| < OPEN_R >|  < RANGE_SEPARATOR > )+
  }
 
  void MultistateSpecies_Operator_SiteSingleState() throws ParseException:
 {}
 {
    < STRING_LITERAL >
-  | (< MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R >|  < RANGE_SEPARATOR > )+
+  | (< MULTI_IDENTIFIER >| < NUMBER > )+//| < OPEN_R >|  < RANGE_SEPARATOR > )+
 }

@@ -19,8 +19,10 @@ import parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import debugTab.DebugConstants;
 import debugTab.DebugMessage;
 
+import sun.misc.Cleaner;
 import utility.CellParsers;
 import utility.Constants;
+import utility.MyChangeNotAllowedException;
 import utility.MySyntaxException;
 
 
@@ -41,9 +43,18 @@ public class FunctionsDB {
 	
 	HashMap<String, Vector> mappings_weight_subFunctions_Functions = new HashMap<String, Vector>(); 
 	
-	public void addChangeFunction(int row, Function f) {
+	
+	
+	public void addChangeFunction(int row, Function f) throws Exception {
+	
+		int existing = getIndex(f.getName());
+		if(existing != -1) {
+			row = existing;
+		}
 		
 		userDefinedFun.put(row, f); 
+	//	System.out.println("in addChangeFunction: "+userDefinedFun);
+		
 		parser.addFunction(f);
 		
 		//recalculate mappings
@@ -69,37 +80,64 @@ public class FunctionsDB {
 				if(!mapping_vector.equals(new_mapping_vector)) {
 					DebugMessage dm = new DebugMessage();
 					dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-					dm.setProblem("The signature of function " + f.getName() + "has been modified. \nThe new mapping of reaction at row " + row+ " is " + new_mapping_vector.subList(1, new_mapping_vector.size()));
+					dm.setProblem("The signature of function " + f.getName() + " has been modified. \nThe new mapping of reaction at row " + row+ " is " + new_mapping_vector.subList(1, new_mapping_vector.size()));
 					dm.setPriority(DebugConstants.PriorityType.MINOR.priorityCode);
 					dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
 					dm.setOrigin_row(row_reaction+1);
 					MainGui.addDebugMessage_ifNotPresent(dm);
+				} else {
+					try {
+						MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.MINOR.priorityCode, row_reaction+1, Constants.ReactionsColumns.KINETIC_LAW.index);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
+			}
+		} else {
+			try {
+				MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.REACTIONS.description, 
+						Constants.ReactionsColumns.KINETIC_LAW.index,DebugConstants.PriorityType.MINOR.priorityCode);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
 	
+	public int getFunctionIndex(Function f){
+		int ret = -1;
+		if(f==null) return ret;
+		Iterator<Integer> it = userDefinedFun.keySet().iterator();
+		while(it.hasNext()) {
+			Integer index = it.next();
+			if(f.getName().compareTo(userDefinedFun.get(index).getName()) == 0) {
+				ret = index.intValue();
+				break;
+			}
+		}
+		return ret;
+	}
 
-	public static String extractJustName(String functionNamePlusPossibleParameters) {
+	public static String extractJustName(String functionNamePlusPossibleParameters) throws Exception {
 		String ret = new String();
 		InputStream is;
 		try {
 			is = new ByteArrayInputStream(functionNamePlusPossibleParameters.getBytes("UTF-8"));
 	
 		  MR_Expression_Parser parser = new MR_Expression_Parser(is);
-		  //CompleteExpression root = parser.CompleteExpression();
 		  CompleteFunctionDeclaration root = parser.CompleteFunctionDeclaration();
 		  GetFunctionNameVisitor name = new GetFunctionNameVisitor();
 		  root.accept(name);
 		  ret = name.getFunctionName();
 		  
 		} catch (Exception e) {
-		
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			throw e;
 		}
 		return ret;
 	}
-	public Function getFunctionByName(String name) {
+	public Function getFunctionByName(String name) throws Exception {
 		
 		if(name.endsWith(")")) name = extractJustName(name);
 		Iterator<Integer> it = userDefinedFun.keySet().iterator();
@@ -143,6 +181,8 @@ public class FunctionsDB {
 				RateLawMappingVisitor vis = new RateLawMappingVisitor(multiModel,row, equation);
 				root1.accept(vis);
 				PARs = vis.getGlobalQ_PARtype();
+			} else {
+				PARs.addAll(undef);// the single parameter of a mass action kinetic (added 
 			}
 			
 			String message = new String("The following elements are used but never declared: " );
@@ -158,7 +198,9 @@ public class FunctionsDB {
 				  }
 			}
 			if(found_non_PAR_missing) throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description);
-			
+			/*else if(found_non_PAR_missing && MainGui.autocompleteWithDefaults) {
+				return ret;
+			}*/
 		} catch (Exception e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			throw e;
@@ -177,7 +219,7 @@ public class FunctionsDB {
 		return this.userDefinedFun.size();
 	}
 	
-	public void addMapping_weight_globalQ_withSUM(int row, MultistateSpecies sp, String weight_functionCall) {
+	public void addMapping_weight_globalQ_withSUM(int row, MultistateSpecies sp, String weight_functionCall) throws Exception {
 		int openBr = weight_functionCall.indexOf("(");
 		while(openBr!=-1) {
 			if(weight_functionCall.charAt(openBr-1)=='\\') { 
@@ -212,7 +254,7 @@ public class FunctionsDB {
 	
 	
 	
-	public void addMapping_speciesExpression(int row, String functionCall) {
+	public void addMapping_speciesExpression(int row, String functionCall) throws Exception {
 		int openBr = functionCall.indexOf("(");
 		while(openBr!=-1) {
 			if(functionCall.charAt(openBr-1)=='\\') { 
@@ -275,7 +317,7 @@ public class FunctionsDB {
 	
 	
 	
-	public void addMapping_subFunctions_Functions(int row, String functionCall, int index_subfunction) {
+	public void addMapping_subFunctions_Functions(int row, String functionCall, int index_subfunction) throws Exception {
 		int openBr = functionCall.indexOf("(");
 		while(openBr!=-1) {
 			if(functionCall.charAt(openBr-1)=='\\') { 
@@ -318,7 +360,7 @@ public class FunctionsDB {
 		return mappings_weight_subFunctions_Functions.get(new String(row+"_"+funName+"_"+index_subfunction));
 	}
 
-	public int getIndex(String funName) {
+	public int getIndex(String funName) throws Exception {
 		
 		funName = extractJustName(funName);
 		Iterator<Integer> it = userDefinedFun.keySet().iterator();

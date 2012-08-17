@@ -65,93 +65,99 @@ public interface MR_Expression_ParserConstants {
   /** RegularExpression Id. */
   int EXTENSION_COMPARTMENT = 33;
   /** RegularExpression Id. */
-  int MY_SPECIAL_EXTENSION = 34;
+  int EXTENSION_REACTION = 34;
   /** RegularExpression Id. */
-  int SUM = 35;
+  int EXTENSION_FUNCTION = 35;
   /** RegularExpression Id. */
-  int FLOOR = 36;
+  int EXTENSION_FLUX = 36;
   /** RegularExpression Id. */
-  int SQRT = 37;
+  int MY_SPECIAL_EXTENSION = 37;
   /** RegularExpression Id. */
-  int EXP = 38;
+  int SUM = 38;
   /** RegularExpression Id. */
-  int LOG = 39;
+  int FLOOR = 39;
   /** RegularExpression Id. */
-  int NAN = 40;
+  int SQRT = 40;
   /** RegularExpression Id. */
-  int CONST_AVOGADRO = 41;
+  int EXP = 41;
   /** RegularExpression Id. */
-  int CONST_QUANTITY_CONV_FACTOR = 42;
+  int LOG = 42;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME = 43;
+  int NAN = 43;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME_INITIAL = 44;
+  int CONST_AVOGADRO = 44;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 45;
+  int CONST_QUANTITY_CONV_FACTOR = 45;
   /** RegularExpression Id. */
-  int FLOATING_POINT_LITERAL = 46;
+  int CONST_MODEL_TIME = 46;
   /** RegularExpression Id. */
-  int EXPONENT = 47;
+  int CONST_MODEL_TIME_INITIAL = 47;
   /** RegularExpression Id. */
-  int IDENTIFIER = 48;
+  int INTEGER_LITERAL = 48;
   /** RegularExpression Id. */
-  int LETTER = 49;
+  int FLOATING_POINT_LITERAL = 49;
   /** RegularExpression Id. */
-  int DIGIT = 50;
+  int EXPONENT = 50;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 51;
+  int IDENTIFIER = 51;
   /** RegularExpression Id. */
-  int LPAREN = 52;
+  int LETTER = 52;
   /** RegularExpression Id. */
-  int RPAREN = 53;
+  int DIGIT = 53;
   /** RegularExpression Id. */
-  int LBRACE = 54;
+  int STRING_LITERAL = 54;
   /** RegularExpression Id. */
-  int RBRACE = 55;
+  int LPAREN = 55;
   /** RegularExpression Id. */
-  int LBRACKET = 56;
+  int RPAREN = 56;
   /** RegularExpression Id. */
-  int RBRACKET = 57;
+  int LBRACE = 57;
   /** RegularExpression Id. */
-  int SEMICOLON = 58;
+  int RBRACE = 58;
   /** RegularExpression Id. */
-  int COMMA = 59;
+  int LBRACKET = 59;
   /** RegularExpression Id. */
-  int COLON = 60;
+  int RBRACKET = 60;
   /** RegularExpression Id. */
-  int DOT = 61;
+  int SEMICOLON = 61;
   /** RegularExpression Id. */
-  int PLUS = 62;
+  int COMMA = 62;
   /** RegularExpression Id. */
-  int MINUS = 63;
+  int COLON = 63;
   /** RegularExpression Id. */
-  int TIMES = 64;
+  int DOT = 64;
   /** RegularExpression Id. */
-  int DIV = 65;
+  int PLUS = 65;
   /** RegularExpression Id. */
-  int ASSIGN = 66;
+  int MINUS = 66;
   /** RegularExpression Id. */
-  int GT = 67;
+  int TIMES = 67;
   /** RegularExpression Id. */
-  int LT = 68;
+  int DIV = 68;
   /** RegularExpression Id. */
-  int BANG = 69;
+  int ASSIGN = 69;
   /** RegularExpression Id. */
-  int CARET = 70;
+  int GT = 70;
   /** RegularExpression Id. */
-  int PERC = 71;
+  int LT = 71;
   /** RegularExpression Id. */
-  int EQ = 72;
+  int BANG = 72;
   /** RegularExpression Id. */
-  int LEQ = 73;
+  int CARET = 73;
   /** RegularExpression Id. */
-  int GEQ = 74;
+  int PERC = 74;
   /** RegularExpression Id. */
-  int NE = 75;
+  int EQ = 75;
   /** RegularExpression Id. */
-  int OR = 76;
+  int LEQ = 76;
   /** RegularExpression Id. */
-  int AND = 77;
+  int GEQ = 77;
+  /** RegularExpression Id. */
+  int NE = 78;
+  /** RegularExpression Id. */
+  int OR = 79;
+  /** RegularExpression Id. */
+  int AND = 80;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -177,7 +183,7 @@ public interface MR_Expression_ParserConstants {
     "\"False\"",
     "\"FALSE\"",
     "\"Time\"",
-    "\"PAR\"",
+    "\"GLQ\"",
     "\"VAR\"",
     "\"SUB\"",
     "\"PROD\"",
@@ -189,9 +195,12 @@ public interface MR_Expression_ParserConstants {
     "\".t\"",
     "\".i\"",
     "\".r\"",
-    "\".sp\"",
-    "\".gq\"",
+    "\".spc\"",
+    "\".glq\"",
     "\".cmp\"",
+    "\".rct\"",
+    "\".fnc\"",
+    "\".f\"",
     "\".*MY*SPECIAL*EXTENSION\"",
     "\"SUM\"",
     "\"floor\"",

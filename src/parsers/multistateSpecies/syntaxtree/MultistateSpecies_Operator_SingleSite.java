@@ -6,12 +6,10 @@ import parsers.multistateSpecies.visitor.*;
 /**
  * JTB node class for the production MultistateSpecies_Operator_SingleSite:<br>
  * Corresponding grammar :<br>
- * nodeChoice -> . %0 #0 MultistateSpecies_Operator_SiteName()<br>
+ * nodeChoice -> . %0 #0 ( &0 < SUCC ><br>
+ * .......... .. . .. .. | &1 < PREC > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R ><br>
+ * .......... .. | %1 #0 MultistateSpecies_Operator_SiteName()<br>
  * .......... .. . .. #1 ( $0 < OPEN_C > $1 MultistateSpecies_Operator_SiteSingleState() $2 < CLOSED_C > )?<br>
- * .......... .. | %1 #0 ( &0 < SUCC ><br>
- * .......... .. . .. .. | &1 < PREC ><br>
- * .......... .. . .. .. | &2 < CIRC_L_SHIFT ><br>
- * .......... .. . .. .. | &3 < CIRC_R_SHIFT > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R ><br>
  */
 public class MultistateSpecies_Operator_SingleSite implements INode {
 

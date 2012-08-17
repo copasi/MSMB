@@ -19,21 +19,26 @@ import org.apache.commons.lang3.tuple.MutablePair;
 
 import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
 import parsers.multistateSpecies.MR_MultistateSpecies_ParserConstants;
+import parsers.multistateSpecies.ParseException;
 import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
+import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Range;
+import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_RangeString;
 import parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 
 import com.google.common.collect.Sets;
+import com.sun.tools.internal.xjc.generator.util.ExistingBlockReference;
 //import com.sun.tools.javac.util.Pair;
 
 import utility.*;
 import utility.Constants.BooleanType;
-import utility.Constants.SiteType;
+
 
 public class MultistateSpecies extends Species {
 	
 	private TreeMap sites = new TreeMap();
 	private HashMap<String, SiteType> sites_type = new HashMap<String, SiteType>();
 	MultiModel multiModel = null;
+	
 	
 	private HashMap<String, String> initialQuantities = new HashMap<String, String>();
 	public HashMap<String, String> getInitialQuantity_multi() {	return this.initialQuantities; }
@@ -60,14 +65,15 @@ public class MultistateSpecies extends Species {
 	}
 	
 
-	public void newParser(String complete_string) throws MySyntaxException {
+	public void newParser(String complete_string, boolean isReactantReactionWithPossibleRanges) throws MySyntaxException {
 		 try {
 			 InputStream is = new ByteArrayInputStream(complete_string.getBytes("UTF-8"));
 			 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
 			 CompleteMultistateSpecies start = react.CompleteMultistateSpecies();
-			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
+			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel,isReactantReactionWithPossibleRanges);
 			 start.accept(v);
 			 if(v.getExceptions().size()>0) throw v.getExceptions().get(0);
+			 HashSet<String> circularSites = v.getCircularSites();
 			 this.setName(v.getSpeciesName());
 			  initialQuantities = new HashMap<String, String>();
 			  Iterator<String> it = v.getAllSites_names().iterator();
@@ -80,6 +86,8 @@ public class MultistateSpecies extends Species {
 					  Vector<String> single_states = v.getSite_states(site_name);
 					  this.addSite_vector(site_name, single_states);
 				  }
+				  if(circularSites.contains(site_name))  this.setCircular(site_name, true);
+				  else  this.setCircular(site_name, false);
 			  }
 			  try {
 				  this.setCompartment(multiModel,Constants.DEFAULT_COMPARTMENT_NAME);
@@ -88,11 +96,11 @@ public class MultistateSpecies extends Species {
 			 }
 			  
 		 } catch(MySyntaxException ex) {
-			 ex.printStackTrace();
+			 //ex.printStackTrace();
 			throw new MySyntaxException(ex.getColumn(),"Problem parsing species:"+ex.getMessage(), Constants.TitlesTabs.SPECIES.description);
 
 		 } catch (Exception e) {
-			 e.printStackTrace();
+			// e.printStackTrace();
 			throw new MySyntaxException(Constants.SpeciesColumns.NAME.index,"Problem parsing species: "+e.getMessage(), Constants.TitlesTabs.SPECIES.description);
 
 		}
@@ -100,18 +108,21 @@ public class MultistateSpecies extends Species {
 	}
 	
 	public MultistateSpecies(MultiModel m, String complete_string) throws Exception { 
-		if(complete_string.length() == 0) return;
-		multiModel = m;
-		newParser(complete_string);
+		this(m,complete_string,false);
 	}
 	
 	
 	
+	public MultistateSpecies(MultiModel m, String complete_string, boolean isReactantReactionWithPossibleRanges) throws Exception{
+		if(complete_string.length() == 0) return;
+		multiModel = m;
+		newParser(complete_string,isReactantReactionWithPossibleRanges);
+	}
 	public void addSite_range(String name, int start, int end) {
 		Vector st = new Vector();
 		for(int i = start; i <= end; i++) { st.add(Integer.toString(i)); }
 		sites.put(name, st);
-		sites_type.put(name, Constants.SiteType.RANGE);
+		sites_type.put(name,new SiteType(SiteType.RANGE));
 	}
 	
 	public void addSite_vector(String name, Vector states) throws Exception {
@@ -134,9 +145,9 @@ public class MultistateSpecies extends Species {
 		if(foundFalse||foundTrue)
 		{
 			//sites_boolean.add(name);
-			sites_type.put(name, Constants.SiteType.BOOLEAN);
+			sites_type.put(name, new SiteType(SiteType.BOOLEAN));
 		}
-		else sites_type.put(name, Constants.SiteType.LIST);
+		else sites_type.put(name, new SiteType(SiteType.LIST));
 		//sites_fromRanges.remove(name);
 		//sites_start_indexes.put(name, new Integer(1));
 	}
@@ -152,7 +163,7 @@ public class MultistateSpecies extends Species {
 				
 		{
 			//sites_boolean.add(name);
-			sites_type.put(name, Constants.SiteType.BOOLEAN);
+			sites_type.put(name, new SiteType(SiteType.BOOLEAN));
 		} else {
 			//sites_boolean.remove(name);
 		}
@@ -189,7 +200,7 @@ public class MultistateSpecies extends Species {
 		
 		Vector states = (Vector)sites.get(site_name);
 		//if(this.sites_fromRanges.contains(site_name)) {
-		if(this.sites_type.get(site_name)== SiteType.RANGE) {
+		if(this.sites_type.get(site_name).getType()== SiteType.RANGE) {
 			start = (String)states.get(0);
 			end = (String)states.get(states.size()-1);
 		} else {
@@ -209,7 +220,7 @@ public class MultistateSpecies extends Species {
 		start_end_list.add(end);
 		start_end_list.add(list);
 		//start_end_list.add(new Boolean(sites_boolean.contains(site_name)));
-		start_end_list.add(new Boolean(sites_type.get(site_name)==SiteType.BOOLEAN));
+		start_end_list.add(new Boolean(sites_type.get(site_name).getType()==SiteType.BOOLEAN));
 		return start_end_list;
 	}
 	
@@ -231,10 +242,10 @@ public class MultistateSpecies extends Species {
 		r+= name+"{";
 		SiteType ty = this.sites_type.get(name);
 		//if(sites_fromRanges.contains(name)) {.
-		if(ty == SiteType.RANGE){
+		if(ty.getType() == SiteType.RANGE){
 			r+=values.get(0) + ":" + values.get(values.size()-1);
 		//} else if(sites_boolean.contains(name)) {
-		} else if(ty == SiteType.BOOLEAN) {
+		} else if(ty.getType() == SiteType.BOOLEAN) {
 			r+= Constants.BooleanType.TRUE.description + "," + Constants.BooleanType.FALSE.description;
 	    }else {
 			for(int i = 0; i < values.size()-1; i++) {
@@ -245,6 +256,7 @@ public class MultistateSpecies extends Species {
 		
 		
 		r+="}";
+		if(ty.isCircular()) r+="c";
 		return r;
 	}
 
@@ -261,9 +273,9 @@ public class MultistateSpecies extends Species {
 			Vector states = (Vector)newSpecies.sites.get(key);
 			Vector statesOld = (Vector)merged.sites.get(key);
 			if(this.sites_type.get(key) != merged.sites_type.get(key)) throw new MySyntaxException(Constants.SpeciesColumns.NAME.index, "Inconsistent site type during merging.", Constants.TitlesTabs.SPECIES.description);
-			if(this.sites_type.get(key) == SiteType.BOOLEAN) {
+			if(this.sites_type.get(key).getType() == SiteType.BOOLEAN) {
 				continue;
-			} else if(this.sites_type.get(key) == SiteType.RANGE) {
+			} else if(this.sites_type.get(key).getType() == SiteType.RANGE) {
 				HashSet statesWithoutDuplicates = new HashSet();
 			    if(states != null) statesWithoutDuplicates.addAll(states);
 			    if(statesOld != null) statesWithoutDuplicates.addAll(statesOld);
@@ -315,12 +327,56 @@ public class MultistateSpecies extends Species {
 		 Iterator iterator = getSitesNames().iterator();  
 		 int i = 0;
 		 while (iterator.hasNext()) {  
-		       String pr = printSite((String)iterator.next());//, true);  
+		       String pr = printSite((String)iterator.next());//, true); 
 		       r+=pr+";";
 	    }
 		 r = r.substring(0,r.length()-1) + ")";
 		return r;
 	}
+	
+	
+	/*public Vector<Species> getExpandedSpecies_Minimum(MultiModel m, String subSpecies) throws Exception {
+		Vector<Species> ret = new Vector<Species>();
+		
+		Set keySet = this.sites.keySet();
+		
+		HashMap<String, Vector<String>> subSpecies_sites_states = something;
+		
+		 List<String> keys = new ArrayList<String>(keySet);
+		 List<Set<String>> values = new Vector<Set<String>>();
+		 Iterator sites_iterator = keySet.iterator();
+		while (sites_iterator.hasNext()) {  
+			String name = sites_iterator.next().toString();  
+			
+			Vector<String> states = null;
+			if(subSpecies_sites_states.containsKey(name)) {
+				states = subSpecies_sites_states.get(name);
+			} else {
+				states = (Vector<String>)this.sites.get(name);
+			}
+		 	Set<String> values_site = Sets.newLinkedHashSet(states);
+		     values.add(values_site);
+		}
+		   		    
+		Set<List<String>> product = Sets.cartesianProduct(values);
+		
+	    
+		for (List<String> v : product) {
+			   Vector<String> site_value = new Vector<String>();
+			   for (int i = 0; i < keys.size(); ++i) {
+		    	    String key = (String) keys.get(i);
+		            String value = v.get(i);
+		            site_value.add(key);
+		            site_value.add(value);
+		        }
+		        Species singleConf = createSingleConfigurationState(m,site_value);
+		        singleConf.setCompartment(multiModel,this.getCompartment());
+		        singleConf.setType(Constants.SpeciesType.REACTIONS.copasiType);
+		        ret.add(singleConf);
+		    }
+		return ret;
+	}*/
+	
 	
 	public Vector<Species> getExpandedSpecies(MultiModel m) throws Exception {
 		Vector<Species> ret = new Vector<Species>();
@@ -445,7 +501,8 @@ public class MultistateSpecies extends Species {
 
 
 	
-	public String getSucc(String site, String state, boolean circular) {
+	//public String getSucc(String site, String state, boolean circular) {
+	public String getSucc(String site, String state) {
 		Vector states = (Vector) sites.get(site);
 		int i = 0;
 		for( i = 0; i < states.size()-1; i++) {
@@ -453,11 +510,12 @@ public class MultistateSpecies extends Species {
 	    		 return (String)states.get(i+1);
 	    	 }	    	 
 	     }
-		if(!circular) return null;
+		if(!isCircular(site)) return null;
 		return (String)states.get(0);
 	}
 	
-	public String getPrec(String site, String state, boolean circular) {
+	//public String getPrec(String site, String state, boolean circular) {
+	public String getPrec(String site, String state) {
 		Vector states = (Vector) sites.get(site);
 		for(int i = 1; i < states.size(); i++) {
 	    	 if(((String)states.get(i)).compareTo(state) == 0) {
@@ -466,29 +524,30 @@ public class MultistateSpecies extends Species {
 	    	 
 	     }
 //		if(sites_fromRanges.contains(site)) return null;
-		if(!circular) return null;
+		if(!!isCircular(site)) return null;
 		return (String)states.get(states.size()-1);
 	}
 	
 	
-	public void mergeStatesWith_Minimum(MultistateSpecies existing) {
+	public boolean isCircular(String site) {
+		SiteType s = sites_type.get(site);
+		return s.isCircular();
+	}
+	
+	private void setCircular(String site, boolean b) {
+		SiteType s = sites_type.get(site);
+		s.setCircular(b);
+		sites_type.put(site, s);
+	}
+	
+	public void mergeStatesWith_Minimum(MultistateSpecies existing) throws Exception {
 		this.setType(existing.getType());
+		this.expandRangesSitesFrom(existing);
+		
 		if(existing.printCompleteDefinition().compareTo(this.printCompleteDefinition()) == 0) {
 			return;
 		}
 		
-		
-	    Iterator iterator = this.sites.keySet().iterator();  
-	    
-	    while (iterator.hasNext()) {  
-	       String key = iterator.next().toString();  
-	       Vector states = new Vector();
-	       states.addAll((Vector)this.sites.get(key));
-	       //if(sites_type.get(key)==SiteType.RANGE) Collections.sort(states, new AlphanumComparator());
-	       this.sites.put(key, states);
-	    }  
-	    
-    
 		Iterator site_it2 = existing.sites.keySet().iterator();
 		while (site_it2.hasNext()) {  
 		       String key = site_it2.next().toString();  
@@ -506,7 +565,7 @@ public class MultistateSpecies extends Species {
 			 String key = sites.next().toString();  
 			 boolean allNumbers = true;
 		     Vector states = (Vector)this.sites.get(key);
-		     
+		    
 		     for(int i = 0; i < states.size(); i++) { //are they all numbers?
 		    	 try {
 		    		 Integer.parseInt((String)states.get(i));	    	 
@@ -517,16 +576,16 @@ public class MultistateSpecies extends Species {
 		    	 }
 		     }
 		     
-		     if(allNumbers) {
+		     if(allNumbers && states.size() > 1) {
 			     int startRange = Integer.parseInt((String)states.get(0));
 			     int endRange = Integer.parseInt((String)states.get(states.size()-1));
 			     
 			     if((endRange-startRange)==states.size()-1) { //the range is complete
 			    	 //this.sites_fromRanges.add(key);
-			    	 this.sites_type.put(key, SiteType.RANGE);
+			    	 this.sites_type.put(key, new SiteType(SiteType.RANGE));
 			     }
 		     } else {
-		    	 this.sites_type.put(key, SiteType.LIST);
+		    	 this.sites_type.put(key, new SiteType(SiteType.LIST));
 		     }
 		    	 
 		     
@@ -536,6 +595,54 @@ public class MultistateSpecies extends Species {
 		return;
 	}
 
+	private void expandRangesSitesFrom(MultistateSpecies existing) throws Exception {
+		  Iterator iterator = this.sites.keySet().iterator();  
+		  while (iterator.hasNext()) {  
+		      String key = iterator.next().toString();  
+		      Vector states = (Vector)this.sites.get(key);
+		      Vector existing_states = existing.getSiteStates_complete(key);
+		      Vector final_states = new Vector();
+		      for(int i = 0; i < states.size(); i++) {
+		    	  String currentState = (String) states.get(i);
+		    	 // try{
+	    			 InputStream is = new ByteArrayInputStream(currentState.getBytes());
+	    			 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+	    			 CompleteMultistateSpecies_RangeString range = react.CompleteMultistateSpecies_RangeString();
+	    			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
+	    			 range.accept(v);
+	    			 if(v.getExceptions().size() >0) {
+	    				 	final_states.add(currentState);//it was not a range, so it should be ok
+			    		  	continue;
+			    	 }
+	    			
+	    			 MutablePair<String, String> pair = v.getStringRangeLimits();
+	    			 int from = existing_states.indexOf(pair.left);
+	    			 int to = existing_states.indexOf(pair.right);
+	    			 if(from==-1 && to == -1) throw new ParseException("Missing states: "+currentState);
+	    			 if(from > to && !existing.sites_type.get(key).isCircular()) throw new ParseException("Wrong range for the non-circular site "+key);
+	    			 else {
+	    				 if(from <= to) {
+	    					 final_states.addAll(existing_states.subList(from, to+1));
+	    				 } else {
+	    					 final_states.addAll(existing_states.subList(from, existing_states.size()));
+	    					 final_states.addAll(existing_states.subList(0, to+1));
+	    				 }
+	    			 }
+	    			 
+	    			 
+		    	 /* } catch(Exception ex){
+		    		  	ex.printStackTrace();
+		    		}*/
+		    	  
+		      }
+		      
+		      
+		      //if(sites_type.get(key)==SiteType.RANGE) Collections.sort(states, new AlphanumComparator());
+		      this.sites.put(key, final_states);
+		 }  
+		    
+		
+	}
 	public boolean containsSpecificConfiguration(String s) throws Exception {
 		MultistateSpecies single = new MultistateSpecies(multiModel,s);
 		String configuration = single.getExpandedSites().get(0);
@@ -639,3 +746,18 @@ class CartesianIterator implements Iterator<Object[]> {
 	@Override
 	public void remove() { throw new UnsupportedOperationException(); }
 }
+
+
+class SiteType {
+	static int RANGE = 0;
+	static int BOOLEAN = 1;
+	static int LIST = 2;
+
+	int type;
+	boolean circular = false;
+	
+	SiteType(int t) {   this.type = t;   }
+	int getType() {return type;}
+	void setCircular(boolean b) {	circular = b; }
+	public boolean isCircular() {	return circular;	}
+};

@@ -39,7 +39,7 @@ public class MR_Expression_Parser {
       DepthFirstVoidVisitor v2 = new MyVisitor();
       start2.accept(v2);
       System.out.println("...................................");
-      expression2 = new String("\"funaasdf \"(PAR v, PAR t)");
+      expression2 = new String("\"funaasdf \"(GLQ v, GLQ t)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2);
       CompleteFunctionDeclaration start3 = react2.CompleteFunctionDeclaration();
@@ -68,6 +68,41 @@ public class MR_Expression_Parser {
       start2.accept(v2);
       System.out.println("...................................");
       expression2 = new String("cdh1(p{1})");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1;p)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1;p{2,3})");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1;p{2,3}; weight(p,k1))");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1;p{0:10};q)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2);
       start2 = react2.CompleteExpression();
@@ -122,7 +157,7 @@ TOKEN :
 | < #FALSE_2 : "False" >
 | < #FALSE_3 : "FALSE" >
 | < TIME : "Time" >
-| < TYPE_PAR : "PAR" >
+| < TYPE_PAR : "GLQ" >
 | < TYPE_VAR : "VAR" >
 | < TYPE_SUB : "SUB" >
 | < TYPE_PROD : "PROD" >
@@ -134,9 +169,12 @@ TOKEN :
 | < EXTENSION_TRANS : ".t" >
 | < EXTENSION_INIT : ".i" >
 | < EXTENSION_RATE : ".r" >
-| < EXTENSION_SPECIES : ".sp" >
-| < EXTENSION_GLOBALQ : ".gq" >
+| < EXTENSION_SPECIES : ".spc" >
+| < EXTENSION_GLOBALQ : ".glq" >
 | < EXTENSION_COMPARTMENT : ".cmp" >
+| < EXTENSION_REACTION : ".rct" >
+| < EXTENSION_FUNCTION : ".fnc" >
+| < EXTENSION_FLUX : ".f" >
 | < MY_SPECIAL_EXTENSION : ".*MY*SPECIAL*EXTENSION" >
 | < SUM : "SUM" >
 | < FLOOR : "floor" >
@@ -741,7 +779,7 @@ MultistateSum MultistateSum() :
   Token n1 = null;
   NodeToken n2 = null;
   Token n3 = null;
-  ArgumentList n4 = null;
+  ArgumentList_MultistateSum n4 = null;
   NodeToken n5 = null;
   Token n6 = null;
 }
@@ -750,7 +788,7 @@ MultistateSum MultistateSum() :
   { n0 = JTBToolkit.makeNodeToken(n1); }
   n3 = < LPAREN >
   { n2 = JTBToolkit.makeNodeToken(n3); }
-  n4 = ArgumentList()
+  n4 = ArgumentList_MultistateSum()
   n6 = < RPAREN >
   { n5 = JTBToolkit.makeNodeToken(n6); }
   { return new MultistateSum(n0, n2, n4, n5); }
@@ -892,57 +930,75 @@ PossibleExtensions PossibleExtensions() :
   Token n16 = null;
   NodeToken n17 = null;
   Token n18 = null;
-  NodeListOptional n19 = new NodeListOptional();
-  PossibleExtensions n20 = null;
+  NodeToken n19 = null;
+  Token n20 = null;
+  NodeToken n21 = null;
+  Token n22 = null;
+  NodeToken n23 = null;
+  Token n24 = null;
+  NodeListOptional n25 = new NodeListOptional();
+  PossibleExtensions n26 = null;
 }
 {
   (
     (
       n2 = < EXTENSION_CONC >
       { n1 = JTBToolkit.makeNodeToken(n2); }
-      { n0 = new NodeChoice(n1, 0, 9); }
+      { n0 = new NodeChoice(n1, 0, 12); }
     |
       n4 = < EXTENSION_COMPARTMENT >
       { n3 = JTBToolkit.makeNodeToken(n4); }
-      { n0 = new NodeChoice(n3, 1, 9); }
+      { n0 = new NodeChoice(n3, 1, 12); }
     |
       n6 = < EXTENSION_PARTICLE >
       { n5 = JTBToolkit.makeNodeToken(n6); }
-      { n0 = new NodeChoice(n5, 2, 9); }
+      { n0 = new NodeChoice(n5, 2, 12); }
     |
       n8 = < EXTENSION_TRANS >
       { n7 = JTBToolkit.makeNodeToken(n8); }
-      { n0 = new NodeChoice(n7, 3, 9); }
+      { n0 = new NodeChoice(n7, 3, 12); }
     |
       n10 = < EXTENSION_INIT >
       { n9 = JTBToolkit.makeNodeToken(n10); }
-      { n0 = new NodeChoice(n9, 4, 9); }
+      { n0 = new NodeChoice(n9, 4, 12); }
     |
       n12 = < EXTENSION_RATE >
       { n11 = JTBToolkit.makeNodeToken(n12); }
-      { n0 = new NodeChoice(n11, 5, 9); }
+      { n0 = new NodeChoice(n11, 5, 12); }
     |
       n14 = < EXTENSION_SPECIES >
       { n13 = JTBToolkit.makeNodeToken(n14); }
-      { n0 = new NodeChoice(n13, 6, 9); }
+      { n0 = new NodeChoice(n13, 6, 12); }
     |
       n16 = < EXTENSION_GLOBALQ >
       { n15 = JTBToolkit.makeNodeToken(n16); }
-      { n0 = new NodeChoice(n15, 7, 9); }
+      { n0 = new NodeChoice(n15, 7, 12); }
     |
-      n18 = < MY_SPECIAL_EXTENSION >
+      n18 = < EXTENSION_FUNCTION >
       { n17 = JTBToolkit.makeNodeToken(n18); }
-      { n0 = new NodeChoice(n17, 8, 9); }
+      { n0 = new NodeChoice(n17, 8, 12); }
+    |
+      n20 = < EXTENSION_REACTION >
+      { n19 = JTBToolkit.makeNodeToken(n20); }
+      { n0 = new NodeChoice(n19, 9, 12); }
+    |
+      n22 = < EXTENSION_FLUX >
+      { n21 = JTBToolkit.makeNodeToken(n22); }
+      { n0 = new NodeChoice(n21, 10, 12); }
+    |
+      n24 = < MY_SPECIAL_EXTENSION >
+      { n23 = JTBToolkit.makeNodeToken(n24); }
+      { n0 = new NodeChoice(n23, 11, 12); }
     )
     
   )
   (
     LOOKAHEAD( 2 )
-    n20 = PossibleExtensions()
-    { n19.addNode(n20); }
+    n26 = PossibleExtensions()
+    { n25.addNode(n26); }
   )*
-  { n19.nodes.trimToSize(); }
-  { return new PossibleExtensions(n0, n19); }
+  { n25.nodes.trimToSize(); }
+  { return new PossibleExtensions(n0, n25); }
 }
 
 Literal Literal() :
@@ -1029,6 +1085,187 @@ ArgumentList ArgumentList() :
     { n0 = new NodeChoice(n2, 1, 2); }
   )
   { return new ArgumentList(n0); }
+}
+
+ArgumentList_MultistateSum ArgumentList_MultistateSum() :
+{
+  // --- JTB generated node declarations ---
+  Name n0 = null;
+  NodeOptional n1 = new NodeOptional();
+  ArgumentList_MultistateSum_Selectors n2 = null;
+}
+{
+  n0 = Name()
+  [
+    n2 = ArgumentList_MultistateSum_Selectors()
+    { n1.addNode(n2); }
+  ]
+  { return new ArgumentList_MultistateSum(n0, n1); }
+}
+
+ArgumentList_MultistateSum_Selectors ArgumentList_MultistateSum_Selectors() :
+{
+  // --- JTB generated node declarations ---
+  NodeToken n0 = null;
+  Token n1 = null;
+  Selector n2 = null;
+  NodeListOptional n3 = new NodeListOptional();
+  NodeSequence n4 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
+  Selector n7 = null;
+}
+{
+  n1 = < SEMICOLON >
+  { n0 = JTBToolkit.makeNodeToken(n1); }
+  n2 = Selector()
+  (
+    { n4 = new NodeSequence(2); }
+    n6 = < SEMICOLON >
+    { n5 = JTBToolkit.makeNodeToken(n6); }
+    { n4.addNode(n5); }
+    n7 = Selector()
+    { n4.addNode(n7); }
+    { n3.addNode(n4); }
+  )*
+  { n3.nodes.trimToSize(); }
+  { return new ArgumentList_MultistateSum_Selectors(n0, n2, n3); }
+}
+
+Selector Selector() :
+{
+  // --- JTB generated node declarations ---
+  Name n0 = null;
+  NodeOptional n1 = new NodeOptional();
+  NodeChoice n2 = null;
+  SiteSelector_postFix n3 = null;
+  CoeffFunction_postFix n4 = null;
+}
+{
+  n0 = Name()
+  [
+    (
+      n3 = SiteSelector_postFix()
+      { n2 = new NodeChoice(n3, 0, 2); }
+    |
+      n4 = CoeffFunction_postFix()
+      { n2 = new NodeChoice(n4, 1, 2); }
+    )
+    { n1.addNode(n2); }
+  ]
+  { return new Selector(n0, n1); }
+}
+
+SiteSelector_postFix SiteSelector_postFix() :
+{
+  // --- JTB generated node declarations ---
+  NodeToken n0 = null;
+  Token n1 = null;
+  NodeChoice n2 = null;
+  Name n3 = null;
+  Literal n4 = null;
+  NodeOptional n5 = new NodeOptional();
+  NodeChoice n6 = null;
+  NodeList n7 = null;
+  NodeSequence n8 = null;
+  NodeToken n9 = null;
+  Token n10 = null;
+  NodeChoice n11 = null;
+  Name n12 = null;
+  Literal n13 = null;
+  NodeSequence n14 = null;
+  NodeToken n15 = null;
+  Token n16 = null;
+  NodeChoice n17 = null;
+  Name n18 = null;
+  Literal n19 = null;
+  NodeToken n20 = null;
+  Token n21 = null;
+}
+{
+  n1 = < LBRACE >
+  { n0 = JTBToolkit.makeNodeToken(n1); }
+  (
+    (
+      n3 = Name()
+      { n2 = new NodeChoice(n3, 0, 2); }
+    |
+      n4 = Literal()
+      { n2 = new NodeChoice(n4, 1, 2); }
+    )
+    
+  )
+  (
+    { n7 = new NodeList(); }
+    (
+      (
+        { n8 = new NodeSequence(2); }
+        n10 = < COMMA >
+        { n9 = JTBToolkit.makeNodeToken(n10); }
+        { n8.addNode(n9); }
+        (
+          (
+            n12 = Name()
+            { n11 = new NodeChoice(n12, 0, 2); }
+          |
+            n13 = Literal()
+            { n11 = new NodeChoice(n13, 1, 2); }
+          )
+          
+        )
+        { n8.addNode(n11); }
+        { n7.addNode(n8); }
+      )+
+      { n7.nodes.trimToSize(); }
+      { n6 = new NodeChoice(n7, 0, 2); }
+    |
+      (
+        { n14 = new NodeSequence(2); }
+        n16 = < COLON >
+        { n15 = JTBToolkit.makeNodeToken(n16); }
+        { n14.addNode(n15); }
+        (
+          (
+            n18 = Name()
+            { n17 = new NodeChoice(n18, 0, 2); }
+          |
+            n19 = Literal()
+            { n17 = new NodeChoice(n19, 1, 2); }
+          )
+          
+        )
+        { n14.addNode(n17); }
+        
+      )
+      { n6 = new NodeChoice(n14, 1, 2); }
+    )
+    { n5.addNode(n6); }
+  )?
+  n21 = < RBRACE >
+  { n20 = JTBToolkit.makeNodeToken(n21); }
+  { return new SiteSelector_postFix(n0, n2, n5, n20); }
+}
+
+CoeffFunction_postFix CoeffFunction_postFix() :
+{
+  // --- JTB generated node declarations ---
+  NodeToken n0 = null;
+  Token n1 = null;
+  NodeOptional n2 = new NodeOptional();
+  ArgumentList n3 = null;
+  NodeToken n4 = null;
+  Token n5 = null;
+}
+{
+  n1 = < LPAREN >
+  { n0 = JTBToolkit.makeNodeToken(n1); }
+  [
+    n3 = ArgumentList()
+    { n2.addNode(n3); }
+  ]
+  n5 = < RPAREN >
+  { n4 = JTBToolkit.makeNodeToken(n5); }
+  { return new CoeffFunction_postFix(n0, n2, n4); }
 }
 
 MultistateSite MultistateSite() :

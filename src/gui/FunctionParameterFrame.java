@@ -28,7 +28,7 @@ public class FunctionParameterFrame extends JDialog {
 	private static final long serialVersionUID = 1L;
 	private JPanel jContentPane = null;
 	private JLabel jLabel = null;
-	private JLabel jLabelFunName = null;
+	private JTextField jLabelFunName = null;
 	private JLabel jLabel1 = null;
 	private JLabel jLabelEquation = null;
 	private JScrollPane jScrollPane = null;
@@ -40,6 +40,7 @@ public class FunctionParameterFrame extends JDialog {
 	
 	private int modifiedRow = -1;
 	private MainGui parentFrame = null;
+	private String oldName;
 	
 	public FunctionParameterFrame(MainGui owner, Function f, int row) {
 		super();
@@ -60,6 +61,7 @@ public class FunctionParameterFrame extends JDialog {
 			try {
 				function = f;
 				modifiedRow = row;
+				oldName = f.getName();
 				fillFrameFields(f);
 			} catch (Exception e) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
@@ -78,7 +80,7 @@ public class FunctionParameterFrame extends JDialog {
 	private void initialize() {
 		this.setSize(272, 286);
 		this.setContentPane(getJContentPane());
-		this.setTitle("Parameters setup");
+		this.setTitle("Function properties...");
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
 	}
@@ -92,7 +94,7 @@ public class FunctionParameterFrame extends JDialog {
 			jLabel1 = new JLabel();
 			jLabel1.setBounds(new Rectangle(13, 34, 90, 20));
 			jLabel1.setText("Equation:");
-			jLabelFunName = new JLabel();
+			jLabelFunName = new JTextField();
 			jLabelFunName.setBounds(new Rectangle(101, 9, 153, 20));
 			jLabelFunName.setText("");
 			jLabel = new JLabel();
@@ -198,6 +200,26 @@ public class FunctionParameterFrame extends JDialog {
 			jButton.setBounds(new Rectangle(this.getSize().width-120-17, 228, 120, 26));
 			jButton.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
+					
+					Function alreadyExist = null;
+					try {
+						alreadyExist = parentFrame.multiModel.funDB.getFunctionByName(jLabelFunName.getText());
+					} catch (Exception e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
+					int alreadyExIndex = parentFrame.multiModel.funDB.getFunctionIndex(alreadyExist);
+					if(alreadyExIndex!=-1 && alreadyExIndex+1!=modifiedRow) {
+						  JOptionPane.showMessageDialog(new JButton(),"The new name you chose already exists!", "Invalid name!", JOptionPane.ERROR_MESSAGE);
+						  return;
+					}
+				
+					
+					try {
+						function.setName(jLabelFunName.getText());
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
 					if(modifiedRow != -1) {
 						try {
 							updateFunctionParameter();
@@ -206,11 +228,11 @@ public class FunctionParameterFrame extends JDialog {
 							  JOptionPane.showMessageDialog(new JButton(),e1.getMessage(), "Invalid change!", JOptionPane.ERROR_MESSAGE);
 							  return;
 						}
-						parentFrame.updateModel_fromFunctionParameterFrame(function, modifiedRow);
+						parentFrame.renameFunction_fromCellOrfromFunctionParameterFrame(function, modifiedRow,oldName);
 					}
 					setVisible(false);
 				}
-
+			
 			});
 			
 		}

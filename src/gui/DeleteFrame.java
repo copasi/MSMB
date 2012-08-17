@@ -3,6 +3,8 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
+
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -10,6 +12,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 import javax.swing.JButton;
 
@@ -18,6 +21,7 @@ import org.jdesktop.swingx.decorator.HighlighterFactory;
 import org.jdesktop.swingx.treetable.DefaultMutableTreeTableNode;
 import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
 import org.jdesktop.swingx.treetable.MutableTreeTableNode;
+import org.jdesktop.swingx.treetable.TreeTableNode;
 
 
 import debugTab.FoundElement;
@@ -108,10 +112,16 @@ public class DeleteFrame extends JDialog {
 		JButton btnDeleteSelected = new JButton("Apply chosen actions");
 		btnDeleteSelected.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
-				MainGui.applyDeleteActions(foundElementTableModel.getRoot());
+				if(!allElementSelectedAction(foundElementTableModel.getRoot())) {
+					JOptionPane.showMessageDialog(null,"There are some elements for which an action has not been selected", "Missing action!", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			   MainGui.applyDeleteActions(foundElementTableModel.getRoot());
 				MainGui.indexToDelete.clear();
+				 setCursor(null);
 				dispose();
+				
 			}
 		});
 		panel_3.add(btnDeleteSelected);
@@ -123,6 +133,18 @@ public class DeleteFrame extends JDialog {
 	}
 	
 	
+	
+	private boolean allElementSelectedAction(TreeTableNode root) {
+		boolean ret = true;
+		for(int i = 0; i < root.getChildCount(); i++) {
+			DefaultMutableTreeTableNode child = (DefaultMutableTreeTableNode) root.getChildAt(i);
+			FoundElementToDelete element = (FoundElementToDelete) child.getUserObject();
+			if(element.getActionToTake().compareTo(Constants.DeleteActions.SELECT.description)==0) return ret = ret && false;
+			else ret = ret && allElementSelectedAction(child);
+		}
+		
+		return ret;
+	}
 
 	static boolean resetPartialView = true;
 		

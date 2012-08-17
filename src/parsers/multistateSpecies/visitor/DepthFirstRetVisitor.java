@@ -162,6 +162,24 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
   }
 
   /**
+   * Visits a {@link CompleteMultistateSpecies_RangeString} node, whose children are the following :
+   * <p>
+   * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
+   * nodeToken -> < EOF ><br>
+   *
+   * @param n the node to visit
+   * @return the user return information
+   */
+  public R visit(final CompleteMultistateSpecies_RangeString n) {
+    R nRes = null;
+    // multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()
+    n.multistateSpecies_SiteSingleElement.accept(this);
+    // nodeToken -> < EOF >
+    n.nodeToken.accept(this);
+    return nRes;
+  }
+
+  /**
    * Visits a {@link MultistateSpecies} node, whose children are the following :
    * <p>
    * multistateSpecies_Name -> MultistateSpecies_Name()<br>
@@ -189,6 +207,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
    * nodeListOptional -> ( #0 < SITE_STATES_SEPARATOR > #1 MultistateSpecies_SiteSingleElement() )*<br>
    * nodeToken1 -> < CLOSED_C ><br>
+   * nodeOptional -> ( < CIRCULAR_FLAG > )?<br>
    *
    * @param n the node to visit
    * @return the user return information
@@ -205,6 +224,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     n.nodeListOptional.accept(this);
     // nodeToken1 -> < CLOSED_C >
     n.nodeToken1.accept(this);
+    // nodeOptional -> ( < CIRCULAR_FLAG > )?
+    n.nodeOptional.accept(this);
     return nRes;
   }
 
@@ -213,11 +234,12 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * <p>
    * nodeChoice -> . %0 < STRING_LITERAL ><br>
    * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
-   * .......... .. . .. | &1 < CLOSED_R ><br>
-   * .......... .. . .. | &2 < SITE_NAMES_SEPARATOR ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR ><br>
-   * .......... .. . .. | &4 < SITE_STATES_SEPARATOR ><br>
-   * .......... .. . .. | &5 < CLOSED_C > )+<br>
+   * .......... .. . .. | &1 < CIRCULAR_FLAG ><br>
+   * .......... .. . .. | &2 < CLOSED_R ><br>
+   * .......... .. . .. | &3 < SITE_NAMES_SEPARATOR ><br>
+   * .......... .. . .. | &4 < RANGE_SEPARATOR ><br>
+   * .......... .. . .. | &5 < SITE_STATES_SEPARATOR ><br>
+   * .......... .. . .. | &6 < CLOSED_C > )+<br>
    *
    * @param n the node to visit
    * @return the user return information
@@ -226,11 +248,12 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     R nRes = null;
     // nodeChoice -> . %0 < STRING_LITERAL >
     // .......... .. | %1 ( &0 < MULTI_IDENTIFIER >
-    // .......... .. . .. | &1 < CLOSED_R >
-    // .......... .. . .. | &2 < SITE_NAMES_SEPARATOR >
-    // .......... .. . .. | &3 < RANGE_SEPARATOR >
-    // .......... .. . .. | &4 < SITE_STATES_SEPARATOR >
-    // .......... .. . .. | &5 < CLOSED_C > )+
+    // .......... .. . .. | &1 < CIRCULAR_FLAG >
+    // .......... .. . .. | &2 < CLOSED_R >
+    // .......... .. . .. | &3 < SITE_NAMES_SEPARATOR >
+    // .......... .. . .. | &4 < RANGE_SEPARATOR >
+    // .......... .. . .. | &5 < SITE_STATES_SEPARATOR >
+    // .......... .. . .. | &6 < CLOSED_C > )+
     n.nodeChoice.accept(this);
     return nRes;
   }
@@ -238,25 +261,34 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
   /**
    * Visits a {@link MultistateSpecies_SiteSingleElement} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 < STRING_LITERAL ><br>
-   * .......... .. | %1 MultistateSpecies_SiteSingleElement_Range()<br>
-   * .......... .. | %2 ( &0 < MULTI_IDENTIFIER ><br>
+   * nodeChoice -> ( %0 < STRING_LITERAL ><br>
+   * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
    * .......... .. . .. | &1 < NUMBER ><br>
-   * .......... .. . .. | &2 < OPEN_R ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+   * .......... .. . .. | &2 < OPEN_R > )+ )<br>
+   * nodeOptional -> ( #0 ( " " )* #1 < RANGE_SEPARATOR ><br>
+   * ............ .. . #2 ( " " )*<br>
+   * ............ .. . #3 ( %0 < STRING_LITERAL ><br>
+   * ............ .. . .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
+   * ............ .. . .. . .. | &1 < NUMBER ><br>
+   * ............ .. . .. . .. | &2 < OPEN_R > )+ ) )?<br>
    *
    * @param n the node to visit
    * @return the user return information
    */
   public R visit(final MultistateSpecies_SiteSingleElement n) {
     R nRes = null;
-    // nodeChoice -> . %0 < STRING_LITERAL >
-    // .......... .. | %1 MultistateSpecies_SiteSingleElement_Range()
-    // .......... .. | %2 ( &0 < MULTI_IDENTIFIER >
+    // nodeChoice -> ( %0 < STRING_LITERAL >
+    // .......... .. | %1 ( &0 < MULTI_IDENTIFIER >
     // .......... .. . .. | &1 < NUMBER >
-    // .......... .. . .. | &2 < OPEN_R >
-    // .......... .. . .. | &3 < RANGE_SEPARATOR > )+
+    // .......... .. . .. | &2 < OPEN_R > )+ )
     n.nodeChoice.accept(this);
+    // nodeOptional -> ( #0 ( " " )* #1 < RANGE_SEPARATOR >
+    // ............ .. . #2 ( " " )*
+    // ............ .. . #3 ( %0 < STRING_LITERAL >
+    // ............ .. . .. | %1 ( &0 < MULTI_IDENTIFIER >
+    // ............ .. . .. . .. | &1 < NUMBER >
+    // ............ .. . .. . .. | &2 < OPEN_R > )+ ) )?
+    n.nodeOptional.accept(this);
     return nRes;
   }
 
@@ -295,8 +327,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * .......... .. . .. | &1 < CLOSED_C ><br>
    * .......... .. . .. | &2 < OPEN_R ><br>
    * .......... .. . .. | &3 < CLOSED_R ><br>
-   * .......... .. . .. | &4 < RANGE_SEPARATOR ><br>
-   * .......... .. . .. | &5 < SITE_STATES_SEPARATOR > )+<br>
+   * .......... .. . .. | &4 < SITE_STATES_SEPARATOR > )+<br>
    *
    * @param n the node to visit
    * @return the user return information
@@ -308,8 +339,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     // .......... .. . .. | &1 < CLOSED_C >
     // .......... .. . .. | &2 < OPEN_R >
     // .......... .. . .. | &3 < CLOSED_R >
-    // .......... .. . .. | &4 < RANGE_SEPARATOR >
-    // .......... .. . .. | &5 < SITE_STATES_SEPARATOR > )+
+    // .......... .. . .. | &4 < SITE_STATES_SEPARATOR > )+
     n.nodeChoice.accept(this);
     return nRes;
   }
@@ -337,24 +367,20 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
   /**
    * Visits a {@link MultistateSpecies_Operator_SingleSite} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 #0 MultistateSpecies_Operator_SiteName()<br>
+   * nodeChoice -> . %0 #0 ( &0 < SUCC ><br>
+   * .......... .. . .. .. | &1 < PREC > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R ><br>
+   * .......... .. | %1 #0 MultistateSpecies_Operator_SiteName()<br>
    * .......... .. . .. #1 ( $0 < OPEN_C > $1 MultistateSpecies_Operator_SiteSingleState() $2 < CLOSED_C > )?<br>
-   * .......... .. | %1 #0 ( &0 < SUCC ><br>
-   * .......... .. . .. .. | &1 < PREC ><br>
-   * .......... .. . .. .. | &2 < CIRC_L_SHIFT ><br>
-   * .......... .. . .. .. | &3 < CIRC_R_SHIFT > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R ><br>
    *
    * @param n the node to visit
    * @return the user return information
    */
   public R visit(final MultistateSpecies_Operator_SingleSite n) {
     R nRes = null;
-    // nodeChoice -> . %0 #0 MultistateSpecies_Operator_SiteName()
+    // nodeChoice -> . %0 #0 ( &0 < SUCC >
+    // .......... .. . .. .. | &1 < PREC > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R >
+    // .......... .. | %1 #0 MultistateSpecies_Operator_SiteName()
     // .......... .. . .. #1 ( $0 < OPEN_C > $1 MultistateSpecies_Operator_SiteSingleState() $2 < CLOSED_C > )?
-    // .......... .. | %1 #0 ( &0 < SUCC >
-    // .......... .. . .. .. | &1 < PREC >
-    // .......... .. . .. .. | &2 < CIRC_L_SHIFT >
-    // .......... .. . .. .. | &3 < CIRC_R_SHIFT > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R >
     n.nodeChoice.accept(this);
     return nRes;
   }
@@ -364,9 +390,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * <p>
    * nodeChoice -> . %0 < STRING_LITERAL ><br>
    * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
-   * .......... .. . .. | &1 < NUMBER ><br>
-   * .......... .. . .. | &2 < OPEN_R ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+   * .......... .. . .. | &1 < NUMBER > )+<br>
    *
    * @param n the node to visit
    * @return the user return information
@@ -375,9 +399,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     R nRes = null;
     // nodeChoice -> . %0 < STRING_LITERAL >
     // .......... .. | %1 ( &0 < MULTI_IDENTIFIER >
-    // .......... .. . .. | &1 < NUMBER >
-    // .......... .. . .. | &2 < OPEN_R >
-    // .......... .. . .. | &3 < RANGE_SEPARATOR > )+
+    // .......... .. . .. | &1 < NUMBER > )+
     n.nodeChoice.accept(this);
     return nRes;
   }
@@ -387,9 +409,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * <p>
    * nodeChoice -> . %0 < STRING_LITERAL ><br>
    * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
-   * .......... .. . .. | &1 < NUMBER ><br>
-   * .......... .. . .. | &2 < OPEN_R ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+   * .......... .. . .. | &1 < NUMBER > )+<br>
    *
    * @param n the node to visit
    * @return the user return information
@@ -398,9 +418,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     R nRes = null;
     // nodeChoice -> . %0 < STRING_LITERAL >
     // .......... .. | %1 ( &0 < MULTI_IDENTIFIER >
-    // .......... .. . .. | &1 < NUMBER >
-    // .......... .. . .. | &2 < OPEN_R >
-    // .......... .. . .. | &3 < RANGE_SEPARATOR > )+
+    // .......... .. . .. | &1 < NUMBER > )+
     n.nodeChoice.accept(this);
     return nRes;
   }

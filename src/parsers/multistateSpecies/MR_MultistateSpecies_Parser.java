@@ -11,13 +11,20 @@ import parsers.multistateSpecies.syntaxtree.*;
 public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserConstants {
 
   public static void main(String args[]) {
-    System.out.println("Nothing MR_ChemicalReaction_Parser...");
+    System.out.println("MR_MultistateSpecies_Parser...");
     try {
       String expression = new String("Cdh1(P{1:10})");
       InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
       CompleteMultistateSpecies start = react.CompleteMultistateSpecies();
       DepthFirstVoidVisitor v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("c");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
       expression = new String("Cdh1");
@@ -28,6 +35,13 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       start.accept(v);
       System.out.println("...................................");
       expression = new String("Cdh1(p{1})");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{1};q{4})");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       start = react.CompleteMultistateSpecies();
@@ -48,7 +62,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
-      expression = new String("Cdh1(P{1:4,6,PREC,\u005c"prec\u005c"})");
+      expression = new String("Cdh1(P{1:4,6,PRED,\u005c"pred\u005c"})");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       start = react.CompleteMultistateSpecies();
@@ -56,26 +70,40 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       start.accept(v);
       System.out.println("...................................");
       System.out.println(".......OPERATORS.....................");
-      expression = new String("Cdh1(++(p))");
+      expression = new String("Cdh1(pred(p);pred(q))");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       CompleteMultistateSpecies_Operator op = react.CompleteMultistateSpecies_Operator();
       v = new MyVisitor();
       op.accept(v);
       System.out.println("...................................");
-      expression = new String("Cdh1(--(p);<<(q))");
+      expression = new String("Cdh1(succ(p))");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       op = react.CompleteMultistateSpecies_Operator();
       v = new MyVisitor();
       op.accept(v);
       System.out.println("...................................");
-      expression = new String("Cdh1(>>(\u005c"Time\u005c");<<(q))");
+      expression = new String("Cdh1(succ(\u005c"Time\u005c");pred(q))");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_MultistateSpecies_Parser(is);
       op = react.CompleteMultistateSpecies_Operator();
       v = new MyVisitor();
       op.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{0:10}c)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{0:10}c;q{true,false})");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
       System.out.println("...................................");
     }
     catch (Exception e) {
@@ -123,6 +151,20 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     n2.endColumn++;
     { n1 = JTBToolkit.makeNodeToken(n2); }
     {if (true) return new CompleteMultistateSpecies_Range(n0, n1);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public CompleteMultistateSpecies_RangeString CompleteMultistateSpecies_RangeString() throws ParseException, ParseException {
+  // --- JTB generated node declarations ---
+  MultistateSpecies_SiteSingleElement n0 = null;
+  NodeToken n1 = null;
+  Token n2 = null;
+    n0 = MultistateSpecies_SiteSingleElement();
+    n2 = jj_consume_token(0);
+    n2.beginColumn++;
+    n2.endColumn++;
+    { n1 = JTBToolkit.makeNodeToken(n2); }
+    {if (true) return new CompleteMultistateSpecies_RangeString(n0, n1);}
     throw new Error("Missing return statement in function");
   }
 
@@ -197,6 +239,9 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   MultistateSpecies_SiteSingleElement n8 = null;
   NodeToken n9 = null;
   Token n10 = null;
+  NodeOptional n11 = new NodeOptional();
+  NodeToken n12 = null;
+  Token n13 = null;
     n0 = MultistateSpecies_SiteName();
     n2 = jj_consume_token(OPEN_C);
     n1 = JTBToolkit.makeNodeToken(n2);
@@ -222,7 +267,17 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     n4.nodes.trimToSize();
     n10 = jj_consume_token(CLOSED_C);
     n9 = JTBToolkit.makeNodeToken(n10);
-    {if (true) return new MultistateSpecies_SingleStateDefinition(n0, n1, n3, n4, n9);}
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case CIRCULAR_FLAG:
+      n13 = jj_consume_token(CIRCULAR_FLAG);
+      n12 = JTBToolkit.makeNodeToken(n13);
+      n11.addNode(n12);
+      break;
+    default:
+      jj_la1[3] = jj_gen;
+      ;
+    }
+    {if (true) return new MultistateSpecies_SingleStateDefinition(n0, n1, n3, n4, n9, n11);}
     throw new Error("Missing return statement in function");
   }
 
@@ -245,12 +300,15 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   Token n14 = null;
   NodeToken n15 = null;
   Token n16 = null;
+  NodeToken n17 = null;
+  Token n18 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case STRING_LITERAL:
       n2 = jj_consume_token(STRING_LITERAL);
       n1 = JTBToolkit.makeNodeToken(n2);
       n0 = new NodeChoice(n1, 0, 2);
       break;
+    case CIRCULAR_FLAG:
     case CLOSED_R:
     case CLOSED_C:
     case RANGE_SEPARATOR:
@@ -263,40 +321,46 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
         case MULTI_IDENTIFIER:
           n6 = jj_consume_token(MULTI_IDENTIFIER);
           n5 = JTBToolkit.makeNodeToken(n6);
-          n4 = new NodeChoice(n5, 0, 6);
+          n4 = new NodeChoice(n5, 0, 7);
+          break;
+        case CIRCULAR_FLAG:
+          n8 = jj_consume_token(CIRCULAR_FLAG);
+          n7 = JTBToolkit.makeNodeToken(n8);
+          n4 = new NodeChoice(n7, 1, 7);
           break;
         case CLOSED_R:
-          n8 = jj_consume_token(CLOSED_R);
-          n7 = JTBToolkit.makeNodeToken(n8);
-          n4 = new NodeChoice(n7, 1, 6);
+          n10 = jj_consume_token(CLOSED_R);
+          n9 = JTBToolkit.makeNodeToken(n10);
+          n4 = new NodeChoice(n9, 2, 7);
           break;
         case SITE_NAMES_SEPARATOR:
-          n10 = jj_consume_token(SITE_NAMES_SEPARATOR);
-          n9 = JTBToolkit.makeNodeToken(n10);
-          n4 = new NodeChoice(n9, 2, 6);
+          n12 = jj_consume_token(SITE_NAMES_SEPARATOR);
+          n11 = JTBToolkit.makeNodeToken(n12);
+          n4 = new NodeChoice(n11, 3, 7);
           break;
         case RANGE_SEPARATOR:
-          n12 = jj_consume_token(RANGE_SEPARATOR);
-          n11 = JTBToolkit.makeNodeToken(n12);
-          n4 = new NodeChoice(n11, 3, 6);
+          n14 = jj_consume_token(RANGE_SEPARATOR);
+          n13 = JTBToolkit.makeNodeToken(n14);
+          n4 = new NodeChoice(n13, 4, 7);
           break;
         case SITE_STATES_SEPARATOR:
-          n14 = jj_consume_token(SITE_STATES_SEPARATOR);
-          n13 = JTBToolkit.makeNodeToken(n14);
-          n4 = new NodeChoice(n13, 4, 6);
+          n16 = jj_consume_token(SITE_STATES_SEPARATOR);
+          n15 = JTBToolkit.makeNodeToken(n16);
+          n4 = new NodeChoice(n15, 5, 7);
           break;
         case CLOSED_C:
-          n16 = jj_consume_token(CLOSED_C);
-          n15 = JTBToolkit.makeNodeToken(n16);
-          n4 = new NodeChoice(n15, 5, 6);
+          n18 = jj_consume_token(CLOSED_C);
+          n17 = JTBToolkit.makeNodeToken(n18);
+          n4 = new NodeChoice(n17, 6, 7);
           break;
         default:
-          jj_la1[3] = jj_gen;
+          jj_la1[4] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         n3.addNode(n4);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case CIRCULAR_FLAG:
         case CLOSED_R:
         case CLOSED_C:
         case RANGE_SEPARATOR:
@@ -306,7 +370,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
           ;
           break;
         default:
-          jj_la1[4] = jj_gen;
+          jj_la1[5] = jj_gen;
           break label_3;
         }
       }
@@ -314,7 +378,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       n0 = new NodeChoice(n3, 1, 2);
       break;
     default:
-      jj_la1[5] = jj_gen;
+      jj_la1[6] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -327,86 +391,189 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   NodeChoice n0 = null;
   NodeToken n1 = null;
   Token n2 = null;
-  MultistateSpecies_SiteSingleElement_Range n3 = null;
-  NodeList n4 = new NodeList();
-  NodeChoice n5 = null;
-  NodeToken n6 = null;
-  Token n7 = null;
-  NodeToken n8 = null;
-  Token n9 = null;
-  NodeToken n10 = null;
-  Token n11 = null;
-  NodeToken n12 = null;
-  Token n13 = null;
+  NodeList n3 = new NodeList();
+  NodeChoice n4 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
+  NodeToken n7 = null;
+  Token n8 = null;
+  NodeToken n9 = null;
+  Token n10 = null;
+  NodeOptional n11 = new NodeOptional();
+  NodeSequence n12 = null;
+  NodeListOptional n13 = null;
+  NodeToken n14 = null;
+  Token n15 = null;
+  NodeToken n16 = null;
+  Token n17 = null;
+  NodeListOptional n18 = null;
+  NodeToken n19 = null;
+  Token n20 = null;
+  NodeChoice n21 = null;
+  NodeToken n22 = null;
+  Token n23 = null;
+  NodeList n24 = null;
+  NodeChoice n25 = null;
+  NodeToken n26 = null;
+  Token n27 = null;
+  NodeToken n28 = null;
+  Token n29 = null;
+  NodeToken n30 = null;
+  Token n31 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case STRING_LITERAL:
       n2 = jj_consume_token(STRING_LITERAL);
-      n1 = JTBToolkit.makeNodeToken(n2);
-      n0 = new NodeChoice(n1, 0, 3);
+        n1 = JTBToolkit.makeNodeToken(n2);
+        n0 = new NodeChoice(n1, 0, 2);
       break;
-    default:
-      jj_la1[8] = jj_gen;
-      if (jj_2_1(3)) {
-        n3 = MultistateSpecies_SiteSingleElement_Range();
-      n0 = new NodeChoice(n3, 1, 3);
-      } else {
+    case OPEN_R:
+    case NUMBER:
+    case MULTI_IDENTIFIER:
+      label_4:
+      while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case OPEN_R:
-        case RANGE_SEPARATOR:
-        case NUMBER:
         case MULTI_IDENTIFIER:
-          label_4:
-          while (true) {
-            switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-            case MULTI_IDENTIFIER:
-              n7 = jj_consume_token(MULTI_IDENTIFIER);
-          n6 = JTBToolkit.makeNodeToken(n7);
-          n5 = new NodeChoice(n6, 0, 4);
-              break;
-            case NUMBER:
-              n9 = jj_consume_token(NUMBER);
-          n8 = JTBToolkit.makeNodeToken(n9);
-          n5 = new NodeChoice(n8, 1, 4);
-              break;
-            case OPEN_R:
-              n11 = jj_consume_token(OPEN_R);
-          n10 = JTBToolkit.makeNodeToken(n11);
-          n5 = new NodeChoice(n10, 2, 4);
-              break;
-            case RANGE_SEPARATOR:
-              n13 = jj_consume_token(RANGE_SEPARATOR);
-          n12 = JTBToolkit.makeNodeToken(n13);
-          n5 = new NodeChoice(n12, 3, 4);
-              break;
-            default:
-              jj_la1[6] = jj_gen;
-              jj_consume_token(-1);
-              throw new ParseException();
-            }
-        n4.addNode(n5);
-            switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-            case OPEN_R:
-            case RANGE_SEPARATOR:
-            case NUMBER:
-            case MULTI_IDENTIFIER:
-              ;
-              break;
-            default:
-              jj_la1[7] = jj_gen;
-              break label_4;
-            }
-          }
-      n4.nodes.trimToSize();
-      n0 = new NodeChoice(n4, 2, 3);
+          n6 = jj_consume_token(MULTI_IDENTIFIER);
+            n5 = JTBToolkit.makeNodeToken(n6);
+            n4 = new NodeChoice(n5, 0, 3);
+          break;
+        case NUMBER:
+          n8 = jj_consume_token(NUMBER);
+            n7 = JTBToolkit.makeNodeToken(n8);
+            n4 = new NodeChoice(n7, 1, 3);
+          break;
+        case OPEN_R:
+          n10 = jj_consume_token(OPEN_R);
+            n9 = JTBToolkit.makeNodeToken(n10);
+            n4 = new NodeChoice(n9, 2, 3);
           break;
         default:
-          jj_la1[9] = jj_gen;
+          jj_la1[7] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
+          n3.addNode(n4);
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case OPEN_R:
+        case NUMBER:
+        case MULTI_IDENTIFIER:
+          ;
+          break;
+        default:
+          jj_la1[8] = jj_gen;
+          break label_4;
+        }
       }
+        n3.nodes.trimToSize();
+        n0 = new NodeChoice(n3, 1, 2);
+      break;
+    default:
+      jj_la1[9] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
     }
-    {if (true) return new MultistateSpecies_SiteSingleElement(n0);}
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case BLANK:
+    case RANGE_SEPARATOR:
+      n13 = new NodeListOptional();
+      n18 = new NodeListOptional();
+      n24 = new NodeList();
+      n12 = new NodeSequence(4);
+      label_5:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case BLANK:
+          ;
+          break;
+        default:
+          jj_la1[10] = jj_gen;
+          break label_5;
+        }
+        n15 = jj_consume_token(BLANK);
+        n14 = JTBToolkit.makeNodeToken(n15);
+        n13.addNode(n14);
+      }
+      n13.nodes.trimToSize();
+      n12.addNode(n13);
+      n17 = jj_consume_token(RANGE_SEPARATOR);
+      n16 = JTBToolkit.makeNodeToken(n17);
+      n12.addNode(n16);
+      label_6:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case BLANK:
+          ;
+          break;
+        default:
+          jj_la1[11] = jj_gen;
+          break label_6;
+        }
+        n20 = jj_consume_token(BLANK);
+        n19 = JTBToolkit.makeNodeToken(n20);
+        n18.addNode(n19);
+      }
+      n18.nodes.trimToSize();
+      n12.addNode(n18);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case STRING_LITERAL:
+        n23 = jj_consume_token(STRING_LITERAL);
+          n22 = JTBToolkit.makeNodeToken(n23);
+          n21 = new NodeChoice(n22, 0, 2);
+        break;
+      case OPEN_R:
+      case NUMBER:
+      case MULTI_IDENTIFIER:
+        label_7:
+        while (true) {
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case MULTI_IDENTIFIER:
+            n27 = jj_consume_token(MULTI_IDENTIFIER);
+              n26 = JTBToolkit.makeNodeToken(n27);
+              n25 = new NodeChoice(n26, 0, 3);
+            break;
+          case NUMBER:
+            n29 = jj_consume_token(NUMBER);
+              n28 = JTBToolkit.makeNodeToken(n29);
+              n25 = new NodeChoice(n28, 1, 3);
+            break;
+          case OPEN_R:
+            n31 = jj_consume_token(OPEN_R);
+              n30 = JTBToolkit.makeNodeToken(n31);
+              n25 = new NodeChoice(n30, 2, 3);
+            break;
+          default:
+            jj_la1[12] = jj_gen;
+            jj_consume_token(-1);
+            throw new ParseException();
+          }
+            n24.addNode(n25);
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case OPEN_R:
+          case NUMBER:
+          case MULTI_IDENTIFIER:
+            ;
+            break;
+          default:
+            jj_la1[13] = jj_gen;
+            break label_7;
+          }
+        }
+          n24.nodes.trimToSize();
+          n21 = new NodeChoice(n24, 1, 2);
+        break;
+      default:
+        jj_la1[14] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      n12.addNode(n21);
+      n11.addNode(n12);
+      break;
+    default:
+      jj_la1[15] = jj_gen;
+      ;
+    }
+    {if (true) return new MultistateSpecies_SiteSingleElement(n0, n11);}
     throw new Error("Missing return statement in function");
   }
 
@@ -426,15 +593,15 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   Token n11 = null;
     n1 = jj_consume_token(NUMBER);
     n0 = JTBToolkit.makeNodeToken(n1);
-    label_5:
+    label_8:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case BLANK:
         ;
         break;
       default:
-        jj_la1[10] = jj_gen;
-        break label_5;
+        jj_la1[16] = jj_gen;
+        break label_8;
       }
       n4 = jj_consume_token(BLANK);
       n3 = JTBToolkit.makeNodeToken(n4);
@@ -443,15 +610,15 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     n2.nodes.trimToSize();
     n6 = jj_consume_token(RANGE_SEPARATOR);
     n5 = JTBToolkit.makeNodeToken(n6);
-    label_6:
+    label_9:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case BLANK:
         ;
         break;
       default:
-        jj_la1[11] = jj_gen;
-        break label_6;
+        jj_la1[17] = jj_gen;
+        break label_9;
       }
       n9 = jj_consume_token(BLANK);
       n8 = JTBToolkit.makeNodeToken(n9);
@@ -481,8 +648,6 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   Token n12 = null;
   NodeToken n13 = null;
   Token n14 = null;
-  NodeToken n15 = null;
-  Token n16 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case STRING_LITERAL:
       n2 = jj_consume_token(STRING_LITERAL);
@@ -492,44 +657,38 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     case OPEN_R:
     case CLOSED_R:
     case CLOSED_C:
-    case RANGE_SEPARATOR:
     case SITE_STATES_SEPARATOR:
     case MULTI_IDENTIFIER:
-      label_7:
+      label_10:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case MULTI_IDENTIFIER:
           n6 = jj_consume_token(MULTI_IDENTIFIER);
           n5 = JTBToolkit.makeNodeToken(n6);
-          n4 = new NodeChoice(n5, 0, 6);
+          n4 = new NodeChoice(n5, 0, 5);
           break;
         case CLOSED_C:
           n8 = jj_consume_token(CLOSED_C);
           n7 = JTBToolkit.makeNodeToken(n8);
-          n4 = new NodeChoice(n7, 1, 6);
+          n4 = new NodeChoice(n7, 1, 5);
           break;
         case OPEN_R:
           n10 = jj_consume_token(OPEN_R);
           n9 = JTBToolkit.makeNodeToken(n10);
-          n4 = new NodeChoice(n9, 2, 6);
+          n4 = new NodeChoice(n9, 2, 5);
           break;
         case CLOSED_R:
           n12 = jj_consume_token(CLOSED_R);
           n11 = JTBToolkit.makeNodeToken(n12);
-          n4 = new NodeChoice(n11, 3, 6);
-          break;
-        case RANGE_SEPARATOR:
-          n14 = jj_consume_token(RANGE_SEPARATOR);
-          n13 = JTBToolkit.makeNodeToken(n14);
-          n4 = new NodeChoice(n13, 4, 6);
+          n4 = new NodeChoice(n11, 3, 5);
           break;
         case SITE_STATES_SEPARATOR:
-          n16 = jj_consume_token(SITE_STATES_SEPARATOR);
-          n15 = JTBToolkit.makeNodeToken(n16);
-          n4 = new NodeChoice(n15, 5, 6);
+          n14 = jj_consume_token(SITE_STATES_SEPARATOR);
+          n13 = JTBToolkit.makeNodeToken(n14);
+          n4 = new NodeChoice(n13, 4, 5);
           break;
         default:
-          jj_la1[12] = jj_gen;
+          jj_la1[18] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -538,21 +697,20 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
         case OPEN_R:
         case CLOSED_R:
         case CLOSED_C:
-        case RANGE_SEPARATOR:
         case SITE_STATES_SEPARATOR:
         case MULTI_IDENTIFIER:
           ;
           break;
         default:
-          jj_la1[13] = jj_gen;
-          break label_7;
+          jj_la1[19] = jj_gen;
+          break label_10;
         }
       }
       n3.nodes.trimToSize();
       n0 = new NodeChoice(n3, 1, 2);
       break;
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[20] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -585,15 +743,15 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       n2.addNode(n3);
       n5 = MultistateSpecies_Operator_SingleSite();
       n2.addNode(n5);
-      label_8:
+      label_11:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case SITE_NAMES_SEPARATOR:
           ;
           break;
         default:
-          jj_la1[15] = jj_gen;
-          break label_8;
+          jj_la1[21] = jj_gen;
+          break label_11;
         }
         n7 = new NodeSequence(2);
         n9 = jj_consume_token(SITE_NAMES_SEPARATOR);
@@ -611,7 +769,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       n1.addNode(n2);
       break;
     default:
-      jj_la1[16] = jj_gen;
+      jj_la1[22] = jj_gen;
       ;
     }
     {if (true) return new MultistateSpecies_Operator(n0, n1);}
@@ -622,102 +780,84 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   // --- JTB generated node declarations ---
   NodeChoice n0 = null;
   NodeSequence n1 = null;
-  MultistateSpecies_Operator_SiteName n2 = null;
-  NodeOptional n3 = new NodeOptional();
-  NodeSequence n4 = null;
+  NodeChoice n2 = null;
+  NodeToken n3 = null;
+  Token n4 = null;
   NodeToken n5 = null;
   Token n6 = null;
-  MultistateSpecies_Operator_SiteSingleState n7 = null;
-  NodeToken n8 = null;
-  Token n9 = null;
-  NodeSequence n10 = null;
-  NodeChoice n11 = null;
-  NodeToken n12 = null;
-  Token n13 = null;
-  NodeToken n14 = null;
-  Token n15 = null;
+  NodeToken n7 = null;
+  Token n8 = null;
+  MultistateSpecies_Operator_SiteName n9 = null;
+  NodeToken n10 = null;
+  Token n11 = null;
+  NodeSequence n12 = null;
+  MultistateSpecies_Operator_SiteName n13 = null;
+  NodeOptional n14 = new NodeOptional();
+  NodeSequence n15 = null;
   NodeToken n16 = null;
   Token n17 = null;
-  NodeToken n18 = null;
-  Token n19 = null;
-  NodeToken n20 = null;
-  Token n21 = null;
-  MultistateSpecies_Operator_SiteName n22 = null;
-  NodeToken n23 = null;
-  Token n24 = null;
+  MultistateSpecies_Operator_SiteSingleState n18 = null;
+  NodeToken n19 = null;
+  Token n20 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case OPEN_R:
-    case RANGE_SEPARATOR:
-    case STRING_LITERAL:
-    case NUMBER:
-    case MULTI_IDENTIFIER:
-      n1 = new NodeSequence(2);
-      n2 = MultistateSpecies_Operator_SiteName();
-      n1.addNode(n2);
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case OPEN_C:
-        n4 = new NodeSequence(3);
-        n6 = jj_consume_token(OPEN_C);
-        n5 = JTBToolkit.makeNodeToken(n6);
-        n4.addNode(n5);
-        n7 = MultistateSpecies_Operator_SiteSingleState();
-        n4.addNode(n7);
-        n9 = jj_consume_token(CLOSED_C);
-        n8 = JTBToolkit.makeNodeToken(n9);
-        n4.addNode(n8);
-        n3.addNode(n4);
-        break;
-      default:
-        jj_la1[17] = jj_gen;
-        ;
-      }
-      n1.addNode(n3);
-      n0 = new NodeChoice(n1, 0, 2);
-      break;
     case SUCC:
     case PREC:
-    case CIRC_L_SHIFT:
-    case CIRC_R_SHIFT:
-      n10 = new NodeSequence(4);
+      n1 = new NodeSequence(4);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case SUCC:
-        n13 = jj_consume_token(SUCC);
-          n12 = JTBToolkit.makeNodeToken(n13);
-          n11 = new NodeChoice(n12, 0, 4);
+        n4 = jj_consume_token(SUCC);
+          n3 = JTBToolkit.makeNodeToken(n4);
+          n2 = new NodeChoice(n3, 0, 2);
         break;
       case PREC:
-        n15 = jj_consume_token(PREC);
-          n14 = JTBToolkit.makeNodeToken(n15);
-          n11 = new NodeChoice(n14, 1, 4);
-        break;
-      case CIRC_L_SHIFT:
-        n17 = jj_consume_token(CIRC_L_SHIFT);
-          n16 = JTBToolkit.makeNodeToken(n17);
-          n11 = new NodeChoice(n16, 2, 4);
-        break;
-      case CIRC_R_SHIFT:
-        n19 = jj_consume_token(CIRC_R_SHIFT);
-          n18 = JTBToolkit.makeNodeToken(n19);
-          n11 = new NodeChoice(n18, 3, 4);
+        n6 = jj_consume_token(PREC);
+          n5 = JTBToolkit.makeNodeToken(n6);
+          n2 = new NodeChoice(n5, 1, 2);
         break;
       default:
-        jj_la1[18] = jj_gen;
+        jj_la1[23] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-      n10.addNode(n11);
-      n21 = jj_consume_token(OPEN_R);
-      n20 = JTBToolkit.makeNodeToken(n21);
-      n10.addNode(n20);
-      n22 = MultistateSpecies_Operator_SiteName();
-      n10.addNode(n22);
-      n24 = jj_consume_token(CLOSED_R);
-      n23 = JTBToolkit.makeNodeToken(n24);
-      n10.addNode(n23);
-      n0 = new NodeChoice(n10, 1, 2);
+      n1.addNode(n2);
+      n8 = jj_consume_token(OPEN_R);
+      n7 = JTBToolkit.makeNodeToken(n8);
+      n1.addNode(n7);
+      n9 = MultistateSpecies_Operator_SiteName();
+      n1.addNode(n9);
+      n11 = jj_consume_token(CLOSED_R);
+      n10 = JTBToolkit.makeNodeToken(n11);
+      n1.addNode(n10);
+      n0 = new NodeChoice(n1, 0, 2);
+      break;
+    case STRING_LITERAL:
+    case NUMBER:
+    case MULTI_IDENTIFIER:
+      n12 = new NodeSequence(2);
+      n13 = MultistateSpecies_Operator_SiteName();
+      n12.addNode(n13);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case OPEN_C:
+        n15 = new NodeSequence(3);
+        n17 = jj_consume_token(OPEN_C);
+        n16 = JTBToolkit.makeNodeToken(n17);
+        n15.addNode(n16);
+        n18 = MultistateSpecies_Operator_SiteSingleState();
+        n15.addNode(n18);
+        n20 = jj_consume_token(CLOSED_C);
+        n19 = JTBToolkit.makeNodeToken(n20);
+        n15.addNode(n19);
+        n14.addNode(n15);
+        break;
+      default:
+        jj_la1[24] = jj_gen;
+        ;
+      }
+      n12.addNode(n14);
+      n0 = new NodeChoice(n12, 1, 2);
       break;
     default:
-      jj_la1[19] = jj_gen;
+      jj_la1[25] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -736,66 +876,48 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   Token n6 = null;
   NodeToken n7 = null;
   Token n8 = null;
-  NodeToken n9 = null;
-  Token n10 = null;
-  NodeToken n11 = null;
-  Token n12 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case STRING_LITERAL:
       n2 = jj_consume_token(STRING_LITERAL);
       n1 = JTBToolkit.makeNodeToken(n2);
       n0 = new NodeChoice(n1, 0, 2);
       break;
-    case OPEN_R:
-    case RANGE_SEPARATOR:
     case NUMBER:
     case MULTI_IDENTIFIER:
-      label_9:
+      label_12:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case MULTI_IDENTIFIER:
           n6 = jj_consume_token(MULTI_IDENTIFIER);
           n5 = JTBToolkit.makeNodeToken(n6);
-          n4 = new NodeChoice(n5, 0, 4);
+          n4 = new NodeChoice(n5, 0, 2);
           break;
         case NUMBER:
           n8 = jj_consume_token(NUMBER);
           n7 = JTBToolkit.makeNodeToken(n8);
-          n4 = new NodeChoice(n7, 1, 4);
-          break;
-        case OPEN_R:
-          n10 = jj_consume_token(OPEN_R);
-          n9 = JTBToolkit.makeNodeToken(n10);
-          n4 = new NodeChoice(n9, 2, 4);
-          break;
-        case RANGE_SEPARATOR:
-          n12 = jj_consume_token(RANGE_SEPARATOR);
-          n11 = JTBToolkit.makeNodeToken(n12);
-          n4 = new NodeChoice(n11, 3, 4);
+          n4 = new NodeChoice(n7, 1, 2);
           break;
         default:
-          jj_la1[20] = jj_gen;
+          jj_la1[26] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         n3.addNode(n4);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case OPEN_R:
-        case RANGE_SEPARATOR:
         case NUMBER:
         case MULTI_IDENTIFIER:
           ;
           break;
         default:
-          jj_la1[21] = jj_gen;
-          break label_9;
+          jj_la1[27] = jj_gen;
+          break label_12;
         }
       }
       n3.nodes.trimToSize();
       n0 = new NodeChoice(n3, 1, 2);
       break;
     default:
-      jj_la1[22] = jj_gen;
+      jj_la1[28] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -814,109 +936,53 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   Token n6 = null;
   NodeToken n7 = null;
   Token n8 = null;
-  NodeToken n9 = null;
-  Token n10 = null;
-  NodeToken n11 = null;
-  Token n12 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case STRING_LITERAL:
       n2 = jj_consume_token(STRING_LITERAL);
       n1 = JTBToolkit.makeNodeToken(n2);
       n0 = new NodeChoice(n1, 0, 2);
       break;
-    case OPEN_R:
-    case RANGE_SEPARATOR:
     case NUMBER:
     case MULTI_IDENTIFIER:
-      label_10:
+      label_13:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case MULTI_IDENTIFIER:
           n6 = jj_consume_token(MULTI_IDENTIFIER);
           n5 = JTBToolkit.makeNodeToken(n6);
-          n4 = new NodeChoice(n5, 0, 4);
+          n4 = new NodeChoice(n5, 0, 2);
           break;
         case NUMBER:
           n8 = jj_consume_token(NUMBER);
           n7 = JTBToolkit.makeNodeToken(n8);
-          n4 = new NodeChoice(n7, 1, 4);
-          break;
-        case OPEN_R:
-          n10 = jj_consume_token(OPEN_R);
-          n9 = JTBToolkit.makeNodeToken(n10);
-          n4 = new NodeChoice(n9, 2, 4);
-          break;
-        case RANGE_SEPARATOR:
-          n12 = jj_consume_token(RANGE_SEPARATOR);
-          n11 = JTBToolkit.makeNodeToken(n12);
-          n4 = new NodeChoice(n11, 3, 4);
+          n4 = new NodeChoice(n7, 1, 2);
           break;
         default:
-          jj_la1[23] = jj_gen;
+          jj_la1[29] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         n3.addNode(n4);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case OPEN_R:
-        case RANGE_SEPARATOR:
         case NUMBER:
         case MULTI_IDENTIFIER:
           ;
           break;
         default:
-          jj_la1[24] = jj_gen;
-          break label_10;
+          jj_la1[30] = jj_gen;
+          break label_13;
         }
       }
       n3.nodes.trimToSize();
       n0 = new NodeChoice(n3, 1, 2);
       break;
     default:
-      jj_la1[25] = jj_gen;
+      jj_la1[31] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
     {if (true) return new MultistateSpecies_Operator_SiteSingleState(n0);}
     throw new Error("Missing return statement in function");
-  }
-
-  private boolean jj_2_1(int xla) {
-    jj_la = xla; jj_lastpos = jj_scanpos = token;
-    try { return !jj_3_1(); }
-    catch(LookaheadSuccess ls) { return true; }
-    finally { jj_save(0, xla); }
-  }
-
-  private boolean jj_3R_12() {
-    if (jj_scan_token(BLANK)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_13() {
-    if (jj_scan_token(BLANK)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_11() {
-    if (jj_scan_token(NUMBER)) return true;
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_12()) { jj_scanpos = xsp; break; }
-    }
-    if (jj_scan_token(RANGE_SEPARATOR)) return true;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_13()) { jj_scanpos = xsp; break; }
-    }
-    if (jj_scan_token(NUMBER)) return true;
-    return false;
-  }
-
-  private boolean jj_3_1() {
-    if (jj_3R_11()) return true;
-    return false;
   }
 
   /** Generated Token Manager. */
@@ -927,20 +993,15 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   /** Next token. */
   public Token jj_nt;
   private int jj_ntk;
-  private Token jj_scanpos, jj_lastpos;
-  private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[26];
+  final private int[] jj_la1 = new int[32];
   static private int[] jj_la1_0;
   static {
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x200000,0x10000,0x400000,0x27a0000,0x27a0000,0x2fa0000,0x3110000,0x3110000,0x800000,0x3110000,0x8000,0x8000,0x25b0000,0x25b0000,0x2db0000,0x200000,0x10000,0x40000,0x7800,0x3917800,0x3110000,0x3110000,0x3910000,0x3110000,0x3110000,0x3910000,};
+      jj_la1_0 = new int[] {0x100000,0x8000,0x200000,0x2000,0x13d2000,0x13d2000,0x17d2000,0x1808000,0x1808000,0x1c08000,0x4000,0x4000,0x1808000,0x1808000,0x1c08000,0x84000,0x4000,0x4000,0x1258000,0x1258000,0x1658000,0x100000,0x8000,0x1800,0x20000,0x1c01800,0x1800000,0x1800000,0x1c00000,0x1800000,0x1800000,0x1c00000,};
    }
-  final private JJCalls[] jj_2_rtns = new JJCalls[1];
-  private boolean jj_rescan = false;
-  private int jj_gc = 0;
 
   /** Constructor with InputStream. */
   public MR_MultistateSpecies_Parser(java.io.InputStream stream) {
@@ -953,8 +1014,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
-    for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
+    for (int i = 0; i < 32; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -968,8 +1028,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
-    for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
+    for (int i = 0; i < 32; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -979,8 +1038,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
-    for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
+    for (int i = 0; i < 32; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -990,8 +1048,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
-    for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
+    for (int i = 0; i < 32; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -1000,8 +1057,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
-    for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
+    for (int i = 0; i < 32; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1010,8 +1066,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
-    for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
+    for (int i = 0; i < 32; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -1021,44 +1076,11 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
     jj_ntk = -1;
     if (token.kind == kind) {
       jj_gen++;
-      if (++jj_gc > 100) {
-        jj_gc = 0;
-        for (int i = 0; i < jj_2_rtns.length; i++) {
-          JJCalls c = jj_2_rtns[i];
-          while (c != null) {
-            if (c.gen < jj_gen) c.first = null;
-            c = c.next;
-          }
-        }
-      }
       return token;
     }
     token = oldToken;
     jj_kind = kind;
     throw generateParseException();
-  }
-
-  static private final class LookaheadSuccess extends java.lang.Error { }
-  final private LookaheadSuccess jj_ls = new LookaheadSuccess();
-  private boolean jj_scan_token(int kind) {
-    if (jj_scanpos == jj_lastpos) {
-      jj_la--;
-      if (jj_scanpos.next == null) {
-        jj_lastpos = jj_scanpos = jj_scanpos.next = token_source.getNextToken();
-      } else {
-        jj_lastpos = jj_scanpos = jj_scanpos.next;
-      }
-    } else {
-      jj_scanpos = jj_scanpos.next;
-    }
-    if (jj_rescan) {
-      int i = 0; Token tok = token;
-      while (tok != null && tok != jj_scanpos) { i++; tok = tok.next; }
-      if (tok != null) jj_add_error_token(kind, i);
-    }
-    if (jj_scanpos.kind != kind) return true;
-    if (jj_la == 0 && jj_scanpos == jj_lastpos) throw jj_ls;
-    return false;
   }
 
 
@@ -1091,33 +1113,6 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   private java.util.List<int[]> jj_expentries = new java.util.ArrayList<int[]>();
   private int[] jj_expentry;
   private int jj_kind = -1;
-  private int[] jj_lasttokens = new int[100];
-  private int jj_endpos;
-
-  private void jj_add_error_token(int kind, int pos) {
-    if (pos >= 100) return;
-    if (pos == jj_endpos + 1) {
-      jj_lasttokens[jj_endpos++] = kind;
-    } else if (jj_endpos != 0) {
-      jj_expentry = new int[jj_endpos];
-      for (int i = 0; i < jj_endpos; i++) {
-        jj_expentry[i] = jj_lasttokens[i];
-      }
-      jj_entries_loop: for (java.util.Iterator<?> it = jj_expentries.iterator(); it.hasNext();) {
-        int[] oldentry = (int[])(it.next());
-        if (oldentry.length == jj_expentry.length) {
-          for (int i = 0; i < jj_expentry.length; i++) {
-            if (oldentry[i] != jj_expentry[i]) {
-              continue jj_entries_loop;
-            }
-          }
-          jj_expentries.add(jj_expentry);
-          break jj_entries_loop;
-        }
-      }
-      if (pos != 0) jj_lasttokens[(jj_endpos = pos) - 1] = kind;
-    }
-  }
 
   /** Generate ParseException. */
   public ParseException generateParseException() {
@@ -1127,7 +1122,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 26; i++) {
+    for (int i = 0; i < 32; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1143,9 +1138,6 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
         jj_expentries.add(jj_expentry);
       }
     }
-    jj_endpos = 0;
-    jj_rescan_token();
-    jj_add_error_token(0, 0);
     int[][] exptokseq = new int[jj_expentries.size()][];
     for (int i = 0; i < jj_expentries.size(); i++) {
       exptokseq[i] = jj_expentries.get(i);
@@ -1161,41 +1153,6 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   final public void disable_tracing() {
   }
 
-  private void jj_rescan_token() {
-    jj_rescan = true;
-    for (int i = 0; i < 1; i++) {
-    try {
-      JJCalls p = jj_2_rtns[i];
-      do {
-        if (p.gen > jj_gen) {
-          jj_la = p.arg; jj_lastpos = jj_scanpos = p.first;
-          switch (i) {
-            case 0: jj_3_1(); break;
-          }
-        }
-        p = p.next;
-      } while (p != null);
-      } catch(LookaheadSuccess ls) { }
-    }
-    jj_rescan = false;
-  }
-
-  private void jj_save(int index, int xla) {
-    JJCalls p = jj_2_rtns[index];
-    while (p.gen > jj_gen) {
-      if (p.next == null) { p = p.next = new JJCalls(); break; }
-      p = p.next;
-    }
-    p.gen = jj_gen + xla - jj_la; p.first = token; p.arg = xla;
-  }
-
-  static final class JJCalls {
-    int gen;
-    Token first;
-    int arg;
-    JJCalls next;
-  }
-
 }
 
 
@@ -1207,11 +1164,6 @@ class MyVisitor extends DepthFirstVoidVisitor {
 
   @Override public void visit(MultistateSpecies n) {
     System.out.println("MultistateSpecies");
-    super.visit(n);
-  }
-
-  @Override public void visit(MultistateSpecies_SiteSingleElement_Range n) {
-    System.out.println("RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANGE");
     super.visit(n);
   }
 }

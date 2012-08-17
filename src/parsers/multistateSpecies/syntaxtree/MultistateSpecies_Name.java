@@ -8,11 +8,12 @@ import parsers.multistateSpecies.visitor.*;
  * Corresponding grammar :<br>
  * nodeChoice -> . %0 < STRING_LITERAL ><br>
  * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
- * .......... .. . .. | &1 < CLOSED_R ><br>
- * .......... .. . .. | &2 < SITE_NAMES_SEPARATOR ><br>
- * .......... .. . .. | &3 < RANGE_SEPARATOR ><br>
- * .......... .. . .. | &4 < SITE_STATES_SEPARATOR ><br>
- * .......... .. . .. | &5 < CLOSED_C > )+<br>
+ * .......... .. . .. | &1 < CIRCULAR_FLAG ><br>
+ * .......... .. . .. | &2 < CLOSED_R ><br>
+ * .......... .. . .. | &3 < SITE_NAMES_SEPARATOR ><br>
+ * .......... .. . .. | &4 < RANGE_SEPARATOR ><br>
+ * .......... .. . .. | &5 < SITE_STATES_SEPARATOR ><br>
+ * .......... .. . .. | &6 < CLOSED_C > )+<br>
  */
 public class MultistateSpecies_Name implements INode {
 

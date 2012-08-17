@@ -11,6 +11,7 @@ import parsers.multistateSpecies.visitor.*;
  * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
  * nodeListOptional -> ( #0 < SITE_STATES_SEPARATOR > #1 MultistateSpecies_SiteSingleElement() )*<br>
  * nodeToken1 -> < CLOSED_C ><br>
+ * nodeOptional -> ( < CIRCULAR_FLAG > )?<br>
  */
 public class MultistateSpecies_SingleStateDefinition implements INode {
 
@@ -29,6 +30,9 @@ public class MultistateSpecies_SingleStateDefinition implements INode {
   /** A child node */
   public NodeToken nodeToken1;
 
+  /** A child node */
+  public NodeOptional nodeOptional;
+
   /** The serial version uid */
   private static final long serialVersionUID = 144L;
 
@@ -40,13 +44,15 @@ public class MultistateSpecies_SingleStateDefinition implements INode {
    * @param n2 next child node
    * @param n3 next child node
    * @param n4 next child node
+   * @param n5 next child node
    */
-  public MultistateSpecies_SingleStateDefinition(final MultistateSpecies_SiteName n0, final NodeToken n1, final MultistateSpecies_SiteSingleElement n2, final NodeListOptional n3, final NodeToken n4) {
+  public MultistateSpecies_SingleStateDefinition(final MultistateSpecies_SiteName n0, final NodeToken n1, final MultistateSpecies_SiteSingleElement n2, final NodeListOptional n3, final NodeToken n4, final NodeOptional n5) {
     multistateSpecies_SiteName = n0;
     nodeToken = n1;
     multistateSpecies_SiteSingleElement = n2;
     nodeListOptional = n3;
     nodeToken1 = n4;
+    nodeOptional = n5;
   }
 
   /**
@@ -55,13 +61,15 @@ public class MultistateSpecies_SingleStateDefinition implements INode {
    * @param n0 first child node
    * @param n1 next child node
    * @param n2 next child node
+   * @param n3 next child node
    */
-  public MultistateSpecies_SingleStateDefinition(final MultistateSpecies_SiteName n0, final MultistateSpecies_SiteSingleElement n1, final NodeListOptional n2) {
+  public MultistateSpecies_SingleStateDefinition(final MultistateSpecies_SiteName n0, final MultistateSpecies_SiteSingleElement n1, final NodeListOptional n2, final NodeOptional n3) {
     multistateSpecies_SiteName = n0;
     nodeToken = new NodeToken("{");
     multistateSpecies_SiteSingleElement = n1;
     nodeListOptional = n2;
     nodeToken1 = new NodeToken("}");
+    nodeOptional = n3;
   }
 
   /**

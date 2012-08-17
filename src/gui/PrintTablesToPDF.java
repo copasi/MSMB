@@ -2,6 +2,8 @@ package gui;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -68,7 +70,17 @@ public class PrintTablesToPDF {
         		section.setNumberStyle(Section.NUMBERSTYLE_DOTTED_WITHOUT_FINAL_DOT);
 
         		PdfPTable table = new PdfPTable(col);
-
+        		table.setTotalWidth(650);
+        	    table.setLockedWidth(true);
+        	        
+        	    ArrayList<Double> w  = getWidths(tablemodel.getTableName());
+        	    
+        	   if(w!=null) {
+        		   float widths[] = new float[w.size()];
+        		   for(int i1 = 0; i1 < w.size(); i1++) { widths[i1] = w.get(i1).floatValue();}
+        	       table.setWidths(widths);
+        	   }
+        	        
         		Font font = new Font(FontFamily.HELVETICA, 12, Font.BOLD, BaseColor.WHITE);
         		Phrase ttable = new Phrase(tablemodel.getTableName(), font);
 
@@ -88,7 +100,13 @@ public class PrintTablesToPDF {
         		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) header = Constants.functions_columns;
         		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) header = Constants.globalQ_columns;
         		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0) header = Constants.reactions_columns;
-
+        		else if(tablemodel.getTableName().compareTo(Constants.MULTISTATE_TITLE_TABLE_PDF)==0) {
+        			header = new Vector<String>();
+        			header.add("Single state of Multistate Species");
+        			header.add("Initial quantity");
+        			
+        		}
+        		
         		if(header!=null) header.add(0, "#");
 
         		for (int i1 = 0; i1 < tablemodel.getColumnCount(); i1++) {
@@ -100,13 +118,23 @@ public class PrintTablesToPDF {
 
         		for(int i1 = 0; i1 < tablemodel.getRowCount()-1; i1++) {
         			for(int j = 0; j < tablemodel.getColumnCount(); j++) {
+        				//if(isButtonColumn(tablemodel.getTableName(),j)) continue;
         				String value = tablemodel.getValueAt(i1, j).toString();
         				if(value.length() <=0) value = " ";
-        				PdfPCell cell1 = new PdfPCell(new Phrase(value));
+        				Chunk ch = new Chunk(value);
+        				if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 &&
+        						j==Constants.FunctionsColumns.NAME.index) {
+        					ch.setSplitCharacter(new CommaSplitCharacter() );
+        				}
+        				Phrase ph = new Phrase(ch);
+        				
+        				PdfPCell cell1 = new PdfPCell(ph);
+        				cell1.setMinimumHeight(22);
         				//   cell.setBackgroundColor(new BaseColor(Color.yellow.getRGB()));
         				
+                				
         				table.addCell(cell1);
-        			}
+        	  			}
         		}
         		section.add(table);
 
@@ -144,6 +172,8 @@ public class PrintTablesToPDF {
      	chapter2.add(Chunk.NEWLINE);
      	chapter2.add(Chunk.NEWLINE);
      	chapter2.add(Chunk.NEWLINE);
+     	chapter2.add(Chunk.NEWLINE);
+     	chapter2.add(Chunk.NEWLINE);
      	
      	element = tablesAndLastTabInfo.get(i);
         i++;
@@ -152,6 +182,8 @@ public class PrintTablesToPDF {
         else interpretation0 = "Particle Number";
      	p = new Chunk("If no reference is specified, in expressions the "+interpretation0 +" is used for calculations", font);
      	chapter2.add(p);
+     	chapter2.add(Chunk.NEWLINE);
+     	chapter2.add(Chunk.NEWLINE);
      	chapter2.add(Chunk.NEWLINE);
      	
      	element = tablesAndLastTabInfo.get(i);
@@ -188,7 +220,73 @@ public class PrintTablesToPDF {
  
 
     
-    private void printDebugMessages(Chapter chapter, HashMap<String, DebugMessage> debugMessages) {
+  
+	private ArrayList getWidths(String tableName) {
+		
+	    ArrayList<Double> w = null;
+	    
+	    if(tableName.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
+	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.species_columns.size()+1] ));
+	    	w.set(0, new Double(0.05F));
+	    	w.set(Constants.SpeciesColumns.NAME.index, new Double(0.25F));
+	    	w.set(Constants.SpeciesColumns.COMPARTMENT.index, new Double(0.1F));
+	    	w.set(Constants.SpeciesColumns.EXPRESSION.index, new Double(0.2F));
+	    	w.set(Constants.SpeciesColumns.INITIAL_QUANTITY.index, new Double(0.2F));
+	    	w.set(Constants.SpeciesColumns.NOTES.index, new Double(0.1F));
+	    	w.set(Constants.SpeciesColumns.TYPE.index, new Double(0.15F));
+	    } else if(tableName.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
+	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.globalQ_columns.size()+1] ));
+	    	w.set(0, new Double(0.05F));
+	    	w.set(Constants.GlobalQColumns.NAME.index, new Double(0.2F));
+	    	w.set(Constants.GlobalQColumns.EXPRESSION.index, new Double(0.3F));
+	    	w.set(Constants.GlobalQColumns.VALUE.index, new Double(0.3F));
+	    	w.set(Constants.GlobalQColumns.NOTES.index, new Double(0.1F));
+	    	w.set(Constants.GlobalQColumns.TYPE.index, new Double(0.15F));
+	    } else if(tableName.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {
+	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.compartments_columns.size()+1] ));
+	    	w.set(0, new Double(0.05F));
+	    	w.set(Constants.CompartmentsColumns.NAME.index, new Double(0.2F));
+	    	w.set(Constants.CompartmentsColumns.EXPRESSION.index, new Double(0.3F));
+	    	w.set(Constants.CompartmentsColumns.INITIAL_SIZE.index, new Double(0.3F));
+	    	w.set(Constants.CompartmentsColumns.NOTES.index, new Double(0.1F));
+	    	w.set(Constants.CompartmentsColumns.TYPE.index, new Double(0.15F));
+	    } else if(tableName.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.reactions_columns.size()+1] )); 
+	    	w.set(0, new Double(0.05F));
+	    	w.set(Constants.ReactionsColumns.NAME.index, new Double(0.1F));
+	    	w.set(Constants.ReactionsColumns.KINETIC_LAW.index, new Double(0.3F));
+	    	w.set(Constants.ReactionsColumns.REACTION.index, new Double(0.3F));
+	    	w.set(Constants.ReactionsColumns.EXPANDED.index, new Double(0.0F)); //not printing the columns with the buttons
+	    	w.set(Constants.ReactionsColumns.NOTES.index, new Double(0.1F));
+	    	w.set(Constants.ReactionsColumns.TYPE.index, new Double(0.15F));
+	    } else if(tableName.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {
+	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.functions_columns.size()+1] )); 
+	    	w.set(0, new Double(0.05F));
+	    	w.set(Constants.FunctionsColumns.NAME.index, new Double(0.4F));
+	    	w.set(Constants.FunctionsColumns.EQUATION.index, new Double(0.4F));
+	    	w.set(Constants.FunctionsColumns.PARAMETER_ROLES.index, new Double(0.0F)); //not printing the columns with the buttons
+	    	w.set(Constants.FunctionsColumns.NOTES.index, new Double(0.1F));
+	    } else if(tableName.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {
+	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.events_columns.size()+1] )); 
+	    	w.set(0, new Double(0.05F));
+	    	w.set(Constants.EventsColumns.NAME.index, new Double(0.1F));
+	    	w.set(Constants.EventsColumns.ACTIONS.index, new Double(0.35F));
+	    	w.set(Constants.EventsColumns.TRIGGER.index, new Double(0.35F)); 
+	    	w.set(Constants.EventsColumns.DELAY.index, new Double(0.15F));
+	    	w.set(Constants.EventsColumns.DELAYCALC.index, new Double(0.07F));
+	    	w.set(Constants.EventsColumns.EXPAND_ACTION_ONVOLUME_TOSPECIES_C.index, new Double(0.07F));
+	     	w.set(Constants.EventsColumns.NOTES.index, new Double(0.1F));
+	 	    	
+	    } else if(tableName.compareTo(Constants.MULTISTATE_TITLE_TABLE_PDF) ==0) {
+	    	w = new ArrayList<Double>(Arrays.asList( new Double[3] )); 
+	    	w.set(0, new Double(0.05F));
+	    	w.set(1, new Double(0.4F));
+	    	w.set(2, new Double(0.4F));
+	    }
+    	
+		return w;
+	}
+	private void printDebugMessages(Chapter chapter, HashMap<String, DebugMessage> debugMessages) {
     		Font font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, BaseColor.BLACK);
 		Vector<String> priorities = new Vector<String>();
 		priorities.add(DebugConstants.PriorityType.MAJOR.description);
@@ -199,7 +297,7 @@ public class PrintTablesToPDF {
 		priorities.add(DebugConstants.PriorityType.DEFAULTS.description);
 		priorities.add(DebugConstants.PriorityType.MINOR.description);
 		priorities.add(DebugConstants.PriorityType.MINOR_EMPTY.description);
-		priorities.add(DebugConstants.PriorityType.SIMILARITY.description);
+		//priorities.add(DebugConstants.PriorityType.SIMILARITY.description);
 			
 		for(String priorityDescr : priorities) {
 			Paragraph title = new Paragraph("Priority: "+priorityDescr);
@@ -273,6 +371,26 @@ public class PrintTablesToPDF {
          
         }
         
+    }
+ 
+}
+
+
+class CommaSplitCharacter implements SplitCharacter {
+	 
+    /**
+     * @see com.itextpdf.text.SplitCharacter#isSplitCharacter(int, int, int, char[],
+     *      com.itextpdf.text.pdf.PdfChunk[])
+     */
+    public boolean isSplitCharacter(int start, int current, int end, char[] cc,
+            PdfChunk[] ck) {
+        char c;
+        if (ck == null)
+            c = cc[current];
+        else
+            c = (char)ck[Math.min(current, ck.length - 1)]
+                    .getUnicodeEquivalent(cc[current]);
+        return (c == ',');
     }
  
 }

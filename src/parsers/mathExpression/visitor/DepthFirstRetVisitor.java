@@ -468,7 +468,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * <p>
    * nodeToken -> < SUM ><br>
    * nodeToken1 -> < LPAREN ><br>
-   * argumentList -> ArgumentList()<br>
+   * argumentList_MultistateSum -> ArgumentList_MultistateSum()<br>
    * nodeToken2 -> < RPAREN ><br>
    *
    * @param n the node to visit
@@ -480,8 +480,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     n.nodeToken.accept(this);
     // nodeToken1 -> < LPAREN >
     n.nodeToken1.accept(this);
-    // argumentList -> ArgumentList()
-    n.argumentList.accept(this);
+    // argumentList_MultistateSum -> ArgumentList_MultistateSum()
+    n.argumentList_MultistateSum.accept(this);
     // nodeToken2 -> < RPAREN >
     n.nodeToken2.accept(this);
     return nRes;
@@ -555,15 +555,18 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
   /**
    * Visits a {@link PossibleExtensions} node, whose children are the following :
    * <p>
-   * nodeChoice -> ( %0 < EXTENSION_CONC ><br>
-   * .......... .. | %1 < EXTENSION_COMPARTMENT ><br>
-   * .......... .. | %2 < EXTENSION_PARTICLE ><br>
-   * .......... .. | %3 < EXTENSION_TRANS ><br>
-   * .......... .. | %4 < EXTENSION_INIT ><br>
-   * .......... .. | %5 < EXTENSION_RATE ><br>
-   * .......... .. | %6 < EXTENSION_SPECIES ><br>
-   * .......... .. | %7 < EXTENSION_GLOBALQ ><br>
-   * .......... .. | %8 < MY_SPECIAL_EXTENSION > )<br>
+   * nodeChoice -> ( %00 < EXTENSION_CONC ><br>
+   * .......... .. | %01 < EXTENSION_COMPARTMENT ><br>
+   * .......... .. | %02 < EXTENSION_PARTICLE ><br>
+   * .......... .. | %03 < EXTENSION_TRANS ><br>
+   * .......... .. | %04 < EXTENSION_INIT ><br>
+   * .......... .. | %05 < EXTENSION_RATE ><br>
+   * .......... .. | %06 < EXTENSION_SPECIES ><br>
+   * .......... .. | %07 < EXTENSION_GLOBALQ ><br>
+   * .......... .. | %08 < EXTENSION_FUNCTION ><br>
+   * .......... .. | %09 < EXTENSION_REACTION ><br>
+   * .......... .. | %10 < EXTENSION_FLUX ><br>
+   * .......... .. | %11 < MY_SPECIAL_EXTENSION > )<br>
    * nodeListOptional -> ( PossibleExtensions() )*<br>
    *
    * @param n the node to visit
@@ -571,15 +574,18 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    */
   public R visit(final PossibleExtensions n) {
     R nRes = null;
-    // nodeChoice -> ( %0 < EXTENSION_CONC >
-    // .......... .. | %1 < EXTENSION_COMPARTMENT >
-    // .......... .. | %2 < EXTENSION_PARTICLE >
-    // .......... .. | %3 < EXTENSION_TRANS >
-    // .......... .. | %4 < EXTENSION_INIT >
-    // .......... .. | %5 < EXTENSION_RATE >
-    // .......... .. | %6 < EXTENSION_SPECIES >
-    // .......... .. | %7 < EXTENSION_GLOBALQ >
-    // .......... .. | %8 < MY_SPECIAL_EXTENSION > )
+    // nodeChoice -> ( %00 < EXTENSION_CONC >
+    // .......... .. | %01 < EXTENSION_COMPARTMENT >
+    // .......... .. | %02 < EXTENSION_PARTICLE >
+    // .......... .. | %03 < EXTENSION_TRANS >
+    // .......... .. | %04 < EXTENSION_INIT >
+    // .......... .. | %05 < EXTENSION_RATE >
+    // .......... .. | %06 < EXTENSION_SPECIES >
+    // .......... .. | %07 < EXTENSION_GLOBALQ >
+    // .......... .. | %08 < EXTENSION_FUNCTION >
+    // .......... .. | %09 < EXTENSION_REACTION >
+    // .......... .. | %10 < EXTENSION_FLUX >
+    // .......... .. | %11 < MY_SPECIAL_EXTENSION > )
     n.nodeChoice.accept(this);
     // nodeListOptional -> ( PossibleExtensions() )*
     n.nodeListOptional.accept(this);
@@ -638,6 +644,122 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     // .......... .. | %1 #0 AdditiveExpression()
     // .......... .. . .. #1 ( $0 < COMMA > $1 AdditiveExpression() )*
     n.nodeChoice.accept(this);
+    return nRes;
+  }
+
+  /**
+   * Visits a {@link ArgumentList_MultistateSum} node, whose children are the following :
+   * <p>
+   * name -> Name()<br>
+   * nodeOptional -> [ ArgumentList_MultistateSum_Selectors() ]<br>
+   *
+   * @param n the node to visit
+   * @return the user return information
+   */
+  public R visit(final ArgumentList_MultistateSum n) {
+    R nRes = null;
+    // name -> Name()
+    n.name.accept(this);
+    // nodeOptional -> [ ArgumentList_MultistateSum_Selectors() ]
+    n.nodeOptional.accept(this);
+    return nRes;
+  }
+
+  /**
+   * Visits a {@link ArgumentList_MultistateSum_Selectors} node, whose children are the following :
+   * <p>
+   * nodeToken -> < SEMICOLON ><br>
+   * selector -> Selector()<br>
+   * nodeListOptional -> ( #0 < SEMICOLON > #1 Selector() )*<br>
+   *
+   * @param n the node to visit
+   * @return the user return information
+   */
+  public R visit(final ArgumentList_MultistateSum_Selectors n) {
+    R nRes = null;
+    // nodeToken -> < SEMICOLON >
+    n.nodeToken.accept(this);
+    // selector -> Selector()
+    n.selector.accept(this);
+    // nodeListOptional -> ( #0 < SEMICOLON > #1 Selector() )*
+    n.nodeListOptional.accept(this);
+    return nRes;
+  }
+
+  /**
+   * Visits a {@link Selector} node, whose children are the following :
+   * <p>
+   * name -> Name()<br>
+   * nodeOptional -> [ %0 SiteSelector_postFix()<br>
+   * ............ .. | %1 CoeffFunction_postFix() ]<br>
+   *
+   * @param n the node to visit
+   * @return the user return information
+   */
+  public R visit(final Selector n) {
+    R nRes = null;
+    // name -> Name()
+    n.name.accept(this);
+    // nodeOptional -> [ %0 SiteSelector_postFix()
+    // ............ .. | %1 CoeffFunction_postFix() ]
+    n.nodeOptional.accept(this);
+    return nRes;
+  }
+
+  /**
+   * Visits a {@link SiteSelector_postFix} node, whose children are the following :
+   * <p>
+   * nodeToken -> < LBRACE ><br>
+   * nodeChoice -> ( %0 Name()<br>
+   * .......... .. | %1 Literal() )<br>
+   * nodeOptional -> ( %0 ( #0 < COMMA ><br>
+   * ............ .. . #1 ( &0 Name()<br>
+   * ............ .. . .. | &1 Literal() ) )+<br>
+   * ............ .. | %1 ( #0 < COLON ><br>
+   * ............ .. . .. . #1 ( &0 Name()<br>
+   * ............ .. . .. . .. | &1 Literal() ) ) )?<br>
+   * nodeToken1 -> < RBRACE ><br>
+   *
+   * @param n the node to visit
+   * @return the user return information
+   */
+  public R visit(final SiteSelector_postFix n) {
+    R nRes = null;
+    // nodeToken -> < LBRACE >
+    n.nodeToken.accept(this);
+    // nodeChoice -> ( %0 Name()
+    // .......... .. | %1 Literal() )
+    n.nodeChoice.accept(this);
+    // nodeOptional -> ( %0 ( #0 < COMMA >
+    // ............ .. . #1 ( &0 Name()
+    // ............ .. . .. | &1 Literal() ) )+
+    // ............ .. | %1 ( #0 < COLON >
+    // ............ .. . .. . #1 ( &0 Name()
+    // ............ .. . .. . .. | &1 Literal() ) ) )?
+    n.nodeOptional.accept(this);
+    // nodeToken1 -> < RBRACE >
+    n.nodeToken1.accept(this);
+    return nRes;
+  }
+
+  /**
+   * Visits a {@link CoeffFunction_postFix} node, whose children are the following :
+   * <p>
+   * nodeToken -> < LPAREN ><br>
+   * nodeOptional -> [ ArgumentList() ]<br>
+   * nodeToken1 -> < RPAREN ><br>
+   *
+   * @param n the node to visit
+   * @return the user return information
+   */
+  public R visit(final CoeffFunction_postFix n) {
+    R nRes = null;
+    // nodeToken -> < LPAREN >
+    n.nodeToken.accept(this);
+    // nodeOptional -> [ ArgumentList() ]
+    n.nodeOptional.accept(this);
+    // nodeToken1 -> < RPAREN >
+    n.nodeToken1.accept(this);
     return nRes;
   }
 

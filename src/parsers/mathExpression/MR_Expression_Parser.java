@@ -25,7 +25,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
       DepthFirstVoidVisitor v2 = new MyVisitor();
       start2.accept(v2);
       System.out.println("...................................");
-      expression2 = new String("\u005c"funaasdf \u005c"(PAR v, PAR t)");
+      expression2 = new String("\u005c"funaasdf \u005c"(GLQ v, GLQ t)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2);
       CompleteFunctionDeclaration start3 = react2.CompleteFunctionDeclaration();
@@ -54,6 +54,41 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
       start2.accept(v2);
       System.out.println("...................................");
       expression2 = new String("cdh1(p{1})");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1;p)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1;p{2,3})");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1;p{2,3}; weight(p,k1))");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1;p{0:10};q)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2);
       start2 = react2.CompleteExpression();
@@ -735,14 +770,14 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
   Token n1 = null;
   NodeToken n2 = null;
   Token n3 = null;
-  ArgumentList n4 = null;
+  ArgumentList_MultistateSum n4 = null;
   NodeToken n5 = null;
   Token n6 = null;
     n1 = jj_consume_token(SUM);
     n0 = JTBToolkit.makeNodeToken(n1);
     n3 = jj_consume_token(LPAREN);
     n2 = JTBToolkit.makeNodeToken(n3);
-    n4 = ArgumentList();
+    n4 = ArgumentList_MultistateSum();
     n6 = jj_consume_token(RPAREN);
     n5 = JTBToolkit.makeNodeToken(n6);
     {if (true) return new MultistateSum(n0, n2, n4, n5);}
@@ -890,6 +925,9 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
       case EXTENSION_SPECIES:
       case EXTENSION_GLOBALQ:
       case EXTENSION_COMPARTMENT:
+      case EXTENSION_REACTION:
+      case EXTENSION_FUNCTION:
+      case EXTENSION_FLUX:
       case MY_SPECIAL_EXTENSION:
         ;
         break;
@@ -928,53 +966,74 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
   Token n16 = null;
   NodeToken n17 = null;
   Token n18 = null;
-  NodeListOptional n19 = new NodeListOptional();
-  PossibleExtensions n20 = null;
+  NodeToken n19 = null;
+  Token n20 = null;
+  NodeToken n21 = null;
+  Token n22 = null;
+  NodeToken n23 = null;
+  Token n24 = null;
+  NodeListOptional n25 = new NodeListOptional();
+  PossibleExtensions n26 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case EXTENSION_CONC:
       n2 = jj_consume_token(EXTENSION_CONC);
         n1 = JTBToolkit.makeNodeToken(n2);
-        n0 = new NodeChoice(n1, 0, 9);
+        n0 = new NodeChoice(n1, 0, 12);
       break;
     case EXTENSION_COMPARTMENT:
       n4 = jj_consume_token(EXTENSION_COMPARTMENT);
         n3 = JTBToolkit.makeNodeToken(n4);
-        n0 = new NodeChoice(n3, 1, 9);
+        n0 = new NodeChoice(n3, 1, 12);
       break;
     case EXTENSION_PARTICLE:
       n6 = jj_consume_token(EXTENSION_PARTICLE);
         n5 = JTBToolkit.makeNodeToken(n6);
-        n0 = new NodeChoice(n5, 2, 9);
+        n0 = new NodeChoice(n5, 2, 12);
       break;
     case EXTENSION_TRANS:
       n8 = jj_consume_token(EXTENSION_TRANS);
         n7 = JTBToolkit.makeNodeToken(n8);
-        n0 = new NodeChoice(n7, 3, 9);
+        n0 = new NodeChoice(n7, 3, 12);
       break;
     case EXTENSION_INIT:
       n10 = jj_consume_token(EXTENSION_INIT);
         n9 = JTBToolkit.makeNodeToken(n10);
-        n0 = new NodeChoice(n9, 4, 9);
+        n0 = new NodeChoice(n9, 4, 12);
       break;
     case EXTENSION_RATE:
       n12 = jj_consume_token(EXTENSION_RATE);
         n11 = JTBToolkit.makeNodeToken(n12);
-        n0 = new NodeChoice(n11, 5, 9);
+        n0 = new NodeChoice(n11, 5, 12);
       break;
     case EXTENSION_SPECIES:
       n14 = jj_consume_token(EXTENSION_SPECIES);
         n13 = JTBToolkit.makeNodeToken(n14);
-        n0 = new NodeChoice(n13, 6, 9);
+        n0 = new NodeChoice(n13, 6, 12);
       break;
     case EXTENSION_GLOBALQ:
       n16 = jj_consume_token(EXTENSION_GLOBALQ);
         n15 = JTBToolkit.makeNodeToken(n16);
-        n0 = new NodeChoice(n15, 7, 9);
+        n0 = new NodeChoice(n15, 7, 12);
+      break;
+    case EXTENSION_FUNCTION:
+      n18 = jj_consume_token(EXTENSION_FUNCTION);
+        n17 = JTBToolkit.makeNodeToken(n18);
+        n0 = new NodeChoice(n17, 8, 12);
+      break;
+    case EXTENSION_REACTION:
+      n20 = jj_consume_token(EXTENSION_REACTION);
+        n19 = JTBToolkit.makeNodeToken(n20);
+        n0 = new NodeChoice(n19, 9, 12);
+      break;
+    case EXTENSION_FLUX:
+      n22 = jj_consume_token(EXTENSION_FLUX);
+        n21 = JTBToolkit.makeNodeToken(n22);
+        n0 = new NodeChoice(n21, 10, 12);
       break;
     case MY_SPECIAL_EXTENSION:
-      n18 = jj_consume_token(MY_SPECIAL_EXTENSION);
-        n17 = JTBToolkit.makeNodeToken(n18);
-        n0 = new NodeChoice(n17, 8, 9);
+      n24 = jj_consume_token(MY_SPECIAL_EXTENSION);
+        n23 = JTBToolkit.makeNodeToken(n24);
+        n0 = new NodeChoice(n23, 11, 12);
       break;
     default:
       jj_la1[21] = jj_gen;
@@ -988,11 +1047,11 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
       } else {
         break label_7;
       }
-      n20 = PossibleExtensions();
-      n19.addNode(n20);
+      n26 = PossibleExtensions();
+      n25.addNode(n26);
     }
-    n19.nodes.trimToSize();
-    {if (true) return new PossibleExtensions(n0, n19);}
+    n25.nodes.trimToSize();
+    {if (true) return new PossibleExtensions(n0, n25);}
     throw new Error("Missing return statement in function");
   }
 
@@ -1122,6 +1181,278 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     throw new Error("Missing return statement in function");
   }
 
+  final public ArgumentList_MultistateSum ArgumentList_MultistateSum() throws ParseException {
+  // --- JTB generated node declarations ---
+  Name n0 = null;
+  NodeOptional n1 = new NodeOptional();
+  ArgumentList_MultistateSum_Selectors n2 = null;
+    n0 = Name();
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case SEMICOLON:
+      n2 = ArgumentList_MultistateSum_Selectors();
+      n1.addNode(n2);
+      break;
+    default:
+      jj_la1[26] = jj_gen;
+      ;
+    }
+    {if (true) return new ArgumentList_MultistateSum(n0, n1);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public ArgumentList_MultistateSum_Selectors ArgumentList_MultistateSum_Selectors() throws ParseException {
+  // --- JTB generated node declarations ---
+  NodeToken n0 = null;
+  Token n1 = null;
+  Selector n2 = null;
+  NodeListOptional n3 = new NodeListOptional();
+  NodeSequence n4 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
+  Selector n7 = null;
+    n1 = jj_consume_token(SEMICOLON);
+    n0 = JTBToolkit.makeNodeToken(n1);
+    n2 = Selector();
+    label_9:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case SEMICOLON:
+        ;
+        break;
+      default:
+        jj_la1[27] = jj_gen;
+        break label_9;
+      }
+      n4 = new NodeSequence(2);
+      n6 = jj_consume_token(SEMICOLON);
+      n5 = JTBToolkit.makeNodeToken(n6);
+      n4.addNode(n5);
+      n7 = Selector();
+      n4.addNode(n7);
+      n3.addNode(n4);
+    }
+    n3.nodes.trimToSize();
+    {if (true) return new ArgumentList_MultistateSum_Selectors(n0, n2, n3);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Selector Selector() throws ParseException {
+  // --- JTB generated node declarations ---
+  Name n0 = null;
+  NodeOptional n1 = new NodeOptional();
+  NodeChoice n2 = null;
+  SiteSelector_postFix n3 = null;
+  CoeffFunction_postFix n4 = null;
+    n0 = Name();
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case LPAREN:
+    case LBRACE:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case LBRACE:
+        n3 = SiteSelector_postFix();
+        n2 = new NodeChoice(n3, 0, 2);
+        break;
+      case LPAREN:
+        n4 = CoeffFunction_postFix();
+        n2 = new NodeChoice(n4, 1, 2);
+        break;
+      default:
+        jj_la1[28] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      n1.addNode(n2);
+      break;
+    default:
+      jj_la1[29] = jj_gen;
+      ;
+    }
+    {if (true) return new Selector(n0, n1);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public SiteSelector_postFix SiteSelector_postFix() throws ParseException {
+  // --- JTB generated node declarations ---
+  NodeToken n0 = null;
+  Token n1 = null;
+  NodeChoice n2 = null;
+  Name n3 = null;
+  Literal n4 = null;
+  NodeOptional n5 = new NodeOptional();
+  NodeChoice n6 = null;
+  NodeList n7 = null;
+  NodeSequence n8 = null;
+  NodeToken n9 = null;
+  Token n10 = null;
+  NodeChoice n11 = null;
+  Name n12 = null;
+  Literal n13 = null;
+  NodeSequence n14 = null;
+  NodeToken n15 = null;
+  Token n16 = null;
+  NodeChoice n17 = null;
+  Name n18 = null;
+  Literal n19 = null;
+  NodeToken n20 = null;
+  Token n21 = null;
+    n1 = jj_consume_token(LBRACE);
+    n0 = JTBToolkit.makeNodeToken(n1);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case TIME:
+    case FLOOR:
+    case EXP:
+    case LOG:
+    case NAN:
+    case IDENTIFIER:
+      n3 = Name();
+        n2 = new NodeChoice(n3, 0, 2);
+      break;
+    case FALSE:
+    case TRUE:
+    case INTEGER_LITERAL:
+    case FLOATING_POINT_LITERAL:
+      n4 = Literal();
+        n2 = new NodeChoice(n4, 1, 2);
+      break;
+    default:
+      jj_la1[30] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case COMMA:
+    case COLON:
+      n7 = new NodeList();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case COMMA:
+        label_10:
+        while (true) {
+          n8 = new NodeSequence(2);
+          n10 = jj_consume_token(COMMA);
+          n9 = JTBToolkit.makeNodeToken(n10);
+          n8.addNode(n9);
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case TIME:
+          case FLOOR:
+          case EXP:
+          case LOG:
+          case NAN:
+          case IDENTIFIER:
+            n12 = Name();
+              n11 = new NodeChoice(n12, 0, 2);
+            break;
+          case FALSE:
+          case TRUE:
+          case INTEGER_LITERAL:
+          case FLOATING_POINT_LITERAL:
+            n13 = Literal();
+              n11 = new NodeChoice(n13, 1, 2);
+            break;
+          default:
+            jj_la1[31] = jj_gen;
+            jj_consume_token(-1);
+            throw new ParseException();
+          }
+          n8.addNode(n11);
+          n7.addNode(n8);
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case COMMA:
+            ;
+            break;
+          default:
+            jj_la1[32] = jj_gen;
+            break label_10;
+          }
+        }
+        n7.nodes.trimToSize();
+        n6 = new NodeChoice(n7, 0, 2);
+        break;
+      case COLON:
+          n14 = new NodeSequence(2);
+        n16 = jj_consume_token(COLON);
+          n15 = JTBToolkit.makeNodeToken(n16);
+          n14.addNode(n15);
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case TIME:
+        case FLOOR:
+        case EXP:
+        case LOG:
+        case NAN:
+        case IDENTIFIER:
+          n18 = Name();
+              n17 = new NodeChoice(n18, 0, 2);
+          break;
+        case FALSE:
+        case TRUE:
+        case INTEGER_LITERAL:
+        case FLOATING_POINT_LITERAL:
+          n19 = Literal();
+              n17 = new NodeChoice(n19, 1, 2);
+          break;
+        default:
+          jj_la1[33] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+          n14.addNode(n17);
+        n6 = new NodeChoice(n14, 1, 2);
+        break;
+      default:
+        jj_la1[34] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      n5.addNode(n6);
+      break;
+    default:
+      jj_la1[35] = jj_gen;
+      ;
+    }
+    n21 = jj_consume_token(RBRACE);
+    n20 = JTBToolkit.makeNodeToken(n21);
+    {if (true) return new SiteSelector_postFix(n0, n2, n5, n20);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public CoeffFunction_postFix CoeffFunction_postFix() throws ParseException {
+  // --- JTB generated node declarations ---
+  NodeToken n0 = null;
+  Token n1 = null;
+  NodeOptional n2 = new NodeOptional();
+  ArgumentList n3 = null;
+  NodeToken n4 = null;
+  Token n5 = null;
+    n1 = jj_consume_token(LPAREN);
+    n0 = JTBToolkit.makeNodeToken(n1);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case FALSE:
+    case TRUE:
+    case TIME:
+    case SUM:
+    case FLOOR:
+    case EXP:
+    case LOG:
+    case NAN:
+    case INTEGER_LITERAL:
+    case FLOATING_POINT_LITERAL:
+    case IDENTIFIER:
+    case LPAREN:
+    case PLUS:
+    case MINUS:
+    case BANG:
+      n3 = ArgumentList();
+      n2.addNode(n3);
+      break;
+    default:
+      jj_la1[36] = jj_gen;
+      ;
+    }
+    n5 = jj_consume_token(RPAREN);
+    n4 = JTBToolkit.makeNodeToken(n5);
+    {if (true) return new CoeffFunction_postFix(n0, n2, n4);}
+    throw new Error("Missing return statement in function");
+  }
+
   final public MultistateSite MultistateSite() throws ParseException {
   // --- JTB generated node declarations ---
   Name n0 = null;
@@ -1153,7 +1484,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
         n3 = new NodeChoice(n5, 1, 2);
       break;
     default:
-      jj_la1[26] = jj_gen;
+      jj_la1[37] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1172,15 +1503,15 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
   Token n4 = null;
   MultistateSite n5 = null;
     n0 = MultistateSite();
-    label_9:
+    label_11:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case SEMICOLON:
         ;
         break;
       default:
-        jj_la1[27] = jj_gen;
-        break label_9;
+        jj_la1[38] = jj_gen;
+        break label_11;
       }
       n2 = new NodeSequence(2);
       n4 = jj_consume_token(SEMICOLON);
@@ -1230,175 +1561,29 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     finally { jj_save(4, xla); }
   }
 
-  private boolean jj_3_2() {
-    if (jj_scan_token(ASSIGN)) return true;
+  private boolean jj_3R_62() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_63()) {
+    jj_scanpos = xsp;
+    if (jj_3R_64()) return true;
+    }
     return false;
   }
 
-  private boolean jj_3R_38() {
-    if (jj_3R_41()) return true;
-    return false;
-  }
-
-  private boolean jj_3_4() {
-    if (jj_3R_12()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_52() {
-    if (jj_scan_token(SUM)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_25() {
-    if (jj_scan_token(MY_SPECIAL_EXTENSION)) return true;
+  private boolean jj_3R_51() {
+    if (jj_3R_55()) return true;
     return false;
   }
 
   private boolean jj_3R_40() {
-    if (jj_scan_token(MINUS)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_24() {
-    if (jj_scan_token(EXTENSION_GLOBALQ)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_39() {
-    if (jj_scan_token(PLUS)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_23() {
-    if (jj_scan_token(EXTENSION_SPECIES)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_56() {
-    if (jj_3R_28()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_37() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_39()) {
-    jj_scanpos = xsp;
-    if (jj_3R_40()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3R_22() {
-    if (jj_scan_token(EXTENSION_RATE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_49() {
-    if (jj_3R_52()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_36() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_37()) {
-    jj_scanpos = xsp;
-    if (jj_3R_38()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3R_21() {
-    if (jj_scan_token(EXTENSION_INIT)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_48() {
-    if (jj_3R_51()) return true;
-    return false;
-  }
-
-  private boolean jj_3_5() {
-    if (jj_3R_13()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_20() {
-    if (jj_scan_token(EXTENSION_TRANS)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_19() {
-    if (jj_scan_token(EXTENSION_PARTICLE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_16() {
-    if (jj_3R_27()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_47() {
-    if (jj_scan_token(LPAREN)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_18() {
-    if (jj_scan_token(EXTENSION_COMPARTMENT)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_46() {
-    if (jj_3R_50()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_35() {
     if (jj_scan_token(NAN)) return true;
     return false;
   }
 
-  private boolean jj_3R_17() {
-    if (jj_scan_token(EXTENSION_CONC)) return true;
-    return false;
-  }
-
-  private boolean jj_3_1() {
-    if (jj_3R_10()) return true;
-    if (jj_3R_11()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_45() {
+  private boolean jj_3R_14() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_46()) {
-    jj_scanpos = xsp;
-    if (jj_3R_47()) {
-    jj_scanpos = xsp;
-    if (jj_3R_48()) {
-    jj_scanpos = xsp;
-    if (jj_3R_49()) return true;
-    }
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_34() {
-    if (jj_scan_token(EXP)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_12() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_17()) {
-    jj_scanpos = xsp;
-    if (jj_3R_18()) {
-    jj_scanpos = xsp;
     if (jj_3R_19()) {
     jj_scanpos = xsp;
     if (jj_3R_20()) {
@@ -1411,7 +1596,20 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     jj_scanpos = xsp;
     if (jj_3R_24()) {
     jj_scanpos = xsp;
-    if (jj_3R_25()) return true;
+    if (jj_3R_25()) {
+    jj_scanpos = xsp;
+    if (jj_3R_26()) {
+    jj_scanpos = xsp;
+    if (jj_3R_27()) {
+    jj_scanpos = xsp;
+    if (jj_3R_28()) {
+    jj_scanpos = xsp;
+    if (jj_3R_29()) {
+    jj_scanpos = xsp;
+    if (jj_3R_30()) return true;
+    }
+    }
+    }
     }
     }
     }
@@ -1427,87 +1625,122 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     return false;
   }
 
-  private boolean jj_3R_33() {
+  private boolean jj_3_1() {
+    if (jj_3R_12()) return true;
+    if (jj_3R_13()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_50() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_51()) {
+    jj_scanpos = xsp;
+    if (jj_3R_52()) {
+    jj_scanpos = xsp;
+    if (jj_3R_53()) {
+    jj_scanpos = xsp;
+    if (jj_3R_54()) return true;
+    }
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_39() {
+    if (jj_scan_token(EXP)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_38() {
     if (jj_scan_token(LOG)) return true;
     return false;
   }
 
-  private boolean jj_3R_59() {
-    if (jj_scan_token(FALSE)) return true;
+  private boolean jj_3R_15() {
+    if (jj_3R_31()) return true;
     return false;
   }
 
-  private boolean jj_3R_32() {
+  private boolean jj_3R_37() {
     if (jj_scan_token(FLOOR)) return true;
     return false;
   }
 
-  private boolean jj_3R_58() {
-    if (jj_scan_token(TRUE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_11() {
-    if (jj_3R_16()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_15() {
-    if (jj_scan_token(OR)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_31() {
-    if (jj_scan_token(TIME)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_57() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_58()) {
-    jj_scanpos = xsp;
-    if (jj_3R_59()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3R_29() {
-    if (jj_3R_36()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_14() {
-    if (jj_scan_token(AND)) return true;
+  private boolean jj_3R_60() {
+    if (jj_3R_62()) return true;
     return false;
   }
 
   private boolean jj_3R_13() {
-    if (jj_3R_26()) return true;
+    if (jj_3R_18()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_17() {
+    if (jj_scan_token(OR)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_36() {
+    if (jj_scan_token(TIME)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_59() {
+    if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_34() {
+    if (jj_3R_41()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_16() {
+    if (jj_scan_token(AND)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_58() {
+    if (jj_scan_token(INTEGER_LITERAL)) return true;
     return false;
   }
 
   private boolean jj_3_3() {
-    if (jj_3R_12()) return true;
+    if (jj_3R_14()) return true;
     return false;
   }
 
-  private boolean jj_3R_44() {
-    if (jj_3R_45()) return true;
+  private boolean jj_3R_49() {
+    if (jj_3R_50()) return true;
     return false;
   }
 
-  private boolean jj_3R_10() {
+  private boolean jj_3R_12() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_14()) {
+    if (jj_3R_16()) {
     jj_scanpos = xsp;
-    if (jj_3R_15()) return true;
+    if (jj_3R_17()) return true;
     }
     return false;
   }
 
-  private boolean jj_3R_30() {
+  private boolean jj_3R_55() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_58()) {
+    jj_scanpos = xsp;
+    if (jj_3R_59()) {
+    jj_scanpos = xsp;
+    if (jj_3R_60()) return true;
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_35() {
     if (jj_scan_token(IDENTIFIER)) return true;
     Token xsp;
     xsp = jj_scanpos;
@@ -1515,25 +1748,20 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     return false;
   }
 
-  private boolean jj_3R_55() {
-    if (jj_3R_57()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_28() {
+  private boolean jj_3R_33() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_30()) {
+    if (jj_3R_35()) {
     jj_scanpos = xsp;
-    if (jj_3R_31()) {
+    if (jj_3R_36()) {
     jj_scanpos = xsp;
-    if (jj_3R_32()) {
+    if (jj_3R_37()) {
     jj_scanpos = xsp;
-    if (jj_3R_33()) {
+    if (jj_3R_38()) {
     jj_scanpos = xsp;
-    if (jj_3R_34()) {
+    if (jj_3R_39()) {
     jj_scanpos = xsp;
-    if (jj_3R_35()) return true;
+    if (jj_3R_40()) return true;
     }
     }
     }
@@ -1542,36 +1770,139 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     return false;
   }
 
-  private boolean jj_3R_43() {
-    if (jj_3R_44()) return true;
+  private boolean jj_3R_48() {
+    if (jj_3R_49()) return true;
     return false;
   }
 
-  private boolean jj_3R_54() {
-    if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_53() {
-    if (jj_scan_token(INTEGER_LITERAL)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_42() {
+  private boolean jj_3R_47() {
     if (jj_scan_token(BANG)) return true;
     return false;
   }
 
-  private boolean jj_3R_50() {
+  private boolean jj_3R_31() {
+    if (jj_3R_33()) return true;
+    if (jj_scan_token(LBRACE)) return true;
+    return false;
+  }
+
+  private boolean jj_3_4() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_46() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_53()) {
+    if (jj_3R_47()) {
     jj_scanpos = xsp;
-    if (jj_3R_54()) {
+    if (jj_3R_48()) return true;
+    }
+    return false;
+  }
+
+  private boolean jj_3R_30() {
+    if (jj_scan_token(MY_SPECIAL_EXTENSION)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_56() {
+    if (jj_3R_61()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_29() {
+    if (jj_scan_token(EXTENSION_FLUX)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_32() {
+    if (jj_3R_34()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_28() {
+    if (jj_scan_token(EXTENSION_REACTION)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_43() {
+    if (jj_3R_46()) return true;
+    return false;
+  }
+
+  private boolean jj_3_2() {
+    if (jj_scan_token(ASSIGN)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_27() {
+    if (jj_scan_token(EXTENSION_FUNCTION)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_57() {
+    if (jj_scan_token(SUM)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_26() {
+    if (jj_scan_token(EXTENSION_GLOBALQ)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_45() {
+    if (jj_scan_token(MINUS)) return true;
+    return false;
+  }
+
+  private boolean jj_3_5() {
+    if (jj_3R_15()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_25() {
+    if (jj_scan_token(EXTENSION_SPECIES)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_44() {
+    if (jj_scan_token(PLUS)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_24() {
+    if (jj_scan_token(EXTENSION_RATE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_23() {
+    if (jj_scan_token(EXTENSION_INIT)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_61() {
+    if (jj_3R_33()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_42() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_44()) {
     jj_scanpos = xsp;
-    if (jj_3R_55()) return true;
+    if (jj_3R_45()) return true;
     }
-    }
+    return false;
+  }
+
+  private boolean jj_3R_54() {
+    if (jj_3R_57()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_22() {
+    if (jj_scan_token(EXTENSION_TRANS)) return true;
     return false;
   }
 
@@ -1585,19 +1916,43 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     return false;
   }
 
-  private boolean jj_3R_51() {
+  private boolean jj_3R_53() {
     if (jj_3R_56()) return true;
     return false;
   }
 
-  private boolean jj_3R_26() {
-    if (jj_3R_28()) return true;
-    if (jj_scan_token(LBRACE)) return true;
+  private boolean jj_3R_21() {
+    if (jj_scan_token(EXTENSION_PARTICLE)) return true;
     return false;
   }
 
-  private boolean jj_3R_27() {
-    if (jj_3R_29()) return true;
+  private boolean jj_3R_20() {
+    if (jj_scan_token(EXTENSION_COMPARTMENT)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_64() {
+    if (jj_scan_token(FALSE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_19() {
+    if (jj_scan_token(EXTENSION_CONC)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_63() {
+    if (jj_scan_token(TRUE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_18() {
+    if (jj_3R_32()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_52() {
+    if (jj_scan_token(LPAREN)) return true;
     return false;
   }
 
@@ -1612,7 +1967,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
   private Token jj_scanpos, jj_lastpos;
   private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[28];
+  final private int[] jj_la1 = new int[39];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -1622,13 +1977,13 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x0,0x3f80000,0x3f80000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x40c00,0x40c00,0x40c00,0x40000,0x40c00,0x0,0xfc000000,0xfc000000,0xc00,0xc00,0x0,0x40c00,0x40c00,0x0,};
+      jj_la1_0 = new int[] {0x0,0x0,0x3f80000,0x3f80000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x40c00,0x40c00,0x40c00,0x40000,0x40c00,0x0,0xfc000000,0xfc000000,0xc00,0xc00,0x0,0x40c00,0x0,0x0,0x0,0x0,0x40c00,0x40c00,0x0,0x40c00,0x0,0x0,0x40c00,0x40c00,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x100000,0x8000000,0x0,0x0,0x0,0x0,0x0,0x0,0xc0000000,0xc0000000,0x0,0x0,0x0,0xc0000000,0xc01161d8,0x1161d8,0x1161d8,0x101d0,0xc01161d8,0x100000,0x7,0x7,0x6000,0x0,0x8000000,0xc01161d8,0x161d0,0x4000000,};
+      jj_la1_1 = new int[] {0x800000,0x40000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8b0ec0,0x8b0ec0,0x8b0ec0,0x80e80,0x8b0ec0,0x800000,0x3f,0x3f,0x30000,0x0,0x40000000,0x8b0ec0,0x20000000,0x20000000,0x2800000,0x2800000,0xb0e80,0xb0e80,0x40000000,0xb0e80,0xc0000000,0xc0000000,0x8b0ec0,0xb0e80,0x20000000,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x71c,0x100,0x71c,0x3000,0x0,0x0,0x3,0x3,0x40,0x0,0x20,0x20,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x0,0x20,0x0,0x0,};
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x38e0,0x800,0x38e0,0x18000,0x6,0x6,0x18,0x18,0x200,0x6,0x106,0x100,0x0,0x0,0x106,0x0,0x0,0x0,0x0,0x0,0x0,0x106,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x106,0x0,0x0,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[5];
   private boolean jj_rescan = false;
@@ -1645,7 +2000,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 28; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 39; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1660,7 +2015,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 28; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 39; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1671,7 +2026,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 28; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 39; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1682,7 +2037,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 28; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 39; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1692,7 +2047,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 28; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 39; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1702,7 +2057,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 28; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 39; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1814,12 +2169,12 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[78];
+    boolean[] la1tokens = new boolean[81];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 28; i++) {
+    for (int i = 0; i < 39; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1834,7 +2189,7 @@ public class MR_Expression_Parser implements MR_Expression_ParserConstants {
         }
       }
     }
-    for (int i = 0; i < 78; i++) {
+    for (int i = 0; i < 81; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

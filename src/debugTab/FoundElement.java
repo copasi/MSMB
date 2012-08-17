@@ -1,5 +1,7 @@
 package debugTab;
 
+import utility.Constants;
+
 public class FoundElement implements Comparable<FoundElement> {
 	String tableDescription;
 	int row = 0;
@@ -29,6 +31,11 @@ public class FoundElement implements Comparable<FoundElement> {
 		return ret;
 	}
 	
+		@Override 
+		public int hashCode() {
+	        return (27 * (7 + this.row)*(13+this.col)  + Constants.TitlesTabs.getIndexFromDescription(this.tableDescription));
+	    }
+		
 	@Override
 	public String toString() {
 		return new String("("+row+","+col+")");

@@ -460,8 +460,8 @@ public class CustomTableModel extends DefaultTableModel {
 	            return;
 	        }
 	        
-	     
 	        Object oldValue = getValueAt(row, column);
+		       
 	        setValueAt_old(value, row, column);
 	        /*JvCellEdit cellEdit = new JvCellEdit(this, oldValue, value, row, column);
 	        UndoableEditEvent editEvent = new UndoableEditEvent(this, cellEdit);
@@ -768,6 +768,13 @@ class CustomJTable extends JTable
 	             	MainGui.cellSelectedRow=row;
 	             	MainGui.cellSelectedCol=col;
 	             	MainGui.cellTableEdited = model.getTableName();
+	             	
+	             	try {
+						if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(MainGui.cellTableEdited, MainGui.cellSelectedRow+1);
+					} catch (Exception e1) {
+						
+						e1.printStackTrace();
+					}
 	             	/*if( model.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && col == Constants.FunctionsColumns.SIGNATURE.index) {
 	             		  CustomDialogSignature d = new CustomDialogSignature(null, (String) MainGui.tableFunctionsmodel.getValueAt(MainGui.cellSelectedRow, Constants.FunctionsColumns.NAME.index));
 						  d.pack();

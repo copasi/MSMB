@@ -82,6 +82,16 @@ public interface IVoidVisitor {
   public void visit(final CompleteMultistateSpecies_Range n);
 
   /**
+   * Visits a {@link CompleteMultistateSpecies_RangeString} node, whose children are the following :
+   * <p>
+   * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
+   * nodeToken -> < EOF ><br>
+   *
+   * @param n the node to visit
+   */
+  public void visit(final CompleteMultistateSpecies_RangeString n);
+
+  /**
    * Visits a {@link MultistateSpecies} node, whose children are the following :
    * <p>
    * multistateSpecies_Name -> MultistateSpecies_Name()<br>
@@ -100,6 +110,7 @@ public interface IVoidVisitor {
    * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
    * nodeListOptional -> ( #0 < SITE_STATES_SEPARATOR > #1 MultistateSpecies_SiteSingleElement() )*<br>
    * nodeToken1 -> < CLOSED_C ><br>
+   * nodeOptional -> ( < CIRCULAR_FLAG > )?<br>
    *
    * @param n the node to visit
    */
@@ -110,11 +121,12 @@ public interface IVoidVisitor {
    * <p>
    * nodeChoice -> . %0 < STRING_LITERAL ><br>
    * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
-   * .......... .. . .. | &1 < CLOSED_R ><br>
-   * .......... .. . .. | &2 < SITE_NAMES_SEPARATOR ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR ><br>
-   * .......... .. . .. | &4 < SITE_STATES_SEPARATOR ><br>
-   * .......... .. . .. | &5 < CLOSED_C > )+<br>
+   * .......... .. . .. | &1 < CIRCULAR_FLAG ><br>
+   * .......... .. . .. | &2 < CLOSED_R ><br>
+   * .......... .. . .. | &3 < SITE_NAMES_SEPARATOR ><br>
+   * .......... .. . .. | &4 < RANGE_SEPARATOR ><br>
+   * .......... .. . .. | &5 < SITE_STATES_SEPARATOR ><br>
+   * .......... .. . .. | &6 < CLOSED_C > )+<br>
    *
    * @param n the node to visit
    */
@@ -123,12 +135,16 @@ public interface IVoidVisitor {
   /**
    * Visits a {@link MultistateSpecies_SiteSingleElement} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 < STRING_LITERAL ><br>
-   * .......... .. | %1 MultistateSpecies_SiteSingleElement_Range()<br>
-   * .......... .. | %2 ( &0 < MULTI_IDENTIFIER ><br>
+   * nodeChoice -> ( %0 < STRING_LITERAL ><br>
+   * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
    * .......... .. . .. | &1 < NUMBER ><br>
-   * .......... .. . .. | &2 < OPEN_R ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+   * .......... .. . .. | &2 < OPEN_R > )+ )<br>
+   * nodeOptional -> ( #0 ( " " )* #1 < RANGE_SEPARATOR ><br>
+   * ............ .. . #2 ( " " )*<br>
+   * ............ .. . #3 ( %0 < STRING_LITERAL ><br>
+   * ............ .. . .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
+   * ............ .. . .. . .. | &1 < NUMBER ><br>
+   * ............ .. . .. . .. | &2 < OPEN_R > )+ ) )?<br>
    *
    * @param n the node to visit
    */
@@ -155,8 +171,7 @@ public interface IVoidVisitor {
    * .......... .. . .. | &1 < CLOSED_C ><br>
    * .......... .. . .. | &2 < OPEN_R ><br>
    * .......... .. . .. | &3 < CLOSED_R ><br>
-   * .......... .. . .. | &4 < RANGE_SEPARATOR ><br>
-   * .......... .. . .. | &5 < SITE_STATES_SEPARATOR > )+<br>
+   * .......... .. . .. | &4 < SITE_STATES_SEPARATOR > )+<br>
    *
    * @param n the node to visit
    */
@@ -176,12 +191,10 @@ public interface IVoidVisitor {
   /**
    * Visits a {@link MultistateSpecies_Operator_SingleSite} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 #0 MultistateSpecies_Operator_SiteName()<br>
+   * nodeChoice -> . %0 #0 ( &0 < SUCC ><br>
+   * .......... .. . .. .. | &1 < PREC > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R ><br>
+   * .......... .. | %1 #0 MultistateSpecies_Operator_SiteName()<br>
    * .......... .. . .. #1 ( $0 < OPEN_C > $1 MultistateSpecies_Operator_SiteSingleState() $2 < CLOSED_C > )?<br>
-   * .......... .. | %1 #0 ( &0 < SUCC ><br>
-   * .......... .. . .. .. | &1 < PREC ><br>
-   * .......... .. . .. .. | &2 < CIRC_L_SHIFT ><br>
-   * .......... .. . .. .. | &3 < CIRC_R_SHIFT > ) #1 < OPEN_R > #2 MultistateSpecies_Operator_SiteName() #3 < CLOSED_R ><br>
    *
    * @param n the node to visit
    */
@@ -192,9 +205,7 @@ public interface IVoidVisitor {
    * <p>
    * nodeChoice -> . %0 < STRING_LITERAL ><br>
    * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
-   * .......... .. . .. | &1 < NUMBER ><br>
-   * .......... .. . .. | &2 < OPEN_R ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+   * .......... .. . .. | &1 < NUMBER > )+<br>
    *
    * @param n the node to visit
    */
@@ -205,9 +216,7 @@ public interface IVoidVisitor {
    * <p>
    * nodeChoice -> . %0 < STRING_LITERAL ><br>
    * .......... .. | %1 ( &0 < MULTI_IDENTIFIER ><br>
-   * .......... .. . .. | &1 < NUMBER ><br>
-   * .......... .. . .. | &2 < OPEN_R ><br>
-   * .......... .. . .. | &3 < RANGE_SEPARATOR > )+<br>
+   * .......... .. . .. | &1 < NUMBER > )+<br>
    *
    * @param n the node to visit
    */
