@@ -20,9 +20,9 @@ ant -f buildRunnableJar.xml
 
 This will create a directory MultiStateModelBuilder_dist with the appropriate Copasi library (according to the different OS/architecture).
 
-To run the generate executable jar, from the directory "MultiStateModelBuilder_dist", use the command:
+To run the generate executable jar, from the directory "MSMB_dist", use the command:
 
-java -jar MultiStateModelBuilder.jar
+java -jar MSMB.jar
 
 
 

@@ -289,6 +289,7 @@ public class MainGui extends JFrame{
 	private String inputFile = new String(Constants.AUTOSAVE_UNTITLED);
 
 	public static boolean importFromTables = false;
+	public static boolean importFromSBMLorCPS = false;
 	
 	private static CustomJTable jTableReactions = null;
 	public static CustomTableModel tableReactionmodel = null;
@@ -646,7 +647,8 @@ public class MainGui extends JFrame{
 	        
 	        TableColumn nameColumn = jTableCompartments.getColumnModel().getColumn(Constants.CompartmentsColumns.NAME.index);
 			 nameColumn.setCellRenderer(new EditableCellRenderer());
-			  
+			 nameColumn.setCellEditor(new UnquotingCellEditor());
+				
 	        
 	        TableColumn column = jTableCompartments.getColumnModel().getColumn(Constants.CompartmentsColumns.INITIAL_SIZE.index);  
 	        column.setCellRenderer(new EditableCellRenderer());
@@ -1025,7 +1027,7 @@ public class MainGui extends JFrame{
 	                    		if(sel > -1) {
 	                    			String name = (String)tableSpeciesmodel.getValueAt(sel, Constants.SpeciesColumns.NAME.index);
 
-	                    			if(name.contains("(")) {
+	                    			if(CellParsers.isMultistateSpeciesName(name)) {
 	                    				multiBuilderFrame.setMultistateSpecies(multiModel.getMultistateSpecies(name));
 	                    				modify_multistate_species_from_builder = true;
 	                    			} 
@@ -1087,15 +1089,48 @@ public class MainGui extends JFrame{
 	}
 	
 	private static void clearCFunctionDB() {
+		
 		CFunctionDB funDB_copasi = CCopasiRootContainer.getFunctionList();
 		CFunctionVectorN funcs = funDB_copasi.loadedFunctions();
+		
+		
+		/*System.out.println("      $$$ loadedFunctions size before $$$: "+ funcs.size());
+		System.out.println("CFunction.UserDefined = "+CFunction.UserDefined);
+		System.out.println("CFunction.MassAction = "+CFunction.MassAction);
+		System.out.println("CFunction.Expression = "+CFunction.Expression);
+		System.out.println("CFunction.Function = "+CFunction.Function);
+		System.out.println("CFunction.PreDefined = "+CFunction.PreDefined);
+	
 		for (int i = 0; i < funcs.size();i++)
 		{
-			CEvaluationTree val = funDB_copasi.findFunction(funcs.get(i).getObjectName());
-			if(val.getType() == CFunction.UserDefined) {
-				funDB_copasi.removeFunction(val.getKey());
+			CFunction val = (CFunction)funDB_copasi.findFunction(funcs.get(i).getObjectName());
+			System.out.println(val.getKey()+" "+val.getObjectName() + " " + val.getType());
+		}
+		*/
+		long funcs_size_before = funcs.size();
+		
+		while(true)
+		{
+			CFunction val = (CFunction)funDB_copasi.findFunction(funcs.get(funcs.size()-1).getObjectName());
+			if(val!= null && (val.getType() == CFunction.UserDefined || val.getType() == CFunction.Function)) {
+				funDB_copasi.removeFunction(val.getKey()); // many API crashes happen here
+			} else {
+				break;
 			}
 		}
+		
+		/*funcs = funDB_copasi.loadedFunctions();
+		System.out.println("-----$$$ loadedFunctions size after $$$: "+ funcs.size());
+		System.out.flush();
+		for (int i = 0; i < funcs.size();i++)
+		{
+			CFunction val = (CFunction)funDB_copasi.findFunction(funcs.get(i).getObjectName());
+			System.out.println(val.getObjectName() + " " + val.getType());
+		}
+		*/
+		long funcs_size_after = funcs.size();
+		
+		if(funcs_size_after != 38) System.err.println("--- FunctionsDB size after cleaning --- "+funcs_size_after);
 	}
 
 	private static void clearTable(CustomTableModel tableModel) {
@@ -1431,7 +1466,7 @@ public class MainGui extends JFrame{
 	            		int sel = jTableSpecies.getSelectedRow();
 	            		if(sel > -1) {
 	            			String name = (String)tableSpeciesmodel.getValueAt(sel, 1);
-	            			if(name.contains("(")) {
+	            			if(CellParsers.isMultistateSpeciesName(name)) {
 		            			multiBuilderFrame.setMultistateSpecies(multiModel.getMultistateSpecies(name));
 		            		 	modify_multistate_species_from_builder = true;
 		         	        } 
@@ -2164,6 +2199,7 @@ public class MainGui extends JFrame{
 			return sbmlID;
 		} catch (Exception e) {
 			e.printStackTrace();
+			if(MainGui.fromMainGuiTest) throw e;
 			Object[] options = {"Save as .multis", "Cancel"};
 			final JOptionPane optionPane = new JOptionPane(
 					e.getMessage(),
@@ -2475,15 +2511,32 @@ public class MainGui extends JFrame{
 		
 		try {
 			if(name.trim().length() ==0) return;
-			int expressionOK = multiModel.updateCompartment(nrow, name, type, initial, expression, notes);
-
-			if(expressionOK==-1) {
+			int rowUpdatated = multiModel.updateCompartment(nrow, CellParsers.cleanName(name), type, initial, expression, notes);
+			
+			if(actionInColumnName) {
+				if(renamingOption != Constants.RENAMING_OPTION_NONE) {
+					MainGui.donotCleanDebugMessages = true;
+					name = findAndReplace(cellValueBeforeChange, row, name,Constants.TitlesTabs.GLOBALQ.description, Constants.GlobalQColumns.NAME.index);
+					MainGui.donotCleanDebugMessages = false;
+				} else {
+					Vector<FoundElement> found = search(cellValueBeforeChange);
+					revalidateExpressions(found);
+				}
+				
+			}
+			
+			if(rowUpdatated==-1) {
 				statusBar.setMessage("System unable to parse assignment expression for the compartment. See Debug tab for details");
 				edi.cell_has_errors(row);
 			} else {
 				statusBar.setMessage("...");
-				
+				tableCompartmentsmodel.setValueAt_withoutUpdate(CellParsers.cleanName(name), row, Constants.CompartmentsColumns.NAME.index);
 				edi.cell_no_errors(row);
+				if(actionInColumnName && cellSelectedCol == Constants.CompartmentsColumns.NAME.index) {
+					
+				}
+				
+				
 				edi = (EditableCellRenderer)(jTableCompartments.getCellRenderer(row, Constants.CompartmentsColumns.INITIAL_SIZE.index));
 				edi.cell_no_errors(row);
 				edi = (EditableCellRenderer)(jTableCompartments.getCellRenderer(row, Constants.CompartmentsColumns.EXPRESSION.index));
@@ -2513,22 +2566,22 @@ public class MainGui extends JFrame{
 			 edi.cell_has_errors(row);
 		}
 		 jTableCompartments.revalidate();
-	   // jListDebugShort.revalidate();
-		// addRemoveEmptyFields_inConsistencyChecks(tableCompartmentsmodel, Constants.TitlesTabs.COMPARTMENTS.description);
-
+	   
 	    
 	 }
 	
 	private boolean isNewNameDifferentFromOld(String name) {
-		if(!name.contains("(")) {
-			return (cellValueBeforeChange.compareTo(name) != 0);
-		}
-		try{
-			MultistateSpecies oldS = new MultistateSpecies(multiModel,cellValueBeforeChange);
-			MultistateSpecies newS = new MultistateSpecies(multiModel,name);
-			return (newS.printCompleteDefinition(true).compareTo(oldS.printCompleteDefinition(true)) != 0);
-		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+		if(cellSelectedCol == Constants.SpeciesColumns.NAME.index && cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
+			if(!CellParsers.isMultistateSpeciesName(name)) {
+				return (cellValueBeforeChange.compareTo(name) != 0);
+			}
+			try{
+				MultistateSpecies oldS = new MultistateSpecies(multiModel,cellValueBeforeChange);
+				MultistateSpecies newS = new MultistateSpecies(multiModel,name);
+				return (newS.printCompleteDefinition(true).compareTo(oldS.printCompleteDefinition(true)) != 0);
+			} catch (Exception e) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			}
 		}
 		return false;
 		
@@ -2642,7 +2695,7 @@ public class MainGui extends JFrame{
 					addedByReaction = false;
 				}
 
-				if(name.contains("(")) {
+				if(CellParsers.isMultistateSpeciesName(name)) {
 					tableSpeciesmodel.disableCell(row,Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 					tableSpeciesmodel.disableCell(row,Constants.SpeciesColumns.TYPE.index);
 				} else {
@@ -2699,6 +2752,8 @@ public class MainGui extends JFrame{
 			 edi2.cell_no_errors(row);
 			 EditableCellRenderer	edi3 = (EditableCellRenderer)(jTableSpecies.getCellRenderer(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index));
 			 edi3.cell_no_errors(row);
+			 
+			 
 	    	 statusBar.setMessage("...");
 			 updateCompartmentTable(updated_rows); 
 			 addedByReaction = true;
@@ -2710,7 +2765,7 @@ public class MainGui extends JFrame{
 				// if(!name.contains("(")) tableSpeciesmodel.setValueAt_withoutUpdate(Constants.SpeciesType.REACTIONS.description, row, Constants.SpeciesColumns.TYPE.index);
 				// else tableSpeciesmodel.setValueAt_withoutUpdate(Constants.SpeciesType.MULTISTATE.description, row, Constants.SpeciesColumns.TYPE.index);
 				 
-				 if(!name.contains("(")) tableSpeciesmodel.setValueAt(Constants.SpeciesType.REACTIONS.description, row, Constants.SpeciesColumns.TYPE.index);
+				 if(!CellParsers.isMultistateSpeciesName(name)) tableSpeciesmodel.setValueAt(Constants.SpeciesType.REACTIONS.description, row, Constants.SpeciesColumns.TYPE.index);
 				 else tableSpeciesmodel.setValueAt(Constants.SpeciesType.MULTISTATE.description, row, Constants.SpeciesColumns.TYPE.index);
 				 }
 			 //if(comp.length()==0 && autocompleteWithDefaults) tableSpeciesmodel.setValueAt_withoutUpdate("cell", row, Constants.SpeciesColumns.COMPARTMENT.index);
@@ -2745,7 +2800,7 @@ public class MainGui extends JFrame{
 	    	 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
 	    	 addedByReaction = true;
 	    	 if(type.length()==0 && autocompleteWithDefaults) {
-	    		 if(!name.contains("(")) tableSpeciesmodel.setValueAt_withoutUpdate(Constants.SpeciesType.REACTIONS.description, row, Constants.SpeciesColumns.TYPE.index);
+	    		 if(!CellParsers.isMultistateSpeciesName(name)) tableSpeciesmodel.setValueAt_withoutUpdate(Constants.SpeciesType.REACTIONS.description, row, Constants.SpeciesColumns.TYPE.index);
 	    		 else tableSpeciesmodel.setValueAt_withoutUpdate(Constants.SpeciesType.MULTISTATE.description, row, Constants.SpeciesColumns.TYPE.index);
 	    	 }
 	    	 if(comp.length()==0 && autocompleteWithDefaults) tableSpeciesmodel.setValueAt_withoutUpdate(MainGui.compartment_default_for_dialog_window, row, Constants.SpeciesColumns.COMPARTMENT.index);
@@ -2818,7 +2873,7 @@ public class MainGui extends JFrame{
 	} finally{
 		name = ((String)tableSpeciesmodel.getValueAt(row, Constants.SpeciesColumns.NAME.index)).trim();
 		
-			if(name.contains("(")) {
+			if(CellParsers.isMultistateSpeciesName(name)) {
 				 tableSpeciesmodel.disableCell(row,Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			     tableSpeciesmodel.disableCell(row,Constants.SpeciesColumns.TYPE.index);
 			 } else {
@@ -4142,6 +4197,8 @@ public class MainGui extends JFrame{
 	
 	public void revalidateExpressions() throws Exception {
 		if(!validationsOn) return;
+		boolean old = autocompleteWithDefaults;
+		MainGui.autocompleteWithDefaults = false;
 		
 		Iterator iterator = debugMessages.keySet().iterator(); 
 	    Vector to_be_deleted = new Vector();
@@ -4192,6 +4249,7 @@ public class MainGui extends JFrame{
 	    addedByReaction = false;
 	    recolorCellsWithErrors();
 	    MainGui.donotCleanDebugMessages = false;  // set back as original value
+	    MainGui.autocompleteWithDefaults = old;
 	}
 	
 	private static void recolorCellsWithErrors() {
@@ -4429,6 +4487,10 @@ public class MainGui extends JFrame{
 		
 	}
 	
+	public static void cleanUpModel() {
+		multiModel.cleanUpModel();
+	}
+	
 	public void modifySBMLid(String copasiDataModelID) {
 		multiModel.modifySBMLid(copasiDataModelID);
 	}
@@ -4437,6 +4499,7 @@ public class MainGui extends JFrame{
 	public void loadSBML(File f) throws Exception{
 	  
 		try{
+			importFromSBMLorCPS = true;
 		MainGui.autocompleteWithDefaults = false;
 		 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 	   clearAllTables();
@@ -4445,17 +4508,20 @@ public class MainGui extends JFrame{
 	   multiModel.setTableReactionModel(tableReactionmodel);
 	   validateMultiModel(false,false);
 		} catch (Exception e) {
+			if(MainGui.fromMainGuiTest) throw e;
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}
 		finally { 
 			setCursor(null); 
 			loadPreferencesFile();
 			modelHasBeenModified = false;
+			importFromSBMLorCPS = false;
 		}
 	}
 	
 	public void loadCPS(String copasiDataModelID) throws Exception {
 		MainGui.autocompleteWithDefaults = false;
+		importFromSBMLorCPS = true;
 		try{
 			 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			clearAllTables();
@@ -4464,6 +4530,7 @@ public class MainGui extends JFrame{
 			multiModel.setTableReactionModel(tableReactionmodel);
 			validateMultiModel(false,false);
 		} catch (Exception e) {
+			if(MainGui.fromMainGuiTest) throw e;
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			
 		}
@@ -4471,6 +4538,7 @@ public class MainGui extends JFrame{
 			setCursor(null); 
 			loadPreferencesFile();
 			modelHasBeenModified = false;
+			importFromSBMLorCPS = false;
 		}
 	}
 	
@@ -4485,6 +4553,7 @@ public class MainGui extends JFrame{
 		updateGUIFromMultimodel();
 		validateMultiModel(false,false);
 		} catch (Exception e) {
+			if(MainGui.fromMainGuiTest) throw e;
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			
 		}
@@ -4503,13 +4572,19 @@ public class MainGui extends JFrame{
 		
 		if(!MainGui.fromMainGuiTest ) exportConcentration = true;
 		
-		multiModel.convert2nonReversible();
-		
+		boolean convertible = multiModel.convert2nonReversible();
+		if(!convertible) throw new IOException("Model with reversible reactions that cannot be converted to irreversible", new Throwable("convert2nonReversible"));
 		loadFunctionsTable();
 		
 		loadCompartmentsTable();
 		
-		loadSpeciesTable();
+		try{ 
+			loadSpeciesTable(); 
+		} 
+		catch(Exception ex) {
+			//some species can refer to globalQ not yet loaded... it's ok to go on with the exceptions
+			//it will be revalidated later
+		}
 		
 		loadGlobalQTable();
 		
@@ -4618,7 +4693,7 @@ public class MainGui extends JFrame{
 			tableSpeciesmodel.setValueAt_withoutUpdate(sp.getCompartment(), i-1,  Constants.SpeciesColumns.COMPARTMENT.index);
 			tableSpeciesmodel.setValueAt_withoutUpdate(sp.getExpression(), i-1,  Constants.SpeciesColumns.EXPRESSION.index);
 			tableSpeciesmodel.setValueAt_withoutUpdate(sp.getNotes(), i-1,  Constants.SpeciesColumns.NOTES.index);
-			if(sp.getDisplayedName().contains("(")) {
+			if(CellParsers.isMultistateSpeciesName(sp.getDisplayedName())) {
 				 tableSpeciesmodel.disableCell(i-1,Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			     tableSpeciesmodel.disableCell(i-1,Constants.SpeciesColumns.TYPE.index);
 			} else {
@@ -4698,7 +4773,7 @@ public class MainGui extends JFrame{
 		Vector rows = multiModel.loadCompartmentsTable();
 		
        for (int i = 0;i < rows.size();i++) {
-			jTabGeneral.setSelectedIndex(5);
+			jTabGeneral.setSelectedIndex(Constants.TitlesTabs.COMPARTMENTS.index);
             tableCompartmentsmodel.addRow((Vector)rows.get(i));
             updateModelFromTable(i, Constants.CompartmentsColumns.NAME.index);
          }
@@ -4725,8 +4800,7 @@ public class MainGui extends JFrame{
 		{
 			CEvaluationTree val = null;
 			val = db.findFunction(funcs.get(i).getObjectName());
-			
-			
+					
 			String pureNameFunc = CellParsers.cleanName(val.getObjectName());
 			CFunction cfun = (CFunction)val;
 			try {
@@ -4737,7 +4811,6 @@ public class MainGui extends JFrame{
 				if(cfun.getType() == CFunction.PreDefined) {
 					f.setEquation(val.getInfix(), CFunction.PreDefined, 0);
 				} else {
-					//f.updateParser(funDB.parser);
 					f.setEquation(val.getInfix(), CFunction.UserDefined, 0);
 				}
 				Vector<String> names = f.getParametersNames();
@@ -4787,6 +4860,7 @@ public class MainGui extends JFrame{
 						val.getObjectName().compareTo("Mass action (reversible)")!=0	) {
 					System.out.println("FUNCTION NOT IMPORTED: " +val.getObjectName());
 					System.out.println("Parse error in string: " +val.getInfix());
+					if(MainGui.fromMainGuiTest) throw ex;
 				}
 				continue;
 			}
@@ -5757,6 +5831,9 @@ public class MainGui extends JFrame{
 	
 	public static void revalidateExpressions(Vector collectedElements) {
 		if(!validationsOn) return;
+		boolean old = autocompleteWithDefaults;
+		MainGui.autocompleteWithDefaults = false;
+		
 		int original_focus = jTabGeneral.getSelectedIndex();
 		Vector<DebugMessage> def = getAllDebugMessagesDefaults();
 		for(int i = 0; i < collectedElements.size(); i++ ) {
@@ -5768,6 +5845,8 @@ public class MainGui extends JFrame{
 		jTabGeneral.setSelectedIndex(original_focus);
 		revalidateAllTables();
 		addAllDebugMessagesMessages(def);
+		MainGui.autocompleteWithDefaults = old;
+		
 	}
 
 	public static void revalidateAllTables() {

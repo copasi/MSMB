@@ -138,7 +138,7 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * <p>
    * name -> Name()<br>
    * nodeToken -> < LPAREN ><br>
-   * argumentList -> ArgumentList()<br>
+   * nodeOptional -> ( ArgumentList() )?<br>
    * nodeToken1 -> < RPAREN ><br>
    * nodeToken2 -> < EOF ><br>
    *
@@ -152,8 +152,8 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     n.name.accept(this, argu);
     // nodeToken -> < LPAREN >
     n.nodeToken.accept(this, argu);
-    // argumentList -> ArgumentList()
-    n.argumentList.accept(this, argu);
+    // nodeOptional -> ( ArgumentList() )?
+    n.nodeOptional.accept(this, argu);
     // nodeToken1 -> < RPAREN >
     n.nodeToken1.accept(this, argu);
     // nodeToken2 -> < EOF >
@@ -287,6 +287,40 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
   }
 
   /**
+   * Visits a {@link IfExpression} node, whose children are the following :
+   * <p>
+   * nodeToken -> < IF ><br>
+   * nodeToken1 -> < LPAREN ><br>
+   * expression -> Expression()<br>
+   * nodeToken2 -> < COMMA ><br>
+   * expression1 -> Expression()<br>
+   * nodeOptional -> ( #0 < COMMA > #1 Expression() )?<br>
+   * nodeToken3 -> < RPAREN ><br>
+   *
+   * @param n the node to visit
+   * @param argu the user argument
+   * @return the user return information
+   */
+  public R visit(final IfExpression n, final A argu) {
+    R nRes = null;
+    // nodeToken -> < IF >
+    n.nodeToken.accept(this, argu);
+    // nodeToken1 -> < LPAREN >
+    n.nodeToken1.accept(this, argu);
+    // expression -> Expression()
+    n.expression.accept(this, argu);
+    // nodeToken2 -> < COMMA >
+    n.nodeToken2.accept(this, argu);
+    // expression1 -> Expression()
+    n.expression1.accept(this, argu);
+    // nodeOptional -> ( #0 < COMMA > #1 Expression() )?
+    n.nodeOptional.accept(this, argu);
+    // nodeToken3 -> < RPAREN >
+    n.nodeToken3.accept(this, argu);
+    return nRes;
+  }
+
+  /**
    * Visits a {@link Expression} node, whose children are the following :
    * <p>
    * additiveExpression -> AdditiveExpression()<br>
@@ -338,6 +372,7 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * <p>
    * nodeChoice -> . %0 < AND ><br>
    * .......... .. | %1 < OR ><br>
+   * .......... .. | %2 < XOR ><br>
    *
    * @param n the node to visit
    * @param argu the user argument
@@ -347,6 +382,7 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     R nRes = null;
     // nodeChoice -> . %0 < AND >
     // .......... .. | %1 < OR >
+    // .......... .. | %2 < XOR >
     n.nodeChoice.accept(this, argu);
     return nRes;
   }
@@ -473,6 +509,7 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * .......... .. | %1 #0 < LPAREN > #1 Expression() #2 < RPAREN ><br>
    * .......... .. | %2 SpeciesReferenceOrFunctionCall()<br>
    * .......... .. | %3 MultistateSum()<br>
+   * .......... .. | %4 IfExpression()<br>
    *
    * @param n the node to visit
    * @param argu the user argument
@@ -484,6 +521,7 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     // .......... .. | %1 #0 < LPAREN > #1 Expression() #2 < RPAREN >
     // .......... .. | %2 SpeciesReferenceOrFunctionCall()
     // .......... .. | %3 MultistateSum()
+    // .......... .. | %4 IfExpression()
     n.nodeChoice.accept(this, argu);
     return nRes;
   }
@@ -516,13 +554,24 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
   /**
    * Visits a {@link Name} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 #0 < IDENTIFIER ><br>
-   * .......... .. . .. #1 ( PossibleExtensions() )?<br>
-   * .......... .. | %1 < TIME ><br>
-   * .......... .. | %2 < FLOOR ><br>
-   * .......... .. | %3 < LOG ><br>
-   * .......... .. | %4 < EXP ><br>
-   * .......... .. | %5 < NAN ><br>
+   * nodeChoice -> . %00 #0 < IDENTIFIER ><br>
+   * .......... .. . ... #1 ( PossibleExtensions() )?<br>
+   * .......... .. | %01 PrimitiveType()<br>
+   * .......... .. | %02 < PI ><br>
+   * .......... .. | %03 < TIME ><br>
+   * .......... .. | %04 < FLOOR ><br>
+   * .......... .. | %05 < DELAY ><br>
+   * .......... .. | %06 < CEIL ><br>
+   * .......... .. | %07 < TAN ><br>
+   * .......... .. | %08 < TANH ><br>
+   * .......... .. | %09 < COSH ><br>
+   * .......... .. | %10 < LOG10 ><br>
+   * .......... .. | %11 < ABS ><br>
+   * .......... .. | %12 < COS ><br>
+   * .......... .. | %13 < SIN ><br>
+   * .......... .. | %14 < LOG ><br>
+   * .......... .. | %15 < EXP ><br>
+   * .......... .. | %16 < NAN ><br>
    *
    * @param n the node to visit
    * @param argu the user argument
@@ -530,13 +579,24 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    */
   public R visit(final Name n, final A argu) {
     R nRes = null;
-    // nodeChoice -> . %0 #0 < IDENTIFIER >
-    // .......... .. . .. #1 ( PossibleExtensions() )?
-    // .......... .. | %1 < TIME >
-    // .......... .. | %2 < FLOOR >
-    // .......... .. | %3 < LOG >
-    // .......... .. | %4 < EXP >
-    // .......... .. | %5 < NAN >
+    // nodeChoice -> . %00 #0 < IDENTIFIER >
+    // .......... .. . ... #1 ( PossibleExtensions() )?
+    // .......... .. | %01 PrimitiveType()
+    // .......... .. | %02 < PI >
+    // .......... .. | %03 < TIME >
+    // .......... .. | %04 < FLOOR >
+    // .......... .. | %05 < DELAY >
+    // .......... .. | %06 < CEIL >
+    // .......... .. | %07 < TAN >
+    // .......... .. | %08 < TANH >
+    // .......... .. | %09 < COSH >
+    // .......... .. | %10 < LOG10 >
+    // .......... .. | %11 < ABS >
+    // .......... .. | %12 < COS >
+    // .......... .. | %13 < SIN >
+    // .......... .. | %14 < LOG >
+    // .......... .. | %15 < EXP >
+    // .......... .. | %16 < NAN >
     n.nodeChoice.accept(this, argu);
     return nRes;
   }
@@ -663,9 +723,9 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
   /**
    * Visits a {@link ArgumentList} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 MultistateSites_list()<br>
-   * .......... .. | %1 #0 AdditiveExpression()<br>
+   * nodeChoice -> . %0 #0 AdditiveExpression()<br>
    * .......... .. . .. #1 ( $0 < COMMA > $1 AdditiveExpression() )*<br>
+   * .......... .. | %1 MultistateSites_list()<br>
    *
    * @param n the node to visit
    * @param argu the user argument
@@ -673,9 +733,9 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    */
   public R visit(final ArgumentList n, final A argu) {
     R nRes = null;
-    // nodeChoice -> . %0 MultistateSites_list()
-    // .......... .. | %1 #0 AdditiveExpression()
+    // nodeChoice -> . %0 #0 AdditiveExpression()
     // .......... .. . .. #1 ( $0 < COMMA > $1 AdditiveExpression() )*
+    // .......... .. | %1 MultistateSites_list()
     n.nodeChoice.accept(this, argu);
     return nRes;
   }

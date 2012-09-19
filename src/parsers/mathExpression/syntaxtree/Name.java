@@ -6,13 +6,24 @@ import parsers.mathExpression.visitor.*;
 /**
  * JTB node class for the production Name:<br>
  * Corresponding grammar :<br>
- * nodeChoice -> . %0 #0 < IDENTIFIER ><br>
- * .......... .. . .. #1 ( PossibleExtensions() )?<br>
- * .......... .. | %1 < TIME ><br>
- * .......... .. | %2 < FLOOR ><br>
- * .......... .. | %3 < LOG ><br>
- * .......... .. | %4 < EXP ><br>
- * .......... .. | %5 < NAN ><br>
+ * nodeChoice -> . %00 #0 < IDENTIFIER ><br>
+ * .......... .. . ... #1 ( PossibleExtensions() )?<br>
+ * .......... .. | %01 PrimitiveType()<br>
+ * .......... .. | %02 < PI ><br>
+ * .......... .. | %03 < TIME ><br>
+ * .......... .. | %04 < FLOOR ><br>
+ * .......... .. | %05 < DELAY ><br>
+ * .......... .. | %06 < CEIL ><br>
+ * .......... .. | %07 < TAN ><br>
+ * .......... .. | %08 < TANH ><br>
+ * .......... .. | %09 < COSH ><br>
+ * .......... .. | %10 < LOG10 ><br>
+ * .......... .. | %11 < ABS ><br>
+ * .......... .. | %12 < COS ><br>
+ * .......... .. | %13 < SIN ><br>
+ * .......... .. | %14 < LOG ><br>
+ * .......... .. | %15 < EXP ><br>
+ * .......... .. | %16 < NAN ><br>
  */
 public class Name implements INode {
 

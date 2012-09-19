@@ -8,6 +8,7 @@ import parsers.mathExpression.visitor.*;
  * Corresponding grammar :<br>
  * nodeChoice -> . %0 < AND ><br>
  * .......... .. | %1 < OR ><br>
+ * .......... .. | %2 < XOR ><br>
  */
 public class LogicalOperator implements INode {
 

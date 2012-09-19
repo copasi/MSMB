@@ -110,7 +110,18 @@ public class ExtractNamesUsedVisitor extends DepthFirstVoidVisitor {
 	  
 	 
 	private boolean isKeyword(String name) {
-		if(name.toLowerCase().compareTo(Constants.NAN_STRING) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) == 0) return true;
+				
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.PI)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.DELAY)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CEIL)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ABS)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG10)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COS)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COSH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TAN)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TANH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SIN)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.FLOOR)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SQRT)) == 0) return true;
@@ -156,7 +167,7 @@ public class ExtractNamesUsedVisitor extends DepthFirstVoidVisitor {
 
 	boolean isMultistateSitesList(INode n) {
 		 if(n instanceof ArgumentList) {
-			 if(((ArgumentList)n).nodeChoice.which ==0){
+			 if(((ArgumentList)n).nodeChoice.which ==1){
 				 return true;
 			 }  else return false;
 		 }

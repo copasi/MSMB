@@ -1,6 +1,7 @@
 package parsers.mathExpression.visitor;
 import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import parsers.mathExpression.syntaxtree.*;
+import utility.CellParsers;
 
 import java.util.*;
 
@@ -30,13 +31,13 @@ public class GetUsedVariablesInEquation extends DepthFirstVoidVisitor {
 				} else {
 					//System.out.println("SPECIES: "+ToStringVisitor.toString(n)); // to print complete "multistate" definition
 					//names.put(namePar,index); // order as they appear
-					names.put(ToStringVisitor.toString(n),ToStringVisitor.toString(n)); // order alphabetical
+					if(!CellParsers.isKeyword(ToStringVisitor.toString(n))) names.put(ToStringVisitor.toString(n),ToStringVisitor.toString(n)); // order alphabetical
 					
 				}
 			}
 		} else {
 			//System.out.println("SPECIES: "+ToStringVisitor.toString(n));
-			names.put(ToStringVisitor.toString(n),ToStringVisitor.toString(n));
+			if(!CellParsers.isKeyword(ToStringVisitor.toString(n))) names.put(ToStringVisitor.toString(n),ToStringVisitor.toString(n));
 		}
 		super.visit(n);
 	}
@@ -57,7 +58,7 @@ public class GetUsedVariablesInEquation extends DepthFirstVoidVisitor {
 	  
 	 boolean isMultistateSitesList(INode n) {
 		 if(n instanceof ArgumentList) {
-			 if(((ArgumentList)n).nodeChoice.which ==0){
+			 if(((ArgumentList)n).nodeChoice.which ==1){
 				 return true;
 			 }  else return false;
 		 }

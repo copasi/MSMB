@@ -28,7 +28,7 @@ public class SpeciesDB {
 		multiModel = mm;
 	}
 	
-		public int addChangeSpecies(int index, String sbmlID, String name, HashMap<String, String> initialQuant, int type, String compartment, String expression, boolean fromMultistateBuilder, String notes, boolean autoMergeSpecies,boolean parseExpression) throws Exception {
+	public int addChangeSpecies(int index, String sbmlID, String name, HashMap<String, String> initialQuant, int type, String compartment, String expression, boolean fromMultistateBuilder, String notes, boolean autoMergeSpecies,boolean parseExpression) throws Exception {
 	
 		Integer ind;
 		if(CellParsers.isMultistateSpeciesName(name)) {
@@ -42,7 +42,7 @@ public class SpeciesDB {
 			ind = speciesIndexes.get(name);
 		}*/
 			
-		if(ind != null && ind != index && !name.contains("(")) { // the name is already assigned to another species
+		if(ind != null && ind != index && !CellParsers.isMultistateSpeciesName(name)) { // the name is already assigned to another species
 			//the case of multistate is handled later because it can be the case of multiple states that need to be merged
 			Throwable cause = new Throwable(name);
 			throw new ClassNotFoundException("A species already exists with that name", cause);
@@ -137,7 +137,7 @@ public class SpeciesDB {
 			
 			if(!speciesIndexes.containsKey(name) && 
 					(index >= speciesVector.size() || index == -1)) { //it is a new species
-				if(name.contains("(")) { 
+				if(CellParsers.isMultistateSpeciesName(name)) { 
 					MultistateSpecies s = new MultistateSpecies(multiModel,name);
 					s.setCompartment(multiModel,compartment);
 					s.setType(Constants.SpeciesType.MULTISTATE.copasiType);
@@ -278,7 +278,7 @@ public class SpeciesDB {
 	
 	public Species getSpecies(String name) {
 		String real_name = new String(name);
-		if(name.contains("(")) {
+		if(CellParsers.isMultistateSpeciesName(name)) {
 			real_name = name.substring(0,name.indexOf("("));
 		}
 		if(speciesIndexes.get(real_name)==null) return null;

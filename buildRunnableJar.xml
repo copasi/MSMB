@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="create_runnable_jar" name="Create Runnable Jar for Project MultiStateModelBuilder">
+<project default="create_runnable_jar_GUI" name="Create Runnable Jar for Project MultiStateModelBuilder(MSMB)">
     <!--ANT 1.7 is required                                        -->
 	<!-- set global properties for this build -->
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
-	<basename property="project.name" file="MultiStateModelBuilder"/>
+	<basename property="project.name" file="MSMB"/>
 	<property name="src" location="${basedir}/src"/>
 	<property name="build" location="${basedir}/build"/>
 	<property name="dist"  location="${basedir}/${project.name}_dist"/>
@@ -13,6 +13,18 @@
 	        <fileset dir="${libs}" includes="**/*.jar"/>
 	    	<fileset dir="${java.home}\lib" includes="**/*.jar"/>			
 	</path>
+	
+	<path id="master-classpath">
+	  <fileset dir="${libs}">
+	    <include name="*.jar"/>
+	  </fileset>
+
+	  <fileset dir="${java.home}\lib">
+	    <include name="*.jar"/>
+	  </fileset>
+	</path>
+
+	
 	
 	<target name="dir.check">
 	    <condition property="dir.exists">
@@ -130,7 +142,9 @@
 
 	  <target name="compile" depends="clean,init"  description="compile the source " >
 	    <!-- Compile the java code from ${src} into ${build} -->
-	    <javac srcdir="${src}" nowarn="on" destdir="${build}" classpathref="classpath">
+	    <javac nowarn="on" destdir="${build}">
+	    	<src path="${src}"/>
+	    	<classpath refid="master-classpath"/>
 	    </javac>
 	  	<copy todir="${build}\gui\images"><fileset dir="${src}\gui\images"></fileset></copy>
 	  </target>
@@ -157,12 +171,35 @@
                    <zipfileset excludes="META-INF/*.SF" src="libs/autocomplete.jar"/>
                    <zipfileset excludes="META-INF/*.SF" src="libs/commons-lang3-3.1.jar"/>
            		 <zipfileset excludes="META-INF/*.SF" src="libs/itextpdf-5.2.1.jar"/>
+         		<zipfileset excludes="META-INF/*.SF" src="libs/RCaller-2.1.0-SNAPSHOT.jar"/>
+         	<zipfileset excludes="META-INF/*.SF" src="libs/biomodels-wslib_standalone-1.21.jar"/>
+          	</jar>
+    </target>
+	
+    <target name="create_runBioModelTest_jar_packJar" depends="check-architecture,compile">
+         <jar destfile="${dist}/${project.name}_BiomodelsTest.jar">
+            <manifest>
+                <attribute name="Main-Class" value="testing.BiomodelTest"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+        		   <fileset dir="${build}"/>
+    	   		   <zipfileset excludes="META-INF/*.SF" src="libs/copasi.jar"/>
+    	           <zipfileset excludes="META-INF/*.SF" src="libs/djep-full-latest.jar"/>
+    	           <zipfileset excludes="META-INF/*.SF" src="libs/guava-r09.jar"/>
+    	           <zipfileset excludes="META-INF/*.SF" src="libs/junit.jar"/>
+    	           <zipfileset excludes="META-INF/*.SF" src="libs/swingx-all-1.6.3.jar"/>
+                   <zipfileset excludes="META-INF/*.SF" src="libs/lablib-checkboxtree-3.2.jar"/>
+                   <zipfileset excludes="META-INF/*.SF" src="libs/autocomplete.jar"/>
+                   <zipfileset excludes="META-INF/*.SF" src="libs/commons-lang3-3.1.jar"/>
+           		 <zipfileset excludes="META-INF/*.SF" src="libs/itextpdf-5.2.1.jar"/>
+         		<zipfileset excludes="META-INF/*.SF" src="libs/RCaller-2.1.0-SNAPSHOT.jar"/>
+         		<zipfileset excludes="META-INF/*.SF" src="libs/biomodels-wslib_standalone-1.21.jar"/>
           	</jar>
 
     </target>
-	
-	
-	<target name="create_runnable_jar" depends="create_run_jar_packJar"> 
+          		
+          		
+	<target name="copy_file_arch"> 
 		<if>
 		<equals arg1="${os-family}" arg2="windows" />
 		<then>
@@ -201,9 +238,13 @@
 					</else>
 				</if>
 			</else>
-			</if>
+		 </if>
 		</else>
 		</if>
 	</target>
+	
+	<target name="create_runnable_jar_GUI" depends="create_run_jar_packJar,copy_file_arch"/> 
+	<target name="create_runnable_jar_BiomodelTest" depends="create_runBioModelTest_jar_packJar,copy_file_arch"/>
+	
 </project>
 	

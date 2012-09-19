@@ -123,7 +123,7 @@ public class Species {
 	
 	
 	public String getValueOfSite(String siteName) {
-		if(!this.getDisplayedName().contains("(")) {
+		if(!CellParsers.isMultistateSpeciesName(this.getDisplayedName())) {
 			return new String();
 		} 
 		

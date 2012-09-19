@@ -4,30 +4,38 @@ package parsers.mathExpression.syntaxtree;
 import parsers.mathExpression.visitor.*;
 
 /**
- * JTB node class for the production SingleFunctionCall:<br>
+ * JTB node class for the production IfExpression:<br>
  * Corresponding grammar :<br>
- * name -> Name()<br>
- * nodeToken -> < LPAREN ><br>
- * nodeOptional -> ( ArgumentList() )?<br>
- * nodeToken1 -> < RPAREN ><br>
- * nodeToken2 -> < EOF ><br>
+ * nodeToken -> < IF ><br>
+ * nodeToken1 -> < LPAREN ><br>
+ * expression -> Expression()<br>
+ * nodeToken2 -> < COMMA ><br>
+ * expression1 -> Expression()<br>
+ * nodeOptional -> ( #0 < COMMA > #1 Expression() )?<br>
+ * nodeToken3 -> < RPAREN ><br>
  */
-public class SingleFunctionCall implements INode {
-
-  /** A child node */
-  public Name name;
+public class IfExpression implements INode {
 
   /** A child node */
   public NodeToken nodeToken;
 
   /** A child node */
-  public NodeOptional nodeOptional;
-
-  /** A child node */
   public NodeToken nodeToken1;
 
   /** A child node */
+  public Expression expression;
+
+  /** A child node */
   public NodeToken nodeToken2;
+
+  /** A child node */
+  public Expression expression1;
+
+  /** A child node */
+  public NodeOptional nodeOptional;
+
+  /** A child node */
+  public NodeToken nodeToken3;
 
   /** The serial version uid */
   private static final long serialVersionUID = 144L;
@@ -40,13 +48,17 @@ public class SingleFunctionCall implements INode {
    * @param n2 next child node
    * @param n3 next child node
    * @param n4 next child node
+   * @param n5 next child node
+   * @param n6 next child node
    */
-  public SingleFunctionCall(final Name n0, final NodeToken n1, final NodeOptional n2, final NodeToken n3, final NodeToken n4) {
-    name = n0;
-    nodeToken = n1;
-    nodeOptional = n2;
-    nodeToken1 = n3;
-    nodeToken2 = n4;
+  public IfExpression(final NodeToken n0, final NodeToken n1, final Expression n2, final NodeToken n3, final Expression n4, final NodeOptional n5, final NodeToken n6) {
+    nodeToken = n0;
+    nodeToken1 = n1;
+    expression = n2;
+    nodeToken2 = n3;
+    expression1 = n4;
+    nodeOptional = n5;
+    nodeToken3 = n6;
   }
 
   /**
@@ -54,13 +66,16 @@ public class SingleFunctionCall implements INode {
    *
    * @param n0 first child node
    * @param n1 next child node
+   * @param n2 next child node
    */
-  public SingleFunctionCall(final Name n0, final NodeOptional n1) {
-    name = n0;
-    nodeToken = new NodeToken("(");
-    nodeOptional = n1;
-    nodeToken1 = new NodeToken(")");
-    nodeToken2 = new NodeToken("");
+  public IfExpression(final Expression n0, final Expression n1, final NodeOptional n2) {
+    nodeToken = new NodeToken("if");
+    nodeToken1 = new NodeToken("(");
+    expression = n0;
+    nodeToken2 = new NodeToken(",");
+    expression1 = n1;
+    nodeOptional = n2;
+    nodeToken3 = new NodeToken(")");
   }
 
   /**

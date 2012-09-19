@@ -32,11 +32,46 @@ public class MR_Expression_Parser {
       DepthFirstVoidVisitor v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
-      String expression2 = new String("asdf < sdf && (a < 3 && a > 4)");
+      String expression2 = new String("(asdf < sdf && (a < 3 && a > 4)) > 1");
       InputStream is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       MR_Expression_Parser react2 = new MR_Expression_Parser(is2);
       CompleteExpression start2 = react2.CompleteExpression();
       DepthFirstVoidVisitor v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("if(ara> 0 && pulse_flag==1,cAra,dAra*ara)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("asdf < sdf xor (a < 3 && a > 4)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*floor(Time/24)) > 1");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("if(X1 > 0,Ks^\"No. of transit compartment (slow)\"/6*exp(-Ks*X1)*X1^(\"No. of transit compartment (slow)\"-1),0)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("1/((exp(0.15*(-V-50))+1))");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
       start2.accept(v2);
       System.out.println("...................................");
       expression2 = new String("\"funaasdf \"(GLQ v, GLQ t)");
@@ -61,13 +96,6 @@ public class MR_Expression_Parser {
       start2.accept(v2);
       System.out.println("...................................");
       expression2 = new String("NaN");
-      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
-      react2 = new MR_Expression_Parser(is2);
-      start2 = react2.CompleteExpression();
-      v2 = new MyVisitor();
-      start2.accept(v2);
-      System.out.println("...................................");
-      expression2 = new String("cdh1(p{1})");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2);
       start2 = react2.CompleteExpression();
@@ -103,6 +131,20 @@ public class MR_Expression_Parser {
       start2.accept(v2);
       System.out.println("...................................");
       expression2 = new String("SUM(Cdh1;p{0:10};q)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("kmisfoldSUB*SUB*(ROS*cytosol)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("1e-006*k*GAP*MOD");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2);
       start2 = react2.CompleteExpression();
@@ -177,11 +219,21 @@ TOKEN :
 | < EXTENSION_FLUX : ".f" >
 | < MY_SPECIAL_EXTENSION : ".*MY*SPECIAL*EXTENSION" >
 | < SUM : "SUM" >
+| < DELAY : "delay" >
 | < FLOOR : "floor" >
+| < CEIL : "ceil" >
+| < COS : "cos" >
+| < SIN : "sin" >
+| < TAN : "tan" >
+| < TANH : "tanh" >
+| < COSH : "cosh" >
 | < SQRT : "sqrt" >
 | < EXP : "exp" >
 | < LOG : "log" >
-| < NAN : "NaN"| "Nan"| "nan"| "NAn"| "naN"| "nAn"| "nAN"| "NAN" >
+| < LOG10 : "log10" >
+| < ABS : "abs" >
+| < PI : "PI" >
+| < NAN : "NaN"| "nan"| "NAN" >
 | < CONST_AVOGADRO : "%NA%" >
 | < CONST_QUANTITY_CONV_FACTOR : "%QFC%" >
 | < CONST_MODEL_TIME : "%ModTime%" >
@@ -193,14 +245,6 @@ TOKEN :
   < INTEGER_LITERAL : ( ["0"-"9"] )+ >
 | < FLOATING_POINT_LITERAL : ( ["0"-"9"] )+ "." ( ["0"-"9"] )* ( <EXPONENT> )? ( ["f", "F", "d", "D"] )?| "." ( ["0"-"9"] )+ ( <EXPONENT> )? ( ["f", "F", "d", "D"] )?| ( ["0"-"9"] )+ <EXPONENT> ( ["f", "F", "d", "D"] )?| ( ["0"-"9"] )+ ( <EXPONENT> )? ["f", "F", "d", "D"] >
 | < #EXPONENT : ["e", "E"] ( ["+", "-"] )? ( ["0"-"9"] )+ >
-}
-
-TOKEN :
-{
-  < IDENTIFIER : <STRING_LITERAL>| <LETTER> ( <LETTER>| <DIGIT> )* >
-| < #LETTER : ["A"-"Z", "_", "a"-"z", "'"] >
-| < #DIGIT : ["0"-"9"] >
-| < #STRING_LITERAL : "\"" ( ( ~["\"", "\\", "\n", "\r"] )| ( "\\" ( ["n", "t", "b", "r", "f", "\\", "'", "\""]| ["0"-"7"] ( ["0"-"7"] )?| ["0"-"3"] ["0"-"7"] ["0"-"7"] ) ) )* "\"" >
 }
 
 TOKEN :
@@ -234,7 +278,16 @@ TOKEN :
 | < GEQ : ">=" >
 | < NE : "!=" >
 | < OR : "||" >
+| < XOR : "xor" >
 | < AND : "&&" >
+}
+
+TOKEN :
+{
+  < IDENTIFIER : <STRING_LITERAL>| <LETTER> ( <LETTER>| <DIGIT> )* >
+| < #LETTER : ["A"-"Z", "_", "a"-"z", "'"] >
+| < #DIGIT : ["0"-"9"] >
+| < #STRING_LITERAL : "\"" ( ( ~["\"", "\\", "\n", "\r"] )| ( "\\" ( ["n", "t", "b", "r", "f", "\\", "'", "\""]| ["0"-"7"] ( ["0"-"7"] )?| ["0"-"3"] ["0"-"7"] ["0"-"7"] ) ) )* "\"" >
 }
 
 /*****************************************
@@ -263,25 +316,29 @@ SingleFunctionCall SingleFunctionCall() :
   Name n0 = null;
   NodeToken n1 = null;
   Token n2 = null;
-  ArgumentList n3 = null;
-  NodeToken n4 = null;
-  Token n5 = null;
-  NodeToken n6 = null;
-  Token n7 = null;
+  NodeOptional n3 = new NodeOptional();
+  ArgumentList n4 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
+  NodeToken n7 = null;
+  Token n8 = null;
 }
 {
   n0 = Name()
   n2 = < LPAREN >
   { n1 = JTBToolkit.makeNodeToken(n2); }
-  n3 = ArgumentList()
-  n5 = < RPAREN >
-  { n4 = JTBToolkit.makeNodeToken(n5); }
-  n7 = < EOF > {
-    n7.beginColumn++;
-    n7.endColumn++;
-    { n6 = JTBToolkit.makeNodeToken(n7); }
+  (
+    n4 = ArgumentList()
+    { n3.addNode(n4); }
+  )?
+  n6 = < RPAREN >
+  { n5 = JTBToolkit.makeNodeToken(n6); }
+  n8 = < EOF > {
+    n8.beginColumn++;
+    n8.endColumn++;
+    { n7 = JTBToolkit.makeNodeToken(n8); }
   }
-  { return new SingleFunctionCall(n0, n1, n3, n4, n6); }
+  { return new SingleFunctionCall(n0, n1, n3, n5, n7); }
 }
 
 CompleteFunctionDeclaration CompleteFunctionDeclaration() :
@@ -437,6 +494,48 @@ VariableDeclaratorId VariableDeclaratorId() :
   { return new VariableDeclaratorId(n0); }
 }
 
+IfExpression IfExpression() :
+{
+  // --- JTB generated node declarations ---
+  NodeToken n0 = null;
+  Token n1 = null;
+  NodeToken n2 = null;
+  Token n3 = null;
+  Expression n4 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
+  Expression n7 = null;
+  NodeOptional n8 = new NodeOptional();
+  NodeSequence n9 = null;
+  NodeToken n10 = null;
+  Token n11 = null;
+  Expression n12 = null;
+  NodeToken n13 = null;
+  Token n14 = null;
+}
+{
+  n1 = < IF >
+  { n0 = JTBToolkit.makeNodeToken(n1); }
+  n3 = < LPAREN >
+  { n2 = JTBToolkit.makeNodeToken(n3); }
+  n4 = Expression()
+  n6 = < COMMA >
+  { n5 = JTBToolkit.makeNodeToken(n6); }
+  n7 = Expression()
+  (
+    { n9 = new NodeSequence(2); }
+    n11 = < COMMA >
+    { n10 = JTBToolkit.makeNodeToken(n11); }
+    { n9.addNode(n10); }
+    n12 = Expression()
+    { n9.addNode(n12); }
+    { n8.addNode(n9); }
+  )?
+  n14 = < RPAREN >
+  { n13 = JTBToolkit.makeNodeToken(n14); }
+  { return new IfExpression(n0, n2, n4, n5, n7, n8, n13); }
+}
+
 Expression Expression() :
 {
   // --- JTB generated node declarations ---
@@ -537,16 +636,22 @@ LogicalOperator LogicalOperator() :
   Token n2 = null;
   NodeToken n3 = null;
   Token n4 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
 }
 {
   (
     n2 = < AND >
     { n1 = JTBToolkit.makeNodeToken(n2); }
-    { n0 = new NodeChoice(n1, 0, 2); }
+    { n0 = new NodeChoice(n1, 0, 3); }
   |
     n4 = < OR >
     { n3 = JTBToolkit.makeNodeToken(n4); }
-    { n0 = new NodeChoice(n3, 1, 2); }
+    { n0 = new NodeChoice(n3, 1, 3); }
+  |
+    n6 = < XOR >
+    { n5 = JTBToolkit.makeNodeToken(n6); }
+    { n0 = new NodeChoice(n5, 2, 3); }
   )
   { return new LogicalOperator(n0); }
 }
@@ -746,11 +851,12 @@ PrimaryPrefix PrimaryPrefix() :
   Token n7 = null;
   SpeciesReferenceOrFunctionCall n8 = null;
   MultistateSum n9 = null;
+  IfExpression n10 = null;
 }
 {
   (
     n1 = Literal()
-    { n0 = new NodeChoice(n1, 0, 4); }
+    { n0 = new NodeChoice(n1, 0, 5); }
   |
     { n2 = new NodeSequence(3); }
     n4 = < LPAREN >
@@ -761,13 +867,16 @@ PrimaryPrefix PrimaryPrefix() :
     n7 = < RPAREN >
     { n6 = JTBToolkit.makeNodeToken(n7); }
     { n2.addNode(n6); }
-    { n0 = new NodeChoice(n2, 1, 4); }
+    { n0 = new NodeChoice(n2, 1, 5); }
   |
     n8 = SpeciesReferenceOrFunctionCall()
-    { n0 = new NodeChoice(n8, 2, 4); }
+    { n0 = new NodeChoice(n8, 2, 5); }
   |
     n9 = MultistateSum()
-    { n0 = new NodeChoice(n9, 3, 4); }
+    { n0 = new NodeChoice(n9, 3, 5); }
+  |
+    n10 = IfExpression()
+    { n0 = new NodeChoice(n10, 4, 5); }
   )
   { return new PrimaryPrefix(n0); }
 }
@@ -803,16 +912,37 @@ Name Name() :
   Token n3 = null;
   NodeOptional n4 = new NodeOptional();
   PossibleExtensions n5 = null;
-  NodeToken n6 = null;
-  Token n7 = null;
-  NodeToken n8 = null;
-  Token n9 = null;
-  NodeToken n10 = null;
-  Token n11 = null;
-  NodeToken n12 = null;
-  Token n13 = null;
-  NodeToken n14 = null;
-  Token n15 = null;
+  PrimitiveType n6 = null;
+  NodeToken n7 = null;
+  Token n8 = null;
+  NodeToken n9 = null;
+  Token n10 = null;
+  NodeToken n11 = null;
+  Token n12 = null;
+  NodeToken n13 = null;
+  Token n14 = null;
+  NodeToken n15 = null;
+  Token n16 = null;
+  NodeToken n17 = null;
+  Token n18 = null;
+  NodeToken n19 = null;
+  Token n20 = null;
+  NodeToken n21 = null;
+  Token n22 = null;
+  NodeToken n23 = null;
+  Token n24 = null;
+  NodeToken n25 = null;
+  Token n26 = null;
+  NodeToken n27 = null;
+  Token n28 = null;
+  NodeToken n29 = null;
+  Token n30 = null;
+  NodeToken n31 = null;
+  Token n32 = null;
+  NodeToken n33 = null;
+  Token n34 = null;
+  NodeToken n35 = null;
+  Token n36 = null;
 }
 {
   (
@@ -826,27 +956,70 @@ Name Name() :
       { n4.addNode(n5); }
     )?
     { n1.addNode(n4); }
-    { n0 = new NodeChoice(n1, 0, 6); }
+    { n0 = new NodeChoice(n1, 0, 17); }
   |
-    n7 = < TIME >
-    { n6 = JTBToolkit.makeNodeToken(n7); }
-    { n0 = new NodeChoice(n6, 1, 6); }
+    n6 = PrimitiveType()
+    { n0 = new NodeChoice(n6, 1, 17); }
   |
-    n9 = < FLOOR >
-    { n8 = JTBToolkit.makeNodeToken(n9); }
-    { n0 = new NodeChoice(n8, 2, 6); }
+    n8 = < PI >
+    { n7 = JTBToolkit.makeNodeToken(n8); }
+    { n0 = new NodeChoice(n7, 2, 17); }
   |
-    n11 = < LOG >
-    { n10 = JTBToolkit.makeNodeToken(n11); }
-    { n0 = new NodeChoice(n10, 3, 6); }
+    n10 = < TIME >
+    { n9 = JTBToolkit.makeNodeToken(n10); }
+    { n0 = new NodeChoice(n9, 3, 17); }
   |
-    n13 = < EXP >
-    { n12 = JTBToolkit.makeNodeToken(n13); }
-    { n0 = new NodeChoice(n12, 4, 6); }
+    n12 = < FLOOR >
+    { n11 = JTBToolkit.makeNodeToken(n12); }
+    { n0 = new NodeChoice(n11, 4, 17); }
   |
-    n15 = < NAN >
-    { n14 = JTBToolkit.makeNodeToken(n15); }
-    { n0 = new NodeChoice(n14, 5, 6); }
+    n14 = < DELAY >
+    { n13 = JTBToolkit.makeNodeToken(n14); }
+    { n0 = new NodeChoice(n13, 5, 17); }
+  |
+    n16 = < CEIL >
+    { n15 = JTBToolkit.makeNodeToken(n16); }
+    { n0 = new NodeChoice(n15, 6, 17); }
+  |
+    n18 = < TAN >
+    { n17 = JTBToolkit.makeNodeToken(n18); }
+    { n0 = new NodeChoice(n17, 7, 17); }
+  |
+    n20 = < TANH >
+    { n19 = JTBToolkit.makeNodeToken(n20); }
+    { n0 = new NodeChoice(n19, 8, 17); }
+  |
+    n22 = < COSH >
+    { n21 = JTBToolkit.makeNodeToken(n22); }
+    { n0 = new NodeChoice(n21, 9, 17); }
+  |
+    n24 = < LOG10 >
+    { n23 = JTBToolkit.makeNodeToken(n24); }
+    { n0 = new NodeChoice(n23, 10, 17); }
+  |
+    n26 = < ABS >
+    { n25 = JTBToolkit.makeNodeToken(n26); }
+    { n0 = new NodeChoice(n25, 11, 17); }
+  |
+    n28 = < COS >
+    { n27 = JTBToolkit.makeNodeToken(n28); }
+    { n0 = new NodeChoice(n27, 12, 17); }
+  |
+    n30 = < SIN >
+    { n29 = JTBToolkit.makeNodeToken(n30); }
+    { n0 = new NodeChoice(n29, 13, 17); }
+  |
+    n32 = < LOG >
+    { n31 = JTBToolkit.makeNodeToken(n32); }
+    { n0 = new NodeChoice(n31, 14, 17); }
+  |
+    n34 = < EXP >
+    { n33 = JTBToolkit.makeNodeToken(n34); }
+    { n0 = new NodeChoice(n33, 15, 17); }
+  |
+    n36 = < NAN >
+    { n35 = JTBToolkit.makeNodeToken(n36); }
+    { n0 = new NodeChoice(n35, 16, 17); }
   )
   { return new Name(n0); }
 }
@@ -1053,36 +1226,36 @@ ArgumentList ArgumentList() :
 {
   // --- JTB generated node declarations ---
   NodeChoice n0 = null;
-  MultistateSites_list n1 = null;
-  NodeSequence n2 = null;
-  AdditiveExpression n3 = null;
-  NodeListOptional n4 = new NodeListOptional();
-  NodeSequence n5 = null;
-  NodeToken n6 = null;
-  Token n7 = null;
-  AdditiveExpression n8 = null;
+  NodeSequence n1 = null;
+  AdditiveExpression n2 = null;
+  NodeListOptional n3 = new NodeListOptional();
+  NodeSequence n4 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
+  AdditiveExpression n7 = null;
+  MultistateSites_list n8 = null;
 }
 {
   (
     LOOKAHEAD( 2 )
-    n1 = MultistateSites_list()
+    { n1 = new NodeSequence(2); }
+    n2 = AdditiveExpression()
+    { n1.addNode(n2); }
+    (
+      { n4 = new NodeSequence(2); }
+      n6 = < COMMA >
+      { n5 = JTBToolkit.makeNodeToken(n6); }
+      { n4.addNode(n5); }
+      n7 = AdditiveExpression()
+      { n4.addNode(n7); }
+      { n3.addNode(n4); }
+    )*
+    { n3.nodes.trimToSize(); }
+    { n1.addNode(n3); }
     { n0 = new NodeChoice(n1, 0, 2); }
   |
-    { n2 = new NodeSequence(2); }
-    n3 = AdditiveExpression()
-    { n2.addNode(n3); }
-    (
-      { n5 = new NodeSequence(2); }
-      n7 = < COMMA >
-      { n6 = JTBToolkit.makeNodeToken(n7); }
-      { n5.addNode(n6); }
-      n8 = AdditiveExpression()
-      { n5.addNode(n8); }
-      { n4.addNode(n5); }
-    )*
-    { n4.nodes.trimToSize(); }
-    { n2.addNode(n4); }
-    { n0 = new NodeChoice(n2, 1, 2); }
+    n8 = MultistateSites_list()
+    { n0 = new NodeChoice(n8, 1, 2); }
   )
   { return new ArgumentList(n0); }
 }

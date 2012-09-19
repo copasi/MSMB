@@ -90,7 +90,7 @@ public class CompartmentsDB {
 			}
 		}
 		
-		if(ind != null && ind != index ) { // the name is already assigned to another species
+		if(ind != null && ind != index ) { // the name is already assigned to another element
 			Throwable cause = new Throwable(name);
 			throw new ClassNotFoundException("A compartment already exists with the name "+name, cause);
 		}
@@ -99,17 +99,21 @@ public class CompartmentsDB {
 		try{
 			if(ind ==null) { //it is a new comp
 				Compartment c = new Compartment(name);
-				compIndexes.put(c.getName(), compVector.size());
+				c.setNotes(notes);
+				c.setType(type);
 				if(index==-1) ind = compVector.size();
 				else ind = index;
-				compVector.put( ind,c);
+				compIndexes.put(c.getName(), ind);
+				compVector.put(ind,c); //take the place even if expressions contains error
 				multiModel.addNamedElement(c.getName(), Constants.TitlesTabs.COMPARTMENTS.index);
 				c.setExpression(multiModel,expression);
 				c.setInitialVolume(multiModel,initial);
-				c.setNotes(notes);
-				c.setType(type);
+				compVector.put(ind,c);
+				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind+1);
 				return compVector.size()-1;
+				
 			} else { //comp already defined
+				
 				Compartment c = compVector.get(ind);
 				compIndexes.put(name, ind);
 				multiModel.addNamedElement(name, Constants.TitlesTabs.COMPARTMENTS.index);

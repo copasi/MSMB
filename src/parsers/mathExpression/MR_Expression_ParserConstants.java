@@ -75,89 +75,111 @@ public interface MR_Expression_ParserConstants {
   /** RegularExpression Id. */
   int SUM = 38;
   /** RegularExpression Id. */
-  int FLOOR = 39;
+  int DELAY = 39;
   /** RegularExpression Id. */
-  int SQRT = 40;
+  int FLOOR = 40;
   /** RegularExpression Id. */
-  int EXP = 41;
+  int CEIL = 41;
   /** RegularExpression Id. */
-  int LOG = 42;
+  int COS = 42;
   /** RegularExpression Id. */
-  int NAN = 43;
+  int SIN = 43;
   /** RegularExpression Id. */
-  int CONST_AVOGADRO = 44;
+  int TAN = 44;
   /** RegularExpression Id. */
-  int CONST_QUANTITY_CONV_FACTOR = 45;
+  int TANH = 45;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME = 46;
+  int COSH = 46;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME_INITIAL = 47;
+  int SQRT = 47;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 48;
+  int EXP = 48;
   /** RegularExpression Id. */
-  int FLOATING_POINT_LITERAL = 49;
+  int LOG = 49;
   /** RegularExpression Id. */
-  int EXPONENT = 50;
+  int LOG10 = 50;
   /** RegularExpression Id. */
-  int IDENTIFIER = 51;
+  int ABS = 51;
   /** RegularExpression Id. */
-  int LETTER = 52;
+  int PI = 52;
   /** RegularExpression Id. */
-  int DIGIT = 53;
+  int NAN = 53;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 54;
+  int CONST_AVOGADRO = 54;
   /** RegularExpression Id. */
-  int LPAREN = 55;
+  int CONST_QUANTITY_CONV_FACTOR = 55;
   /** RegularExpression Id. */
-  int RPAREN = 56;
+  int CONST_MODEL_TIME = 56;
   /** RegularExpression Id. */
-  int LBRACE = 57;
+  int CONST_MODEL_TIME_INITIAL = 57;
   /** RegularExpression Id. */
-  int RBRACE = 58;
+  int INTEGER_LITERAL = 58;
   /** RegularExpression Id. */
-  int LBRACKET = 59;
+  int FLOATING_POINT_LITERAL = 59;
   /** RegularExpression Id. */
-  int RBRACKET = 60;
+  int EXPONENT = 60;
   /** RegularExpression Id. */
-  int SEMICOLON = 61;
+  int LPAREN = 61;
   /** RegularExpression Id. */
-  int COMMA = 62;
+  int RPAREN = 62;
   /** RegularExpression Id. */
-  int COLON = 63;
+  int LBRACE = 63;
   /** RegularExpression Id. */
-  int DOT = 64;
+  int RBRACE = 64;
   /** RegularExpression Id. */
-  int PLUS = 65;
+  int LBRACKET = 65;
   /** RegularExpression Id. */
-  int MINUS = 66;
+  int RBRACKET = 66;
   /** RegularExpression Id. */
-  int TIMES = 67;
+  int SEMICOLON = 67;
   /** RegularExpression Id. */
-  int DIV = 68;
+  int COMMA = 68;
   /** RegularExpression Id. */
-  int ASSIGN = 69;
+  int COLON = 69;
   /** RegularExpression Id. */
-  int GT = 70;
+  int DOT = 70;
   /** RegularExpression Id. */
-  int LT = 71;
+  int PLUS = 71;
   /** RegularExpression Id. */
-  int BANG = 72;
+  int MINUS = 72;
   /** RegularExpression Id. */
-  int CARET = 73;
+  int TIMES = 73;
   /** RegularExpression Id. */
-  int PERC = 74;
+  int DIV = 74;
   /** RegularExpression Id. */
-  int EQ = 75;
+  int ASSIGN = 75;
   /** RegularExpression Id. */
-  int LEQ = 76;
+  int GT = 76;
   /** RegularExpression Id. */
-  int GEQ = 77;
+  int LT = 77;
   /** RegularExpression Id. */
-  int NE = 78;
+  int BANG = 78;
   /** RegularExpression Id. */
-  int OR = 79;
+  int CARET = 79;
   /** RegularExpression Id. */
-  int AND = 80;
+  int PERC = 80;
+  /** RegularExpression Id. */
+  int EQ = 81;
+  /** RegularExpression Id. */
+  int LEQ = 82;
+  /** RegularExpression Id. */
+  int GEQ = 83;
+  /** RegularExpression Id. */
+  int NE = 84;
+  /** RegularExpression Id. */
+  int OR = 85;
+  /** RegularExpression Id. */
+  int XOR = 86;
+  /** RegularExpression Id. */
+  int AND = 87;
+  /** RegularExpression Id. */
+  int IDENTIFIER = 88;
+  /** RegularExpression Id. */
+  int LETTER = 89;
+  /** RegularExpression Id. */
+  int DIGIT = 90;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 91;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -203,10 +225,20 @@ public interface MR_Expression_ParserConstants {
     "\".f\"",
     "\".*MY*SPECIAL*EXTENSION\"",
     "\"SUM\"",
+    "\"delay\"",
     "\"floor\"",
+    "\"ceil\"",
+    "\"cos\"",
+    "\"sin\"",
+    "\"tan\"",
+    "\"tanh\"",
+    "\"cosh\"",
     "\"sqrt\"",
     "\"exp\"",
     "\"log\"",
+    "\"log10\"",
+    "\"abs\"",
+    "\"PI\"",
     "<NAN>",
     "\"%NA%\"",
     "\"%QFC%\"",
@@ -215,10 +247,6 @@ public interface MR_Expression_ParserConstants {
     "<INTEGER_LITERAL>",
     "<FLOATING_POINT_LITERAL>",
     "<EXPONENT>",
-    "<IDENTIFIER>",
-    "<LETTER>",
-    "<DIGIT>",
-    "<STRING_LITERAL>",
     "\"(\"",
     "\")\"",
     "\"{\"",
@@ -244,7 +272,12 @@ public interface MR_Expression_ParserConstants {
     "\">=\"",
     "\"!=\"",
     "\"||\"",
+    "\"xor\"",
     "\"&&\"",
+    "<IDENTIFIER>",
+    "<LETTER>",
+    "<DIGIT>",
+    "<STRING_LITERAL>",
   };
 
 }

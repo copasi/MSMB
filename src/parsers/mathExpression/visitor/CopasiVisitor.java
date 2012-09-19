@@ -9,6 +9,7 @@ import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
 import parsers.multistateSpecies.TokenMgrError;
 import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
+import utility.CellParsers;
 import utility.Constants;
 
 import gui.MainGui;
@@ -116,6 +117,15 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 						copasiExpression += funName+"(";
 					} catch(Exception ex) {
 						if(funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.FLOOR))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ABS))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG10))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.CEIL))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.COS))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.COSH))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.TAN))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.TANH))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SIN))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.DELAY))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SQRT))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXP))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG))==0) {
@@ -150,7 +160,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 							this.exceptions.addAll(vis.exceptions);
 						}
 					}
-					copasiExpression = copasiExpression.substring(0, copasiExpression.length()-1);
+					if(parametersActuals.size()>0) copasiExpression = copasiExpression.substring(0, copasiExpression.length()-1);
 					copasiExpression += ")";
 				
 			} else {
@@ -511,16 +521,17 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	
 	
 	private int findMetabolite(String name, boolean key) throws Exception {
-			if(name.startsWith("\"")) {	name = name.substring(1);	}
-			if(name.endsWith("\"")) { name = name.substring(0,name.length()-1); }
 			
-			if(name.contains("(")) {
+			if(CellParsers.isMultistateSpeciesName(name)) {
 				MultistateSpecies ms = new MultistateSpecies(multiModel,name);
 				name = ms.printCompleteDefinition(); 
 				//because in "name" the order of the sites can be different from the order used for defining the metabolite species.
 				//Building the multistateSpecies and printing again its complete definition will make the two definitions identical w.r.t. the order
 			}
-			
+		
+			if(name.startsWith("\"")) {	name = name.substring(1);	}
+			if(name.endsWith("\"")) { name = name.substring(0,name.length()-1); }
+		
 			int i, iMax =(int) model.getMetabolites().size();
 			
 	        for (i = 0;i < iMax;++i)
@@ -541,7 +552,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	
 	 boolean isMultistateSitesList(INode n) {
 		 if(n instanceof ArgumentList) {
-			 if(((ArgumentList)n).nodeChoice.which ==0){
+			 if(((ArgumentList)n).nodeChoice.which ==1){
 				 return true;
 			 }  else return false;
 		 }

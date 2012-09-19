@@ -73,7 +73,7 @@ public interface IRetVisitor<R> {
    * <p>
    * name -> Name()<br>
    * nodeToken -> < LPAREN ><br>
-   * argumentList -> ArgumentList()<br>
+   * nodeOptional -> ( ArgumentList() )?<br>
    * nodeToken1 -> < RPAREN ><br>
    * nodeToken2 -> < EOF ><br>
    *
@@ -155,6 +155,22 @@ public interface IRetVisitor<R> {
   public R visit(final VariableDeclaratorId n);
 
   /**
+   * Visits a {@link IfExpression} node, whose children are the following :
+   * <p>
+   * nodeToken -> < IF ><br>
+   * nodeToken1 -> < LPAREN ><br>
+   * expression -> Expression()<br>
+   * nodeToken2 -> < COMMA ><br>
+   * expression1 -> Expression()<br>
+   * nodeOptional -> ( #0 < COMMA > #1 Expression() )?<br>
+   * nodeToken3 -> < RPAREN ><br>
+   *
+   * @param n the node to visit
+   * @return the user return information
+   */
+  public R visit(final IfExpression n);
+
+  /**
    * Visits a {@link Expression} node, whose children are the following :
    * <p>
    * additiveExpression -> AdditiveExpression()<br>
@@ -186,6 +202,7 @@ public interface IRetVisitor<R> {
    * <p>
    * nodeChoice -> . %0 < AND ><br>
    * .......... .. | %1 < OR ><br>
+   * .......... .. | %2 < XOR ><br>
    *
    * @param n the node to visit
    * @return the user return information
@@ -267,6 +284,7 @@ public interface IRetVisitor<R> {
    * .......... .. | %1 #0 < LPAREN > #1 Expression() #2 < RPAREN ><br>
    * .......... .. | %2 SpeciesReferenceOrFunctionCall()<br>
    * .......... .. | %3 MultistateSum()<br>
+   * .......... .. | %4 IfExpression()<br>
    *
    * @param n the node to visit
    * @return the user return information
@@ -289,13 +307,24 @@ public interface IRetVisitor<R> {
   /**
    * Visits a {@link Name} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 #0 < IDENTIFIER ><br>
-   * .......... .. . .. #1 ( PossibleExtensions() )?<br>
-   * .......... .. | %1 < TIME ><br>
-   * .......... .. | %2 < FLOOR ><br>
-   * .......... .. | %3 < LOG ><br>
-   * .......... .. | %4 < EXP ><br>
-   * .......... .. | %5 < NAN ><br>
+   * nodeChoice -> . %00 #0 < IDENTIFIER ><br>
+   * .......... .. . ... #1 ( PossibleExtensions() )?<br>
+   * .......... .. | %01 PrimitiveType()<br>
+   * .......... .. | %02 < PI ><br>
+   * .......... .. | %03 < TIME ><br>
+   * .......... .. | %04 < FLOOR ><br>
+   * .......... .. | %05 < DELAY ><br>
+   * .......... .. | %06 < CEIL ><br>
+   * .......... .. | %07 < TAN ><br>
+   * .......... .. | %08 < TANH ><br>
+   * .......... .. | %09 < COSH ><br>
+   * .......... .. | %10 < LOG10 ><br>
+   * .......... .. | %11 < ABS ><br>
+   * .......... .. | %12 < COS ><br>
+   * .......... .. | %13 < SIN ><br>
+   * .......... .. | %14 < LOG ><br>
+   * .......... .. | %15 < EXP ><br>
+   * .......... .. | %16 < NAN ><br>
    *
    * @param n the node to visit
    * @return the user return information
@@ -373,9 +402,9 @@ public interface IRetVisitor<R> {
   /**
    * Visits a {@link ArgumentList} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 MultistateSites_list()<br>
-   * .......... .. | %1 #0 AdditiveExpression()<br>
+   * nodeChoice -> . %0 #0 AdditiveExpression()<br>
    * .......... .. . .. #1 ( $0 < COMMA > $1 AdditiveExpression() )*<br>
+   * .......... .. | %1 MultistateSites_list()<br>
    *
    * @param n the node to visit
    * @return the user return information

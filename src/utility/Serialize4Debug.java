@@ -120,7 +120,7 @@ public class Serialize4Debug {
 			out.println("---");
 		}
 		
-		//out.println("I cannot get the CEvents from the vector");
+		out.println("I cannot get the CEvents from the vector");
 		out.println("-------------");
 		out.flush();
     	out.close();

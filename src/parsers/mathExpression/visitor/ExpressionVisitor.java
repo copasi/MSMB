@@ -51,6 +51,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	@Override
 	public void visit(NodeToken n) {
 		expression+=n.tokenImage;
+		
 		super.visit(n);
 	}
 	
@@ -102,8 +103,8 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 
 			Vector mapping_vector = new Vector();
 			if(!listFunctionToCompact.contains(funName)){
-				expression += "(";
 				String r = f.getExpandedEquation(parametersActuals);
+				expression += "(";
 				expression += r;
 				expression += ")";
 			}
@@ -139,9 +140,18 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 					}
 				} catch(Exception ex) {
 					if(funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.FLOOR))==0 ||
-					   funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SQRT))==0 ||
-					   funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXP))==0 ||
-					   funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG))==0) {
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SQRT))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.CEIL))==0 ||
+									funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ABS))==0 ||
+											funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG10))==0 ||
+												funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.COS))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.COSH))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.TAN))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.TANH))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SIN))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.DELAY))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXP))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG))==0) {
 						expression += funName+"(";
 					}
 					else {
@@ -170,7 +180,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 						this.exceptions.addAll(vis.exceptions);
 					}
 				}
-				expression = expression.substring(0, expression.length()-1);
+				if(parametersActuals.size()>0) expression = expression.substring(0, expression.length()-1);
 				expression += ")";
 			} else {
 				expression += generateElement(element);
@@ -396,7 +406,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	
 	 boolean isMultistateSitesList(INode n) {
 		 if(n instanceof ArgumentList) {
-			 if(((ArgumentList)n).nodeChoice.which ==0){
+			 if(((ArgumentList)n).nodeChoice.which ==1){
 				 return true;
 			 }  else return false;
 		 }

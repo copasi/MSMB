@@ -18,6 +18,7 @@ import org.nfunk.jep.function.*;
 import parsers.chemicalReaction.MR_ChemicalReaction_Parser;
 import parsers.chemicalReaction.syntaxtree.CompleteReaction;
 import parsers.chemicalReaction.visitor.ExtractSubProdModVisitor;
+import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 
 
@@ -90,8 +91,39 @@ public class CellParsers {
 	}
 	
 	
+	public static boolean isKeyword(String name) {
+		
+		
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) == 0) return true;
+		
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.PI)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.DELAY)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CEIL)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COS)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ABS)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG10)) == 0) return true;
+			if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COSH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TAN)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TANH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SIN)) == 0) return true;
+	
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.FLOOR)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SQRT)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXP)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG)) == 0) return true;
+		return false;
+	}
 	
 	public static boolean isMultistateSpeciesName(String name) {
+		if(MainGui.importFromSBMLorCPS) {
+			//TO FIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIX
+			//I WILL NEED TO CHECK THE ANNOTATION
+			//AND IF THERE IS NO ANNOTATION, EVEN IF IT FOLLOWS OUR SYNTAX I SHOULD SAY IS NOT A MULTIASTATE SPECIES
+			return false;
+		}
+		if(name.startsWith("\"")) return false;
+		
 		InputStream is;
 		try {
 			is = new ByteArrayInputStream(name.getBytes("UTF-8"));
@@ -327,15 +359,40 @@ public class CellParsers {
 		//return cleanName_2(objectName);
 		//return oldCleanName(objectName, species);
 		
-		if(!objectName.startsWith("\"") && 
-				(objectName.indexOf(' ')!=-1 ||
-				 objectName.indexOf('+')!=-1 ||
-				 objectName.indexOf('-')!=-1 ||
-				 objectName.indexOf('*')!=-1 ||
-				 objectName.indexOf('/')!=-1 ||
-				 objectName.indexOf('^')!=-1)) {
-			return new String("\""+objectName+"\"");
+		if(!objectName.startsWith("\"")) {
+			if(objectName.indexOf(' ')!=-1 ||
+					objectName.indexOf('+')!=-1 ||
+					objectName.indexOf('-')!=-1 ||
+					objectName.indexOf('*')!=-1 ||
+					objectName.indexOf('#')!=-1 ||
+					objectName.indexOf('/')!=-1 ||
+					objectName.indexOf('^')!=-1) {
+				return new String("\""+objectName+"\"");
+			}
 			
+			if(objectName.indexOf('\"')!=-1 ){
+				return new String(objectName.replace("\"", "''"));
+			}
+			
+			if(isKeyword(objectName) && objectName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) != 0) {
+				return new String("\""+objectName+"\"");
+			}
+			if(!CellParsers.isMultistateSpeciesName(objectName) && 
+					(objectName.indexOf('(')!=-1 
+					|| objectName.indexOf(':')!=-1 
+					|| objectName.indexOf(',')!=-1
+					|| objectName.indexOf(';')!=-1
+					|| objectName.indexOf('{')!=-1
+					|| objectName.indexOf('}')!=-1)) {
+				return new String("\""+objectName+"\"");
+			}
+			
+			if(objectName.indexOf('.') != -1) {
+				//TO CHECK IF IT'S OK WITH NAME WITH EXTENSIONS IN EXPRESSIONS
+				return new String("\""+objectName+"\"");
+			}
+			
+			else return objectName;
 		}
 		else return objectName;
 	}
@@ -436,7 +493,7 @@ public class CellParsers {
 		while(st_modifiers.hasMoreTokens()) {
 					String species = (String)(st_modifiers.nextToken());
 			    	String mod_to_add = new String(species);
-			    	if(species.contains("(")) {
+			    	if(CellParsers.isMultistateSpeciesName(species)) {
 			    		if(!species.contains(")")) {
 			    			throw new Exception("Only single multisite species states can be used as modifier. No ranges (:) or list (,) operators are allowed");
 			    		}
@@ -669,9 +726,14 @@ public class CellParsers {
 
 	public static String cleanMathematicalExpression(String mathematicalExpression) {
 		String ret = new String(mathematicalExpression);
+		
 		ret = ret.replace(" eq ", "==");
 		ret = ret.replace(" ge ", ">=");
 		ret = ret.replace(" le ", "<=");
+		ret = ret.replace(" gt", ">");
+		ret = ret.replace(" lt", "<");
+		ret = ret.replace(" and ", "&&");
+		ret = ret.replace(" or ", "||");
 		
 		int index_open = mathematicalExpression.indexOf("\"");
 		if(index_open == -1) return ret;
@@ -691,13 +753,22 @@ public class CellParsers {
 		ret = ret.replace(" eq ", "==");
 		ret = ret.replace(" ge ", ">=");
 		ret = ret.replace(" le ", "<=");
-	
+		ret = ret.replace(" gt", ">");
+		ret = ret.replace(" lt", "<");
+		ret = ret.replace(" and ", "&&");
+		ret = ret.replace(" or ", "||");
+		
+		
+		
+		
 		return ret;
 	}
 
 
 	public static boolean isMultistateSpeciesName_withUndefinedStates(String name) {
 		if(name.trim().length() ==0) return false;
+		if(name.startsWith("\"")) return false;
+		
 		InputStream is;
 		try {
 			is = new ByteArrayInputStream(name.getBytes("UTF-8"));

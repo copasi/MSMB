@@ -137,7 +137,6 @@ public class Constants {
 		
 		public static final int DEFAULT_START_INDEX_LIST_STATES = 1;
 		public static final String COPASI_STRING_TIME = "Reference=Time";
-		public static final String NAN_STRING = "nan";
 				
 		public static final int RENAMING_OPTION_ALL = 100;
 		public static final int RENAMING_OPTION_CUSTOM = 101;

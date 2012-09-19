@@ -67,12 +67,11 @@ public class Function implements Comparable<Function> {
 		Vector<String> t = getParametersTypes();
 		Vector<String> n = getParametersNames();
 		String ret = new String(this.getName());
-		if(n.size()==0) return ret;
 		ret += "(";
 		for(int i = 0; i < n.size(); i++) {
 			ret += t.get(i) + " " + n.get(i) + ",";
 		}
-		ret = ret.substring(0, ret.length()-1);
+		if(n.size()>0) ret = ret.substring(0, ret.length()-1);
 		ret += ")";
 		return ret;
 	}
@@ -185,7 +184,8 @@ public class Function implements Comparable<Function> {
 		if(this.type != CFunction.MassAction) {
 			
 			mathematicalExpression = CellParsers.cleanMathematicalExpression(mathematicalExpression);
-			  InputStream is = new ByteArrayInputStream(mathematicalExpression.getBytes("UTF-8"));
+			  
+			InputStream is = new ByteArrayInputStream(mathematicalExpression.getBytes("UTF-8"));
 			  MR_Expression_Parser parser = new MR_Expression_Parser(is);
 			  CompleteExpression root = parser.CompleteExpression();
   			  GetUsedVariablesInEquation v = new GetUsedVariablesInEquation();
@@ -201,6 +201,7 @@ public class Function implements Comparable<Function> {
 			if(!this.completeFunSignatureInTable) {
 				int order = 0;
 				while(it.hasNext()){
+					
 					String n = ((Map.Entry<String,Integer>)it.next()).getKey();
 					parametesOrder.put(n, new Integer(order));
 					order++;
@@ -245,7 +246,6 @@ public class Function implements Comparable<Function> {
 				parametesOrder.put(((Map.Entry<String,Integer>)it.next()).getKey(), new Integer(order));
 				order++;
 			}
-			
 		}
 		
 		fillMissingRoles();

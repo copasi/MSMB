@@ -24,7 +24,10 @@ public class MR_Expression_Parser {
 						"("  , ")"  ,  "{"  ,  "}", " ", "[", "]", 
 					 	"\\", "\""
 						};		*/			  public static void main(String args [])  {
-    try    {      
+    try    {
+
+
+      
        String expression = new String("1*floor(Time/tau)");
       InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  MR_Expression_Parser react = new MR_Expression_Parser(is);
@@ -33,7 +36,7 @@ public class MR_Expression_Parser {
       start.accept(v);
       System.out.println("...................................");
 
-       String expression2 = new String("asdf < sdf && (a < 3 && a > 4)");
+       String expression2 = new String("(asdf < sdf && (a < 3 && a > 4)) > 1");
       InputStream is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  MR_Expression_Parser react2 = new MR_Expression_Parser(is2);
   	  CompleteExpression start2 = react2.CompleteExpression();
@@ -41,6 +44,54 @@ public class MR_Expression_Parser {
       start2.accept(v2);
       System.out.println("...................................");
 
+
+	expression2 = new String("if(ara> 0 && pulse_flag==1,cAra,dAra*ara)");
+is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	   react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      
+	expression2 = new String("asdf < sdf xor (a < 3 && a > 4)");
+	 is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	   react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+
+
+expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*floor(Time/24)) > 1");
+ is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  
+     react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      
+      expression2 = new String("if(X1 > 0,Ks^\"No. of transit compartment (slow)\"/6*exp(-Ks*X1)*X1^(\"No. of transit compartment (slow)\"-1),0)");
+ is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  
+     react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      
+
+      
+	expression2 = new String("1/((exp(0.15*(-V-50))+1))");
+	 is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  
+     react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      
       expression2 = new String("\"funaasdf \"(GLQ v, GLQ t)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  react2 = new MR_Expression_Parser(is2);
@@ -73,16 +124,7 @@ public class MR_Expression_Parser {
       System.out.println("...................................");
 
 
-      
-      expression2 = new String("cdh1(p{1})"); 
-      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
-	  react2 = new MR_Expression_Parser(is2);
-  	  start2 = react2.CompleteExpression();
-      v2 = new MyVisitor();
-      start2.accept(v2);
-      System.out.println("...................................");
-
-     expression2 = new String("SUM(Cdh1)");
+        expression2 = new String("SUM(Cdh1)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  react2 = new MR_Expression_Parser(is2);
   	  start2 = react2.CompleteExpression();
@@ -114,6 +156,24 @@ public class MR_Expression_Parser {
 
        expression2 = new String("SUM(Cdh1;p{0:10};q)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+
+
+       expression2 = new String("kmisfoldSUB*SUB*(ROS*cytosol)");
+       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+       expression2 = new String("1e-006*k*GAP*MOD");
+       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  react2 = new MR_Expression_Parser(is2);
   	  start2 = react2.CompleteExpression();
       v2 = new MyVisitor();
@@ -171,11 +231,21 @@ TOKEN :
 | < EXTENSION_FLUX :  ".f" >
 | < MY_SPECIAL_EXTENSION :  ".*MY*SPECIAL*EXTENSION" >
 | < SUM: "SUM">
+| < DELAY: "delay">
 | < FLOOR: "floor">
+| < CEIL: "ceil">
+| < COS: "cos">
+| < SIN: "sin">
+| < TAN: "tan">
+| < TANH: "tanh">
+| < COSH: "cosh">
 | < SQRT: "sqrt">
 | < EXP: "exp">
 | < LOG: "log">
-| < NAN: "NaN" | "Nan" | "nan" | "NAn" | "naN" | "nAn" | "nAN" | "NAN">
+| < LOG10: "log10">
+| < ABS: "abs">
+| < PI: "PI">
+| < NAN: "NaN" | "nan" | "NAN">
 | < CONST_AVOGADRO : "%NA%" >
 | < CONST_QUANTITY_CONV_FACTOR : "%QFC%" >
 | < CONST_MODEL_TIME : "%ModTime%" >
@@ -197,26 +267,7 @@ TOKEN :
   < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
 }
 
-/* IDENTIFIERS */
 
-TOKEN :
-{
-   < IDENTIFIER: < STRING_LITERAL > |  <LETTER> (<LETTER>|<DIGIT>)* >
-|  < #LETTER:   ["A"-"Z", "_", "a"-"z", "'"] >
-|  < #DIGIT:   ["0"-"9"]  >
-|  <# STRING_LITERAL:
-      "\""
-      (   (~["\"","\\","\n","\r"])
-        | ("\\"
-            ( ["n","t","b","r","f","\\","'","\""]
-            | ["0"-"7"] ( ["0"-"7"] )?
-            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
-            )
-          )
-      )*
-      "\""
-  >
-}
 
 
 /* SEPARATORS */
@@ -254,21 +305,45 @@ TOKEN :
 | < GEQ: ">=" >
 | < NE: "!=" >
 | < OR: "||" >
+| < XOR: "xor" >
 | < AND: "&&" >
+}
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+   < IDENTIFIER: < STRING_LITERAL > |  <LETTER> (<LETTER>|<DIGIT>)* >
+|  < #LETTER:   ["A"-"Z", "_", "a"-"z", "'"] >
+|  < #DIGIT:   ["0"-"9"]  >
+|  <# STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
 }
 
 
 /*****************************************
  * THE MULTIREMI EXPRESSION GRAMMAR STARTS HERE *
  *****************************************/ 
-void CompleteExpression() : {} {
+void CompleteExpression() : {} { 
   Expression() <EOF>
+  //|
+  //IfExpression() (LogicalOperator() Expression())? < EOF > 
 }
 
-void SingleFunctionCall() : {} {
- Name() < LPAREN >  ArgumentList() <  RPAREN > <EOF>
+void SingleFunctionCall() : {} { 
+ Name() < LPAREN > ( ArgumentList() )? <  RPAREN > <EOF>
 }
-
+ 
 void CompleteFunctionDeclaration() :{} {
   FunctionDeclarator() <EOF>}
 
@@ -292,7 +367,7 @@ void FormalParameter() :
 
 void PrimitiveType() :{}
 {
-  < TYPE_PAR >
+  < TYPE_PAR > 
 | < TYPE_VAR >
 | < TYPE_SUB >
 | < TYPE_PROD >
@@ -307,10 +382,13 @@ void VariableDeclaratorId() :{}
    <IDENTIFIER> 
 }
 
+void IfExpression() : {} {
+< IF > < LPAREN > Expression() < COMMA > Expression() (< COMMA > Expression())?  <  RPAREN > 
+}
 
 void Expression() :{}
 {
-  AdditiveExpression() ( RelationalOperator() Expression() (LOOKAHEAD(2) LogicalOperator() Expression())*)?
+	AdditiveExpression() ( RelationalOperator() Expression() (LOOKAHEAD(2) LogicalOperator() Expression())*)?
 } 
 
 void RelationalOperator() :{}
@@ -320,7 +398,7 @@ void RelationalOperator() :{}
 
 void LogicalOperator() :{}
 {
-  < AND > | < OR > 
+  < AND > | < OR > | < XOR >
 }
 
 
@@ -372,6 +450,7 @@ void PrimaryPrefix() :
   SpeciesReferenceOrFunctionCall()
 
 | MultistateSum()
+| IfExpression()
 }
 
 void MultistateSum() : {}
@@ -383,7 +462,8 @@ void MultistateSum() : {}
 void Name() : {}
 {	
 	  <IDENTIFIER> (LOOKAHEAD(2)PossibleExtensions())?
-	  | < TIME > | < FLOOR>   | < LOG > | < EXP > | < NAN >
+	|  PrimitiveType()
+	| < PI >| < TIME > | < FLOOR> | < DELAY > | < CEIL > | < TAN > | < TANH > | < COSH > | < LOG10 >|< ABS> | < COS > | < SIN > | < LOG > | < EXP > | < NAN >
 }
 
 void SpeciesReferenceOrFunctionCall_prefix() :{}
@@ -423,9 +503,8 @@ void BooleanLiteral() :{}
 
 void ArgumentList() :{}
 {
- LOOKAHEAD(2)  MultistateSites_list() 
-|
-AdditiveExpression() ( < COMMA > AdditiveExpression() )*
+ LOOKAHEAD(2)  AdditiveExpression() ( < COMMA > AdditiveExpression() )*
+|  MultistateSites_list() 
  
 }
 

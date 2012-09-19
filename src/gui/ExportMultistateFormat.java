@@ -11,6 +11,7 @@ import debugTab.DebugMessage;
 import model.Function;
 import model.MultistateSpecies;
 import model.Species;
+import utility.CellParsers;
 import utility.Constants;
 
 class ExportMultistateFormat {
@@ -174,7 +175,7 @@ class ExportMultistateFormat {
 		for(int i = 0; i < tablemodel.getRowCount()-1; i++) {
     		String row = new String();
     		String nameSpecie = tablemodel.getValueAt(i, 1).toString();
-    		if(!nameSpecie.contains("(")) {
+    		if(!CellParsers.isMultistateSpeciesName(nameSpecie)) {
     			for(int j = 1; j < tablemodel.getColumnCount(); j++) {
     				String value = tablemodel.getValueAt(i, j).toString();
     				if(value.length() <=0) value = " ";
