@@ -49,137 +49,139 @@ public interface MR_Expression_ParserConstants {
   /** RegularExpression Id. */
   int TYPE_VOL = 25;
   /** RegularExpression Id. */
-  int EXTENSION_CONC = 26;
+  int TYPE_TIME = 26;
   /** RegularExpression Id. */
-  int EXTENSION_PARTICLE = 27;
+  int EXTENSION_CONC = 27;
   /** RegularExpression Id. */
-  int EXTENSION_TRANS = 28;
+  int EXTENSION_PARTICLE = 28;
   /** RegularExpression Id. */
-  int EXTENSION_INIT = 29;
+  int EXTENSION_TRANS = 29;
   /** RegularExpression Id. */
-  int EXTENSION_RATE = 30;
+  int EXTENSION_INIT = 30;
   /** RegularExpression Id. */
-  int EXTENSION_SPECIES = 31;
+  int EXTENSION_RATE = 31;
   /** RegularExpression Id. */
-  int EXTENSION_GLOBALQ = 32;
+  int EXTENSION_SPECIES = 32;
   /** RegularExpression Id. */
-  int EXTENSION_COMPARTMENT = 33;
+  int EXTENSION_GLOBALQ = 33;
   /** RegularExpression Id. */
-  int EXTENSION_REACTION = 34;
+  int EXTENSION_COMPARTMENT = 34;
   /** RegularExpression Id. */
-  int EXTENSION_FUNCTION = 35;
+  int EXTENSION_REACTION = 35;
   /** RegularExpression Id. */
-  int EXTENSION_FLUX = 36;
+  int EXTENSION_FUNCTION = 36;
   /** RegularExpression Id. */
-  int MY_SPECIAL_EXTENSION = 37;
+  int EXTENSION_FLUX = 37;
   /** RegularExpression Id. */
-  int SUM = 38;
+  int MY_SPECIAL_EXTENSION = 38;
   /** RegularExpression Id. */
-  int DELAY = 39;
+  int SUM = 39;
   /** RegularExpression Id. */
-  int FLOOR = 40;
+  int DELAY = 40;
   /** RegularExpression Id. */
-  int CEIL = 41;
+  int FLOOR = 41;
   /** RegularExpression Id. */
-  int COS = 42;
+  int CEIL = 42;
   /** RegularExpression Id. */
-  int SIN = 43;
+  int COS = 43;
   /** RegularExpression Id. */
-  int TAN = 44;
+  int SIN = 44;
   /** RegularExpression Id. */
-  int TANH = 45;
+  int TAN = 45;
   /** RegularExpression Id. */
-  int COSH = 46;
+  int TANH = 46;
   /** RegularExpression Id. */
-  int SQRT = 47;
+  int COSH = 47;
   /** RegularExpression Id. */
-  int EXP = 48;
+  int SQRT = 48;
   /** RegularExpression Id. */
-  int LOG = 49;
+  int EXP = 49;
   /** RegularExpression Id. */
-  int LOG10 = 50;
+  int LOG = 50;
   /** RegularExpression Id. */
-  int ABS = 51;
+  int LOG10 = 51;
   /** RegularExpression Id. */
-  int PI = 52;
+  int ABS = 52;
   /** RegularExpression Id. */
-  int NAN = 53;
+  int PI = 53;
   /** RegularExpression Id. */
-  int CONST_AVOGADRO = 54;
+  int NAN = 54;
   /** RegularExpression Id. */
-  int CONST_QUANTITY_CONV_FACTOR = 55;
+  int CONST_AVOGADRO = 55;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME = 56;
+  int CONST_QUANTITY_CONV_FACTOR = 56;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME_INITIAL = 57;
+  int CONST_MODEL_TIME = 57;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 58;
+  int CONST_MODEL_TIME_INITIAL = 58;
   /** RegularExpression Id. */
-  int FLOATING_POINT_LITERAL = 59;
+  int INTEGER_LITERAL = 59;
   /** RegularExpression Id. */
-  int EXPONENT = 60;
+  int FLOATING_POINT_LITERAL = 60;
   /** RegularExpression Id. */
-  int LPAREN = 61;
+  int EXPONENT = 61;
   /** RegularExpression Id. */
-  int RPAREN = 62;
+  int LPAREN = 62;
   /** RegularExpression Id. */
-  int LBRACE = 63;
+  int RPAREN = 63;
   /** RegularExpression Id. */
-  int RBRACE = 64;
+  int LBRACE = 64;
   /** RegularExpression Id. */
-  int LBRACKET = 65;
+  int RBRACE = 65;
   /** RegularExpression Id. */
-  int RBRACKET = 66;
+  int LBRACKET = 66;
   /** RegularExpression Id. */
-  int SEMICOLON = 67;
+  int RBRACKET = 67;
   /** RegularExpression Id. */
-  int COMMA = 68;
+  int SEMICOLON = 68;
   /** RegularExpression Id. */
-  int COLON = 69;
+  int COMMA = 69;
   /** RegularExpression Id. */
-  int DOT = 70;
+  int COLON = 70;
   /** RegularExpression Id. */
-  int PLUS = 71;
+  int DOT = 71;
   /** RegularExpression Id. */
-  int MINUS = 72;
+  int PLUS = 72;
   /** RegularExpression Id. */
-  int TIMES = 73;
+  int MINUS = 73;
   /** RegularExpression Id. */
-  int DIV = 74;
+  int TIMES = 74;
   /** RegularExpression Id. */
-  int ASSIGN = 75;
+  int DIV = 75;
   /** RegularExpression Id. */
-  int GT = 76;
+  int ASSIGN = 76;
   /** RegularExpression Id. */
-  int LT = 77;
+  int GT = 77;
   /** RegularExpression Id. */
-  int BANG = 78;
+  int LT = 78;
   /** RegularExpression Id. */
-  int CARET = 79;
+  int BANG = 79;
   /** RegularExpression Id. */
-  int PERC = 80;
+  int CARET = 80;
   /** RegularExpression Id. */
-  int EQ = 81;
+  int PERC = 81;
   /** RegularExpression Id. */
-  int LEQ = 82;
+  int EQ = 82;
   /** RegularExpression Id. */
-  int GEQ = 83;
+  int LEQ = 83;
   /** RegularExpression Id. */
-  int NE = 84;
+  int GEQ = 84;
   /** RegularExpression Id. */
-  int OR = 85;
+  int NE = 85;
   /** RegularExpression Id. */
-  int XOR = 86;
+  int OR = 86;
   /** RegularExpression Id. */
-  int AND = 87;
+  int XOR = 87;
   /** RegularExpression Id. */
-  int IDENTIFIER = 88;
+  int AND = 88;
   /** RegularExpression Id. */
-  int LETTER = 89;
+  int IDENTIFIER = 89;
   /** RegularExpression Id. */
-  int DIGIT = 90;
+  int LETTER = 90;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 91;
+  int DIGIT = 91;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 92;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -212,6 +214,7 @@ public interface MR_Expression_ParserConstants {
     "\"MOD\"",
     "\"SITE\"",
     "\"VOL\"",
+    "\"TIME\"",
     "\".c\"",
     "\".p\"",
     "\".t\"",

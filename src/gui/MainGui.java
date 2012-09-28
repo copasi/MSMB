@@ -54,7 +54,6 @@ public class MainGui extends JFrame{
 	
 	static Font customFont = new Font(UIManager.getLookAndFeelDefaults().getFont("Label.font").getName(), Font.PLAIN, 12);
 	private static final long serialVersionUID = 8L;
-	private static final String nameTool = "MultiState Model Builder (MSMB)";
 	
 	private static final boolean DEBUG_SAVE_AT_EACH_STEP = false;
 	private static int DEBUG_STEP = 0;
@@ -271,6 +270,7 @@ public class MainGui extends JFrame{
 	
 	private JFileChooser cpsFileChooser = new JFileChooser();
 	private JFileChooser sbmlFileChooser = new JFileChooser();
+	private JFileChooser xppFileChooser = new JFileChooser();
 	
 	private JButton jButtonDelectAllFunctionToCompact;
 	private JButton jButtonSelectAllFunctionToCompact;
@@ -1327,6 +1327,27 @@ public class MainGui extends JFrame{
 			);
 			
 			menuFile.add(itemSaveCPS);
+			Vector xpp = new Vector();
+			xpp.add("xpp");
+			xppFileChooser.addChoosableFileFilter(new CustomFileFilter(xpp, "XPP files"));
+			JMenuItem itemExportXPP = new JMenuItem("Export XPP...");
+			itemExportXPP.addActionListener(new ActionListener() {
+	            public void actionPerformed(ActionEvent arg0) {
+	            	int returnVal = xppFileChooser.showSaveDialog(null);
+	                if (returnVal == JFileChooser.APPROVE_OPTION) {
+	                        File file = xppFileChooser.getSelectedFile();
+	                        addRecents(file);
+	                        try {
+	                        	exportXPP(file,true);
+							} catch (Exception e) {
+								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+							}
+	                    } 
+	            }
+			}
+			);
+			
+			menuFile.add(itemExportXPP);
 			menuFile.addSeparator();
 			
 			
@@ -2180,7 +2201,68 @@ public class MainGui extends JFrame{
 		 return;
 	}
 	
-    
+	public String exportXPP(File file, boolean withProgressBar) throws Exception {
+			try {
+				validateMultiModel(false,false);
+				
+				Vector<DebugMessage> major = getDebugMessages(DebugConstants.PriorityType.MAJOR.priorityCode);
+				if(major.size() > 0) {
+					throw new Exception("Major issues in the model! It cannot be exported to Copasi-SBML");
+				}
+				
+				if(withProgressBar && file!= null) createAndShowProgressBarFrame(file.getName());
+				String sbmlID =  multiModel.exportXPP(file, tableReactionmodel,progressBarFrame);
+				modelHasBeenModified = false;
+				
+				return sbmlID;
+			} catch (Exception e) {
+				e.printStackTrace();
+				if(MainGui.fromMainGuiTest) throw e;
+				Object[] options = {"Save as .multis", "Cancel"};
+				final JOptionPane optionPane = new JOptionPane(
+						e.getMessage(),
+						JOptionPane.QUESTION_MESSAGE,
+						JOptionPane.YES_NO_OPTION,
+						null,     //do not use a custom Icon
+						options,  //the titles of buttons
+						options[0]); //default button title
+
+				final JDialog dialog = new JDialog(this, 
+						"Model not valid!",
+						true);
+				dialog.setContentPane(optionPane);
+				
+				setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+				
+				optionPane.addPropertyChangeListener(
+						new PropertyChangeListener() {
+							public void propertyChange(PropertyChangeEvent e) {
+								String prop = e.getPropertyName();
+
+								if (dialog.isVisible() 
+										&& (e.getSource() == optionPane)
+										&& (prop.equals(JOptionPane.VALUE_PROPERTY))) {
+									dialog.setVisible(false);
+								}
+							}
+						});
+				dialog.pack();
+				dialog.setLocationRelativeTo(null);
+				dialog.setVisible(true);
+				
+				if(optionPane.getValue() == options[0]) {//save as .multis
+					ExportMultistateFormat.setFile(file);
+		            ExportMultistateFormat.exportMultistateFormat(withProgressBar);
+		            return null;
+				} 
+				
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e.printStackTrace();
+				return null;
+			}
+			
+			
+		}
+		
 	//if file=null then the copasiDataModelID is returned (after validation/compilation)
 	//otherwise the model is saved in file, the model is cleared and null is returned
 	public String saveCPS(File file, boolean withProgressBar) throws Exception {
@@ -2248,7 +2330,6 @@ public class MainGui extends JFrame{
 	//the copasiDataModelID is returned (after validation/compilation)
 	public String saveCPS() throws Exception {
 		String id = saveCPS(null,true);
-		//Serialize4Debug.writeCopasiStateSummary(id, "IN_SAVECPS()");
 		return id;
 	}
 		
@@ -3021,6 +3102,22 @@ public class MainGui extends JFrame{
 		
 		if(reaction_string.trim().length() == 0) return;
 		
+		
+		
+		try{ 
+			CellParsers.parseReaction(this.multiModel,reaction_string,nrow-1);
+		} catch(Exception ex) { //stop strings like 2*a -> which are wrong formatted
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+			EditableCellRenderer edicr = (EditableCellRenderer)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.REACTION.index));
+			edicr.cell_has_errors(row);
+			tableReactionmodel.setValueAt_withoutUpdate(reaction_string, row, Constants.ReactionsColumns.REACTION.index);
+			statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
+			jTableReactions.revalidate();
+			recolorCellsWithErrors();
+			return;
+		}
+
+		
 		boolean oldAutocompleteWithDefaults = autocompleteWithDefaults;
 		if(show_defaults_dialog_window && actionInColumnName) {
 				species_default_for_dialog_window = multiModel.getUndefinedSpeciesInReaction(nrow, reaction_string);
@@ -3101,7 +3198,6 @@ public class MainGui extends JFrame{
 		
 		
 	if(autocompleteWithDefaults && actionInColumnName) addDefaultCompartment_ifNecessary(compartment_default_for_dialog_window);
-	
 	
 	try{
 		Vector updated_rows = multiModel.updateReaction(nrow+1, name, reaction_string, type, equation, exp, notes, autocompleteWithDefaults,actionInColumnName);
@@ -4340,7 +4436,7 @@ public class MainGui extends JFrame{
 			if(ind!= -1)jTabGeneral.setSelectedIndex(ind);
 			dialogAcceptRejectShowed = false;
 		} catch(Exception ex) {
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				ex.printStackTrace();
 			System.out.println("Something wrong in the updateModelFromTable: ");
 			System.out.println("--> "+ex.getMessage());
@@ -4802,6 +4898,7 @@ public class MainGui extends JFrame{
 			val = db.findFunction(funcs.get(i).getObjectName());
 					
 			String pureNameFunc = CellParsers.cleanName(val.getObjectName());
+		
 			CFunction cfun = (CFunction)val;
 			try {
 				Function f = new Function(pureNameFunc); 
@@ -4817,14 +4914,19 @@ public class MainGui extends JFrame{
 				CFunctionParameters variables = cfun.getVariables();
 				
 				for(int n = 0; n < names.size(); n++) {
-					int type = (variables.getParameter(cfun.getVariableIndex(names.get(n)))).getUsage(); 
+					String unquoted = names.get(n);
+					if(unquoted.startsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
+					int type = (variables.getParameter(cfun.getVariableIndex(unquoted))).getUsage(); 
 					//PAR in native function can be a number --> VAR in my interpretation
 					if(type==CFunctionParameter.PARAMETER) type = CFunctionParameter.VARIABLE;
 					f.setParameterRole(names.get(n), type  );
 				}
 				for(int n = 0; n < names.size(); n++) {
 					//System.out.println("index:" + names.get(n));
-					f.setParameterIndex(names.get(n), cfun.getVariableIndex(names.get(n)));
+					String unquoted = names.get(n);
+					if(unquoted.startsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
+				
+					f.setParameterIndex(names.get(n), cfun.getVariableIndex(unquoted));
 				}
 				f.setCompleteFunSignatureInTable(true);
 				multiModel.funDB.addChangeFunction(indexFun, f);
@@ -5358,7 +5460,7 @@ public class MainGui extends JFrame{
 		setSize(700, 539);
 		setJMenuBar(getJJMenuBar());
 		setContentPane(getJContentPane());
-		setTitle(nameTool+" - version 0."+serialVersionUID);
+		setTitle(Constants.TOOL_NAME_FULL+" - version 0."+serialVersionUID);
 		setLocationRelativeTo(null);
 		
 	 	
@@ -5990,7 +6092,6 @@ public class MainGui extends JFrame{
 		
 		CellParsers.parser.parseExpression(editableView);
 		if(CellParsers.parser.getErrorInfo()!= null) {
-				System.out.println(CellParsers.parser.getErrorInfo());
 				try {
 					throw new Exception(CellParsers.parser.getErrorInfo());
 				} catch (Exception e) {
@@ -6002,7 +6103,6 @@ public class MainGui extends JFrame{
 		
 		CellParsers.parser.parseExpression(viewToCheck);
 		if(CellParsers.parser.getErrorInfo()!= null) {
-				System.out.println(CellParsers.parser.getErrorInfo());
 				try {
 					throw new Exception(CellParsers.parser.getErrorInfo());
 				} catch (Exception e) {

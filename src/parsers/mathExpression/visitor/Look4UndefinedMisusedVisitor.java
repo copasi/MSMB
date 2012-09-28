@@ -233,7 +233,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			if(modify)sumExpansion.set(indexSum,se);
 			else sumExpansion.add(se);
 		}
-		System.out.println("print sumExpansion "+sumExpansion);
+		//System.out.println("print sumExpansion "+sumExpansion);
 	}
 	
 	
@@ -299,7 +299,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					if(!res) break;
 				}
 			}
-			System.out.println("print sumExpansion inside"+sumExpansion);
+			//System.out.println("print sumExpansion inside"+sumExpansion);
 	}
 
 	
@@ -351,7 +351,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			if(sequenceOrRange.which == 0) {//sequence
 				
 				int quanti = ((NodeSequence)(sequenceOrRange.choice)).nodes.size();
-				System.out.println("ce ne sono altri   "+quanti);
+			//	System.out.println("ce ne sono altri   "+quanti);
 				//I HAVE TO EXTACT ALL THE ELEMENTS
 			} else { // range
 				String stateSecond = ToStringVisitor.toString(((NodeSequence)(sequenceOrRange.choice)).nodes.get(1));
@@ -361,8 +361,8 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			
 			
 			Vector states = sp.getSiteStates_complete(nameSiteOrFuN);
-			System.out.println("listedStates "+listedStates);
-			System.out.println("existing  "+states);
+		//	System.out.println("listedStates "+listedStates);
+		//	System.out.println("existing  "+states);
 			
 			
 			for(int i1 = 0; i1< listedStates.size(); i1++) {
@@ -619,7 +619,13 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 				
 				Vector<Integer> definedInTable = multiModel.getWhereNameIsUsed(element);
 				if(definedInTable==null){//it means that is a number or an expression... and if the function requires something else than a variable, this is not allowed
-					if(!missing.contains(element)) { // because if it is missing it is also misused, but the user should see only the missing error
+					if(element.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CONST_MODEL_TIME))==0 ||
+							element.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CONST_MODEL_TIME_INITIAL))==0) {
+						if(types.get(i).compareTo(Constants.FunctionParamType.TIME.signatureType)!=0) {
+								misused.add("Encountered \""+element+"\". Was expecting a "+types.get(i));
+						}
+					}
+					else if(!missing.contains(element)) { // because if it is missing it is also misused, but the user should see only the missing error
 						misused.add("Encountered \""+element+"\". Was expecting a "+types.get(i));
 					}
 				}

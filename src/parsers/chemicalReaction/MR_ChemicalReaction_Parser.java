@@ -20,6 +20,13 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       DepthFirstVoidVisitor v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
+      expression = new String("2*a ->");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
       expression = new String("Cdh1(p{1:10}) -> Cdh1(SDFGSDFGSDF(p))");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
       react = new MR_ChemicalReaction_Parser(is);
@@ -599,21 +606,6 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     finally { jj_save(2, xla); }
   }
 
-  private boolean jj_3R_21() {
-    if (jj_3R_24()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_24() {
-    if (jj_scan_token(23)) return true;
-    return false;
-  }
-
-  private boolean jj_3_3() {
-    if (jj_3R_24()) return true;
-    return false;
-  }
-
   private boolean jj_3R_27() {
     if (jj_scan_token(IDENTIFIER)) return true;
     return false;
@@ -698,6 +690,21 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   }
 
   private boolean jj_3R_22() {
+    if (jj_3R_24()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_21() {
+    if (jj_3R_24()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_24() {
+    if (jj_scan_token(23)) return true;
+    return false;
+  }
+
+  private boolean jj_3_3() {
     if (jj_3R_24()) return true;
     return false;
   }

@@ -100,6 +100,16 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
       start3.accept(v2);
       System.out.println("...................................");
 
+
+ expression2 = new String("function(par1, par2, %ModTime%)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+      
        expression2 = new String("k1*a^b");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  react2 = new MR_Expression_Parser(is2);
@@ -217,7 +227,7 @@ TOKEN :
 | < TYPE_MOD :  "MOD" > 
 | < TYPE_SITE :  "SITE" >
 | < TYPE_VOL :  "VOL" >
-
+| < TYPE_TIME :  "TIME" >
 | < EXTENSION_CONC :  ".c" >
 | < EXTENSION_PARTICLE :  ".p" >
 | < EXTENSION_TRANS :  ".t" >
@@ -374,6 +384,7 @@ void PrimitiveType() :{}
 | < TYPE_MOD >
 | < TYPE_SITE >
 | < TYPE_VOL >
+| < TYPE_TIME >
 }
 
 
@@ -451,6 +462,7 @@ void PrimaryPrefix() :
 
 | MultistateSum()
 | IfExpression()
+| < CONST_MODEL_TIME > | < CONST_AVOGADRO > |  <  CONST_QUANTITY_CONV_FACTOR > | < CONST_MODEL_TIME_INITIAL >
 }
 
 void MultistateSum() : {}

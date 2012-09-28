@@ -26,39 +26,30 @@ public class BiomodelTest {
 		id_delay.add("BIOMD0000000034");
 		id_delay.add("BIOMD0000000154");
 		id_delay.add("BIOMD0000000155");
-		id_delay.add("BIOMD0000000177"); //simulations not possible because exception numerical instability 
 		id_delay.add("BIOMD0000000196");
 		id_delay.add("BIOMD0000000297"); // simulations not possible because: Simultaneous event assignments encountered. The simulation cannot continue.
 	}				  
 	
 	
-	//IDs with delay --> NO SIMULATION ALLOWED 
 	public static final Vector<String> models_with_known_problems;
 		static {
 			models_with_known_problems = new Vector<String>();
-			models_with_known_problems.add("BIOMD0000000293");
 			models_with_known_problems.add("BIOMD0000000388");
 			models_with_known_problems.add("BIOMD0000000322");
 			models_with_known_problems.add("BIOMD0000000410");
 			models_with_known_problems.add("BIOMD0000000411");
 			models_with_known_problems.add("BIOMD0000000415"); 
-			models_with_known_problems.add("BIOMD0000000112");
-			models_with_known_problems.add("BIOMD0000000174");
-			models_with_known_problems.add("BIOMD0000000055");
-			models_with_known_problems.add("BIOMD0000000214");
-			models_with_known_problems.add("BIOMD0000000234");
-			models_with_known_problems.add("BIOMD0000000295");
-			models_with_known_problems.add("BIOMD0000000412");
-			models_with_known_problems.add("BIOMD0000000350");
 			models_with_known_problems.add("BIOMD0000000143");
 			models_with_known_problems.add("BIOMD0000000226");
 			models_with_known_problems.add("BIOMD0000000227");
+			models_with_known_problems.add("BIOMD0000000380");
 			models_with_known_problems.add("BIOMD0000000396");
 			models_with_known_problems.add("BIOMD0000000397");
 			models_with_known_problems.add("BIOMD0000000266");
 			models_with_known_problems.add("BIOMD0000000255");
-			models_with_known_problems.add("BIOMD0000000422");
 		}
+		
+		
 	
 	
 	public static void main(String[] args) {
@@ -134,6 +125,8 @@ public class BiomodelTest {
 		
 		System.exit(0);
 	}
+	
+	
 		public void runTest(){
 		try{
 			MainGui m = new MainGui();
@@ -161,15 +154,16 @@ public class BiomodelTest {
 				}
 			}					
 			generateLogReport();
+		
 			
-				
+
 			FileOutputStream buffoutProgressLog= new FileOutputStream(progressLog,true);
 	    	PrintWriter outProgressLog = new PrintWriter(new OutputStreamWriter(buffoutProgressLog,"UTF-8"));
 	    	SimpleDateFormat formatDate = new SimpleDateFormat("HH:mm:ss:SS");
 	    
 	    	for(int i = 0; i < indices.size(); i++) {
 				Integer index = indices.get(i);
-				if(index == 0) break;
+				if(index == 0) continue;
 				String sbmlID = curatedIDs.get(index-1);
 				if(models_with_known_problems.contains(sbmlID)){
 					System.out.println("Model with known problems. We are working to solve them :)");
@@ -210,6 +204,7 @@ public class BiomodelTest {
 							cpsFile.getAbsolutePath(),
 							sbmlFile.getAbsolutePath(), 
 							2000, 200,new File(nameFileLogReport).getAbsolutePath());
+					
 					
 					outProgressLog.println(sbmlID + ", simulated , "+ formatDate.format(new Date()));
 					outProgressLog.flush();
@@ -324,7 +319,7 @@ public class BiomodelTest {
 				if(!file.exists()) {
 					FileOutputStream buffout= new FileOutputStream(file.getAbsolutePath());
 					PrintWriter out = new PrintWriter(new OutputStreamWriter(buffout,"UTF-8"));
-					out.println("StartIF, IDNumber, MaxPercentageError,  SimulatedFrom, Simulated to, NumberSteps, MaxPercentageErrorOnSpecies");
+					out.println("StartIF, IDNumber, MaxPercentageError, MaxAbsoluteError,  SimulatedFrom, Simulated to, NumberSteps, MaxPercentageErrorOnSpecies");
 					out.flush();
 					out.println();
 					out.close();

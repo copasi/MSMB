@@ -138,6 +138,7 @@ public interface IRetVisitor<R> {
    * .......... .. | %4 < TYPE_MOD ><br>
    * .......... .. | %5 < TYPE_SITE ><br>
    * .......... .. | %6 < TYPE_VOL ><br>
+   * .......... .. | %7 < TYPE_TIME ><br>
    *
    * @param n the node to visit
    * @return the user return information
@@ -285,6 +286,10 @@ public interface IRetVisitor<R> {
    * .......... .. | %2 SpeciesReferenceOrFunctionCall()<br>
    * .......... .. | %3 MultistateSum()<br>
    * .......... .. | %4 IfExpression()<br>
+   * .......... .. | %5 < CONST_MODEL_TIME ><br>
+   * .......... .. | %6 < CONST_AVOGADRO ><br>
+   * .......... .. | %7 < CONST_QUANTITY_CONV_FACTOR ><br>
+   * .......... .. | %8 < CONST_MODEL_TIME_INITIAL ><br>
    *
    * @param n the node to visit
    * @return the user return information

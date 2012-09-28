@@ -11,6 +11,10 @@ import parsers.mathExpression.visitor.*;
  * .......... .. | %2 SpeciesReferenceOrFunctionCall()<br>
  * .......... .. | %3 MultistateSum()<br>
  * .......... .. | %4 IfExpression()<br>
+ * .......... .. | %5 < CONST_MODEL_TIME ><br>
+ * .......... .. | %6 < CONST_AVOGADRO ><br>
+ * .......... .. | %7 < CONST_QUANTITY_CONV_FACTOR ><br>
+ * .......... .. | %8 < CONST_MODEL_TIME_INITIAL ><br>
  */
 public class PrimaryPrefix implements INode {
 

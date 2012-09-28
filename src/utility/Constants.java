@@ -1013,6 +1013,7 @@ public class Constants {
 			   VOLUME(5,"Volume", CFunctionParameter.VOLUME,"VOL"),
 			//   FUNCTION(6,"Function", Constants.PARAM_TYPE_FUN,"FUN"),
 			   SITE(6,"Site", Constants.SITE_FOR_WEIGHT_IN_SUM,"SITE"),
+			   TIME(7,"Time", CFunctionParameter.TIME,"TIME"),
 			   MISSING(-1,"Missing", -1,"MISSING");
 				   
 						          
@@ -1176,8 +1177,11 @@ public class Constants {
 		}
 		
 		public static final Vector<String> quantityUnits;
-		public static final String RECENT_FILE_NAME = new String("MultiStateGui_recents.cfg");
-		public static final String PREFERENCES_FILE_NAME = new String("MultiStateGui_preferences.cfg");
+		public static final String TOOL_NAME = new String("MSMB");
+		public static final String TOOL_NAME_FULL = "MultiState Model Builder (MSMB)";
+		
+		public static final String RECENT_FILE_NAME = new String(TOOL_NAME+"_recents.cfg");
+		public static final String PREFERENCES_FILE_NAME = new String(TOOL_NAME+"_preferences.cfg");
 		public static final String MultistateBuilder_QUANTITIES_description = new String("Initial quantities");
 		public static final int DELETE_JUST_ENTITIES = 5640;
 		public static final int DELETE_RECURSIVELY_ALL = 4321;

@@ -81,6 +81,13 @@ public class MR_Expression_Parser {
       v2 = new MyVisitor();
       start3.accept(v2);
       System.out.println("...................................");
+      expression2 = new String("function(par1, par2, %ModTime%)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
       expression2 = new String("k1*a^b");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2);
@@ -206,6 +213,7 @@ TOKEN :
 | < TYPE_MOD : "MOD" >
 | < TYPE_SITE : "SITE" >
 | < TYPE_VOL : "VOL" >
+| < TYPE_TIME : "TIME" >
 | < EXTENSION_CONC : ".c" >
 | < EXTENSION_PARTICLE : ".p" >
 | < EXTENSION_TRANS : ".t" >
@@ -448,36 +456,42 @@ PrimitiveType PrimitiveType() :
   Token n12 = null;
   NodeToken n13 = null;
   Token n14 = null;
+  NodeToken n15 = null;
+  Token n16 = null;
 }
 {
   (
     n2 = < TYPE_PAR >
     { n1 = JTBToolkit.makeNodeToken(n2); }
-    { n0 = new NodeChoice(n1, 0, 7); }
+    { n0 = new NodeChoice(n1, 0, 8); }
   |
     n4 = < TYPE_VAR >
     { n3 = JTBToolkit.makeNodeToken(n4); }
-    { n0 = new NodeChoice(n3, 1, 7); }
+    { n0 = new NodeChoice(n3, 1, 8); }
   |
     n6 = < TYPE_SUB >
     { n5 = JTBToolkit.makeNodeToken(n6); }
-    { n0 = new NodeChoice(n5, 2, 7); }
+    { n0 = new NodeChoice(n5, 2, 8); }
   |
     n8 = < TYPE_PROD >
     { n7 = JTBToolkit.makeNodeToken(n8); }
-    { n0 = new NodeChoice(n7, 3, 7); }
+    { n0 = new NodeChoice(n7, 3, 8); }
   |
     n10 = < TYPE_MOD >
     { n9 = JTBToolkit.makeNodeToken(n10); }
-    { n0 = new NodeChoice(n9, 4, 7); }
+    { n0 = new NodeChoice(n9, 4, 8); }
   |
     n12 = < TYPE_SITE >
     { n11 = JTBToolkit.makeNodeToken(n12); }
-    { n0 = new NodeChoice(n11, 5, 7); }
+    { n0 = new NodeChoice(n11, 5, 8); }
   |
     n14 = < TYPE_VOL >
     { n13 = JTBToolkit.makeNodeToken(n14); }
-    { n0 = new NodeChoice(n13, 6, 7); }
+    { n0 = new NodeChoice(n13, 6, 8); }
+  |
+    n16 = < TYPE_TIME >
+    { n15 = JTBToolkit.makeNodeToken(n16); }
+    { n0 = new NodeChoice(n15, 7, 8); }
   )
   { return new PrimitiveType(n0); }
 }
@@ -852,11 +866,19 @@ PrimaryPrefix PrimaryPrefix() :
   SpeciesReferenceOrFunctionCall n8 = null;
   MultistateSum n9 = null;
   IfExpression n10 = null;
+  NodeToken n11 = null;
+  Token n12 = null;
+  NodeToken n13 = null;
+  Token n14 = null;
+  NodeToken n15 = null;
+  Token n16 = null;
+  NodeToken n17 = null;
+  Token n18 = null;
 }
 {
   (
     n1 = Literal()
-    { n0 = new NodeChoice(n1, 0, 5); }
+    { n0 = new NodeChoice(n1, 0, 9); }
   |
     { n2 = new NodeSequence(3); }
     n4 = < LPAREN >
@@ -867,16 +889,32 @@ PrimaryPrefix PrimaryPrefix() :
     n7 = < RPAREN >
     { n6 = JTBToolkit.makeNodeToken(n7); }
     { n2.addNode(n6); }
-    { n0 = new NodeChoice(n2, 1, 5); }
+    { n0 = new NodeChoice(n2, 1, 9); }
   |
     n8 = SpeciesReferenceOrFunctionCall()
-    { n0 = new NodeChoice(n8, 2, 5); }
+    { n0 = new NodeChoice(n8, 2, 9); }
   |
     n9 = MultistateSum()
-    { n0 = new NodeChoice(n9, 3, 5); }
+    { n0 = new NodeChoice(n9, 3, 9); }
   |
     n10 = IfExpression()
-    { n0 = new NodeChoice(n10, 4, 5); }
+    { n0 = new NodeChoice(n10, 4, 9); }
+  |
+    n12 = < CONST_MODEL_TIME >
+    { n11 = JTBToolkit.makeNodeToken(n12); }
+    { n0 = new NodeChoice(n11, 5, 9); }
+  |
+    n14 = < CONST_AVOGADRO >
+    { n13 = JTBToolkit.makeNodeToken(n14); }
+    { n0 = new NodeChoice(n13, 6, 9); }
+  |
+    n16 = < CONST_QUANTITY_CONV_FACTOR >
+    { n15 = JTBToolkit.makeNodeToken(n16); }
+    { n0 = new NodeChoice(n15, 7, 9); }
+  |
+    n18 = < CONST_MODEL_TIME_INITIAL >
+    { n17 = JTBToolkit.makeNodeToken(n18); }
+    { n0 = new NodeChoice(n17, 8, 9); }
   )
   { return new PrimaryPrefix(n0); }
 }

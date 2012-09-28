@@ -29,7 +29,7 @@ public class Serialize4Debug {
 	public static void writeCopasiStateSummary(String copasiDataModelSBML_ID, String testName) throws Exception {
 		for (long s = 0; s < CCopasiRootContainer.getDatamodelList().size(); s++) 
 		   {
-			 CCopasiDataModel copasiDataModel = CCopasiRootContainer.getDatamodel(s);
+			 CCopasiDataModel copasiDataModel = CCopasiRootContainer.get(s); //CCopasiRootContainer.getDatamodel(s); //
 			 CModel model = copasiDataModel.getModel();
 			 if (model.getSBMLId().compareTo(copasiDataModelSBML_ID) == 0)	 {
 				 writeCopasiStateSummary(model, testName);

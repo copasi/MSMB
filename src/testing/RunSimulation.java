@@ -15,6 +15,7 @@ import java.nio.channels.FileChannel;
 import org.COPASI.*;
 
 import rcaller.RCaller;
+import utility.Serialize4Debug;
 
 
 public class RunSimulation {
@@ -23,16 +24,19 @@ public class RunSimulation {
 	private static long steps;
 	private static double maxTime;
 	
-	private static String RSCRIPT_PATH = new String();
 	
-	public static void setRScriptPath(String s) { RSCRIPT_PATH = new String(s);}
-			
+	private static String RSCRIPT_PATH = new String("");
+	
+	
+	public static void setRScriptPath(String s) {RSCRIPT_PATH = s; }
+	
 	public static void RunSimulations_CPSfromMSMB_OriginalSBML(String filename_CPS, String filename_SBML, long nsteps, int time, String nameFileLogReport) throws Exception {
 		 steps  = nsteps;
 		 maxTime = time;
 
 		 dataModel.loadModel(filename_CPS);
 		 createTimeSeriesReport(filename_CPS);
+		 
 
 		 dataModel.importSBML(filename_SBML);
 		 createTimeSeriesReport(filename_SBML);
@@ -95,10 +99,11 @@ public class RunSimulation {
 
 
 	public static void compareGeneratedTXTWithCorrectTXT(String fileName1, String fileName2, String nameFileLogReport) throws IOException {
-	    	RCaller caller = new RCaller();
-	    	caller.cleanRCode();
-	    	caller.setRscriptExecutable(RSCRIPT_PATH);
-	    	
+			RCaller caller = new RCaller();
+			caller.cleanRCode();
+						
+    		caller.setRscriptExecutable(RSCRIPT_PATH);
+    	
 	    	fileName1 = fileName1.substring(0,fileName1.lastIndexOf("."))+".txt";
 	    	fileName2 = fileName2.substring(0,fileName2.lastIndexOf("."))+".txt";
 	    	fileName2 = fileName2.substring(0,fileName2.lastIndexOf("."))+".txt";
@@ -114,7 +119,11 @@ public class RunSimulation {
 	    	File file = caller.startPlot();  
 	       	caller.addRCode(RCode_generatePlotsFromTXTs);
 	    	caller.endPlot();
-	        caller.runOnly();
+	        try{
+	        	caller.runOnly();
+	        }catch(Exception ex) {
+	        	ex.printStackTrace();
+	        }
 	        copyFile(file, new File((new File(fileName1).getParent())+System.getProperty("file.separator")+baseName+".png")); 
 	   }
 		
@@ -145,10 +154,14 @@ public class RunSimulation {
 
 	 public static void createTimeSeriesReport(String fileName) throws Exception {
 		 CModel model = dataModel.getModel();
-
+		
 		 // create a report with the correct filename and all the species against
 		 // time.
 		 CReportDefinitionVector reports = dataModel.getReportDefinitionList();
+		 reports.cleanup();
+		 reports.clear();
+		 
+	
 		 // create a new report definition object
 		 CReportDefinition report = reports.createReportDefinition("Report", "Output for timecourse");
 		 // set the task type for the report definition to timecourse
@@ -214,10 +227,9 @@ public class RunSimulation {
 				 }
 		 }
 
-
 		 // get the trajectory task object
 		 CTrajectoryTask trajectoryTask = (CTrajectoryTask)dataModel.getTask("Time-Course");
-		 assert trajectoryTask != null;
+		 
 		 // if there isn't one
 		 if (trajectoryTask == null)
 		 {
@@ -229,7 +241,7 @@ public class RunSimulation {
 			 // by the list and that it does not get deleted by SWIG
 			 dataModel.getTaskList().addAndOwn(trajectoryTask);
 		 }
-
+		 
 		 // run a deterministic time course
 		 trajectoryTask.setMethodType(CCopasiMethod.deterministic);
 
@@ -263,10 +275,8 @@ public class RunSimulation {
 		 CTrajectoryMethod method = (CTrajectoryMethod)trajectoryTask.getMethod();
 
 		 CCopasiParameter parameter = method.getParameter("Absolute Tolerance");
-		 assert parameter != null;
-		 assert parameter.getType() == CCopasiParameter.DOUBLE;
 		 parameter.setDblValue(1.0e-12);
-
+		
 		 boolean result=true;
 		 try
 		 {
@@ -276,9 +286,14 @@ public class RunSimulation {
 		 catch (Exception ex)
 		 {
 				fileName = fileName.replace('\\','/');
-		    	String baseName = fileName.substring(fileName.lastIndexOf("/")+1,fileName.lastIndexOf("_"));
+		    	String baseName2 = fileName.substring(fileName.lastIndexOf("/")+1,fileName.lastIndexOf("_"));
 		    
-			 if(!BiomodelTest.id_delay.contains(baseName)) ex.printStackTrace();
+		    	trajectoryTask.restore();
+				 trajectoryTask.clearRefresh();
+				 trajectoryTask.clearDirectDependencies();
+				 trajectoryTask.cleanup();
+				 
+		    	if(!BiomodelTest.id_delay.contains(baseName2)) ex.printStackTrace();
 			// System.err.println( "Error. Running the time course simulation failed." );
 			 // check if there are additional error messages
 			 if (CCopasiMessage.size() > 0)
@@ -317,6 +332,7 @@ public class RunSimulation {
 				"row1=both[1]"+System.getProperty("line.separator")+
 				"col1=both[2]"+System.getProperty("line.separator")+
 				"max_percentage_error = 100*abs(table1[row1,col1]-table2[row1,col1])/(max(abs(table1[row1,col1]),abs(table2[row1,col1])))"+System.getProperty("line.separator")+
+				"max_abs_error = abs(table1[row1,col1]-table2[row1,col1])"+System.getProperty("line.separator")+
 				"if(length(which((table1 == table2)==FALSE))>0) {"+System.getProperty("line.separator")+
 				"	subtitle = (paste(colnames(table1)[col1],table1[row1,col1],table2[row1,col1], \"  percentageError=\", max_percentage_error))"+System.getProperty("line.separator")+
 				"} else {"+System.getProperty("line.separator")+
@@ -338,7 +354,7 @@ public class RunSimulation {
 				"}"+System.getProperty("line.separator")+
 				"logData = c(\"BIOMD0000000\", "+System.getProperty("line.separator")+
 				"		substr(file2, nchar(file2)-6, nchar(file2)-4), "+System.getProperty("line.separator")+
-				"		max_percentage_error,"+System.getProperty("line.separator")+
+				"		max_percentage_error,max_abs_error,"+System.getProperty("line.separator")+
 				"		table1[1,1], "+System.getProperty("line.separator")+
 				"		table1[nrow(table1),1],"+System.getProperty("line.separator")+
 				"		nrow(table1), "+System.getProperty("line.separator")+

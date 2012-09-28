@@ -14,6 +14,10 @@
 	    	<fileset dir="${java.home}\lib" includes="**/*.jar"/>			
 	</path>
 	
+	<path id="manifestClassPath">
+		 <fileset dir="${libs}" includes="**/*.jar"/>
+	</path>
+	
 	<path id="master-classpath">
 	  <fileset dir="${libs}">
 	    <include name="*.jar"/>
@@ -154,15 +158,19 @@
 	    <delete dir="${build}"/>
 	    <delete dir="${dist}"/>
 	  </target>
+	 
 
     <target name="create_run_jar_packJar" depends="check-architecture,compile">
-         <jar destfile="${dist}/${project.name}.jar">
-            <manifest>
-                <attribute name="Main-Class" value="gui.MainGui"/>
-                <attribute name="Class-Path" value="."/>
+    	<manifestclasspath property="manifest.classpath" jarfile="${dist}/${project.name}.jar">
+    	      <classpath refid="manifestClassPath"/>
+    	    </manifestclasspath>    
+    	<jar destfile="${dist}/${project.name}.jar">
+         	<manifest>
+            	 <attribute name="Main-Class" value="gui.MainGui"/>
+                 <attribute name="Class-Path" value="${manifest.classpath}"/>
             </manifest>
         		   <fileset dir="${build}"/>
-    	   		   <zipfileset excludes="META-INF/*.SF" src="libs/copasi.jar"/>
+    	   		   <!--<zipfileset excludes="META-INF/*.SF" src="libs/copasi.jar"/>
     	           <zipfileset excludes="META-INF/*.SF" src="libs/djep-full-latest.jar"/>
     	           <zipfileset excludes="META-INF/*.SF" src="libs/guava-r09.jar"/>
     	           <zipfileset excludes="META-INF/*.SF" src="libs/junit.jar"/>
@@ -172,7 +180,7 @@
                    <zipfileset excludes="META-INF/*.SF" src="libs/commons-lang3-3.1.jar"/>
            		 <zipfileset excludes="META-INF/*.SF" src="libs/itextpdf-5.2.1.jar"/>
          		<zipfileset excludes="META-INF/*.SF" src="libs/RCaller-2.1.0-SNAPSHOT.jar"/>
-         	<zipfileset excludes="META-INF/*.SF" src="libs/biomodels-wslib_standalone-1.21.jar"/>
+         	<zipfileset excludes="META-INF/*.SF" src="libs/biomodels-wslib_standalone-1.21.jar"/>-->
           	</jar>
     </target>
 	

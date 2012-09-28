@@ -252,6 +252,7 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * .......... .. | %4 < TYPE_MOD ><br>
    * .......... .. | %5 < TYPE_SITE ><br>
    * .......... .. | %6 < TYPE_VOL ><br>
+   * .......... .. | %7 < TYPE_TIME ><br>
    *
    * @param n the node to visit
    * @param argu the user argument
@@ -266,6 +267,7 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     // .......... .. | %4 < TYPE_MOD >
     // .......... .. | %5 < TYPE_SITE >
     // .......... .. | %6 < TYPE_VOL >
+    // .......... .. | %7 < TYPE_TIME >
     n.nodeChoice.accept(this, argu);
     return nRes;
   }
@@ -510,6 +512,10 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * .......... .. | %2 SpeciesReferenceOrFunctionCall()<br>
    * .......... .. | %3 MultistateSum()<br>
    * .......... .. | %4 IfExpression()<br>
+   * .......... .. | %5 < CONST_MODEL_TIME ><br>
+   * .......... .. | %6 < CONST_AVOGADRO ><br>
+   * .......... .. | %7 < CONST_QUANTITY_CONV_FACTOR ><br>
+   * .......... .. | %8 < CONST_MODEL_TIME_INITIAL ><br>
    *
    * @param n the node to visit
    * @param argu the user argument
@@ -522,6 +528,10 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     // .......... .. | %2 SpeciesReferenceOrFunctionCall()
     // .......... .. | %3 MultistateSum()
     // .......... .. | %4 IfExpression()
+    // .......... .. | %5 < CONST_MODEL_TIME >
+    // .......... .. | %6 < CONST_AVOGADRO >
+    // .......... .. | %7 < CONST_QUANTITY_CONV_FACTOR >
+    // .......... .. | %8 < CONST_MODEL_TIME_INITIAL >
     n.nodeChoice.accept(this, argu);
     return nRes;
   }

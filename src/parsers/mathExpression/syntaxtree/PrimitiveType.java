@@ -13,6 +13,7 @@ import parsers.mathExpression.visitor.*;
  * .......... .. | %4 < TYPE_MOD ><br>
  * .......... .. | %5 < TYPE_SITE ><br>
  * .......... .. | %6 < TYPE_VOL ><br>
+ * .......... .. | %7 < TYPE_TIME ><br>
  */
 public class PrimitiveType implements INode {
 

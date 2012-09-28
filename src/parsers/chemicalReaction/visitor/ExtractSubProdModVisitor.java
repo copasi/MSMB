@@ -40,15 +40,53 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 			return ret;	
 		}
 		
-		public Vector<Vector<MutablePair<Double,String>>> getAll_asString() {	
-			Vector ret = new Vector<Vector<String>> ();
+		public Vector<Vector<String>> getAll_asString() {	
+			Vector ret = new Vector<Vector<MutablePair<Double,String>>> ();
 			ret.add(getSubstrates_asString());
-			ret.add(getProduct_asString());
+			ret.add(getProducts_asString());
 			ret.add(getModifiers_asString());
 			return ret;	
 		}
 		
-		private Vector<MutablePair<Double,String>> getSubstrates_asString() {	
+		  
+				public Vector<Vector<MutablePair<Double,String>>> getAll_onlyNames() {	
+					Vector ret = new Vector<Vector<MutablePair<Double,String>>> ();
+					ret.add(getSubstrates_onlyNames());
+					ret.add(getProducts_onlyNames());
+					ret.add(getModifiers_onlyNames());
+					return ret;	
+				}
+				
+		
+
+		private Vector<MutablePair<Double,String>> getSubstrates_onlyNames() {	
+			Vector ret = new Vector<String>();
+			for(MutablePair<Double, String> element  : substrates) {
+				String name = new String(element.getRight());
+				if(!ret.contains(name)) 	ret.add(name);
+			}
+			return ret;		
+		}
+		
+		private Vector<MutablePair<Double,String>> getProducts_onlyNames() {	
+			Vector ret = new Vector<String>();
+			for(MutablePair<Double, String> element  : products) {
+				String name = new String(element.getRight());
+				if(!ret.contains(name)) 	ret.add(name);
+			}
+			return ret;		
+		}
+		private Vector<MutablePair<Double,String>> getModifiers_onlyNames() {	
+			Vector ret = new Vector<String>();
+			for(MutablePair<Double, String> element  : modifiers) {
+				String name = new String(element.getRight());
+				if(!ret.contains(name)) 	ret.add(name);
+			}
+			return ret;		
+		}
+	
+		
+		private Vector<Vector<String>> getSubstrates_asString() {	
 			Vector ret = new Vector<String>();
 			for(MutablePair<Double, String> element  : substrates) {
 				String name = new String();
@@ -59,7 +97,7 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 			return ret;		
 		}
 		
-		private Vector<MutablePair<Double,String>> getProduct_asString() {	
+		private Vector<Vector<String>> getProducts_asString() {	
 			Vector ret = new Vector<String>();
 			for(MutablePair<Double, String> element  : products) {
 				String name = new String();
@@ -70,7 +108,7 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 			return ret;		
 		}
 		
-		private Vector<MutablePair<Double,String>> getModifiers_asString() {	
+		private Vector<Vector<String>> getModifiers_asString() {	
 			Vector ret = new Vector<String>();
 			for(MutablePair<Double, String> element  : modifiers) {
 				String name = new String();

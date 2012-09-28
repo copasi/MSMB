@@ -19,10 +19,8 @@ import parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import debugTab.DebugConstants;
 import debugTab.DebugMessage;
 
-import sun.misc.Cleaner;
 import utility.CellParsers;
 import utility.Constants;
-import utility.MyChangeNotAllowedException;
 import utility.MySyntaxException;
 
 

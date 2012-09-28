@@ -10,7 +10,7 @@ public class MyTreeFormatter extends TreeFormatter {
 	}
 
 	public void visit(final NodeToken n) {
-		 System.out.println(MR_Expression_ParserConstants.tokenImage[n.kind]);
+		 //System.out.println(MR_Expression_ParserConstants.tokenImage[n.kind]);
 		 super.visit(n);
 	 }
 }

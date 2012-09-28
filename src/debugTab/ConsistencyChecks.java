@@ -213,6 +213,9 @@ public class ConsistencyChecks {
 								if(undef == null || undef.size() ==0)	{checkAllRoles = false; }
 								else throw new NullPointerException();
 								break;
+							case CFunctionParameter.TIME:    
+								checkAllRoles = false;
+								break;
 							/*case Constants.SITE_FOR_WEIGHT_IN_SUM:
 								System.out.println("TOOOOOOOO DO Constants.SITE_FOR_WEIGHT_IN_SUM");
 								break;*/

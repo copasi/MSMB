@@ -2,11 +2,9 @@ package utility;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.Vector;
-//import javaCC_parser.MR_grammar;
 
 import org.lsmp.djep.xjep.XJep;
 import org.nfunk.jep.Node;
@@ -106,7 +104,14 @@ public class CellParsers {
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TAN)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TANH)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SIN)) == 0) return true;
-	
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_MOD)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_PAR)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_PROD)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_SITE)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_SUB)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_VAR)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_VOL)) == 0) return true;
+			
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.FLOOR)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SQRT)) == 0) return true;
@@ -526,13 +531,13 @@ public class CellParsers {
 		   
 		    subs_prod_mod.addAll(v.getAll_asString());
 		      
-		} catch(Exception ex) {
-			ex.printStackTrace();
+		} catch(Throwable ex) {
+			//ex.printStackTrace();
 			
 			 DebugMessage dm = new DebugMessage();
 			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-			 dm.setProblem("Reaction not following the correct syntax: FIIIIIIIIIIIIIIIIIIX MESSAGE"+ex.getMessage());
-			 dm.setOrigin_row(row);
+			 dm.setProblem("Reaction not following the correct syntax. Common causes: missing blank separator or quotes."+ex.getMessage());
+			 dm.setOrigin_row(row+1);
 			 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
 			 dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
 			 MainGui.addDebugMessage_ifNotPresent(dm);
@@ -735,7 +740,18 @@ public class CellParsers {
 		ret = ret.replace(" and ", "&&");
 		ret = ret.replace(" or ", "||");
 		
-		int index_open = mathematicalExpression.indexOf("\"");
+		try {
+			InputStream is = new ByteArrayInputStream(mathematicalExpression.getBytes("UTF-8"));
+			MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is);
+			CompleteExpression root = parser.CompleteExpression();
+			QuoteKeywordInExpressionVisitor quoted = new QuoteKeywordInExpressionVisitor();
+			root.accept(quoted);
+			ret = quoted.getNewExpression();
+			
+		} catch (Exception e) {
+			
+		}
+	/*	int index_open = mathematicalExpression.indexOf("\"");
 		if(index_open == -1) return ret;
 		
 		ret = new String();
@@ -758,6 +774,8 @@ public class CellParsers {
 		ret = ret.replace(" and ", "&&");
 		ret = ret.replace(" or ", "||");
 		
+		
+		*/
 		
 		
 		
