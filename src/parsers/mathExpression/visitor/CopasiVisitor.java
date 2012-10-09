@@ -54,8 +54,15 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 
 	@Override
 	public void visit(NodeToken n) {
+		
 		copasiExpression+=n.tokenImage;
 		super.visit(n);
+	}
+	
+		
+	@Override
+	public void visit(PossibleExtensions n) {
+		//nothing it will be taken care of by generateElement
 	}
 	
 	@Override
@@ -162,10 +169,12 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 					}
 					if(parametersActuals.size()>0) copasiExpression = copasiExpression.substring(0, copasiExpression.length()-1);
 					copasiExpression += ")";
-				
+					
 			} else {
 				generateCopasiElement(element);
 			}
+			
+			
 		} catch (Exception e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
 				e.printStackTrace();
@@ -276,11 +285,13 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 			|| element.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) ==0) {
 			element_copasiTerm = model.getObject(new CCopasiObjectName(Constants.COPASI_STRING_TIME)).getCN().getString();
 		} 
+		
 		else  if(!isMultistateSpeciesDefined(element)) {
 			
 			int index = -1;
 			GetElementWithExtensions name = null;
 			try{
+				
 				InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
 				MR_Expression_Parser parser = new MR_Expression_Parser(is);
 				CompleteExpression root = parser.CompleteExpression();
@@ -292,6 +303,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				
 			}
 				String element_substring = name.getElementName();
+				String cmp = CellParsers.extractCompartmentLabel(element_substring);
 				Vector<String> extensions = name.getExtensions();
 				String element_kind_quantifier = getKindQuantifier(extensions);
 				String element_timing_quantifier = getTimingQuantifier(extensions);
@@ -299,7 +311,12 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 			
 				try {
 					if(element_kind_quantifier == null || element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES))==0) {
-						index = this.findMetabolite(element_substring,false);
+						if(cmp.length() > 0 ) {
+							String justName = CellParsers.extractMultistateName(element_substring); 
+							index = multiModel.findMetabolite(justName, cmp);
+						} else {
+							index = multiModel.findMetabolite(element_substring,null);
+						}
 					}
 				} catch (Exception e) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
@@ -351,7 +368,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				}
 			} else {
 				if(element_kind_quantifier == null || element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ))==0) {
-						index = this.findGlobalQ(element_substring,false);
+						index = multiModel.findGlobalQ(element_substring,false);
 				}
 				if(index!= -1) { //parameter
 					CModelValue m = model.getModelValue(index);
@@ -368,7 +385,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 					}
 				} else { //compartment?
 					if(element_kind_quantifier == null || element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT))==0) {
-						index = this.findCompartment(element_substring,false);
+						index = multiModel.findCompartment(element_substring,false);
 					}
 					if(index != -1) {
 						CCompartment comp = model.getCompartment(index);
@@ -388,6 +405,8 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 			}
 		} else {
 			try {
+				
+				
 				InputStream is = new ByteArrayInputStream(element.getBytes());
 				MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
 				CompleteMultistateSpecies_Operator start;
@@ -398,7 +417,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(v.getSpeciesName());
 			
 				
-				int index = this.findMetabolite(element,false);
+				int index = multiModel.findMetabolite(element,null);
 				
 				//TOOOOO DOOOOOO
 				
@@ -485,9 +504,8 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 		return null;
 	}
 
-	private int findCompartment(String name, boolean key) {
-		if(name.startsWith("\"")) {	name = name.substring(1);	}
-		if(name.endsWith("\"")) { name = name.substring(0,name.length()-1); }
+	/*private int findCompartment(String name, boolean key) {
+		if(name.startsWith("\"")&name.endsWith("\"")) { name = name.substring(1,name.length()-1); }
 		int i, iMax =(int) model.getCompartments().size();
         for (i = 0;i < iMax;++i)
         {
@@ -503,9 +521,8 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	}
 	
 	private int findGlobalQ(String name, boolean key) {
-		if(name.startsWith("\"")) {	name = name.substring(1);	}
-		if(name.endsWith("\"")) { name = name.substring(0,name.length()-1); }
-		
+		if(name.startsWith("\"")&name.endsWith("\"")) { name = name.substring(1,name.length()-1); }
+			
 		int i, iMax =(int) model.getModelValues().size();
         for (i = 0;i < iMax;++i)
         {
@@ -548,11 +565,11 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	        }
 	        
 	        return -1;
-		}
+		}*/
 	
 	 boolean isMultistateSitesList(INode n) {
 		 if(n instanceof ArgumentList) {
-			 if(((ArgumentList)n).nodeChoice.which ==1){
+			 if(((ArgumentList)n).nodeChoice.which ==0){
 				 return true;
 			 }  else return false;
 		 }

@@ -135,16 +135,16 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
   /**
    * Visits a {@link Reaction} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 #0 ( AdditiveExpression() )+<br>
+   * nodeChoice -> . %0 #0 ( AdditiveExpression() )?<br>
    * .......... .. . .. #1 ( Blank() )* #2 < ARROW ><br>
    * .......... .. . .. #3 ( $0 ( " " )<br>
    * .......... .. . .. .. . $1 ( Blank() )*<br>
-   * .......... .. . .. .. . $2 ( AdditiveExpression() )+ )*<br>
+   * .......... .. . .. .. . $2 ( AdditiveExpression() )? )*<br>
    * .......... .. . .. #4 ( $0 ( Blank() )* $1 ";"<br>
    * .......... .. . .. .. . $2 ( Blank() )* $3 ListModifiers() )?<br>
    * .......... .. | %1 #0 < ARROW2 ><br>
    * .......... .. . .. #1 ( Blank() )*<br>
-   * .......... .. . .. #2 ( AdditiveExpression() )+<br>
+   * .......... .. . .. #2 ( AdditiveExpression() )?<br>
    * .......... .. . .. #3 ( $0 ( Blank() )* $1 ";"<br>
    * .......... .. . .. .. . $2 ( Blank() )* $3 ListModifiers() )?<br>
    *
@@ -152,16 +152,16 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
    * @param argu the user argument
    */
   public void visit(final Reaction n, final A argu) {
-    // nodeChoice -> . %0 #0 ( AdditiveExpression() )+
+    // nodeChoice -> . %0 #0 ( AdditiveExpression() )?
     // .......... .. . .. #1 ( Blank() )* #2 < ARROW >
     // .......... .. . .. #3 ( $0 ( " " )
     // .......... .. . .. .. . $1 ( Blank() )*
-    // .......... .. . .. .. . $2 ( AdditiveExpression() )+ )*
+    // .......... .. . .. .. . $2 ( AdditiveExpression() )? )*
     // .......... .. . .. #4 ( $0 ( Blank() )* $1 ";"
     // .......... .. . .. .. . $2 ( Blank() )* $3 ListModifiers() )?
     // .......... .. | %1 #0 < ARROW2 >
     // .......... .. . .. #1 ( Blank() )*
-    // .......... .. . .. #2 ( AdditiveExpression() )+
+    // .......... .. . .. #2 ( AdditiveExpression() )?
     // .......... .. . .. #3 ( $0 ( Blank() )* $1 ";"
     // .......... .. . .. .. . $2 ( Blank() )* $3 ListModifiers() )?
     n.nodeChoice.accept(this, argu);
@@ -238,6 +238,7 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
    * Visits a {@link Species} node, whose children are the following :
    * <p>
    * nodeToken -> < IDENTIFIER ><br>
+   * nodeListOptional -> ( < IDENTIFIER > )*<br>
    *
    * @param n the node to visit
    * @param argu the user argument
@@ -245,6 +246,8 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
   public void visit(final Species n, final A argu) {
     // nodeToken -> < IDENTIFIER >
     n.nodeToken.accept(this, argu);
+    // nodeListOptional -> ( < IDENTIFIER > )*
+    n.nodeListOptional.accept(this, argu);
   }
 
   /**

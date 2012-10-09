@@ -42,10 +42,15 @@ public class SpeciesDB {
 			ind = speciesIndexes.get(name);
 		}*/
 			
-		if(ind != null && ind != index && !CellParsers.isMultistateSpeciesName(name)) { // the name is already assigned to another species
+		if(ind != null && ind != index && !CellParsers.isMultistateSpeciesName(name)) { 
+			// the name is already assigned to another species
 			//the case of multistate is handled later because it can be the case of multiple states that need to be merged
-			Throwable cause = new Throwable(name);
-			throw new ClassNotFoundException("A species already exists with that name", cause);
+			Species old = speciesVector.get(ind);
+			
+			if(old.getCompartment_listString().compareTo(compartment)==0 || compartment.length()== 0) {
+				Throwable cause = new Throwable(name);
+				throw new ClassNotFoundException("A species already exists with that name", cause);
+			}
 		}
 		
 		if(index != -1) {
@@ -176,13 +181,19 @@ public class SpeciesDB {
 				
 			} else { //species already defined
 				//if(!name.contains("(")) { 
+				
+				
+				
 				if(!CellParsers.isMultistateSpeciesName(name)) {
-						if(index >= speciesVector.size() || index == -1) { // the user is trying to define a regular species with a name of already existing multistate species
-						Throwable cause = new Throwable(name);
-						throw new ClassNotFoundException("A species already exists with that name", cause);
+					if(index >= speciesVector.size() || index == -1) { 
+						if(compartment.length() > 0 && speciesVector.get(ind).getCompartment_listString().length() > 0 && speciesVector.get(ind).getCompartment_listString().compareTo(compartment)==0) {
+						// the user is trying to define a regular species with a name of already existing multistate species
+							Throwable cause = new Throwable(name);
+							throw new ClassNotFoundException("A species already exists with that name", cause);
+						}
 					}
 					
-					Species s = speciesVector.get(index);
+					Species s = speciesVector.get(ind); //QUIIIIIII C'ERA INDEX
 					String oldName = s.getDisplayedName();
 					s.setName(name);
 					s.setCompartment(multiModel,compartment);
@@ -359,11 +370,11 @@ public class SpeciesDB {
 				if(current instanceof MultistateSpecies) {
 					MultistateSpecies multiCurrent = (MultistateSpecies) current;
 					//this.addChangeSpecies(multiCurrent.getDisplayedName(),multiCurrent.getInitialConcentration_multi(),multiCurrent.getInitialAmount_multi(), multiCurrent.getType(), multiCurrent.getCompartment(), multiCurrent.getExpression(), false);
-					this.addChangeSpecies(-1,new String(),multiCurrent.getDisplayedName(),multiCurrent.getInitialQuantity_multi(), multiCurrent.getType(), multiCurrent.getCompartment(), multiCurrent.getExpression(), false, multiCurrent.getNotes(),true,false);
+					this.addChangeSpecies(-1,new String(),multiCurrent.getDisplayedName(),multiCurrent.getInitialQuantity_multi(), multiCurrent.getType(), multiCurrent.getCompartment_listString(), multiCurrent.getExpression(), false, multiCurrent.getNotes(),true,false);
 				} else {
 					HashMap<String, String> entry_quantity = new HashMap<String, String>();
 					entry_quantity.put(current.getDisplayedName(),current.getInitialQuantity());
-					this.addChangeSpecies(i,current.getSBMLid(),current.getDisplayedName(),entry_quantity, current.getType(), current.getCompartment(), current.getExpression(), false, current.getNotes(),true,false);
+					this.addChangeSpecies(i,current.getSBMLid(),current.getDisplayedName(),entry_quantity, current.getType(), current.getCompartment_listString(), current.getExpression(), false, current.getNotes(),true,false);
 					
 								
 				}
@@ -385,7 +396,7 @@ public class SpeciesDB {
 			MultistateSpecies m = new MultistateSpecies(multiModel,speciesName,isFromReaction);
 			justName = m.getSpeciesName();
 		} catch (Exception e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 			//this function can be used also to check if Cdh1(++(p)) exist... so I have to analyze name with operators too.
 			 InputStream is;
 			try {
@@ -537,5 +548,28 @@ public class SpeciesDB {
 		return ret;
 	}
 
-	
+	public void clear() {
+		speciesVector.clear();
+		speciesIndexes.clear();
+	}
+
+	public void addCompartmentToSpecies(String name, String cmpName) {
+		Integer ind = this.getSpeciesIndex(name);
+		Species s = this.speciesVector.get(ind);
+		try {
+			s.setCompartment(multiModel, cmpName);
+		} catch (MySyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.speciesVector.put(ind, s);		
+	}
+
+	public boolean isSpeciesWithMultipleCompartment(String cleanName) {
+		Species sp = this.getSpecies(cleanName);
+		if(sp== null) return false;
+		Vector<String> c = sp.getCompartments();
+		if(c== null || c.size()<=1) return false;
+		else return true;
+	}
 }

@@ -118,6 +118,7 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * Visits a {@link CompleteMultistateSpecies} node, whose children are the following :
    * <p>
    * multistateSpecies -> MultistateSpecies()<br>
+   * nodeListOptional -> ( PossibleExtensions() )*<br>
    * nodeToken -> < EOF ><br>
    *
    * @param n the node to visit
@@ -128,6 +129,8 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     R nRes = null;
     // multistateSpecies -> MultistateSpecies()
     n.multistateSpecies.accept(this, argu);
+    // nodeListOptional -> ( PossibleExtensions() )*
+    n.nodeListOptional.accept(this, argu);
     // nodeToken -> < EOF >
     n.nodeToken.accept(this, argu);
     return nRes;
@@ -137,6 +140,7 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * Visits a {@link CompleteMultistateSpecies_Operator} node, whose children are the following :
    * <p>
    * multistateSpecies_Operator -> MultistateSpecies_Operator()<br>
+   * nodeListOptional -> ( PossibleExtensions() )*<br>
    * nodeToken -> < EOF ><br>
    *
    * @param n the node to visit
@@ -147,6 +151,8 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     R nRes = null;
     // multistateSpecies_Operator -> MultistateSpecies_Operator()
     n.multistateSpecies_Operator.accept(this, argu);
+    // nodeListOptional -> ( PossibleExtensions() )*
+    n.nodeListOptional.accept(this, argu);
     // nodeToken -> < EOF >
     n.nodeToken.accept(this, argu);
     return nRes;
@@ -187,6 +193,42 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     n.multistateSpecies_SiteSingleElement.accept(this, argu);
     // nodeToken -> < EOF >
     n.nodeToken.accept(this, argu);
+    return nRes;
+  }
+
+  /**
+   * Visits a {@link PossibleExtensions} node, whose children are the following :
+   * <p>
+   * nodeChoice -> . %00 < EXTENSION_CONC ><br>
+   * .......... .. | %01 < EXTENSION_COMPARTMENT ><br>
+   * .......... .. | %02 < EXTENSION_PARTICLE ><br>
+   * .......... .. | %03 < EXTENSION_TRANS ><br>
+   * .......... .. | %04 < EXTENSION_INIT ><br>
+   * .......... .. | %05 < EXTENSION_RATE ><br>
+   * .......... .. | %06 < EXTENSION_SPECIES ><br>
+   * .......... .. | %07 < EXTENSION_GLOBALQ ><br>
+   * .......... .. | %08 < EXTENSION_FUNCTION ><br>
+   * .......... .. | %09 < EXTENSION_REACTION ><br>
+   * .......... .. | %10 < EXTENSION_FLUX ><br>
+   *
+   * @param n the node to visit
+   * @param argu the user argument
+   * @return the user return information
+   */
+  public R visit(final PossibleExtensions n, final A argu) {
+    R nRes = null;
+    // nodeChoice -> . %00 < EXTENSION_CONC >
+    // .......... .. | %01 < EXTENSION_COMPARTMENT >
+    // .......... .. | %02 < EXTENSION_PARTICLE >
+    // .......... .. | %03 < EXTENSION_TRANS >
+    // .......... .. | %04 < EXTENSION_INIT >
+    // .......... .. | %05 < EXTENSION_RATE >
+    // .......... .. | %06 < EXTENSION_SPECIES >
+    // .......... .. | %07 < EXTENSION_GLOBALQ >
+    // .......... .. | %08 < EXTENSION_FUNCTION >
+    // .......... .. | %09 < EXTENSION_REACTION >
+    // .......... .. | %10 < EXTENSION_FLUX >
+    n.nodeChoice.accept(this, argu);
     return nRes;
   }
 

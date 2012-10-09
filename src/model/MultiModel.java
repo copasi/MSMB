@@ -40,6 +40,15 @@ public class MultiModel {
 	
 	private HashMap<String, Vector<Integer>> allNamedElements = new HashMap<String, Vector<Integer>>(); // name + list of indices of tables where the name is already defined
 	public Vector<Integer> getWhereNameIsUsed(String name) { 
+		if(CellParsers.isMultistateSpeciesName(name)) {
+			try {
+				name = new MultistateSpecies(this,name).getSpeciesName();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		Vector ret = allNamedElements.get(name);
 		if(ret!= null && ret.size() > 0) return ret;
 		return null;
@@ -51,7 +60,8 @@ public class MultiModel {
 	
 		Vector<Integer> where = getWhereNameIsUsed(name);
 		if(where != null) { 
-			if(where.contains(tableIndex)) throw new Exception(); //already defined in that table
+			
+			if(where.contains(tableIndex) && tableIndex != Constants.TitlesTabs.SPECIES.index) throw new Exception(); //already defined in that table
 		} else {
 			where = new Vector<Integer>();
 		}
@@ -149,7 +159,7 @@ public class MultiModel {
 
 	
 	public String mergeMultistateSpecies(int indexOld, MultistateSpecies newSp) throws Exception {
-		int ind = -(speciesDB.addChangeSpecies(-1,new String(),newSp.printCompleteDefinition(),newSp.getInitialQuantity_multi(),newSp.getType(), newSp.getCompartment(), newSp.getExpression(),false, new String(),true,true));
+		int ind = -(speciesDB.addChangeSpecies(-1,new String(),newSp.printCompleteDefinition(),newSp.getInitialQuantity_multi(),newSp.getType(), newSp.getCompartment_listString(), newSp.getExpression(),false, new String(),true,true));
 		return ((MultistateSpecies)speciesDB.getSpecies(ind)).printCompleteDefinition();
 	}
 
@@ -157,7 +167,7 @@ public class MultiModel {
 	public void modifyMultistateSpecies(MultistateSpecies species, boolean fromMultistateBuilder,int row, boolean autoMergeSpecies) throws Exception {
 		String name = species.printCompleteDefinition();
 		
-		int n = this.speciesDB.addChangeSpecies(row+1, new String(), name,species.getInitialQuantity_multi(), species.getType(), species.getCompartment(), species.getExpression(),fromMultistateBuilder, new String(),autoMergeSpecies,true);
+		int n = this.speciesDB.addChangeSpecies(row+1, new String(), name,species.getInitialQuantity_multi(), species.getType(), species.getCompartment_listString(), species.getExpression(),fromMultistateBuilder, new String(),autoMergeSpecies,true);
 	}
 	
 	public int findCompartment(String name) {
@@ -168,9 +178,8 @@ public class MultiModel {
 		return this.findCompartment(name, true);
 	}
 	
-	private int findCompartment(String name, boolean key) {
-		if(name.startsWith("\"")) {	name = name.substring(1);	}
-		if(name.endsWith("\"")) { name = name.substring(0,name.length()-1); }
+	public int findCompartment(String name, boolean key) {
+		if(name.startsWith("\"")&&name.endsWith("\"")) {	name = name.substring(1,name.length()-1); }
 		CModel model = copasiDataModel.getModel();
 		int i, iMax =(int) model.getCompartments().size();
         for (i = 0;i < iMax;++i)
@@ -195,10 +204,8 @@ public class MultiModel {
 	}
 	
 	
-	private int findGlobalQ(String name, boolean key) {
-		if(name.startsWith("\"")) {	name = name.substring(1);	}
-		if(name.endsWith("\"")) { name = name.substring(0,name.length()-1); }
-		
+	public int findGlobalQ(String name, boolean key) {
+		if(name.startsWith("\"")&&name.endsWith("\"")) {	name = name.substring(1,name.length()-1); }
 		CModel model = copasiDataModel.getModel();
 		int i, iMax =(int) model.getModelValues().size();
         for (i = 0;i < iMax;++i)
@@ -254,18 +261,18 @@ public class MultiModel {
 	}
 	
 	
-	public int findMetabolite(String name) throws Exception {
-		return findMetabolite(name, false);
+	public int findMetabolite(String name, String cmp) throws Exception {
+		return findMetabolite(name,cmp, false);
 	}
 	
 	private int findMetabolite_key(String name) throws Exception {
-		return findMetabolite(name, true);
+		return findMetabolite(name,null, true);
 	}
 	
 	
 	
 	
-	private int findMetabolite(String name, boolean key) throws Exception {
+	private int findMetabolite(String name, String cmp, boolean key) throws Exception {
 		
 		if(CellParsers.isMultistateSpeciesName(name)) {
 			MultistateSpecies ms = new MultistateSpecies(this,name);
@@ -274,10 +281,9 @@ public class MultiModel {
 			//Building the multistateSpecies and printing again its complete definition will make the two definitions identical w.r.t. the order
 		}
 		
-		if(name.startsWith("\"")) {	name = name.substring(1);	}
-		if(name.endsWith("\"")) { name = name.substring(0,name.length()-1); }
-		
-		
+		if(name.startsWith("\"")&&name.endsWith("\"")) {	name = name.substring(1,name.length()-1); }
+		if(cmp!= null && cmp.startsWith("\"")&&cmp.endsWith("\"")) {	cmp = cmp.substring(1,cmp.length()-1); }
+			
 		CModel model = copasiDataModel.getModel();
 		int i, iMax =(int) model.getMetabolites().size();
 		
@@ -299,7 +305,14 @@ public class MultiModel {
 	        		dm.setOrigin_col(1);
 	        		//MainGui.debugMessages.add(dm);
 	        	}*/
-	            if(name.compareTo(current) == 0) return i;
+	            
+	            if(name.compareTo(current) == 0) {
+	            	if(cmp!= null) { 
+	            		if(metab.getCompartment().getObjectName().compareTo(cmp)==0 ) return i;
+	            		else continue;
+	            	}
+	            	else return i;
+	            }
             } else {
             	String current = metab.getKey();
             	
@@ -344,27 +357,28 @@ public class MultiModel {
 		 progress(progressBarFrame,Constants.ProgressBar.LOADING_CPS.progress);
 			
 		 fillCopasiDataModel(tableReactionmodel, progressBarFrame);
-			
+		 System.out.println("created"); System.out.flush();
+		 			
 		 
 		 progress(progressBarFrame,Constants.ProgressBar.COMPILING_CPS.progress);
 			
 		 this.copasiDataModel.getModel().compile();
-		 System.out.println("compiled");
+		 System.out.println("compiled"); System.out.flush();
 		 progress(progressBarFrame,Constants.ProgressBar.UPDATING_CPS.progress);
 		 //this.copasiDataModel.getModel().updateInitialValues(changedObjects);
-		 System.out.println("updated");
+		// System.out.println("updated");System.out.flush();
 		 progress(progressBarFrame,Constants.ProgressBar.SAVING_CPS.progress);
 		 if(file != null) {
-			// Serialize4Debug.writeCopasiStateSummary(copasiDataModel.getModel(), "EVENTS");
+			 //Serialize4Debug.writeCopasiStateSummary(copasiDataModel.getModel(), "EVENTS");
 			 
 			 this.copasiDataModel.saveModel(file.getAbsolutePath(), true);
-			 System.out.println("saved");
+			 System.out.println("saved");System.out.flush();
 			 progress(progressBarFrame,Constants.ProgressBar.COMPILING_CPS.progress);
 			 
 			 //addAnnotations(file);
 			 
 			 clearCopasiDataModel();
-			 System.out.println("cleared");
+			 System.out.println("cleared");System.out.flush();
 			 progress(progressBarFrame,Constants.ProgressBar.END.progress);
 			 return null;
 		 } else {
@@ -393,12 +407,13 @@ public class MultiModel {
 
 		this.copasiDataModel.getModel().compile();
 		System.out.println("compiled");
+		System.out.flush();
 		progress(progressBarFrame,Constants.ProgressBar.UPDATING_CPS.progress);
-		System.out.println("updated");
+		System.out.println("updated");System.out.flush();
 		progress(progressBarFrame,Constants.ProgressBar.SAVING_CPS.progress);
 		if(file != null) {
 			
-			System.out.println("exported");
+			System.out.println("exported");System.out.flush();
 			String math = this.copasiDataModel.exportMathModelToString("XPPAUT (*.ode)");
 			
 			BufferedWriter buffout= new BufferedWriter(new FileWriter(file,true));
@@ -408,12 +423,12 @@ public class MultiModel {
 			out.flush();
 			out.close();
 			progress(progressBarFrame,Constants.ProgressBar.COMPILING_CPS.progress);
-			System.out.println("saved");
+			System.out.println("saved");System.out.flush();
 			
 			//addAnnotations(file);
 
 			clearCopasiDataModel();
-			System.out.println("cleared");
+			System.out.println("cleared");System.out.flush();
 			progress(progressBarFrame,Constants.ProgressBar.END.progress);
 			return null;
 		} else {
@@ -482,21 +497,11 @@ public class MultiModel {
 
 		//RIEMPIRE PRIMA I COMPARTMENT E POI LE SPECIE ALTRIMENTI NON AGGIUNGE I METABOLITESSSSSSS
 
-		/*long size = CCopasiRootContainer.getDatamodelList().size();
-		for(int i = 0; i < size; i++ ) { 
-			CCopasiRootContainer.removeDatamodelWithIndex(0);
-		}
-		
-	    copasiDataModel = CCopasiRootContainer.addDatamodel();
-		CModel model = this.copasiDataModel.getModel();
-		*/
-		
 		clearCopasiDataModel();
 		CModel model = copasiDataModel.getModel(); 
 		model.getEvents().cleanup(); // IF I DON'T DO THIS, THE COPASI SAVEMODEL IS NOT WORKING (NO EXCEPTIONS BUT SIMPLY STUCK)
 				
-	//	changedObjects.clear();
-	
+		
 		if(progressBarFrame!=null) progress(progressBarFrame,Constants.ProgressBar.LOADING_GLOBQ__CPS.progress);
 		fillCopasiDataModel_globalQ_fixed();
 
@@ -536,7 +541,7 @@ public class MultiModel {
 
 			}
 		} catch(Exception ex) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	ex.printStackTrace();
 		}
 		
 		//CFunctionVectorN allFunctions = funDB.loadedFunctions();
@@ -611,7 +616,7 @@ public class MultiModel {
 		model.setObjectName(MainGui.modelName);
 		
 		
-	
+		
 	}
 		
 	public Vector check_ifSingleFunctionCallAndSingleParameters(boolean massAction, int reaction_row, String reactionName, String equation) {
@@ -874,9 +879,17 @@ public class MultiModel {
 		for(int i1 = 0; i1 < subs.size(); i1++) {
 			String s = (String)subs.get(i1);
 			multiplicity = extractMultiplicity(s);
-			s = extractName(s);
 			CMetab metab;
-			int index_metab = this.findMetabolite(s);
+			int index_metab = -1;
+			String cmp = CellParsers.extractCompartmentLabel(s);
+			if(cmp.length() > 0 ) {
+				String justName = CellParsers.extractMultistateName(extractName(s)); //extractName separates just the multiplicity
+				index_metab = this.findMetabolite(justName, cmp);
+			} else {
+				String onlyName = extractName(s);
+				index_metab = this.findMetabolite(onlyName,null);
+			}
+			
 			if(index_metab==-1) {
 				continue; 
 			} else {
@@ -889,8 +902,15 @@ public class MultiModel {
 			String s = (String)prod.get(i1);
 			CMetab metab;
 			multiplicity = extractMultiplicity(s);
-			s = extractName(s);
-			int index_metab = this.findMetabolite(s);
+			int index_metab = -1;
+			String cmp = CellParsers.extractCompartmentLabel(s);
+			if(cmp.length() > 0 ) {
+				String justName = CellParsers.extractMultistateName(extractName(s)); //extractName separates just the multiplicity
+				index_metab = this.findMetabolite(justName, cmp);
+			} else {
+				String onlyName = extractName(s);
+				index_metab = this.findMetabolite(onlyName,null);
+			}
 			if(index_metab==-1) {
 				continue;
 			} else {
@@ -902,7 +922,15 @@ public class MultiModel {
 		for(int i1 = 0; i1 < mod.size(); i1++) {
 			String s = (String)mod.get(i1);
 			CMetab metab;
-			int index_metab = this.findMetabolite(s);
+			int index_metab = -1;
+			String cmp = CellParsers.extractCompartmentLabel(s);
+			if(cmp.length() > 0 ) {
+				String justName = CellParsers.extractMultistateName(extractName(s)); //extractName separates just the multiplicity
+				index_metab = this.findMetabolite(justName, cmp);
+			} else {
+				String onlyName = extractName(s);
+				index_metab = this.findMetabolite(onlyName,null);
+			}
 			multiplicity = extractMultiplicity(s);
 			s = extractName(s);
 			if(index_metab==-1) {
@@ -971,7 +999,8 @@ public class MultiModel {
 		
 		
 		
-		//System.out.println(rateConstant);
+		//System.out.println("Exporting "+rateLaw);
+		//System.out.flush();
 		if(foundUserDefFunction || foundPredefinedFunction) {
 			Vector paramMapping = new Vector();
 			paramMapping = (Vector) funDB.getMapping(i);
@@ -987,8 +1016,7 @@ public class MultiModel {
 			roleVector.add(Constants.ROLE_EXPRESSION);
 			
 			CFunction chosenFun = reaction.getFunction();
-			//System.out.println(f);
-
+			
 			for(int iii = 1, jjj = 0; iii < paramMapping.size(); iii=iii+2,jjj++) {
 				String parameterNameInFunction = (String)paramMapping.get(iii);
 				String actualModelParameter = (String)paramMapping.get(iii+1);
@@ -996,7 +1024,7 @@ public class MultiModel {
 				int role = paramRoles.get(jjj);
 				boolean checkAllRoles = false;
 				int indexRole = 0;
-			
+				
 				if(role==CFunctionParameter.VARIABLE) { checkAllRoles  = true; role= (Integer) roleVector.get(indexRole);}
 				do{
 					try {
@@ -1008,10 +1036,9 @@ public class MultiModel {
 								checkAllRoles = false;
 							} catch(NumberFormatException ex) { //the parameter is not a number but a globalQ
 								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-								if(actualModelParameter.startsWith("\"")) actualModelParameter = actualModelParameter.substring(1, actualModelParameter.length()-1);
+								if(actualModelParameter.startsWith("\"")&&actualModelParameter.endsWith("\"")) actualModelParameter = actualModelParameter.substring(1, actualModelParameter.length()-1);
 								int index = this.findGlobalQ(actualModelParameter);
 								if(index == -1) throw new NullPointerException();
-								
 								CModelValue modelValue = model.getModelValue(actualModelParameter);
 								reaction.setParameterMapping(findParamIndex_InCFunction(chosenFun, parameterNameInFunction), modelValue.getKey());
 								checkAllRoles = false;
@@ -1023,18 +1050,27 @@ public class MultiModel {
 							checkAllRoles = false;
 							break;
 						case CFunctionParameter.SUBSTRATE: 
-							expandedVectorElements.addAll(subs);
-							int index_metab = this.findMetabolite(actualModelParameter);
 							
+							expandedVectorElements.addAll(subs);
+							int index_metab = this.findMetabolite(actualModelParameter,null);
 							
 							if(index_metab == -1) {
 								for(int g = 0; g < expandedVectorElements.size(); g++) {
 									String current = (String)(expandedVectorElements.get(g));
 									if(current.contains(actualModelParameter)) {
-										index_metab = this.findMetabolite(current);
+										index_metab = this.findMetabolite(current,null);
 									}
 								}
 							}
+							if(index_metab == -1) { //it's not a normal multistate species but the one with multiple compartment
+								if(CellParsers.isMultistateSpeciesName(actualModelParameter)) {
+									String cmp = CellParsers.extractCompartmentLabel(actualModelParameter);
+									String justName = CellParsers.extractMultistateName(actualModelParameter);
+									index_metab = this.findMetabolite(justName, cmp);
+								}
+								
+							}
+							
 							if(index_metab == -1) throw new NullPointerException();
 							CMetab metab = model.getMetabolite(index_metab);
 							if(actualModelParameter.compareTo("\"SUB\"")==0) {
@@ -1045,15 +1081,24 @@ public class MultiModel {
 							break;
 						case CFunctionParameter.PRODUCT:  
 							expandedVectorElements.addAll(prod); 
-							index_metab = this.findMetabolite(actualModelParameter);
+							index_metab = this.findMetabolite(actualModelParameter,null);
 							if(index_metab == -1) {
 								for(int g = 0; g < expandedVectorElements.size(); g++) {
 									String current = (String)(expandedVectorElements.get(g));
 									if(current.contains(actualModelParameter)) {
-										index_metab = this.findMetabolite(current);
+										index_metab = this.findMetabolite(current,null);
 									}
 								}
 							}
+							if(index_metab == -1) { //it's not a normal multistate species but the one with multiple compartment
+								if(CellParsers.isMultistateSpeciesName(actualModelParameter)) {
+									String cmp = CellParsers.extractCompartmentLabel(actualModelParameter);
+									String justName = CellParsers.extractMultistateName(actualModelParameter);
+									index_metab = this.findMetabolite(justName, cmp);
+								}
+								
+							}
+							
 							if(index_metab == -1) throw new NullPointerException();
 							metab = model.getMetabolite(index_metab);
 							reaction.setParameterMapping(findParamIndex_InCFunction(chosenFun, parameterNameInFunction), metab.getKey());
@@ -1061,14 +1106,22 @@ public class MultiModel {
 							break;
 						case CFunctionParameter.MODIFIER:   
 							expandedVectorElements.addAll(mod);
-							index_metab = this.findMetabolite(actualModelParameter);
+							index_metab = this.findMetabolite(actualModelParameter,null);
 							if(index_metab == -1) {
 								for(int g = 0; g < expandedVectorElements.size(); g++) {
 									String current = (String)(expandedVectorElements.get(g));
 									if(current.contains(actualModelParameter)) {
-										index_metab = this.findMetabolite(current);
+										index_metab = this.findMetabolite(current,null);
 									}
 								}
+							}
+							if(index_metab == -1) { //it's not a normal multistate species but the one with multiple compartment
+								if(CellParsers.isMultistateSpeciesName(actualModelParameter)) {
+									String cmp = CellParsers.extractCompartmentLabel(actualModelParameter);
+									String justName = CellParsers.extractMultistateName(actualModelParameter);
+									index_metab = this.findMetabolite(justName, cmp);
+								}
+								
 							}
 							if(index_metab == -1) throw new NullPointerException();
 							metab = model.getMetabolite(index_metab);
@@ -1121,15 +1174,15 @@ public class MultiModel {
 		
 
 
-		Vector mod_indexes = new Vector();
-		Vector sub_indexes = new Vector();
-		Vector prod_indexes = new Vector();
+		//Vector mod_indexes = new Vector();
+		//Vector sub_indexes = new Vector();
+		//Vector prod_indexes = new Vector();
 		int volume_index = -1;
 	
 		CEvaluationTree f = copasiFunDB.findFunction(reaction.getFunction().getObjectName());
 		
 		//TOOOOOOOOOOOOOOOOOOOOO BE FIXED (CHECK IF IT EXISTS IN THE MULTIREMI DATA STRUCTURE FOR USERDEFINED FUNCTIONS)
-		if(f instanceof CFunction && !foundUserDefFunction && !reaction.getFunction().getObjectName().contains("action") &&
+	/*	if(f instanceof CFunction && !reaction.getFunction().getObjectName().contains("action") &&
 				!reaction.getFunction().getObjectName().contains("flux")) {
 			CFunctionParameters variables = ((CFunction) f).getVariables();
 			for(int r = 0; r < variables.size(); r++) {
@@ -1139,9 +1192,7 @@ public class MultiModel {
 				if(p.getUsage() == CFunctionParameter.SUBSTRATE) { 
 					sub_indexes.add(r);
 				}
-				if(p.getUsage() == CFunctionParameter.SUBSTRATE) { 
-					sub_indexes.add(r);
-				}
+				
 				if(p.getUsage() == CFunctionParameter.PRODUCT) { 
 					prod_indexes.add(r);
 				}
@@ -1151,57 +1202,77 @@ public class MultiModel {
 				}
 
 			}
-		}
+		}*/
 
-		for(int r = 0; r < mod.size(); r++ ) {
-			String s = (String)mod.get(r);
-			s = extractName(s);
-			CMetab metab;
-			int index_metab = this.findMetabolite(s);
-			metab = model.getMetabolite(index_metab);
-			if(mod_indexes.size() > 0 ) reaction.setParameterMapping((Integer) mod_indexes.get(r),  metab.getKey());
-			else reaction.addParameterMapping("modifier",  metab.getKey());
-		}
-
-		
-		
-		for(int r = 0; r < subs.size(); r++ ) {
-			String s = (String)subs.get(r);
-			multiplicity = extractMultiplicity(s);
-			s = extractName(s);
-			CMetab metab;
-			int index_metab = this.findMetabolite(s);
-			metab = model.getMetabolite(index_metab);
-			if(sub_indexes.size() > 0 ) {
-				reaction.setParameterMapping((Integer) sub_indexes.get(r),  metab.getKey());
+		if(foundMassAction) {
+			for(int r = 0; r < mod.size(); r++ ) {
+				String s = (String)mod.get(r);
+				s = extractName(s);
+				CMetab metab;
+				int index_metab = this.findMetabolite(s,null);
+				metab = model.getMetabolite(index_metab);
+				//if(mod_indexes.size() > 0 ) reaction.setParameterMapping((Integer) mod_indexes.get(r),  metab.getKey());
+				//else 
+				reaction.addParameterMapping("modifier",  metab.getKey());
 			}
-			else {
+	
+			
+			
+			for(int r = 0; r < subs.size(); r++ ) {
+				String s = (String)subs.get(r);
+				multiplicity = extractMultiplicity(s);
+				s = extractName(s);
+				CMetab metab;
+				int index_metab = this.findMetabolite(s,null);
 				
-				if(multiplicity == Math.floor(multiplicity)){
-					for(int i11 = 0; i11 < Math.floor(multiplicity); i11++) {
-						reaction.addParameterMapping("substrate",  metab.getKey());
+				if(index_metab == -1) { //it's not a normal multistate species but the one with multiple compartment
+					if(CellParsers.isMultistateSpeciesName(s)) {
+						String cmp = CellParsers.extractCompartmentLabel(s);
+						String justName = CellParsers.extractMultistateName(s);
+						index_metab = this.findMetabolite(justName, cmp);
 					}
+					
+				}
+				metab = model.getMetabolite(index_metab);
+				/*if(sub_indexes.size() > 0 ) {
+					reaction.setParameterMapping((Integer) sub_indexes.get(r),  metab.getKey());
 				}
 				else {
-					reaction.addParameterMapping("substrate",  metab.getKey());
-				}	
+				*/	
+					if(multiplicity == Math.floor(multiplicity)){
+						for(int i11 = 0; i11 < Math.floor(multiplicity); i11++) {
+							reaction.addParameterMapping("substrate",  metab.getKey());
+						}
+					}
+					else {
+						reaction.addParameterMapping("substrate",  metab.getKey());
+					}	
+				//}
+			}
+			//if(volume_index != -1 ) reaction.setParameterMapping(volume_index,  model.getCompartment(0).getKey());
+	
+	
+			for(int r = 0; r < prod.size(); r++ ) {
+				String s = (String)prod.get(r);
+				s = extractName(s);
+				CMetab metab;
+				int index_metab = this.findMetabolite(s,null);
+				if(index_metab == -1) { //it's not a normal multistate species but the one with multiple compartment
+					if(CellParsers.isMultistateSpeciesName(s)) {
+						String cmp = CellParsers.extractCompartmentLabel(s);
+						String justName = CellParsers.extractMultistateName(s);
+						index_metab = this.findMetabolite(justName, cmp);
+					}
+					
+				}
+				metab = model.getMetabolite(index_metab);
+				/*if(prod_indexes.size() > 0 ) { 
+					reaction.setParameterMapping((Integer) prod_indexes.get(r),  metab.getKey());
+				} else */
+				reaction.addParameterMapping("product",  metab.getKey());
+	
 			}
 		}
-		if(volume_index != -1 ) reaction.setParameterMapping(volume_index,  model.getCompartment(0).getKey());
-
-
-		for(int r = 0; r < prod.size(); r++ ) {
-			String s = (String)prod.get(r);
-			s = extractName(s);
-			CMetab metab;
-			int index_metab = this.findMetabolite(s);
-			metab = model.getMetabolite(index_metab);
-			if(prod_indexes.size() > 0 ) { 
-				reaction.setParameterMapping((Integer) prod_indexes.get(r),  metab.getKey());
-			} else reaction.addParameterMapping("product",  metab.getKey());
-
-		}
-		
 		return reaction;
 	}
 	
@@ -1245,6 +1316,17 @@ public class MultiModel {
 		if(copasiDataModel==null) return;
 		CModel model = this.copasiDataModel.getModel();
 		if(model!=null) model.cleanup();
+		
+		
+		allNamedElements.clear();
+		speciesDB.clear();
+		compDB.clear();
+		eventsDB.clear();
+		funDB.clear();
+		globalqDB.clear();
+		
+		
+		System.gc();
 	}
 	
 	static int speciesToBeExported = 0;
@@ -1264,62 +1346,68 @@ public class MultiModel {
 				if(s instanceof Species && !(s instanceof MultistateSpecies)) {
 					String name = s.getDisplayedName();
 					if(name.trim().length()== 0) continue;
-					String comp = s.getCompartment();
-					//double initial_conc = s.getInitialConcentration().doubleValue();
-					String initialExpression = new String();
-					double initial_conc = 0.0;
-					if(MainGui.quantityIsConc) {
-						try{
-							initial_conc = Double.parseDouble(s.getInitialQuantity());
-						} catch(Exception ex) { //E' UN'ESPRESSIONE METTERE 0 QUI E INITIAL EXPRESSION COME EXPRESSION
-							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-							initialExpression = s.getInitialQuantity();
-						}
-					}
+					String compartmentList = s.getCompartment_listString();
+					//FOR NOW ALL HAVE THE SAME INITIAL CONCENTRATION/EXPRESSION... NEEEEEEEEEED TO BE FIIIIIIIIIIIIXED
+					Vector<String> compNames = CellParsers.extractListElements(this,compartmentList, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.description);
 					
-					int type = s.getType();
-					CMetab m;
-					int index_metab = this.findMetabolite(name);
-					if(index_metab == -1) m = model.createMetabolite(name, comp , initial_conc,  type);
-					else m = model.getMetabolite(index_metab);
-				
-					String sbmlID = s.getSBMLid().trim();
-					if(sbmlID.length()==0)  sbmlID = m.getKey();
-					m.setSBMLId(sbmlID);
 					
-					if(s.getExpression().trim().length() > 0) {
-						try {
-							String expr = buildCopasiExpression(s.getExpression(),true,false);
-							//System.out.println("Expression: "+expr);
-							
-							if(expr.length()==0) throw new Exception("Problems exporting the expression "+s.getExpression());
-							m.setExpression(expr);
-							//m.setInitialExpression(expr);
-						} catch (Exception e) {
-							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-							species_with_expression_not_added.add(s);
+					for(int ii = 0; ii < compNames.size(); ii++) {
+						//double initial_conc = s.getInitialConcentration().doubleValue();
+						String comp = compNames.get(ii);
+						String initialExpression = new String();
+						double initial_conc = 0.0;
+						if(MainGui.quantityIsConc) {
+							try{
+								initial_conc = Double.parseDouble(s.getInitialQuantity());
+							} catch(Exception ex) { //E' UN'ESPRESSIONE METTERE 0 QUI E INITIAL EXPRESSION COME EXPRESSION
+								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+								initialExpression = s.getInitialQuantity();
+							}
 						}
-					}
-					
-					if(!MainGui.quantityIsConc)		{
-						try{
-							m.setInitialValue(Double.parseDouble(s.getInitialQuantity()));
-						} catch(Exception ex) { //E' UN'ESPRESSIONE METTERE 0 QUI E INITIAL EXPRESSION COME EXPRESSION
-							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-							initialExpression = s.getInitialQuantity();
+
+						int type = s.getType();
+						CMetab m;
+						int index_metab = this.findMetabolite(name,comp);
+						if(index_metab == -1) m = model.createMetabolite(name, comp , initial_conc,  type);
+						else m = model.getMetabolite(index_metab);
+
+						String sbmlID = s.getSBMLid().trim();
+						if(sbmlID.length()==0)  sbmlID = m.getKey();
+						m.setSBMLId(sbmlID);
+
+						if(s.getExpression().trim().length() > 0) {
+							try {
+								String expr = buildCopasiExpression(s.getExpression(),true,false);
+								//System.out.println("Expression: "+expr);
+
+								if(expr.length()==0) throw new Exception("Problems exporting the expression "+s.getExpression());
+								m.setExpression(expr);
+								//m.setInitialExpression(expr);
+							} catch (Exception e) {
+								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+								species_with_expression_not_added.add(s);
+							}
 						}
-					}
-					if(initialExpression.length()>0 ) {
-						if(initialExpression.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) != 0)
+
+						if(!MainGui.quantityIsConc)		{
+							try{
+								m.setInitialValue(Double.parseDouble(s.getInitialQuantity()));
+							} catch(Exception ex) { //E' UN'ESPRESSIONE METTERE 0 QUI E INITIAL EXPRESSION COME EXPRESSION
+								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+								initialExpression = s.getInitialQuantity();
+							}
+						}
+						if(initialExpression.length()>0 ) {
+							if(initialExpression.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) != 0)
 								m.setInitialExpression(buildCopasiExpression(initialExpression, false,true));
-						else m.setInitialExpression("nan");
-					} else {
-						m.setInitialConcentration(initial_conc);
-					}					
-					//if(!MainGui.quantityIsConc) object = m.getObject(new CCopasiObjectName("Reference=InitialParticleNumber"));
-					//else object = m.getObject(new CCopasiObjectName("Reference=InitialConcentration"));
-					m.setNotes(s.getNotes());
-				
+							else m.setInitialExpression("nan");
+						} else {
+							m.setInitialConcentration(initial_conc);
+						}					
+						//if(!MainGui.quantityIsConc) object = m.getObject(new CCopasiObjectName("Reference=InitialParticleNumber"));
+						//else object = m.getObject(new CCopasiObjectName("Reference=InitialConcentration"));
+						m.setNotes(s.getNotes());
+					}
 					//changedObjects.add(object);
 				} else {
 
@@ -1333,7 +1421,7 @@ public class MultiModel {
 					for(int j = 0; j < expanded.size(); j++) {
 						Species single = expanded.get(j);
 						String name = single.getDisplayedName();
-						String comp = single.getCompartment();
+						String comp = single.getCompartment_listString();
 						double initial_conc = 0.0;
 						if(MainGui.quantityIsConc) {
 							try{
@@ -1350,7 +1438,7 @@ public class MultiModel {
 						int type = single.getType();
 
 						CMetab m;
-						int index_metab = this.findMetabolite(name);
+						int index_metab = this.findMetabolite(name,null);
 						if(index_metab == -1) m = model.createMetabolite(name, comp , initial_conc,  type);
 						else m = model.getMetabolite(index_metab);
 
@@ -1418,7 +1506,7 @@ public class MultiModel {
 	private int findParamIndex_InCFunction(CFunction chosenFun, String param) {
 		CFunctionParameters var = chosenFun.getVariables();
 		
-		if(param.startsWith("\"")) param = param.substring(1,param.length()-1);
+		if(param.startsWith("\"")&param.endsWith("\"")) param = param.substring(1,param.length()-1);
 		for(int i = 0; i < var.size(); i++) {
 			CFunctionParameter par = var.getParameter(i);
 			if(par.getObjectName().compareTo(param) == 0) return i; 
@@ -1630,7 +1718,9 @@ public class MultiModel {
 			if(g.getType() == CModelValue.FIXED) { 
 				continue; 
 			}
-			
+			if(g.getName().compareTo("F")==0){
+				System.out.println("qui");
+			}
 			CModelValue modelValue = null;
 			try{
 				Double value = Double.parseDouble(g.getInitialValue());
@@ -1638,6 +1728,7 @@ public class MultiModel {
 			}catch(Exception ex) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 				modelValue = model.createModelValue(g.getName(), 0.0);
+				
 				modelValue.setInitialExpression(buildCopasiExpression(g.getInitialValue(),false,true));
 			}	
 			
@@ -1867,7 +1958,18 @@ public class MultiModel {
 			    	MultistateSpecies m = new MultistateSpecies(this,target);
 			    	String complete_name = m.printCompleteDefinition();
 			    		
-			    	int index_metab = this.findMetabolite(complete_name);
+			    	//int index_metab = this.findMetabolite(complete_name,null);
+			    	int index_metab = -1;
+			    	
+			    	String cmp = CellParsers.extractCompartmentLabel(complete_name);
+					if(cmp.length() > 0 ) {
+						String justName = CellParsers.extractMultistateName(complete_name); //extractName separates just the multiplicity
+						index_metab = this.findMetabolite(justName, cmp);
+					} else {
+					
+						index_metab = this.findMetabolite(complete_name,null);
+					}
+					
 					CMetab metab = model.getMetabolite(index_metab);
 							
 					String element_copasiTerm = metab.getKey();
@@ -1877,8 +1979,17 @@ public class MultiModel {
 				    couple.add(element_copasiTerm);
 				    originalValue_copasiTerm.add(couple);
 			   } else {
-					int index = this.findMetabolite(target);
-			    	String element_copasiTerm = new String();
+				   //int index = this.findMetabolite(target,null);
+				   int index = -1;
+			    	String cmp = CellParsers.extractCompartmentLabel(target);
+					if(cmp.length() > 0 ) {
+						String justName = CellParsers.extractMultistateName(target); //extractName separates just the multiplicity
+						index = this.findMetabolite(justName, cmp);
+					} else {
+						
+						index = this.findMetabolite(target,null);
+					}
+					String element_copasiTerm = new String();
 					if(index!= -1) { //species
 							CMetab metab = model.getMetabolite(index);
 							element_copasiTerm = metab.getKey();//metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString();
@@ -1915,7 +2026,7 @@ public class MultiModel {
 				
 				target_assignment.add(final_target);
 				target_assignment.add(parseExpressionGlobalQ(assignment, MainGui.exportConcentration, false,false)); 
-				//NO... ADESSO VARIA A SECONDA DI QUELLO CHE SI DICE IN GENERALE... always concentration because the events hold the particle number automatically
+				// always concentration because the events hold the particle number automatically
 				originalValue_copasiTerm.clear();
 		}
 		//---CONTROLLARE SE C'E' EXPANSION... SE SONO FALSI LASCIARE SOLO LE AZIONI CHE CI SONO
@@ -2065,8 +2176,14 @@ public class MultiModel {
 		 CompleteMultistateSpecies start = react.CompleteMultistateSpecies();
 		 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this);
 	 	 start.accept(v);
-		 MultistateSpecies existing = (MultistateSpecies) this.getSpecies(v.getSpeciesName());
-		temp.mergeStatesWith_Minimum(existing);
+	 	 Species existingSp = this.getSpecies(v.getSpeciesName());
+	 	 if(existingSp instanceof MultistateSpecies)  {
+	 		 MultistateSpecies existingMulti = (MultistateSpecies) existingSp;
+			temp.mergeStatesWith_Minimum(existingMulti);
+		 } else { 
+			 //is multistate because of just compartment so the "temp" should be ok...
+		 }
+		 
 		return temp.getExpandedSpecies(this);
 
 	}
@@ -2241,6 +2358,8 @@ public class MultiModel {
         
         for (int i = 0;i < iMax;i++)
         {
+        	//System.out.println("global q "+i + " of "+iMax);
+			//System.out.flush();
         	Vector row = new Vector();
     		CModelValue val = model.getModelValue(i);
             
@@ -2310,6 +2429,8 @@ public class MultiModel {
 		MainGui.quantityUnit = model.getQuantityUnitEnum();
 		MainGui.modelName = model.getObjectName();
 		
+		
+		
 		model.setTimeUnit(Constants.UnitTypeTime.DIMENSIONLESS_TIME.copasiType);
 		model.setVolumeUnit(Constants.UnitTypeVolume.DIMENSIONLESS_VOL.copasiType);
 		model.setQuantityUnit(Constants.UnitTypeQuantity.DIMENSIONLESS_QUANTITY.copasiType);
@@ -2318,49 +2439,71 @@ public class MultiModel {
 		HashMap<Long, String> SBML_IDS = new HashMap<Long, String>();
 		
         int iMax = (int)model.getMetabolites().size();
-        
+        HashMap<String, Integer> namesCollected_index = new HashMap<String, Integer>();
         for (int i = 0;i < iMax;i++)
         {
+        	//System.out.println("species "+i + " of "+iMax);
+			//System.out.flush();
+			
         	Vector row = new Vector();
             CMetab metab = model.getMetabolite(i);
 
-          
             String cleanName = CellParsers.cleanName(metab.getObjectName(),true);
-            if(metab.getMiriamAnnotation().compareTo(Constants.MULTISTATE_ANNOTATION) == 0) {
-            	System.out.println(metab.getObjectName() +" is a real multistate species from MultiReMI");
-            };
             
-           /* if(cleanName.compareTo(metab.getObjectName())!=0) {
-            	metab.setObjectName(cleanName);
-            }
-            
-            row.add(metab.getObjectName());*/
-            
-            row.add(cleanName);
-            SBML_IDS.put((long) i+1,metab.getSBMLId());
-      
-            if(MainGui.quantityIsConc) row.add(new Double(metab.getInitialConcentration()).toString());
-           else row.add(new Double(metab.getInitialValue()).toString());
-           
-           if(metab.getInitialExpression().trim().length()>0) {
-        	   row.set(row.size()-1, buildMRExpression_fromCopasiExpr(metab.getInitialExpression()));
-           }
-            
-            row.add(Constants.SpeciesType.getDescriptionFromCopasiType(metab.getStatus()));
-            
-            
-            String cleanNameComp = CellParsers.cleanName(metab.getCompartment().getObjectName(),false);
-            row.add(cleanNameComp);
-            
-            if(metab.getStatus() == CMetab.ASSIGNMENT || metab.getStatus() == CMetab.ODE) {
-            	row.add(CellParsers.cleanMathematicalExpression(this.buildMRExpression_fromCopasiExpr(metab.getExpression())));
-            } else row.add("");
-            
-            
-       	
-            row.add(metab.getNotes());
-           rows.add(row);
-   		  
+            if(!namesCollected_index.containsKey(cleanName)) {
+                if(metab.getMiriamAnnotation().compareTo(Constants.MULTISTATE_ANNOTATION) == 0) {
+	            	System.out.println(metab.getObjectName() +" is a real multistate species from MultiReMI");
+	            };
+	            
+	            row.add(cleanName);
+	            SBML_IDS.put((long) i+1,metab.getSBMLId());
+	      
+	            if(MainGui.quantityIsConc) row.add(new Double(metab.getInitialConcentration()).toString());
+	           else row.add(new Double(metab.getInitialValue()).toString());
+	           
+	           if(metab.getInitialExpression().trim().length()>0) {
+	        	   row.set(row.size()-1, buildMRExpression_fromCopasiExpr(metab.getInitialExpression()));
+	           }
+	            
+	            row.add(Constants.SpeciesType.getDescriptionFromCopasiType(metab.getStatus()));
+	            
+	            
+	            String cleanNameComp = CellParsers.cleanName(metab.getCompartment().getObjectName(),false);
+	            row.add(cleanNameComp);
+	            
+	          
+	            
+	            if(metab.getStatus() == CMetab.ASSIGNMENT || metab.getStatus() == CMetab.ODE) {
+	            	row.add(CellParsers.cleanMathematicalExpression(this.buildMRExpression_fromCopasiExpr(metab.getExpression())));
+	            } else row.add("");
+	            
+	            
+	       	
+	            row.add(metab.getNotes());
+	            namesCollected_index.put(cleanName, i);
+	           rows.add(row);
+        	} else { //the species already exist in another compartment, I have to add the compartment and other data to the same row as the previously added one
+        		Integer index = namesCollected_index.get(cleanName);
+        		row = (Vector) rows.get(index);
+        		
+        		//SBML_IDS.put((long) i+1,metab.getSBMLId());
+        		//if(MainGui.quantityIsConc) row.add(new Double(metab.getInitialConcentration()).toString());
+ 	            //else row.add(new Double(metab.getInitialValue()).toString());
+ 	            //if(metab.getInitialExpression().trim().length()>0) {
+ 	        	 //  row.set(row.size()-1, buildMRExpression_fromCopasiExpr(metab.getInitialExpression()));
+ 	           	//}
+ 	            //row.add(Constants.SpeciesType.getDescriptionFromCopasiType(metab.getStatus()));
+ 	            
+ 	            String cleanNameComp = CellParsers.cleanName(metab.getCompartment().getObjectName(),false);
+ 	            String oldComp = (String) row.get(Constants.SpeciesColumns.COMPARTMENT.index-1);
+ 	            
+ 	            row.set(Constants.SpeciesColumns.COMPARTMENT.index-1, oldComp+", "+cleanNameComp);
+ 	            
+ 	           // if(metab.getStatus() == CMetab.ASSIGNMENT || metab.getStatus() == CMetab.ODE) {
+ 	          //  	row.add(CellParsers.cleanMathematicalExpression(this.buildMRExpression_fromCopasiExpr(metab.getExpression())));
+ 	          //  } else row.add("");
+ 	            rows.set(index, row);
+        	}
         }
         
         Vector ret = new Vector();
@@ -2384,6 +2527,8 @@ public class MultiModel {
         
         for (int i = 0;i < iMax;i++)
         {
+        	//System.out.println("reaction "+i + " of "+iMax);
+			//System.out.flush();
             CReaction reaction = model.getReaction(i);
             if(reaction.isReversible()) {
             	System.out.println("!!!!!!-----REVERSIBLE REACTION NOT IMPORTED-----");
@@ -2395,49 +2540,47 @@ public class MultiModel {
             
             row.add(reaction.getObjectName());
 //------------------------------------------------------------------
-           CChemEq eq = reaction.getChemEq();
-           
-           //--undefined reaction
-           if(eq.getSubstrates().size() == 0 && eq.getProducts().size() == 0) {	 
-        	   rows.add(new Vector(row));
-        	   row.clear(); continue;    
-           }
-         
-           //--  
-           
+            CChemEq eq = reaction.getChemEq();
+
+            //--undefined reaction
+            if(eq.getSubstrates().size() == 0 && eq.getProducts().size() == 0) {	 
+            	rows.add(new Vector(row));
+            	row.clear(); continue;    
+            }
+            //--  
+
             String r_string = new String();
             long nsub = eq.getSubstrates().size();
             for(int ii = 0; ii < nsub; ii++) {
-           	 CChemEqElement sub = eq.getSubstrate(ii);
-           	 Double mult = sub.getMultiplicity();
-           	 if(mult!=1.0) {r_string += mult.doubleValue() + " * ";}
-			String cleanName = CellParsers.cleanName(sub.getMetabolite().getObjectName(),true);
-			/*if(cleanName.compareTo(sub.getMetabolite().getObjectName())!=0) {
-				sub.getMetabolite().setObjectName(cleanName);
-			}	 r_string += sub.getMetabolite().getObjectName() + " + ";*/
-			 r_string += cleanName  + " + ";
+            	CChemEqElement sub = eq.getSubstrate(ii);
+            	Double mult = sub.getMultiplicity();
+            	if(mult!=1.0) {r_string += mult.doubleValue() + " * ";}
+            	String cleanName = CellParsers.cleanName(sub.getMetabolite().getObjectName(),true);
+            	if(isSpeciesWithMultipleCompartment(cleanName)) {
+            		cleanName = addCompartmentLabel(cleanName, sub.getMetabolite().getCompartment().getObjectName());
+            	}
+            	r_string += cleanName  + " + ";
             }
             if(r_string.length() > 3) r_string = r_string.substring(0, r_string.length()-3);
 
             r_string += " -> ";
-            
+
             long nprod = eq.getProducts().size();
             boolean products = false;
             for(int ii = 0; ii < nprod; ii++) {
-           	 products = true;
-           	 CChemEqElement sp = eq.getProduct(ii);
-           	 Double mult = sp.getMultiplicity();
-           	 if(mult!=1.0) {r_string += mult.doubleValue() + " * ";}
-           	String cleanName = CellParsers.cleanName(sp.getMetabolite().getObjectName(),true);
-			/*if(cleanName.compareTo(sp.getMetabolite().getObjectName())!=0) {
-				sp.getMetabolite().setObjectName(cleanName);
-			}
-           	 r_string += sp.getMetabolite().getObjectName() + " + ";*/
-           	r_string += cleanName + " + ";
+            	products = true;
+            	CChemEqElement sp = eq.getProduct(ii);
+            	Double mult = sp.getMultiplicity();
+            	if(mult!=1.0) {r_string += mult.doubleValue() + " * ";}
+            	String cleanName = CellParsers.cleanName(sp.getMetabolite().getObjectName(),true);
+            	if(isSpeciesWithMultipleCompartment(cleanName)) {
+            		cleanName = addCompartmentLabel(cleanName, sp.getMetabolite().getCompartment().getObjectName());
+            	}
+            	r_string += cleanName + " + ";
             }
             if(r_string.length() > 3 && products== true) r_string = r_string.substring(0, r_string.length()-3);
-            
-            
+
+
             long nmod = eq.getModifiers().size();
             boolean modifiers = false;
             if(nmod != 0) {
@@ -2445,12 +2588,15 @@ public class MultiModel {
             }
             for(int ii = 0; ii < nmod; ii++) {
             	modifiers = true;
-           	 	CChemEqElement sp = eq.getModifier(ii);
+            	CChemEqElement sp = eq.getModifier(ii);
             	String cleanName = CellParsers.cleanName(sp.getMetabolite().getObjectName(),true);
-    			r_string +=  cleanName + " ";
+            	if(isSpeciesWithMultipleCompartment(cleanName)) {
+            		cleanName = addCompartmentLabel(cleanName, sp.getMetabolite().getCompartment().getObjectName());
+            	}
+            	r_string +=  cleanName + " ";
             }
             if(r_string.length() > 3 && modifiers== true) r_string = r_string.substring(0, r_string.length()-1);
-            
+
             row.add(r_string.trim());
             if(reaction.getFunction().getObjectName().contains("undefined")) { 
             	rows.add(new Vector(row));
@@ -2484,6 +2630,14 @@ public class MultiModel {
         return rows;
  	}
 	
+	private String addCompartmentLabel(String cleanName, String objectName) {
+		return CellParsers.addCompartmentLabel(cleanName, objectName);
+	}
+
+	private boolean isSpeciesWithMultipleCompartment(String cleanName) {
+		return  this.speciesDB.isSpeciesWithMultipleCompartment(cleanName);
+	}
+
 	private String buildMRKineticLaw_fromCopasiFunction(CReaction reaction) throws Exception {
 			return buildMRKineticLaw_fromCopasiFunction(reaction, false);
 	}
@@ -2526,8 +2680,15 @@ public class MultiModel {
 				int index = findMetabolite_key(currentKey);
 				val = model.getMetabolite(index);
 				String complete_name_species = val.getObjectName();
-				if(CellParsers.isMultistateSpeciesName(complete_name_species)) complete_name_species = complete_name_species.substring(0,complete_name_species.indexOf("("));
-				ret += CellParsers.cleanName(complete_name_species) + ",";
+				if(CellParsers.isMultistateSpeciesName(complete_name_species)) {
+					//complete_name_species = complete_name_species.substring(0,complete_name_species.indexOf("("));
+					complete_name_species = extractName(complete_name_species);
+				}
+				String element = CellParsers.cleanName(complete_name_species);
+				if(isSpeciesWithMultipleCompartment(element)) {
+					element = addCompartmentLabel(element, model.getMetabolite(index).getCompartment().getObjectName());
+            	}
+				ret +=  element + ",";
 			} else if(currentKey.contains("Compartment")) {
 				int index = findCompartment_key(currentKey);
 				val = model.getCompartment(index);
@@ -2592,7 +2753,6 @@ public class MultiModel {
 		String ret = new String();
 		if(expression.trim().length() ==0) return ret;
 		
-		
 		expression = expression.replace(" < ", " lt ");
 		expression = expression.replace(" > ", " gt ");
 		expression = expression.replace(" <= ", " le ");
@@ -2610,16 +2770,32 @@ public class MultiModel {
 			if(elem.contains("[")) {
 				StringTokenizer st_vector = new StringTokenizer(elem,",");
 				String real_elem = new String();
+				String real_elem2 = new String();
 				int open_br = 0;
 				int closed_br = 0;
-				
+				boolean first = true;
 				
 				while(st_vector.hasMoreTokens()) {
-					//for now I ignore the fact that metabolites can be in different compartments
-					//I just keep track of the LAST "Vector=" element and I use it as the element in my expression string
-					//for Metabolites there are 2 "Vector=[]": the first is the compartment the second the metabolite... for now I'm extracting only the name of the species
+					//for Metabolites there are 2 "Vector=[]": the first is the compartment the second the metabolite... 
 					String sub_elem = st_vector.nextToken();
-					if(sub_elem.contains("Vector")) {
+					//for Metabolites there are 2 "Vector=[]": the first is the compartment the second the metabolite... 
+					if(sub_elem.contains("Vector") && !first) {
+						real_elem2 = new String(sub_elem);
+						real_elem2 = real_elem2.replace('\\', '\u00A3');
+						real_elem2 = real_elem2.replaceAll("\u00A3", "");
+						open_br = real_elem2.indexOf("[");
+						closed_br = real_elem2.lastIndexOf("]");
+						if(real_elem2.contains("Metabolite")) whichElement = Constants.TitlesTabs.SPECIES.index;
+						real_elem2 = real_elem2.substring(open_br+1,closed_br);
+						real_elem2 = real_elem2.replace("*MY*COMMA", ",");
+						
+						if(whichElement == Constants.TitlesTabs.SPECIES.index) real_elem2 = CellParsers.cleanName(real_elem2,true);
+						else real_elem2 = CellParsers.cleanName(real_elem2);
+						
+						real_elem = addCompartmentLabel(real_elem2, real_elem);
+					}
+					
+					if(sub_elem.contains("Vector") && first) {
 						real_elem = new String(sub_elem);
 						real_elem = real_elem.replace('\\', '\u00A3');
 						real_elem = real_elem.replaceAll("\u00A3", "");
@@ -2630,15 +2806,13 @@ public class MultiModel {
 						else if(real_elem.contains("Compartments")) whichElement = Constants.TitlesTabs.COMPARTMENTS.index;
 						real_elem = real_elem.substring(open_br+1,closed_br);
 						real_elem = real_elem.replace("*MY*COMMA", ",");
+						if(whichElement == Constants.TitlesTabs.SPECIES.index) real_elem = CellParsers.cleanName(real_elem,true);
+						else real_elem = CellParsers.cleanName(real_elem);
+						first = false;
 					}
-					
-					
-					
 				}
 				
-				if(whichElement == Constants.TitlesTabs.SPECIES.index) real_elem = CellParsers.cleanName(real_elem,true);
-				else real_elem = CellParsers.cleanName(real_elem);
-				
+					
 				st_vector = new StringTokenizer(elem,",");
 				elem = elem.replace("\\,", "\\*MY*COMMA");
 				String ref = new String();
@@ -2687,6 +2861,8 @@ public class MultiModel {
 		ret = ret.replace(" eq ", " == ");
 		ret = ret.replace(" and ", " && ");
 		ret = ret.replace(" or ", " || ");
+		
+		
 		try {
 			ret = reprintExpression(ret, false);
 		} catch (Exception e) {
@@ -2705,8 +2881,9 @@ public class MultiModel {
 			InputStream is = new ByteArrayInputStream(expr.getBytes("UTF-8"));
 			MR_Expression_Parser parser = new MR_Expression_Parser(is);
 			CompleteExpression root = parser.CompleteExpression();
+			MainGui.jListFunctionToCompact.setSelectionInterval(0, MainGui.listModel_FunctionToCompact.size()-1);
 			
-			ExpressionVisitor vis = new ExpressionVisitor(new ArrayList<String>(),this,forceExpansion_elements);
+			ExpressionVisitor vis = new ExpressionVisitor(MainGui.jListFunctionToCompact.getSelectedValuesList(),this,forceExpansion_elements);
 			
 			root.accept(vis);
 			if(vis.getExceptions().size() == 0) {
@@ -2731,9 +2908,11 @@ public class MultiModel {
 			try { //IT CAN BE SOMETHING DIFFERENT FROM A METAAAAAAAAAAAAAAAAAAAAAAAAAAAABOLITE
 					//TO BE FIIIIIIIIIIIIIIIIIIIIIIIIIIIIXED
 				
-				int index = this.findMetabolite(element.getTargetKey(),true);
-		    	if(index!= -1) { //species
-		    		ret += model.getMetabolite(index).getObjectName();
+				int index = this.findMetabolite(element.getTargetKey(),null,true);
+				
+				if(index!= -1) { //species
+		    		ret += CellParsers.cleanName(model.getMetabolite(index).getObjectName(),true);
+		    		
 		    	} else { 
 						index = this.findGlobalQ(element.getTargetKey(),true);
 						if(index!= -1) { //parameter
@@ -2768,7 +2947,7 @@ public class MultiModel {
 									//sp.getInitialAmount(), 
 									sp.getInitialQuantity(), 
 									(String)Constants.SpeciesType.getDescriptionFromCopasiType(sp.getType()),
-									sp.getCompartment(),
+									sp.getCompartment_listString(),
 									sp.getExpression(), false, sp.getNotes(),true);
 		}
 	
@@ -3560,6 +3739,11 @@ public class MultiModel {
 
 	public Vector<MultistateSpecies> getAllMultistateSpecies() {
 		return speciesDB.getAllMultistateSpecies();
+	}
+
+	public void addCompartmentToSpecies(String name, String cmpName) {
+		speciesDB.addCompartmentToSpecies(name, cmpName);
+		
 	}
 	
 }

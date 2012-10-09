@@ -7,22 +7,28 @@ import parsers.chemicalReaction.visitor.*;
  * JTB node class for the production Species:<br>
  * Corresponding grammar :<br>
  * nodeToken -> < IDENTIFIER ><br>
+ * nodeListOptional -> ( < IDENTIFIER > )*<br>
  */
 public class Species implements INode {
 
   /** A child node */
   public NodeToken nodeToken;
 
+  /** A child node */
+  public NodeListOptional nodeListOptional;
+
   /** The serial version uid */
   private static final long serialVersionUID = 144L;
 
   /**
-   * Constructs the node with its child node.
+   * Constructs the node with all its children nodes.
    *
-   * @param n0 the child node
+   * @param n0 first child node
+   * @param n1 next child node
    */
-  public Species(final NodeToken n0) {
+  public Species(final NodeToken n0, final NodeListOptional n1) {
     nodeToken = n0;
+    nodeListOptional = n1;
   }
 
   /**

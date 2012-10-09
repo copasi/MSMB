@@ -50,6 +50,28 @@ public interface MR_MultistateSpecies_ParserConstants {
   int MULTI_IDENTIFIER = 24;
   /** RegularExpression Id. */
   int UNDEFINED_SITE_SYMBOL = 25;
+  /** RegularExpression Id. */
+  int EXTENSION_CONC = 26;
+  /** RegularExpression Id. */
+  int EXTENSION_PARTICLE = 27;
+  /** RegularExpression Id. */
+  int EXTENSION_TRANS = 28;
+  /** RegularExpression Id. */
+  int EXTENSION_INIT = 29;
+  /** RegularExpression Id. */
+  int EXTENSION_RATE = 30;
+  /** RegularExpression Id. */
+  int EXTENSION_SPECIES = 31;
+  /** RegularExpression Id. */
+  int EXTENSION_GLOBALQ = 32;
+  /** RegularExpression Id. */
+  int EXTENSION_COMPARTMENT = 33;
+  /** RegularExpression Id. */
+  int EXTENSION_REACTION = 34;
+  /** RegularExpression Id. */
+  int EXTENSION_FUNCTION = 35;
+  /** RegularExpression Id. */
+  int EXTENSION_FLUX = 36;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -82,6 +104,17 @@ public interface MR_MultistateSpecies_ParserConstants {
     "<NUMBER>",
     "<MULTI_IDENTIFIER>",
     "\"?\"",
+    "\".c\"",
+    "\".p\"",
+    "\".t\"",
+    "\".i\"",
+    "\".r\"",
+    "\".spc\"",
+    "\".glq\"",
+    "\".cmp\"",
+    "\".rct\"",
+    "\".fnc\"",
+    "\".f\"",
   };
 
 }

@@ -3,6 +3,7 @@ package gui;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 
+import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -26,6 +27,13 @@ import utility.Constants;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.Color;
+import java.awt.GridLayout;
+import javax.swing.JRadioButton;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 public class RenamingDialog extends JDialog {
 
@@ -46,6 +54,20 @@ public class RenamingDialog extends JDialog {
 	String returnString = new String();
 	//private String speciesOldName;
 	static MultiModel multiModel = null;
+	private JTextField textField_1;
+	private JTextField textField_2;
+	private JRadioButton rdbtnNewSpeciesName;
+	private JRadioButton rdbtnNewCompartmentName;
+	private String newSpeciesName;
+	private String newCompartmentName;
+	
+	public String getNewSpeciesName() {
+		return newSpeciesName.trim();
+	}
+	public String getNewCompartmentName() {
+		return newCompartmentName.trim();
+	}
+	
 	public String getReturnString() {
 		return returnString;
 	}
@@ -79,9 +101,11 @@ public class RenamingDialog extends JDialog {
 			contentPanel.add(panel);
 			btnNewButton_1 = new JLabel(icon);
 			{
-				lblASpeciesWith = new JLabel("A Species with that name already exists. Provide a New Name for the Species.");
+				lblASpeciesWith = new JLabel("A Species with that name already exists.");
 				lblASpeciesWith.setHorizontalAlignment(SwingConstants.LEFT);
 			}
+			
+			
 			GroupLayout gl_panel = new GroupLayout(panel);
 			gl_panel.setHorizontalGroup(
 				gl_panel.createParallelGroup(Alignment.LEADING)
@@ -103,6 +127,65 @@ public class RenamingDialog extends JDialog {
 			);
 			panel.setLayout(gl_panel);
 		}
+		
+		JPanel panel_newName = new JPanel();
+		panel_newName.setForeground(Color.WHITE);
+		panel_newName.setBackground(Color.BLUE);
+		contentPanel.add(panel_newName, BorderLayout.SOUTH);
+		panel_newName.setLayout(new GridLayout(2, 0, 0, 0));
+		
+		JPanel panel_1 = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) panel_1.getLayout();
+		flowLayout.setAlignment(FlowLayout.LEFT);
+		panel_1.setBackground(Color.BLUE);
+		panel_newName.add(panel_1);
+		
+		rdbtnNewSpeciesName = new JRadioButton("New Species name:  ");
+		panel_1.add(rdbtnNewSpeciesName);
+		rdbtnNewSpeciesName.setSelected(true);
+		
+		textField_1 = new JTextField();
+		panel_1.add(textField_1);
+		textField_1.setColumns(10);
+		
+		JPanel panel_3 = new JPanel();
+		FlowLayout flowLayout_1 = (FlowLayout) panel_3.getLayout();
+		flowLayout_1.setAlignment(FlowLayout.LEFT);
+		panel_3.setBackground(Color.MAGENTA);
+		panel_newName.add(panel_3);
+		
+		rdbtnNewCompartmentName = new JRadioButton("New Compartment name:");
+		
+		panel_3.add(rdbtnNewCompartmentName);
+		
+		ButtonGroup names = new ButtonGroup();
+		names.add(rdbtnNewSpeciesName);
+		names.add(rdbtnNewCompartmentName);
+		
+		textField_2 = new JTextField();
+		panel_3.add(textField_2);
+		textField_2.setColumns(10);
+		textField_2.setEditable(false);
+		
+		rdbtnNewCompartmentName.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if(rdbtnNewCompartmentName.isSelected()) {
+					textField_1.setEditable(false);
+					textField_1.setText("");
+					textField_2.setEditable(true);
+				}
+			}
+		});
+		rdbtnNewSpeciesName.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if(rdbtnNewSpeciesName.isSelected()) {
+					textField_2.setEditable(false);
+					textField_2.setText("");
+					textField_1.setEditable(true);
+				}
+			}
+		});
+		
 	
 		{
 			JPanel buttonPane = new JPanel();
@@ -133,12 +216,23 @@ public class RenamingDialog extends JDialog {
 				});
 				buttonPane.add(btnNewButton);
 			}
+			else
+			{
+				
+				JButton btnNewButton = new JButton("Use new name\n");
+				btnNewButton.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						useNewName();
+					}
+				});
+				buttonPane.add(btnNewButton);
+			}
 			{
 				String cancelButtonText = new String();
 				if(actionsType == Constants.MERGE_SPECIES || actionsType == Constants.DELETE_SPECIES_AND_REDIRECT) {
 					cancelButtonText = "Go back and provide New Name";
 				}
-				else cancelButtonText = "OK";
+				else cancelButtonText = "Cancel";
 				JButton cancelButton = new JButton(cancelButtonText);
 				cancelButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
@@ -210,6 +304,13 @@ public class RenamingDialog extends JDialog {
 		setVisible(false);
 	}
 	
+	protected void useNewName() {
+		newCompartmentName = textField_2.getText();
+		newSpeciesName = textField_1.getText();
+		returnString = "NEW_NAME";
+		setVisible(false);
+	}
+	
 	protected void freshNameMultistateOption() {
 		MultistateSpecies ms = null;
 		try {
@@ -237,5 +338,4 @@ public class RenamingDialog extends JDialog {
 		setVisible(false);
 		
 	}
-
 }

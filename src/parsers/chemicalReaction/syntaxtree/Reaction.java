@@ -6,16 +6,16 @@ import parsers.chemicalReaction.visitor.*;
 /**
  * JTB node class for the production Reaction:<br>
  * Corresponding grammar :<br>
- * nodeChoice -> . %0 #0 ( AdditiveExpression() )+<br>
+ * nodeChoice -> . %0 #0 ( AdditiveExpression() )?<br>
  * .......... .. . .. #1 ( Blank() )* #2 < ARROW ><br>
  * .......... .. . .. #3 ( $0 ( " " )<br>
  * .......... .. . .. .. . $1 ( Blank() )*<br>
- * .......... .. . .. .. . $2 ( AdditiveExpression() )+ )*<br>
+ * .......... .. . .. .. . $2 ( AdditiveExpression() )? )*<br>
  * .......... .. . .. #4 ( $0 ( Blank() )* $1 ";"<br>
  * .......... .. . .. .. . $2 ( Blank() )* $3 ListModifiers() )?<br>
  * .......... .. | %1 #0 < ARROW2 ><br>
  * .......... .. . .. #1 ( Blank() )*<br>
- * .......... .. . .. #2 ( AdditiveExpression() )+<br>
+ * .......... .. . .. #2 ( AdditiveExpression() )?<br>
  * .......... .. . .. #3 ( $0 ( Blank() )* $1 ";"<br>
  * .......... .. . .. .. . $2 ( Blank() )* $3 ListModifiers() )?<br>
  */

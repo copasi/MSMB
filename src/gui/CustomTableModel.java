@@ -580,12 +580,11 @@ class CustomTableModelListener implements TableModelListener{
 		int rowChanged = e.getFirstRow();
 	    mod.modified = true;
         if(rowChanged == mod.getRowCount()-1) {
-        	  
         	   mod.addRow(new Vector());
         } else {
         	if(e.getColumn()!=-1) {
         		//MainGui.clear_debugMessages_relatedWith(rowChanged+1);
-        		MainGui.addRemoveEmptyFields_inConsistencyChecks(mod, mod.getTableName());
+        		if(MainGui.importFromSBMLorCPS) MainGui.addRemoveEmptyFields_inConsistencyChecks(mod, mod.getTableName());
         	}
         }
      }
@@ -966,6 +965,7 @@ class CustomJTable extends JTable
 
 	 
 	public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int vColIndex) {
+		if(MainGui.importFromSBMLorCPS) return null;
 		Component c = null;
 		try{
 			c = super.prepareRenderer(renderer, rowIndex, vColIndex);

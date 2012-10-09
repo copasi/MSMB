@@ -9,7 +9,7 @@ public class Species {
 	String initialQuantity = new String();
 	private String editableInitialQuantity = initialQuantity;
 	int type = Constants.SpeciesType.REACTIONS.copasiType;
-	String compartment = new String(); 
+	Vector<String> compartment = new Vector<String>(); 
 	String expression = new String();
 	private String editableExpression = expression;
 	public String getExpression() { 	return expression.trim();	}
@@ -52,7 +52,7 @@ public class Species {
 		r.add(this.getDisplayedName());
 		r.add(this.getInitialQuantity());
 		r.add(this.getType());
-		r.add(this.getCompartment());
+		r.add(this.getCompartment_listString());
 		r.add(this.getNotes());
 		r.add(this.getSBMLid());
 		return r;
@@ -94,7 +94,20 @@ public class Species {
 		this.type = CMetab_Type;
 	}
 	
-	public String getCompartment() {		return compartment; }
+	public String getCompartment_listString() {		
+		String ret = new String();
+		if(compartment.size() > 0) {
+			for(int i = 0; i< compartment.size()-1; i++) {
+				ret += compartment.get(i)+", ";
+			}
+			ret += compartment.get(compartment.size()-1);
+		}
+		return ret; 
+	}
+	
+	public Vector<String> getCompartments() {		
+		return this.compartment; 
+	}
 	
 	public void setCompartment(MultiModel m, String compartment) throws MySyntaxException {	
 		if(compartment == null) return;
@@ -102,19 +115,34 @@ public class Species {
 		if(compartment.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		if(compartment.length()==0) return;
 		try {
-			Vector<Vector<String>> undef_misused = CellParsers.parseExpression_getUndefMisused(m,compartment, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.COMPARTMENT.description);
+			//Vector<Vector<String>> undef_misused = CellParsers.parseExpression_getUndefMisused(m,compartment, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.COMPARTMENT.description);
+			Vector<Vector<String>> undef_misused = CellParsers.parseListExpression_getUndefMisused(m,compartment, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.COMPARTMENT.description);
+			
+		
 		} catch (Exception ex) {
-			if(m.getComp(compartment)!=null) {
-				this.compartment = compartment;	
-			}
+			/*if(m.getComp(compartment)!=null) {
+				if(!this.compartment.contains(compartment))	this.compartment.add(compartment);	
+			}*/
 			throw ex;	
 		}	
 		
-		if(m.getComp(compartment)!=null) {
-			this.compartment = compartment;	
-		} else {
-			throw new MySyntaxException(Constants.SpeciesColumns.COMPARTMENT.index, "Compartment  \""+ compartment+"\" is not defined.", Constants.TitlesTabs.SPECIES.description);
+		Vector<String> names = new Vector<String>();
+		try {
+			names = CellParsers.extractListElements(m,compartment, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.description);
+		} catch (MySyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
+		for(int i = 0; i < names.size(); i++) {
+			if(m.getComp(names.get(i))!=null) {
+				if(!this.compartment.contains(names.get(i))) this.compartment.add(names.get(i));	
+			} else {
+				throw new MySyntaxException(Constants.SpeciesColumns.COMPARTMENT.index, "Compartment  \""+ names.get(i)+"\" is not defined.", Constants.TitlesTabs.SPECIES.description);
+			}
+		}
+		
+		
 	}
 
 	public String getNotes() {		return notes;	}

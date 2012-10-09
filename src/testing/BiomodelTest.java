@@ -9,7 +9,7 @@ import org.COPASI.*;
 
 
 public class BiomodelTest {
-	static boolean deleteFilesAfterProcessing = false;
+	static boolean deleteFilesAfterProcessing = true;
 	static 	String subdirectoryTests = "tests/BiomodelTests/";
 	static String nameFileLogReport = subdirectoryTests+"MSMB_simulationDiff_report.txt";
 	static String progressLog = subdirectoryTests+"MSMB_progressLog.txt";
@@ -34,18 +34,20 @@ public class BiomodelTest {
 	public static final Vector<String> models_with_known_problems;
 		static {
 			models_with_known_problems = new Vector<String>();
-			models_with_known_problems.add("BIOMD0000000388");
+			/*models_with_known_problems.add("BIOMD0000000388");
 			models_with_known_problems.add("BIOMD0000000322");
 			models_with_known_problems.add("BIOMD0000000410");
-			models_with_known_problems.add("BIOMD0000000411");
+			
 			models_with_known_problems.add("BIOMD0000000415"); 
-			models_with_known_problems.add("BIOMD0000000143");
-			models_with_known_problems.add("BIOMD0000000226");
-			models_with_known_problems.add("BIOMD0000000227");
-			models_with_known_problems.add("BIOMD0000000380");
+		*/	//models_with_known_problems.add("BIOMD0000000143");
+			//models_with_known_problems.add("BIOMD0000000226");
+		//	models_with_known_problems.add("BIOMD0000000227");
+		/*	models_with_known_problems.add("BIOMD0000000380");
 			models_with_known_problems.add("BIOMD0000000396");
 			models_with_known_problems.add("BIOMD0000000397");
 			models_with_known_problems.add("BIOMD0000000266");
+			*/
+			models_with_known_problems.add("BIOMD0000000411");
 			models_with_known_problems.add("BIOMD0000000255");
 		}
 		
@@ -154,9 +156,7 @@ public class BiomodelTest {
 				}
 			}					
 			generateLogReport();
-		
 			
-
 			FileOutputStream buffoutProgressLog= new FileOutputStream(progressLog,true);
 	    	PrintWriter outProgressLog = new PrintWriter(new OutputStreamWriter(buffoutProgressLog,"UTF-8"));
 	    	SimpleDateFormat formatDate = new SimpleDateFormat("HH:mm:ss:SS");

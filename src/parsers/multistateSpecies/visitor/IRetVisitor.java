@@ -61,6 +61,7 @@ public interface IRetVisitor<R> {
    * Visits a {@link CompleteMultistateSpecies} node, whose children are the following :
    * <p>
    * multistateSpecies -> MultistateSpecies()<br>
+   * nodeListOptional -> ( PossibleExtensions() )*<br>
    * nodeToken -> < EOF ><br>
    *
    * @param n the node to visit
@@ -72,6 +73,7 @@ public interface IRetVisitor<R> {
    * Visits a {@link CompleteMultistateSpecies_Operator} node, whose children are the following :
    * <p>
    * multistateSpecies_Operator -> MultistateSpecies_Operator()<br>
+   * nodeListOptional -> ( PossibleExtensions() )*<br>
    * nodeToken -> < EOF ><br>
    *
    * @param n the node to visit
@@ -100,6 +102,26 @@ public interface IRetVisitor<R> {
    * @return the user return information
    */
   public R visit(final CompleteMultistateSpecies_RangeString n);
+
+  /**
+   * Visits a {@link PossibleExtensions} node, whose children are the following :
+   * <p>
+   * nodeChoice -> . %00 < EXTENSION_CONC ><br>
+   * .......... .. | %01 < EXTENSION_COMPARTMENT ><br>
+   * .......... .. | %02 < EXTENSION_PARTICLE ><br>
+   * .......... .. | %03 < EXTENSION_TRANS ><br>
+   * .......... .. | %04 < EXTENSION_INIT ><br>
+   * .......... .. | %05 < EXTENSION_RATE ><br>
+   * .......... .. | %06 < EXTENSION_SPECIES ><br>
+   * .......... .. | %07 < EXTENSION_GLOBALQ ><br>
+   * .......... .. | %08 < EXTENSION_FUNCTION ><br>
+   * .......... .. | %09 < EXTENSION_REACTION ><br>
+   * .......... .. | %10 < EXTENSION_FLUX ><br>
+   *
+   * @param n the node to visit
+   * @return the user return information
+   */
+  public R visit(final PossibleExtensions n);
 
   /**
    * Visits a {@link MultistateSpecies} node, whose children are the following :

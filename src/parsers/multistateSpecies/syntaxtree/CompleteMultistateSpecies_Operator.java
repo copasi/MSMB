@@ -7,12 +7,16 @@ import parsers.multistateSpecies.visitor.*;
  * JTB node class for the production CompleteMultistateSpecies_Operator:<br>
  * Corresponding grammar :<br>
  * multistateSpecies_Operator -> MultistateSpecies_Operator()<br>
+ * nodeListOptional -> ( PossibleExtensions() )*<br>
  * nodeToken -> < EOF ><br>
  */
 public class CompleteMultistateSpecies_Operator implements INode {
 
   /** A child node */
   public MultistateSpecies_Operator multistateSpecies_Operator;
+
+  /** A child node */
+  public NodeListOptional nodeListOptional;
 
   /** A child node */
   public NodeToken nodeToken;
@@ -25,19 +29,23 @@ public class CompleteMultistateSpecies_Operator implements INode {
    *
    * @param n0 first child node
    * @param n1 next child node
+   * @param n2 next child node
    */
-  public CompleteMultistateSpecies_Operator(final MultistateSpecies_Operator n0, final NodeToken n1) {
+  public CompleteMultistateSpecies_Operator(final MultistateSpecies_Operator n0, final NodeListOptional n1, final NodeToken n2) {
     multistateSpecies_Operator = n0;
-    nodeToken = n1;
+    nodeListOptional = n1;
+    nodeToken = n2;
   }
 
   /**
    * Constructs the node with only its non NodeToken child node(s).
    *
    * @param n0 first child node
+   * @param n1 next child node
    */
-  public CompleteMultistateSpecies_Operator(final MultistateSpecies_Operator n0) {
+  public CompleteMultistateSpecies_Operator(final MultistateSpecies_Operator n0, final NodeListOptional n1) {
     multistateSpecies_Operator = n0;
+    nodeListOptional = n1;
     nodeToken = new NodeToken("");
   }
 

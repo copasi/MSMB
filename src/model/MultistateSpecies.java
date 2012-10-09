@@ -99,7 +99,7 @@ public class MultistateSpecies extends Species {
 			 //ex.printStackTrace();
 			throw new MySyntaxException(ex.getColumn(),"Problem parsing species:"+ex.getMessage(), Constants.TitlesTabs.SPECIES.description);
 
-		 } catch (Exception e) {
+		 } catch (Throwable e) {
 			// e.printStackTrace();
 			throw new MySyntaxException(Constants.SpeciesColumns.NAME.index,"Problem parsing species: "+e.getMessage(), Constants.TitlesTabs.SPECIES.description);
 
@@ -313,7 +313,7 @@ public class MultistateSpecies extends Species {
 		merged.setInitialQuantity(newSpecies.getInitialQuantity_multi());
 
 		merged.setType(this.getType());
-		merged.setCompartment(multiModel,this.getCompartment());
+		merged.setCompartment(multiModel,this.getCompartment_listString());
 
 		return merged;
 	}
@@ -405,7 +405,7 @@ public class MultistateSpecies extends Species {
 		            site_value.add(value);
 		        }
 		        Species singleConf = createSingleConfigurationState(m,site_value);
-		        singleConf.setCompartment(multiModel,this.getCompartment());
+		        singleConf.setCompartment(multiModel,this.getCompartment_listString());
 		        singleConf.setType(Constants.SpeciesType.REACTIONS.copasiType);
 		        ret.add(singleConf);
 		    }
@@ -424,7 +424,7 @@ public class MultistateSpecies extends Species {
 		
 		Species ret = new Species();
 		ret.setName(name);
-		ret.setCompartment(multiModel,this.getCompartment());
+		ret.setCompartment(multiModel,this.getCompartment_listString());
 		ret.setInitialQuantity(m,new String(MainGui.species_defaultInitialValue));
 		
 		ret.setType(this.getType());

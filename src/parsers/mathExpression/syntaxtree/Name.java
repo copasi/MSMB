@@ -6,8 +6,7 @@ import parsers.mathExpression.visitor.*;
 /**
  * JTB node class for the production Name:<br>
  * Corresponding grammar :<br>
- * nodeChoice -> . %00 #0 < IDENTIFIER ><br>
- * .......... .. . ... #1 ( PossibleExtensions() )?<br>
+ * nodeChoice -> . %00 < IDENTIFIER ><br>
  * .......... .. | %01 PrimitiveType()<br>
  * .......... .. | %02 < PI ><br>
  * .......... .. | %03 < TIME ><br>

@@ -83,16 +83,16 @@ public interface IVoidArguVisitor<A> {
   /**
    * Visits a {@link Reaction} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 #0 ( AdditiveExpression() )+<br>
+   * nodeChoice -> . %0 #0 ( AdditiveExpression() )?<br>
    * .......... .. . .. #1 ( Blank() )* #2 < ARROW ><br>
    * .......... .. . .. #3 ( $0 ( " " )<br>
    * .......... .. . .. .. . $1 ( Blank() )*<br>
-   * .......... .. . .. .. . $2 ( AdditiveExpression() )+ )*<br>
+   * .......... .. . .. .. . $2 ( AdditiveExpression() )? )*<br>
    * .......... .. . .. #4 ( $0 ( Blank() )* $1 ";"<br>
    * .......... .. . .. .. . $2 ( Blank() )* $3 ListModifiers() )?<br>
    * .......... .. | %1 #0 < ARROW2 ><br>
    * .......... .. . .. #1 ( Blank() )*<br>
-   * .......... .. . .. #2 ( AdditiveExpression() )+<br>
+   * .......... .. . .. #2 ( AdditiveExpression() )?<br>
    * .......... .. . .. #3 ( $0 ( Blank() )* $1 ";"<br>
    * .......... .. . .. .. . $2 ( Blank() )* $3 ListModifiers() )?<br>
    *
@@ -151,6 +151,7 @@ public interface IVoidArguVisitor<A> {
    * Visits a {@link Species} node, whose children are the following :
    * <p>
    * nodeToken -> < IDENTIFIER ><br>
+   * nodeListOptional -> ( < IDENTIFIER > )*<br>
    *
    * @param n the node to visit
    * @param argu the user argument

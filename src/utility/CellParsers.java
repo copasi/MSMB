@@ -25,6 +25,7 @@ import model.*;
 import parsers.mathExpression.syntaxtree.*;
 import parsers.mathExpression.visitor.*;
 import parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import parsers.multistateSpecies.MR_MultistateSpecies_ParserConstantsNOQUOTES;
 import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
 import parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
@@ -127,7 +128,7 @@ public class CellParsers {
 			//AND IF THERE IS NO ANNOTATION, EVEN IF IT FOLLOWS OUR SYNTAX I SHOULD SAY IS NOT A MULTIASTATE SPECIES
 			return false;
 		}
-		if(name.startsWith("\"")) return false;
+		if(name.startsWith("\"")&&name.endsWith("\"")) return false;
 		
 		InputStream is;
 		try {
@@ -192,6 +193,85 @@ public class CellParsers {
 		return null;
 	 }
 
+	
+	public static Vector<String> extractListElements(MultiModel m, String expression, String table_descr, String column_descr) throws MySyntaxException {
+		 Vector<String> ret = new Vector<String>();
+		 expression = expression.trim();
+		 if(expression.length()==0) return ret;
+		 int column_tab = -1;
+			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.description)== 0) {
+				column_tab = Constants.SpeciesColumns.getIndex(column_descr);
+			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)== 0) {
+				column_tab = Constants.GlobalQColumns.getIndex(column_descr);
+			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)== 0) {
+				column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
+			}
+		 try{
+			
+		  if(expression.length() >0) {
+				  InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+				  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is);
+				  CompleteListOfExpression root = parser.CompleteListOfExpression();
+				  ExtractNamesUsedVisitor usedVisitor = new ExtractNamesUsedVisitor(m);
+				  root.accept(usedVisitor);
+				 ret = usedVisitor.getNamesUsed();
+			  }
+		 } catch (Exception e) {
+			 
+			 
+			 //e.printStackTrace();
+			 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
+		}
+		return ret;
+	}
+	
+	
+	public static Vector<Vector<String>> parseListExpression_getUndefMisused(MultiModel m, String expression, String table_descr, String column_descr) throws MySyntaxException {
+		 Vector ret = new Vector();
+		 expression = expression.trim();
+		 if(expression.length()==0) return ret;
+		 int column_tab = -1;
+			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.description)== 0) {
+				column_tab = Constants.SpeciesColumns.getIndex(column_descr);
+			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)== 0) {
+				column_tab = Constants.GlobalQColumns.getIndex(column_descr);
+			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)== 0) {
+				column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
+			}
+		 try{
+			
+		    if(expression.length() >0) {
+				  InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+				  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is);
+				  CompleteListOfExpression root = parser.CompleteListOfExpression();
+				  Look4UndefinedMisusedVisitor undefVisitor = new Look4UndefinedMisusedVisitor(m);
+				  root.accept(undefVisitor);
+				  Vector<String> undef = undefVisitor.getUndefinedElements();
+				  Vector<String> misused = undefVisitor.getMisusedElements();
+				  
+				  ret.add(undef);
+				  ret.add(misused);
+				  
+				  if(undef.size() != 0 || misused.size() != 0) {
+					    String message = new String();
+						if(undef.size() >0) {
+							 message += "The following elements are used but never declared: " + undef.toString();
+						}
+						if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
+						throw new MySyntaxException(column_tab, message,table_descr);
+				  } 
+				  
+				
+			  }
+		 } catch (Exception e) {
+			 
+			 
+			 //e.printStackTrace();
+			 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
+		}
+		return ret;
+	}
+	
 	public static Vector<Vector<String>> parseExpression_getUndefMisused_2(MultiModel m, String expression, String table_descr, String column_descr) throws MySyntaxException, Exception {
 		 Vector ret = new Vector();
 		 expression = expression.trim();
@@ -532,7 +612,7 @@ public class CellParsers {
 		    subs_prod_mod.addAll(v.getAll_asString());
 		      
 		} catch(Throwable ex) {
-			//ex.printStackTrace();
+			ex.printStackTrace();
 			
 			 DebugMessage dm = new DebugMessage();
 			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
@@ -785,7 +865,7 @@ public class CellParsers {
 
 	public static boolean isMultistateSpeciesName_withUndefinedStates(String name) {
 		if(name.trim().length() ==0) return false;
-		if(name.startsWith("\"")) return false;
+		if(name.startsWith("\"")&&name.endsWith("\"")) return false;
 		
 		InputStream is;
 		try {
@@ -813,8 +893,59 @@ public class CellParsers {
 		}
 
 	}
+
+
+	public static String addCompartmentLabel(String cleanName, String compartment) {
+		String ret = new String();
+
+		if(isMultistateSpeciesName(cleanName)) {
+			ret = "ADD_COMPARTMENT_TO_MULTISTATE_SPECIEEEEEEEEEEEEEEEES";
+		} else {
+			ret = cleanName + 
+				 MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_Parser.OPEN_R) +
+				 MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXTENSION_COMPARTMENT).substring(1) +
+				 MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_Parser.OPEN_C) +
+				 cleanName(compartment, false)+
+				 MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_Parser.CLOSED_C) +
+				 MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_Parser.CLOSED_R);
+		}
+		
+		return ret;
+	}
 	
+	public static String extractCompartmentLabel(String name) {
+		String ret = new String();
+
+		/*if(isMultistateSpeciesName(name)) { extract compartment from "real" classic multistate species
+			ret = "EXTRACT_COMPARTMENT_FROM_MULTISTATE_SPECIEEEEEEEEEEEEEEEES";
+		} else {*/
+			String prefix = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXTENSION_COMPARTMENT).substring(1)+MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_Parser.OPEN_C);
+			int index_cmp_label = name.indexOf(prefix);
+			int index_closed_bracket =  name.indexOf(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_Parser.CLOSED_C),index_cmp_label);
+			if(index_cmp_label == -1 || index_closed_bracket == -1) return ret;
+			else ret = name.substring(index_cmp_label+prefix.length(), index_closed_bracket);
+		//}
+			return ret;
+	}
 	
+		
+	public static String extractMultistateName(String name) {
+		String ret = name;
+
+		if(isMultistateSpeciesName(name)) {
+			MultistateSpecies ms = null;
+			try {
+				ms = new MultistateSpecies(null, name);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			ret = ms.getSpeciesName();
+			
+		}
+		
+		return ret;
+	}
 	
 	
 

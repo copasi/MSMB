@@ -4,6 +4,7 @@ import parsers.mathExpression.MR_Expression_Parser;
 import parsers.mathExpression.MR_Expression_ParserConstants;
 import parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import parsers.mathExpression.syntaxtree.*;
+import utility.CellParsers;
 import utility.Constants;
 
 import gui.MainGui;
@@ -51,8 +52,8 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	@Override
 	public void visit(NodeToken n) {
 		expression+=n.tokenImage;
-		
 		super.visit(n);
+		
 	}
 	
 	
@@ -118,7 +119,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	@Override
 	public void visit(SpeciesReferenceOrFunctionCall n) {
 		try {
-			super.visit(n);
 			String element = ToStringVisitor.toString(n);
 			if(nodeIsAFunctionCall) {
 				String funName  = new String();
@@ -185,6 +185,8 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			} else {
 				expression += generateElement(element);
 			}
+			super.visit(n);
+			
 		} catch (Exception e) {
 			exceptions.add(e);
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
@@ -228,6 +230,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	
 	
 	public String generateElement(String element) {
+		if(CellParsers.isKeyword(element)) return element;
 		String asCompactedAsPossible = new String();
 		try {
 			asCompactedAsPossible = generateElement_extended(element);
@@ -298,6 +301,8 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	public String generateElement_extended(String element) {
 		//System.out.println("in generateElement:" + element);
 		//String element = ToStringVisitor.toString(n);
+		if(CellParsers.isKeyword(element)) return element;
+		
 		String element_newView = new String();
 		if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0 
 				||element.compareTo(MR_Expression_ParserConstantsNOQUOTES.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0) {
@@ -349,6 +354,8 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 				if(element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES))==0){
 					isASpecies = true;
 				}
+				
+				
 				int table = where.get(0);
 
 				if(where.size() == 1) {
@@ -406,7 +413,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	
 	 boolean isMultistateSitesList(INode n) {
 		 if(n instanceof ArgumentList) {
-			 if(((ArgumentList)n).nodeChoice.which ==1){
+			 if(((ArgumentList)n).nodeChoice.which ==0){
 				 return true;
 			 }  else return false;
 		 }

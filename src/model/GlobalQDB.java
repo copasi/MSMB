@@ -196,5 +196,9 @@ public class GlobalQDB {
 			}
 			return true;
 	}
-
+	
+	public void clear() {
+		globalQVector.clear();
+		globalQIndexes.clear();
+	}
 }

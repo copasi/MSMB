@@ -24,10 +24,7 @@ public class MR_Expression_Parser {
 						"("  , ")"  ,  "{"  ,  "}", " ", "[", "]", 
 					 	"\\", "\""
 						};		*/			  public static void main(String args [])  {
-    try    {
-
-
-      
+    try    {     
        String expression = new String("1*floor(Time/tau)");
       InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  MR_Expression_Parser react = new MR_Expression_Parser(is);
@@ -101,7 +98,7 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
       System.out.println("...................................");
 
 
- expression2 = new String("function(par1, par2, %ModTime%)");
+ 	expression2 = new String("function(par1, par2, %ModTime%)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  react2 = new MR_Expression_Parser(is2);
   	  start2 = react2.CompleteExpression();
@@ -184,6 +181,32 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
 
        expression2 = new String("1e-006*k*GAP*MOD");
        is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+
+	expression2 = new String("\"function something\"(par1, cdh1(p{1}), %ModTime%)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+      expression2 = new String("\"function_4_Melatonin free radical  diffusion phagosome/cytoplasm_1\"(\"Melatonin free radical\"(cmp{cytoplasm}),\"Melatonin free radical\"(cmp{phagosome}),k17,phagosome)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+
+       expression2 = new String("stepfunc(model_time.glq,1799.99,0,1800,10000000)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  react2 = new MR_Expression_Parser(is2);
   	  start2 = react2.CompleteExpression();
       v2 = new MyVisitor();
@@ -346,12 +369,15 @@ TOKEN :
  *****************************************/ 
 void CompleteExpression() : {} { 
   Expression() <EOF>
-  //|
-  //IfExpression() (LogicalOperator() Expression())? < EOF > 
 }
 
+void CompleteListOfExpression() : {} { 
+  Expression() (< COMMA > Expression())* <EOF>
+}
+
+
 void SingleFunctionCall() : {} { 
- Name() < LPAREN > ( ArgumentList() )? <  RPAREN > <EOF>
+ Name() < LPAREN > ( ArgumentList() )?  <  RPAREN > <EOF>
 }
  
 void CompleteFunctionDeclaration() :{} {
@@ -455,11 +481,8 @@ void PrimaryPrefix() :
 {}
 {
   Literal()
-|
-  < LPAREN > Expression() <  RPAREN >
-|
-  SpeciesReferenceOrFunctionCall()
-
+| < LPAREN > Expression() <  RPAREN >
+| SpeciesReferenceOrFunctionCall()
 | MultistateSum()
 | IfExpression()
 | < CONST_MODEL_TIME > | < CONST_AVOGADRO > |  <  CONST_QUANTITY_CONV_FACTOR > | < CONST_MODEL_TIME_INITIAL >
@@ -473,7 +496,7 @@ void MultistateSum() : {}
 
 void Name() : {}
 {	
-	  <IDENTIFIER> (LOOKAHEAD(2)PossibleExtensions())?
+	  <IDENTIFIER> /*(LOOKAHEAD(2)PossibleExtensions())?*/
 	|  PrimitiveType()
 	| < PI >| < TIME > | < FLOOR> | < DELAY > | < CEIL > | < TAN > | < TANH > | < COSH > | < LOG10 >|< ABS> | < COS > | < SIN > | < LOG > | < EXP > | < NAN >
 }
@@ -515,8 +538,10 @@ void BooleanLiteral() :{}
 
 void ArgumentList() :{}
 {
- LOOKAHEAD(2)  AdditiveExpression() ( < COMMA > AdditiveExpression() )*
-|  MultistateSites_list() 
+  LOOKAHEAD(4)
+  MultistateSites_list() |
+  AdditiveExpression() ( < COMMA > AdditiveExpression() )*
+ 
  
 }
 
@@ -548,11 +573,11 @@ void SiteSelector_postFix() : {}
    < RBRACE >}
 
 void CoeffFunction_postFix():{}{
-  < LPAREN > [  ArgumentList() ] <  RPAREN >}
+  < LPAREN > [  ArgumentList() ] <  RPAREN > }
 
 void MultistateSite() :{}
 {
-   Name() < LBRACE > (Name() | Literal() )  < RBRACE > }
+   Name() < LBRACE > (Name() | Literal() )  < RBRACE >}
 
 void MultistateSites_list() :{}
 {

@@ -6,9 +6,9 @@ import parsers.mathExpression.visitor.*;
 /**
  * JTB node class for the production ArgumentList:<br>
  * Corresponding grammar :<br>
- * nodeChoice -> . %0 #0 AdditiveExpression()<br>
+ * nodeChoice -> . %0 MultistateSites_list()<br>
+ * .......... .. | %1 #0 AdditiveExpression()<br>
  * .......... .. . .. #1 ( $0 < COMMA > $1 AdditiveExpression() )*<br>
- * .......... .. | %1 MultistateSites_list()<br>
  */
 public class ArgumentList implements INode {
 

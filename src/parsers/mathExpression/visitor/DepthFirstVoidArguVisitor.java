@@ -117,6 +117,25 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
   }
 
   /**
+   * Visits a {@link CompleteListOfExpression} node, whose children are the following :
+   * <p>
+   * expression -> Expression()<br>
+   * nodeListOptional -> ( #0 < COMMA > #1 Expression() )*<br>
+   * nodeToken -> < EOF ><br>
+   *
+   * @param n the node to visit
+   * @param argu the user argument
+   */
+  public void visit(final CompleteListOfExpression n, final A argu) {
+    // expression -> Expression()
+    n.expression.accept(this, argu);
+    // nodeListOptional -> ( #0 < COMMA > #1 Expression() )*
+    n.nodeListOptional.accept(this, argu);
+    // nodeToken -> < EOF >
+    n.nodeToken.accept(this, argu);
+  }
+
+  /**
    * Visits a {@link SingleFunctionCall} node, whose children are the following :
    * <p>
    * name -> Name()<br>
@@ -490,8 +509,7 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
   /**
    * Visits a {@link Name} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %00 #0 < IDENTIFIER ><br>
-   * .......... .. . ... #1 ( PossibleExtensions() )?<br>
+   * nodeChoice -> . %00 < IDENTIFIER ><br>
    * .......... .. | %01 PrimitiveType()<br>
    * .......... .. | %02 < PI ><br>
    * .......... .. | %03 < TIME ><br>
@@ -513,8 +531,7 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
    * @param argu the user argument
    */
   public void visit(final Name n, final A argu) {
-    // nodeChoice -> . %00 #0 < IDENTIFIER >
-    // .......... .. . ... #1 ( PossibleExtensions() )?
+    // nodeChoice -> . %00 < IDENTIFIER >
     // .......... .. | %01 PrimitiveType()
     // .......... .. | %02 < PI >
     // .......... .. | %03 < TIME >
@@ -641,17 +658,17 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
   /**
    * Visits a {@link ArgumentList} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 #0 AdditiveExpression()<br>
+   * nodeChoice -> . %0 MultistateSites_list()<br>
+   * .......... .. | %1 #0 AdditiveExpression()<br>
    * .......... .. . .. #1 ( $0 < COMMA > $1 AdditiveExpression() )*<br>
-   * .......... .. | %1 MultistateSites_list()<br>
    *
    * @param n the node to visit
    * @param argu the user argument
    */
   public void visit(final ArgumentList n, final A argu) {
-    // nodeChoice -> . %0 #0 AdditiveExpression()
+    // nodeChoice -> . %0 MultistateSites_list()
+    // .......... .. | %1 #0 AdditiveExpression()
     // .......... .. . .. #1 ( $0 < COMMA > $1 AdditiveExpression() )*
-    // .......... .. | %1 MultistateSites_list()
     n.nodeChoice.accept(this, argu);
   }
 

@@ -261,12 +261,15 @@ public class ConsistencyChecks {
 				String string_reaction = ((String)tableReactionmodel.getValueAt(i, 2)).trim();
 				if(string_reaction.trim().length() <= 0) continue;
 
+				MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.MISSING.priorityCode, i, Constants.ReactionsColumns.REACTION.index);
+				MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.MISSING.priorityCode, i, Constants.ReactionsColumns.KINETIC_LAW.index);
+				MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.PARSING.priorityCode, i, Constants.ReactionsColumns.KINETIC_LAW.index);
+				MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.PARSING.priorityCode, i, Constants.ReactionsColumns.REACTION.index);
+			
 				//missingSpecies.addAll(all_parameters_in_functionCalls_exist(multiModel, (String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.KINETIC_LAW.index), i));
 				missingSpecies.addAll(all_parameters_in_functionCalls_exist(Constants.TitlesTabs.REACTIONS.index, multiModel, (String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.KINETIC_LAW.index), i));
 				
-				MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.MISSING.priorityCode, i+1, Constants.ReactionsColumns.REACTION.index);
-				MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.MISSING.priorityCode, i+1, Constants.ReactionsColumns.KINETIC_LAW.index);
-			
+						
 				//boolean parseErrors = false;
 				Vector<?> metabolites = new Vector<Object>();
 				Vector<?> singleConfigurations = new Vector<Object>();
@@ -274,10 +277,10 @@ public class ConsistencyChecks {
 					metabolites = CellParsers.parseReaction(multiModel,string_reaction,i+1);
 					singleConfigurations = multiModel.expandReaction(metabolites,i);
 				} catch(Exception ex) {
-					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+					//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+						ex.printStackTrace();
 					 DebugMessage dm = new DebugMessage();
 					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-					// dm.setProblem("Problem parsing the reaction string. Species name uses characters not allowed.");
 					dm.setProblem("Problem parsing the reaction string. " + ex.getMessage());
 				    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
 					 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);

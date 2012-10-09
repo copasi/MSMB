@@ -133,6 +133,10 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 		@Override
 	public void visit(Species n) {
 		String name = new String(n.nodeToken.tokenImage);
+		if(n.nodeListOptional.present()) {
+			name = ToStringVisitor.toString(n);
+		}
+		
 		  int[] vectorExtensions = {
 				  	MR_Expression_ParserConstants.EXTENSION_COMPARTMENT,
 				  	MR_Expression_ParserConstants.EXTENSION_CONC,
@@ -209,6 +213,10 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 		@Override
 		public void visit(CompleteSpeciesWithCoefficient n) {
 			justSpeciesName = new String(n.speciesWithCoeff.species.nodeToken.tokenImage);
+			if(n.speciesWithCoeff.species.nodeListOptional.present()) {
+				justSpeciesName += ToStringVisitor.toString(n.speciesWithCoeff.species.nodeListOptional);
+			}
+			
 			if(n.speciesWithCoeff.nodeOptional.present()) {
 				Stoichiometry nodeOptional = (Stoichiometry) ((NodeSequence) n.speciesWithCoeff.nodeOptional.node).nodes.get(0);
 				stoichiometry = new Double(ToStringVisitor.toString(nodeOptional));

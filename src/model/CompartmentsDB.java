@@ -24,6 +24,8 @@ public class CompartmentsDB {
 	HashMap<String, Integer> compIndexes = new HashMap<String, Integer>();
 	MultiModel multiModel = null;
 	
+	
+	
 	public CompartmentsDB(MultiModel mm) {
 		compVector = new TreeMap<Integer, Compartment>();
 		compIndexes = new HashMap<String, Integer>();
@@ -49,6 +51,24 @@ public class CompartmentsDB {
 		int ind = compIndexes.get(name).intValue();
 		return getComp(ind);
 	}
+	
+	/*public Vector<Compartment> getComp(String name) {
+		Vector<String> names;
+		try {
+			names = CellParsers.extractListElements(multiModel,name, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.description);
+		} catch (MySyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		Vector<Compartment> ret = new Vector<Compartment>();
+		for(int i = 0; i < names.size(); i++) {
+			if(compIndexes.get(names.get(0))== null) ret.add(null);
+			int ind = compIndexes.get(name).intValue();
+			ret.add(getComp(ind));
+		}
+		return ret;
+	}*/
 	
 	public Compartment getComp(int index) {
 		if(index < 0 || index >= compVector.size()) {
@@ -212,6 +232,11 @@ public class CompartmentsDB {
 		}
 		return true;
 		
+	}
+	
+	public void clear() {
+		compVector.clear();
+		compIndexes.clear();
 	}
 	
 }

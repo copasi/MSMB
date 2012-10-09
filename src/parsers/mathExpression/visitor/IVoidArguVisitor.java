@@ -70,6 +70,18 @@ public interface IVoidArguVisitor<A> {
   public void visit(final CompleteExpression n, final A argu);
 
   /**
+   * Visits a {@link CompleteListOfExpression} node, whose children are the following :
+   * <p>
+   * expression -> Expression()<br>
+   * nodeListOptional -> ( #0 < COMMA > #1 Expression() )*<br>
+   * nodeToken -> < EOF ><br>
+   *
+   * @param n the node to visit
+   * @param argu the user argument
+   */
+  public void visit(final CompleteListOfExpression n, final A argu);
+
+  /**
    * Visits a {@link SingleFunctionCall} node, whose children are the following :
    * <p>
    * name -> Name()<br>
@@ -313,8 +325,7 @@ public interface IVoidArguVisitor<A> {
   /**
    * Visits a {@link Name} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %00 #0 < IDENTIFIER ><br>
-   * .......... .. . ... #1 ( PossibleExtensions() )?<br>
+   * nodeChoice -> . %00 < IDENTIFIER ><br>
    * .......... .. | %01 PrimitiveType()<br>
    * .......... .. | %02 < PI ><br>
    * .......... .. | %03 < TIME ><br>
@@ -408,9 +419,9 @@ public interface IVoidArguVisitor<A> {
   /**
    * Visits a {@link ArgumentList} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 #0 AdditiveExpression()<br>
+   * nodeChoice -> . %0 MultistateSites_list()<br>
+   * .......... .. | %1 #0 AdditiveExpression()<br>
    * .......... .. . .. #1 ( $0 < COMMA > $1 AdditiveExpression() )*<br>
-   * .......... .. | %1 MultistateSites_list()<br>
    *
    * @param n the node to visit
    * @param argu the user argument

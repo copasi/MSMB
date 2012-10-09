@@ -402,5 +402,12 @@ public class FunctionsDB {
 	}
 	
 	
-	
+	public void clear() {
+		userDefinedFun.clear();
+		mappings.clear();
+		whereFuncIsUsed.clear();
+		mappings_weight_globalQ_withSUM.clear();
+		mappings_speciesExpression.clear();
+		mappings_weight_subFunctions_Functions.clear();
+	}
 }

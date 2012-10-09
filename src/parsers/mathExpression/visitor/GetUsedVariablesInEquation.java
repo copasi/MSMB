@@ -58,7 +58,7 @@ public class GetUsedVariablesInEquation extends DepthFirstVoidVisitor {
 	  
 	 boolean isMultistateSitesList(INode n) {
 		 if(n instanceof ArgumentList) {
-			 if(((ArgumentList)n).nodeChoice.which ==1){
+			 if(((ArgumentList)n).nodeChoice.which ==0){
 				 return true;
 			 }  else return false;
 		 }

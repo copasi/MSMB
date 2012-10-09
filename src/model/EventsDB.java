@@ -40,4 +40,9 @@ public class EventsDB {
 		return true;
 }
 	
+	public void clear() {
+		eventVector.clear();
+		eventIndexes.clear();
+	}
+	
 }

@@ -195,7 +195,7 @@ class ExportMultistateFormat {
     						//ms.getInitial_singleConfiguration(sp, true) + "\t" +
     						ms.getInitial_singleConfiguration(sp) + "\t" +
     						Constants.SpeciesType.getDescriptionFromCopasiType(ms.getType()) + "\t" +
-    						sp.getCompartment() + "\t" +
+    						sp.getCompartment_listString() + "\t" +
     						sp.getExpression() + "\t" +
     						sp.getNotes();
     				row = realRowCount + "\t" + row;

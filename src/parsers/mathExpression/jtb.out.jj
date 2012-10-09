@@ -158,6 +158,27 @@ public class MR_Expression_Parser {
       v2 = new MyVisitor();
       start2.accept(v2);
       System.out.println("...................................");
+      expression2 = new String("\"function something\"(par1, cdh1(p{1}), %ModTime%)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("\"function_4_Melatonin free radical  diffusion phagosome/cytoplasm_1\"(\"Melatonin free radical\"(cmp{cytoplasm}),\"Melatonin free radical\"(cmp{phagosome}),k17,phagosome)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("stepfunc(model_time.glq,1799.99,0,1800,10000000)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
     }
     catch (Exception ex) {
       ex.printStackTrace();
@@ -316,6 +337,38 @@ CompleteExpression CompleteExpression() :
     { n1 = JTBToolkit.makeNodeToken(n2); }
   }
   { return new CompleteExpression(n0, n1); }
+}
+
+CompleteListOfExpression CompleteListOfExpression() :
+{
+  // --- JTB generated node declarations ---
+  Expression n0 = null;
+  NodeListOptional n1 = new NodeListOptional();
+  NodeSequence n2 = null;
+  NodeToken n3 = null;
+  Token n4 = null;
+  Expression n5 = null;
+  NodeToken n6 = null;
+  Token n7 = null;
+}
+{
+  n0 = Expression()
+  (
+    { n2 = new NodeSequence(2); }
+    n4 = < COMMA >
+    { n3 = JTBToolkit.makeNodeToken(n4); }
+    { n2.addNode(n3); }
+    n5 = Expression()
+    { n2.addNode(n5); }
+    { n1.addNode(n2); }
+  )*
+  { n1.nodes.trimToSize(); }
+  n7 = < EOF > {
+    n7.beginColumn++;
+    n7.endColumn++;
+    { n6 = JTBToolkit.makeNodeToken(n7); }
+  }
+  { return new CompleteListOfExpression(n0, n1, n6); }
 }
 
 SingleFunctionCall SingleFunctionCall() :
@@ -945,119 +998,108 @@ Name Name() :
 {
   // --- JTB generated node declarations ---
   NodeChoice n0 = null;
-  NodeSequence n1 = null;
-  NodeToken n2 = null;
-  Token n3 = null;
-  NodeOptional n4 = new NodeOptional();
-  PossibleExtensions n5 = null;
-  PrimitiveType n6 = null;
-  NodeToken n7 = null;
-  Token n8 = null;
-  NodeToken n9 = null;
-  Token n10 = null;
-  NodeToken n11 = null;
-  Token n12 = null;
-  NodeToken n13 = null;
-  Token n14 = null;
-  NodeToken n15 = null;
-  Token n16 = null;
-  NodeToken n17 = null;
-  Token n18 = null;
-  NodeToken n19 = null;
-  Token n20 = null;
-  NodeToken n21 = null;
-  Token n22 = null;
-  NodeToken n23 = null;
-  Token n24 = null;
-  NodeToken n25 = null;
-  Token n26 = null;
-  NodeToken n27 = null;
-  Token n28 = null;
-  NodeToken n29 = null;
-  Token n30 = null;
-  NodeToken n31 = null;
-  Token n32 = null;
-  NodeToken n33 = null;
-  Token n34 = null;
-  NodeToken n35 = null;
-  Token n36 = null;
+  NodeToken n1 = null;
+  Token n2 = null;
+  PrimitiveType n3 = null;
+  NodeToken n4 = null;
+  Token n5 = null;
+  NodeToken n6 = null;
+  Token n7 = null;
+  NodeToken n8 = null;
+  Token n9 = null;
+  NodeToken n10 = null;
+  Token n11 = null;
+  NodeToken n12 = null;
+  Token n13 = null;
+  NodeToken n14 = null;
+  Token n15 = null;
+  NodeToken n16 = null;
+  Token n17 = null;
+  NodeToken n18 = null;
+  Token n19 = null;
+  NodeToken n20 = null;
+  Token n21 = null;
+  NodeToken n22 = null;
+  Token n23 = null;
+  NodeToken n24 = null;
+  Token n25 = null;
+  NodeToken n26 = null;
+  Token n27 = null;
+  NodeToken n28 = null;
+  Token n29 = null;
+  NodeToken n30 = null;
+  Token n31 = null;
+  NodeToken n32 = null;
+  Token n33 = null;
 }
 {
   (
-    { n1 = new NodeSequence(2); }
-    n3 = < IDENTIFIER >
-    { n2 = JTBToolkit.makeNodeToken(n3); }
-    { n1.addNode(n2); }
-    (
-      LOOKAHEAD( 2 )
-      n5 = PossibleExtensions()
-      { n4.addNode(n5); }
-    )?
-    { n1.addNode(n4); }
+    n2 = < IDENTIFIER >
+    { n1 = JTBToolkit.makeNodeToken(n2); }
     { n0 = new NodeChoice(n1, 0, 17); }
   |
-    n6 = PrimitiveType()
-    { n0 = new NodeChoice(n6, 1, 17); }
+    n3 = PrimitiveType()
+    { n0 = new NodeChoice(n3, 1, 17); }
   |
-    n8 = < PI >
-    { n7 = JTBToolkit.makeNodeToken(n8); }
-    { n0 = new NodeChoice(n7, 2, 17); }
+    n5 = < PI >
+    { n4 = JTBToolkit.makeNodeToken(n5); }
+    { n0 = new NodeChoice(n4, 2, 17); }
   |
-    n10 = < TIME >
-    { n9 = JTBToolkit.makeNodeToken(n10); }
-    { n0 = new NodeChoice(n9, 3, 17); }
+    n7 = < TIME >
+    { n6 = JTBToolkit.makeNodeToken(n7); }
+    { n0 = new NodeChoice(n6, 3, 17); }
   |
-    n12 = < FLOOR >
-    { n11 = JTBToolkit.makeNodeToken(n12); }
-    { n0 = new NodeChoice(n11, 4, 17); }
+    n9 = < FLOOR >
+    { n8 = JTBToolkit.makeNodeToken(n9); }
+    { n0 = new NodeChoice(n8, 4, 17); }
   |
-    n14 = < DELAY >
-    { n13 = JTBToolkit.makeNodeToken(n14); }
-    { n0 = new NodeChoice(n13, 5, 17); }
+    n11 = < DELAY >
+    { n10 = JTBToolkit.makeNodeToken(n11); }
+    { n0 = new NodeChoice(n10, 5, 17); }
   |
-    n16 = < CEIL >
-    { n15 = JTBToolkit.makeNodeToken(n16); }
-    { n0 = new NodeChoice(n15, 6, 17); }
+    n13 = < CEIL >
+    { n12 = JTBToolkit.makeNodeToken(n13); }
+    { n0 = new NodeChoice(n12, 6, 17); }
   |
-    n18 = < TAN >
-    { n17 = JTBToolkit.makeNodeToken(n18); }
-    { n0 = new NodeChoice(n17, 7, 17); }
+    n15 = < TAN >
+    { n14 = JTBToolkit.makeNodeToken(n15); }
+    { n0 = new NodeChoice(n14, 7, 17); }
   |
-    n20 = < TANH >
-    { n19 = JTBToolkit.makeNodeToken(n20); }
-    { n0 = new NodeChoice(n19, 8, 17); }
+    n17 = < TANH >
+    { n16 = JTBToolkit.makeNodeToken(n17); }
+    { n0 = new NodeChoice(n16, 8, 17); }
   |
-    n22 = < COSH >
-    { n21 = JTBToolkit.makeNodeToken(n22); }
-    { n0 = new NodeChoice(n21, 9, 17); }
+    n19 = < COSH >
+    { n18 = JTBToolkit.makeNodeToken(n19); }
+    { n0 = new NodeChoice(n18, 9, 17); }
   |
-    n24 = < LOG10 >
-    { n23 = JTBToolkit.makeNodeToken(n24); }
-    { n0 = new NodeChoice(n23, 10, 17); }
+    n21 = < LOG10 >
+    { n20 = JTBToolkit.makeNodeToken(n21); }
+    { n0 = new NodeChoice(n20, 10, 17); }
   |
-    n26 = < ABS >
-    { n25 = JTBToolkit.makeNodeToken(n26); }
-    { n0 = new NodeChoice(n25, 11, 17); }
+    n23 = < ABS >
+    { n22 = JTBToolkit.makeNodeToken(n23); }
+    { n0 = new NodeChoice(n22, 11, 17); }
   |
-    n28 = < COS >
-    { n27 = JTBToolkit.makeNodeToken(n28); }
-    { n0 = new NodeChoice(n27, 12, 17); }
+    n25 = < COS >
+    { n24 = JTBToolkit.makeNodeToken(n25); }
+    { n0 = new NodeChoice(n24, 12, 17); }
   |
-    n30 = < SIN >
-    { n29 = JTBToolkit.makeNodeToken(n30); }
-    { n0 = new NodeChoice(n29, 13, 17); }
+    n27 = < SIN >
+    { n26 = JTBToolkit.makeNodeToken(n27); }
+    { n0 = new NodeChoice(n26, 13, 17); }
   |
-    n32 = < LOG >
-    { n31 = JTBToolkit.makeNodeToken(n32); }
-    { n0 = new NodeChoice(n31, 14, 17); }
+    n29 = < LOG >
+    { n28 = JTBToolkit.makeNodeToken(n29); }
+    { n0 = new NodeChoice(n28, 14, 17); }
   |
-    n34 = < EXP >
-    { n33 = JTBToolkit.makeNodeToken(n34); }
-    { n0 = new NodeChoice(n33, 15, 17); }
+    n31 = < EXP >
+    { n30 = JTBToolkit.makeNodeToken(n31); }
+    { n0 = new NodeChoice(n30, 15, 17); }
   |
-    n36 = < NAN >
-    { n35 = JTBToolkit.makeNodeToken(n36); }
-    { n0 = new NodeChoice(n35, 16, 17); }
+    n33 = < NAN >
+    { n32 = JTBToolkit.makeNodeToken(n33); }
+    { n0 = new NodeChoice(n32, 16, 17); }
   )
   { return new Name(n0); }
 }
@@ -1264,36 +1306,36 @@ ArgumentList ArgumentList() :
 {
   // --- JTB generated node declarations ---
   NodeChoice n0 = null;
-  NodeSequence n1 = null;
-  AdditiveExpression n2 = null;
-  NodeListOptional n3 = new NodeListOptional();
-  NodeSequence n4 = null;
-  NodeToken n5 = null;
-  Token n6 = null;
-  AdditiveExpression n7 = null;
-  MultistateSites_list n8 = null;
+  MultistateSites_list n1 = null;
+  NodeSequence n2 = null;
+  AdditiveExpression n3 = null;
+  NodeListOptional n4 = new NodeListOptional();
+  NodeSequence n5 = null;
+  NodeToken n6 = null;
+  Token n7 = null;
+  AdditiveExpression n8 = null;
 }
 {
   (
-    LOOKAHEAD( 2 )
-    { n1 = new NodeSequence(2); }
-    n2 = AdditiveExpression()
-    { n1.addNode(n2); }
-    (
-      { n4 = new NodeSequence(2); }
-      n6 = < COMMA >
-      { n5 = JTBToolkit.makeNodeToken(n6); }
-      { n4.addNode(n5); }
-      n7 = AdditiveExpression()
-      { n4.addNode(n7); }
-      { n3.addNode(n4); }
-    )*
-    { n3.nodes.trimToSize(); }
-    { n1.addNode(n3); }
+    LOOKAHEAD( 4 )
+    n1 = MultistateSites_list()
     { n0 = new NodeChoice(n1, 0, 2); }
   |
-    n8 = MultistateSites_list()
-    { n0 = new NodeChoice(n8, 1, 2); }
+    { n2 = new NodeSequence(2); }
+    n3 = AdditiveExpression()
+    { n2.addNode(n3); }
+    (
+      { n5 = new NodeSequence(2); }
+      n7 = < COMMA >
+      { n6 = JTBToolkit.makeNodeToken(n7); }
+      { n5.addNode(n6); }
+      n8 = AdditiveExpression()
+      { n5.addNode(n8); }
+      { n4.addNode(n5); }
+    )*
+    { n4.nodes.trimToSize(); }
+    { n2.addNode(n4); }
+    { n0 = new NodeChoice(n2, 1, 2); }
   )
   { return new ArgumentList(n0); }
 }

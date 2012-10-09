@@ -16,14 +16,20 @@ public class GetElementWithExtensions extends DepthFirstVoidVisitor {
 		
 	   public GetElementWithExtensions()  {}
 		
-	@Override
+	/*@Override
 	public void visit(Name n) {
 		if(n.nodeChoice.which ==0) {
 			super.visit(n);
 			NodeSequence nodes = (NodeSequence) n.nodeChoice.choice;
 			returnName = ToStringVisitor.toString(nodes.nodes.get(0));
 		}
-	}
+	}*/
+	   
+	   public void visit(SpeciesReferenceOrFunctionCall n) {
+		   returnName = ToStringVisitor.toString(n.speciesReferenceOrFunctionCall_prefix);
+		   super.visit(n);
+	   };
+	
 	
 	@Override
 	public void visit(PossibleExtensions n) {
