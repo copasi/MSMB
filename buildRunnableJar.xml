@@ -150,7 +150,7 @@
 	    	<src path="${src}"/>
 	    	<classpath refid="master-classpath"/>
 	    </javac>
-	  	<copy todir="${build}\gui\images"><fileset dir="${src}\gui\images"></fileset></copy>
+	  	<copy todir="${build}\msmb\gui\images"><fileset dir="${src}\msmb\gui\images"></fileset></copy>
 	  </target>
 
 	 <target name="clean"     description="clean up" >
@@ -166,21 +166,10 @@
     	    </manifestclasspath>    
     	<jar destfile="${dist}/${project.name}.jar">
          	<manifest>
-            	 <attribute name="Main-Class" value="gui.MainGui"/>
+            	 <attribute name="Main-Class" value="msmb.gui.MainGui"/>
                  <attribute name="Class-Path" value="${manifest.classpath}"/>
             </manifest>
         		   <fileset dir="${build}"/>
-    	   		   <!--<zipfileset excludes="META-INF/*.SF" src="libs/copasi.jar"/>
-    	           <zipfileset excludes="META-INF/*.SF" src="libs/djep-full-latest.jar"/>
-    	           <zipfileset excludes="META-INF/*.SF" src="libs/guava-r09.jar"/>
-    	           <zipfileset excludes="META-INF/*.SF" src="libs/junit.jar"/>
-    	           <zipfileset excludes="META-INF/*.SF" src="libs/swingx-all-1.6.3.jar"/>
-                   <zipfileset excludes="META-INF/*.SF" src="libs/lablib-checkboxtree-3.2.jar"/>
-                   <zipfileset excludes="META-INF/*.SF" src="libs/autocomplete.jar"/>
-                   <zipfileset excludes="META-INF/*.SF" src="libs/commons-lang3-3.1.jar"/>
-           		 <zipfileset excludes="META-INF/*.SF" src="libs/itextpdf-5.2.1.jar"/>
-         		<zipfileset excludes="META-INF/*.SF" src="libs/RCaller-2.1.0-SNAPSHOT.jar"/>
-         	<zipfileset excludes="META-INF/*.SF" src="libs/biomodels-wslib_standalone-1.21.jar"/>-->
           	</jar>
     </target>
 	
@@ -192,11 +181,8 @@
             </manifest>
         		   <fileset dir="${build}"/>
     	   		   <zipfileset excludes="META-INF/*.SF" src="libs/copasi.jar"/>
-    	           <zipfileset excludes="META-INF/*.SF" src="libs/djep-full-latest.jar"/>
     	           <zipfileset excludes="META-INF/*.SF" src="libs/guava-r09.jar"/>
-    	           <zipfileset excludes="META-INF/*.SF" src="libs/junit.jar"/>
     	           <zipfileset excludes="META-INF/*.SF" src="libs/swingx-all-1.6.3.jar"/>
-                   <zipfileset excludes="META-INF/*.SF" src="libs/lablib-checkboxtree-3.2.jar"/>
                    <zipfileset excludes="META-INF/*.SF" src="libs/autocomplete.jar"/>
                    <zipfileset excludes="META-INF/*.SF" src="libs/commons-lang3-3.1.jar"/>
            		 <zipfileset excludes="META-INF/*.SF" src="libs/itextpdf-5.2.1.jar"/>
@@ -214,10 +200,10 @@
 			<if>
 				<equals arg1="${register-size}" arg2="32" />
 				<then>
-					<copy file="CopasiLibs/copasi35_java6_win32/CopasiJava.dll" todir="${dist}"/>
+					<copy file="CopasiLibs/copasi35_java6_win32/CopasiJava.dll" todir="${libs}"/>
 				</then>
 				<else>
-					<copy file="CopasiLibs/copasi35_java6_win64/CopasiJava.dll" todir="${dist}"/>
+					<copy file="CopasiLibs/copasi35_java6_win64/CopasiJava.dll" todir="${libs}"/>
 				</else>
 			</if>
 		</then>
@@ -228,10 +214,10 @@
 				<if>
 					<equals arg1="${register-size}" arg2="32" />
 						<then>
-							<copy file="CopasiLibs/copasi35_java6_linux_x86/libCopasiJava.so" todir="${dist}"/>
+							<copy file="CopasiLibs/copasi35_java6_linux_x86/libCopasiJava.so" todir="${libs}"/>
 						</then>
 						<else>
-							<copy file="CopasiLibs/copasi35_java6_linux_x64/libCopasiJava.so" todir="${dist}"/>
+							<copy file="CopasiLibs/copasi35_java6_linux_x64/libCopasiJava.so" todir="${libs}"/>
 						</else>
 				</if>
 				</then>
@@ -239,10 +225,10 @@
 				<if>
 					<equals arg1="${register-size}" arg2="32" />
 					<then>
-						<copy file="CopasiLibs/copasi35_java5_macosx105_x86_ppc32/libCopasiJava.jnilib" todir="${dist}"/>
+						<copy file="CopasiLibs/copasi35_java5_macosx105_x86_ppc32/libCopasiJava.jnilib" todir="${libs}"/>
 					</then>
 					<else>
-						<copy file="CopasiLibs/copasi35_java6_macosx106_x86_x64/libCopasiJava.jnilib" todir="${dist}"/>
+						<copy file="CopasiLibs/copasi35_java6_macosx106_x86_x64/libCopasiJava.jnilib" todir="${libs}"/>
 					</else>
 				</if>
 			</else>
