@@ -239,9 +239,18 @@ public class CompartmentsDB {
 		compIndexes.clear();
 	}
 	
+	public String getEditableExpression(int row, int column) {
+		Compartment element = this.compVector.get(row+1);
+		String ret = null;
+		if(column == Constants.CompartmentsColumns.INITIAL_SIZE.index) {ret = element.getEditableVolume();}
+		if (column == Constants.CompartmentsColumns.EXPRESSION.index) { ret = element.getEditableExpression();}
+		return ret;
+	
+}
+	
 }
 
-class ValueComparator implements Comparator {
+/*class ValueComparator implements Comparator {
 
 	  Map base;
 	  public ValueComparator(Map base) {
@@ -259,3 +268,4 @@ class ValueComparator implements Comparator {
 	    }
 	  }
 	}
+*/

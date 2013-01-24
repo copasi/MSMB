@@ -260,7 +260,8 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 		if(customFont != null) c.setFont(customFont);
 		return c;
 	}
-	public void stopTimerAutocompletion() {
+	
+	/*public void stopTimerAutocompletion() {
 		try{
 			JTextField textField = (JTextField)super.editorComponent;
 			KeyListener[] listeners = textField.getKeyListeners(); 
@@ -274,7 +275,7 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 			e.printStackTrace();
 		}
 		
-	}
+	}*/
 
 }
 

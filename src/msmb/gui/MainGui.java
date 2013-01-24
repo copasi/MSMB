@@ -26,6 +26,8 @@ import org.jdesktop.swingx.treetable.DefaultMutableTreeTableNode;
 import org.jdesktop.swingx.treetable.TreeTableNode;
 import org.COPASI.*;
 
+import examples.Main;
+
 //import com.sun.tools.apt.Main;
 
 import  msmb.parsers.chemicalReaction.MR_ChemicalReaction_Parser;
@@ -40,8 +42,14 @@ import  msmb.parsers.mathExpression.syntaxtree.SingleFunctionCall;
 import  msmb.parsers.mathExpression.visitor.ExpressionVisitor;
 import  msmb.parsers.mathExpression.visitor.ExtractNamesUsedVisitor;
 import msmb.parsers.mathExpression.visitor.GetElementBeforeSpecialExtension;
+import msmb.parsers.mathExpression.visitor.GetFunctionCallsInEquation;
 import  msmb.parsers.mathExpression.visitor.GetFunctionNameVisitor;
 import  msmb.parsers.mathExpression.visitor.GetFunctionParametersVisitor;
+import msmb.parsers.mathExpression.visitor.GetUsedVariablesInEquation;
+import msmb.parsers.mathExpression.visitor.MR_SubstitutionVisitor;
+import msmb.parsers.mathExpression.visitor.SwapParametersVisitor;
+import msmb.parsers.mathExpression.visitor.ToStringVisitor;
+
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -52,6 +60,11 @@ import msmb.model.*;
 import msmb.utility.*;
 import msmb.utility.Constants.FunctionParamType;
 import msmb.utility.Constants.TitlesTabs;
+import msmb.commonUtilities.MSMB_Interface;
+import msmb.commonUtilities.MSMB_InterfaceChange;
+import msmb.commonUtilities.tables.CustomColumn0Renderer;
+import msmb.commonUtilities.tables.ScientificFormatCellRenderer;
+import msmb.commonUtilities.tables.UnquotingCellEditor;
 import msmb.debugTab.*;
 
 
@@ -60,23 +73,41 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	public JTabbedPane getMSMB_MainTabPanel() {	return jTabGeneral; }
 	public JMenuBar getMSMB_MenuBar() {	return jMenuBar;}
 	public void importFromCopasiKey(String copasiKey) throws Exception {loadCopasiDataModel_fromKey(copasiKey);}
-	public int getMSMB_numSpecies() { return getNumSpecies(); }
+	public Vector<String> getMSMB_listOfSpecies() { return multiModel.getAllSpecies_names();}
+	public Vector<String> getMSMB_listOfGlobalQuantities() { return multiModel.getAllGlobalQuantities_names();}
+	public Vector<String> getMSMB_listOfCompartments() { return multiModel.getAllCompartments_names();}
 	
+	static HashMap<Class, ChangeListener> changeListeners = new HashMap<Class, ChangeListener>();
 	
+	public void addChangeListener(ChangeListener c, Class cl) {
+		changeListeners.put(cl, c); 
+	}
+	public static void setChangeToReport(MSMB_InterfaceChange changeToReport) {
+		if(changeListeners.get(changeToReport.getType())!= null) changeListeners.get(changeToReport.getType()).stateChanged(new ChangeEvent(changeToReport));
+	}
 	
-	static Font customFont = new Font(UIManager.getLookAndFeelDefaults().getFont("Label.font").getName(), Font.PLAIN, 12);
+	public static Font customFont = GraphicalProperties.customFont;
 	private static final long serialVersionUID = 8L;
 	
 	private static final boolean DEBUG_SAVE_AT_EACH_STEP = false;
 	private static int DEBUG_STEP = 0;
 	public static final boolean DEBUG_SHOW_PRINTSTACKTRACES = false;
 	public static boolean FULL_BRACKET_EXPRESSION = false;
-	public Font getCustomFont() {return customFont;}
+	public Font getCustomFont() {return GraphicalProperties.customFont;}
 	
 	public void setCustomFont(int size) {
 		if(customFont!=null) {
-			customFont = new Font(customFont.getName(), Font.PLAIN, size);
-
+			
+			MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(Font.class);
+			changeToReport.setElementBefore(new Font(customFont.getName(), customFont.getStyle(), customFont.getSize()));
+			
+			GraphicalProperties.customFont = new Font(GraphicalProperties.customFont.getName(), Font.PLAIN, size);
+			customFont = GraphicalProperties.customFont;
+			changeToReport.setElementAfter(new Font(customFont.getName(), customFont.getStyle(), customFont.getSize()));
+				
+			setChangeToReport(changeToReport);
+			//if(changeListeners.get(Font.class)!= null) changeListeners.get(Font.class).stateChanged(new ChangeEvent(changeToReport));
+			
 			/*for(int i = 0; i < jMenuBar.getComponentCount();i++) {
 				Component c = jMenuBar.getComponent(i);
 				if(c instanceof JMenu) {
@@ -91,6 +122,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					}
 				}
 			}*/
+			
+
 			
 			jTabGeneral.setFont(customFont);
 
@@ -112,7 +145,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			jTableBuiltInFunctions.setCustomFont(customFont);
 			
 
-			Vector<CustomJTable> tables = new Vector<>();
+			Vector<Object> tables = new Vector<>();
 			tables.add(jTableCompartments);
 			tables.add(jTableEvents);
 			tables.add(jTableFunctions);
@@ -120,27 +153,32 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			tables.add(jTableGlobalQ);
 			tables.add(jTableReactions);
 			tables.add(jTableSpecies);
-			for (CustomJTable table : tables) {
-				for(int i = 0; i < table.getColumnCount(); i++) {
-					TableColumnModel colModel = table.getColumnModel();
-					TableCellEditor e = colModel.getColumn(i).getCellEditor();
-					if(e!= null){
-						if(e instanceof UnquotingCellEditor) {	((UnquotingCellEditor)e).setCustomFont(customFont); }
-						else {
-							if(e instanceof ExpressionsCellEditor) {	((ExpressionsCellEditor)e).setCustomFont(customFont); }
-							//else {	System.out.println("editor " + e.getClass()); }
+			for (Object t : tables) {
+				
+				if(t instanceof CustomJTable_MSMB) {
+					CustomJTable_MSMB table = (CustomJTable_MSMB) t;
+
+					for(int i = 0; i < table.getColumnCount(); i++) {
+						TableColumnModel colModel = table.getColumnModel();
+						TableCellEditor e = colModel.getColumn(i).getCellEditor();
+						if(e!= null){
+							if(e instanceof UnquotingCellEditor) {	((UnquotingCellEditor)e).setCustomFont(customFont); }
+							else {
+								if(e instanceof ExpressionsCellEditor) {	((ExpressionsCellEditor)e).setCustomFont(customFont); }
+								//else {	System.out.println("editor " + e.getClass()); }
+							}
+						}
+						TableCellRenderer r = colModel.getColumn(i).getCellRenderer();
+						if(r!=null) {
+							if(r instanceof EditableCellRenderer_MSMB) {	((EditableCellRenderer_MSMB)r).setCustomFont(customFont); }
+							else {
+								if(r instanceof ScientificFormatCellRenderer) {	((ScientificFormatCellRenderer)r).setCustomFont(customFont); }
+								else if(r instanceof CustomColumn0Renderer) {	((CustomColumn0Renderer)r).setCustomFont(customFont); }
+								//else { 	System.out.println("renderer " + r.getClass()); }
+							}
 						}
 					}
-					TableCellRenderer r = colModel.getColumn(i).getCellRenderer();
-					if(r!=null) {
-						if(r instanceof EditableCellRenderer) {	((EditableCellRenderer)r).setCustomFont(customFont); }
-						else {
-							if(r instanceof ScientificFormatCellRenderer) {	((ScientificFormatCellRenderer)r).setCustomFont(customFont); }
-							else if(r instanceof CustomColumn0Renderer) {	((CustomColumn0Renderer)r).setCustomFont(customFont); }
-							//else { 	System.out.println("renderer " + r.getClass()); }
-						}
-					}
-				}
+				} 
 			}
 
 
@@ -161,14 +199,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	public static boolean show_defaults_dialog_window = true;
 	public static int renamingOption = Constants.RENAMING_OPTION_ALL;
 	public static boolean showAllAvailableFunctions = true;
-	public static Color color_border_defaults = Color.MAGENTA;
-	public static Color color_shading_table = Constants.vt_cream_2; //new Color(230, 230, 230); 
-	public static Color color_selected_row = Constants.vt_gray_4;
-	public static Color color_cell_with_errors = Constants.vt_orange;
-	public static Color color_debug_none = UIManager.getColor("TableHeader.background");
-	public static Color color_debug_warnings = Constants.vt_orange;
-	public static Color color_debug_problems = Constants.vt_red_1;
-	public static Color color_cell_to_highlight = Color.YELLOW;
+	
 	private String autosavePath = new String();
 	private int autosaveTimeMilliseconds = 5*60*1000;
 	private boolean isAutosaveActive = true;
@@ -214,7 +245,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	protected static DebugMessage toBeAck_debugMessage;
 	private static HashSet<String> old_acknowledged = new HashSet<String>();
 	static boolean addedByReaction = false;
-	
+	static boolean hidePopupWarning = false;
 	public static HashMap<String, DebugMessage> debugMessages = new HashMap<String, DebugMessage>();
 
 	public static HashMap<String, String> cleanNamesPredefinedFunctions = null;
@@ -310,25 +341,26 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	private JCheckBoxMenuItem menu_expandedExpr_Compartments;
 	private JCheckBoxMenuItem menu_expandedExpr_Events;
 	private JSplitPane splitPaneFunctions;
-	static CustomJTable jTableBuiltInFunctions;
+	static CustomJTable_MSMB jTableBuiltInFunctions;
 	private JScrollPane jScrollPaneTableBuiltInFunctions;
 
 	public static boolean importFromTables = false;
 	public static boolean importFromSBMLorCPS = false;
 	
-	static CustomJTable jTableReactions = null;
-	public static CustomTableModel tableReactionmodel = null;
-	static CustomJTable jTableSpecies = null;
-	static CustomTableModel tableSpeciesmodel = null;
-	static CustomJTable jTableGlobalQ = null;
-	public static CustomTableModel tableGlobalQmodel = null;
-	static CustomJTable jTableFunctions = null;
-	public static CustomTableModel tableFunctionsmodel = null;
-	public static CustomTableModel tableBuiltInFunctionsmodel = null;
-	public static CustomJTable jTableCompartments = null;
-	public static CustomTableModel tableCompartmentsmodel = null;
-	static CustomJTable jTableEvents;
-	public static CustomTableModel tableEventsmodel = null;
+	static CustomJTable_MSMB jTableReactions = null;
+	public static CustomTableModel_MSMB tableReactionmodel = null;
+	static CustomJTable_MSMB jTableSpecies = null;
+	static CustomTableModel_MSMB tableSpeciesmodel = null;
+		
+	static CustomJTable_MSMB jTableGlobalQ = null;
+	public static CustomTableModel_MSMB tableGlobalQmodel = null;
+	static CustomJTable_MSMB jTableFunctions = null;
+	public static CustomTableModel_MSMB tableFunctionsmodel = null;
+	public static CustomTableModel_MSMB tableBuiltInFunctionsmodel = null;
+	public static CustomJTable_MSMB jTableCompartments = null;
+	public static CustomTableModel_MSMB tableCompartmentsmodel = null;
+	static CustomJTable_MSMB jTableEvents;
+	public static CustomTableModel_MSMB tableEventsmodel = null;
 	
 	public static JList<String> jListFunctionToCompact;
 	public static DefaultListModel<String> listModel_FunctionToCompact;
@@ -370,7 +402,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			jTabGeneral.addTab(Constants.TitlesTabs.EQUATIONS.description, null, getJPanelEquations(), null);
 			jTabGeneral.setEnabledAt(Constants.TitlesTabs.EQUATIONS.index,true);
 			jTabGeneral.addTab(Constants.TitlesTabs.DEBUG.description, null, getJPanelDebug(), null);
-			jTabGeneral.setBackgroundAt(6, MainGui.color_debug_none);
+			//jTabGeneral.setBackgroundAt(6, GraphicalProperties.color_debug_none);
 			
 			
 			
@@ -446,42 +478,54 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 
 	protected static void resetViewsInExpressions() {
+	
 		try{
 			int tabSelected = jTabGeneral.getSelectedIndex();
 		
 			if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description) ==0) {	
-				CustomTableModel table = tableSpeciesmodel;
+				//CustomTableModel table = tableSpeciesmodel;
+				CustomTableModel_MSMB table = tableSpeciesmodel;
 				for(int i = 0; i < table.getRowCount()-1; i++) {
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.SpeciesColumns.EXPRESSION.index);
 				}
 
 			} 
 			else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description) ==0) {	
-				CustomTableModel table = tableReactionmodel;
+				CustomTableModel_MSMB table = tableReactionmodel;
 				for(int i = 0; i < table.getRowCount()-1; i++) {
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.ReactionsColumns.KINETIC_LAW.index);
 				}
 			}
 			else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) ==0) {	
-				CustomTableModel table = tableCompartmentsmodel;
+				CustomTableModel_MSMB table = tableCompartmentsmodel;
 				for(int i = 0; i < table.getRowCount()-1; i++) {
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.CompartmentsColumns.INITIAL_SIZE.index);
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.CompartmentsColumns.EXPRESSION.index);
 				}
 			}
 			else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.EVENTS.description) ==0) {	
-				CustomTableModel table = tableEventsmodel;
+				CustomTableModel_MSMB table = tableEventsmodel;
 				for(int i = 0; i < table.getRowCount()-1; i++) {
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.EventsColumns.ACTIONS.index);
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.EventsColumns.TRIGGER.index);
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.EventsColumns.DELAY.index);
 				}
 			}
 			else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.GLOBALQ.description) ==0) {	
-				CustomTableModel table = tableGlobalQmodel;
+				CustomTableModel_MSMB table = tableGlobalQmodel;
 				for(int i = 0; i < table.getRowCount()-1; i++) {
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.GlobalQColumns.VALUE.index);
+					MainGui.donotCleanDebugMessages = true;
 					setView(Constants.Views.EDITABLE.index,table.getTableName(),i,Constants.GlobalQColumns.EXPRESSION.index);
 				}
 			}
@@ -489,8 +533,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			jTabGeneral.setSelectedIndex(tabSelected);
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			MainGui.donotCleanDebugMessages = false;
 		}
-		
 	}
 
 	private JPanel getJPanelCompartments() {
@@ -756,8 +801,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	private JTable getJTableCompartments() {
 			Vector col = new Vector(Constants.compartments_columns);
 					
-			if(tableCompartmentsmodel == null) tableCompartmentsmodel = new CustomTableModel(Constants.TitlesTabs.COMPARTMENTS.description,col,this);
-			jTableCompartments = new CustomJTable();
+			if(tableCompartmentsmodel == null) tableCompartmentsmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.COMPARTMENTS.description,col,new Vector(),this);
+			jTableCompartments = new CustomJTable_MSMB();
 			
 		       jTableCompartments.getActionMap().put("Delete",
 					    new AbstractAction() {
@@ -779,19 +824,19 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				}
 			}
 	        typeColumn.setCellEditor(new DefaultCellEditor(comboBoxCompartmentsType));
-	        typeColumn.setCellRenderer(new EditableCellRenderer());
+	        typeColumn.setCellRenderer(new EditableCellRenderer_MSMB());
 	    	
 	        
 	        TableColumn nameColumn = jTableCompartments.getColumnModel().getColumn(Constants.CompartmentsColumns.NAME.index);
-			 nameColumn.setCellRenderer(new EditableCellRenderer());
+			 nameColumn.setCellRenderer(new EditableCellRenderer_MSMB());
 			 nameColumn.setCellEditor(new UnquotingCellEditor());
 				
 	        
 	        TableColumn column = jTableCompartments.getColumnModel().getColumn(Constants.CompartmentsColumns.INITIAL_SIZE.index);  
-	        column.setCellRenderer(new EditableCellRenderer());
+	        column.setCellRenderer(new EditableCellRenderer_MSMB());
 	        
 	        TableColumn column2 = jTableCompartments.getColumnModel().getColumn(Constants.CompartmentsColumns.EXPRESSION.index);  
-	        column2.setCellRenderer(new EditableCellRenderer());
+	        column2.setCellRenderer(new EditableCellRenderer_MSMB());
 	        
 	        JTextField withAutoComplete = new JTextField();
 			AutoCompletion autoCompletion = new AutoCompletion(Constants.provider);
@@ -822,8 +867,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	private JTable getJTableGlobalQ() {
 			Vector col = new Vector(Constants.globalQ_columns);
 			
-			if(tableGlobalQmodel == null) tableGlobalQmodel = new CustomTableModel(Constants.TitlesTabs.GLOBALQ.description,col,this);
-			jTableGlobalQ = new CustomJTable();
+			if(tableGlobalQmodel == null) tableGlobalQmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.GLOBALQ.description,col,new Vector(),this);
+			jTableGlobalQ = new CustomJTable_MSMB();
 			jTableGlobalQ.setModel(tableGlobalQmodel);
 			
 			jTableGlobalQ.initializeCustomTable(tableGlobalQmodel);
@@ -835,10 +880,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				}
 			}
 		    typeColumn.setCellEditor(new DefaultCellEditor(comboBoxGlobalQType));
-		    jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.TYPE.index).setCellRenderer(new EditableCellRenderer());
+		    jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.TYPE.index).setCellRenderer(new EditableCellRenderer_MSMB());
 		    
 		    TableColumn column = jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.VALUE.index);  
-	        column.setCellRenderer(new EditableCellRenderer());
+	        column.setCellRenderer(new EditableCellRenderer_MSMB());
 	        
 	    	JTextField withAutoCompleteInitial = new JTextField();
 	    	AutoCompletion autoCompletion = new AutoCompletion(Constants.provider);
@@ -852,11 +897,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.VALUE.index).setCellEditor(new ExpressionsCellEditor(withAutoCompleteInitial));
 
 			
-	        jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.NAME.index).setCellRenderer(new EditableCellRenderer());
+	        jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.NAME.index).setCellRenderer(new EditableCellRenderer_MSMB());
 	        jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.NAME.index).setCellEditor(new UnquotingCellEditor());
 				  
 		    TableColumn column2 = jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.EXPRESSION.index);  
-	        column2.setCellRenderer(new EditableCellRenderer());
+	        column2.setCellRenderer(new EditableCellRenderer_MSMB());
 			return jTableGlobalQ;
 	}
 	
@@ -864,18 +909,20 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		Vector col = new Vector(Constants.functions_columns);
 		
 		
-		if(tableBuiltInFunctionsmodel == null)tableBuiltInFunctionsmodel = new CustomTableModel(Constants.TitlesTabs.BUILTINFUNCTIONS.description,col,this);
-		jTableBuiltInFunctions = new CustomJTable();
+		if(tableBuiltInFunctionsmodel == null)tableBuiltInFunctionsmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.BUILTINFUNCTIONS.description,col,new Vector(),this);
+		jTableBuiltInFunctions = new CustomJTable_MSMB();
 		jTableBuiltInFunctions.setModel(tableBuiltInFunctionsmodel);
 		
 		jTableBuiltInFunctions.initializeCustomTable(tableBuiltInFunctionsmodel);
 		
 		 TableColumn nameColumn = jTableBuiltInFunctions.getColumnModel().getColumn(Constants.FunctionsColumns.NAME.index);
-		 nameColumn.setCellRenderer(new EditableCellRenderer());
+		 nameColumn.setCellRenderer(new EditableCellRenderer_MSMB());
 		 nameColumn.setCellEditor(new UnquotingCellEditor());
+		 
 			
+		 
 		 TableColumn equationColumn = jTableBuiltInFunctions.getColumnModel().getColumn(Constants.FunctionsColumns.EQUATION.index);
-		 equationColumn.setCellRenderer(new EditableCellRenderer());
+		 equationColumn.setCellRenderer(new EditableCellRenderer_MSMB());
 		 equationColumn.setCellEditor(new UnquotingCellEditor());
 			
 		  TableColumn expandedColumn = jTableBuiltInFunctions.getColumnModel().getColumn(Constants.FunctionsColumns.PARAMETER_ROLES.index);
@@ -889,6 +936,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	        
 	        ActionListener action = new ActionListener() {
 				  public void actionPerformed(ActionEvent e) {
+					
 					  openFunctionParameterFrame();
 				  }
 			  };
@@ -905,19 +953,19 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	private JTable getJTableFunctions() throws IOException {
 			Vector col = new Vector(Constants.functions_columns);
 			
-			if(tableFunctionsmodel == null)tableFunctionsmodel = new CustomTableModel(Constants.TitlesTabs.FUNCTIONS.description,col,this);
-			jTableFunctions = new CustomJTable();
+			if(tableFunctionsmodel == null)tableFunctionsmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.FUNCTIONS.description,col,new Vector(),this);
+			jTableFunctions = new CustomJTable_MSMB();
 			jTableFunctions.setModel(tableFunctionsmodel);
 			
 			jTableFunctions.initializeCustomTable(tableFunctionsmodel);
 			
 			
 			 TableColumn nameColumn = jTableFunctions.getColumnModel().getColumn(Constants.FunctionsColumns.NAME.index);
-			 nameColumn.setCellRenderer(new EditableCellRenderer());
+			 nameColumn.setCellRenderer(new EditableCellRenderer_MSMB());
 			 nameColumn.setCellEditor(new UnquotingCellEditor());
 				
 			 TableColumn equationColumn = jTableFunctions.getColumnModel().getColumn(Constants.FunctionsColumns.EQUATION.index);
-			 equationColumn.setCellRenderer(new EditableCellRenderer());
+			 equationColumn.setCellRenderer(new EditableCellRenderer_MSMB());
 			 equationColumn.setCellEditor(new UnquotingCellEditor());
 				
 			  TableColumn expandedColumn = jTableFunctions.getColumnModel().getColumn(Constants.FunctionsColumns.PARAMETER_ROLES.index);
@@ -931,10 +979,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		        
 		        ActionListener action = new ActionListener() {
 					  public void actionPerformed(ActionEvent e) {
+						  
 						  openFunctionParameterFrame();
 					  }
 				  };
-		        
+		       
 		        expandedColumn.setCellEditor(new ButtonEditor_ParameterRoles(icon, action));
 		       
 		        expandedColumn.setMaxWidth(22);
@@ -948,8 +997,12 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	private JTable getJTableEvents() {
 			Vector col = new Vector(Constants.events_columns);
 			
-			if(tableEventsmodel == null)tableEventsmodel = new CustomTableModel(Constants.TitlesTabs.EVENTS.description,col,this);
-			jTableEvents = new CustomJTable();
+			  Vector booleanCol = new Vector();
+			  booleanCol.add(Constants.EventsColumns.DELAYCALC.index);
+			  booleanCol.add(Constants.EventsColumns.EXPAND_ACTION_ONVOLUME_TOSPECIES_C.index);
+			  
+			if(tableEventsmodel == null)tableEventsmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.EVENTS.description,col,booleanCol,this);
+			jTableEvents = new CustomJTable_MSMB();
 			jTableEvents.setModel(tableEventsmodel);
 			
 			jTableEvents.initializeCustomTable(tableEventsmodel);
@@ -983,7 +1036,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		functionParameterFrame.clearAll();
 	    
 		if(jTabGeneral.getSelectedIndex() == Constants.TitlesTabs.FUNCTIONS.index) {
-			int sel = jTableFunctions.getSelectedRow();
+			int sel = MainGui.row_to_highlight.get(Constants.TitlesTabs.FUNCTIONS.index); // jTableFunctions.getSelectedRow();
 			if(sel > -1) {
 				
 				if(!MainGui.containsKey_debugMessages_relatedWith(Constants.TitlesTabs.FUNCTIONS.description,  DebugConstants.PriorityType.PARSING.priorityCode, sel,Constants.FunctionsColumns.NAME.index)&&
@@ -993,8 +1046,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					try {
 						functionParameterFrame.setFunction((Integer)tableFunctionsmodel.getValueAt(sel, 0), multiModel.funDB.getFunctionByName(name));
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
 					}
 					functionParameterFrame.setVisible(true);
 				} 
@@ -1008,7 +1060,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	public void resetJTable(Vector<Vector<String>> data, String description) throws IOException {
 		if(description.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) {
 			Vector col =new Vector(Constants.reactions_columns);
-			tableReactionmodel = new CustomTableModel(Constants.TitlesTabs.REACTIONS.description,col,this);
+			tableReactionmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.REACTIONS.description,col,new Vector(),this);
 			tableReactionmodel.setDataVector(new Vector(data), col);
 			for(int i = 0; i < data.size(); i++) {
 				Vector row = new Vector((Vector<String>)data.get(i));
@@ -1020,7 +1072,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			return;
 		} else if(description.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) {
 			Vector col =new Vector(Constants.species_columns);
-			tableSpeciesmodel = new CustomTableModel(Constants.TitlesTabs.SPECIES.description,col,this);
+			//tableSpeciesmodel = new CustomTableModel(Constants.TitlesTabs.SPECIES.description,col,this);
+			tableSpeciesmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.SPECIES.description,col,new Vector(),this);
 			tableSpeciesmodel.setDataVector(new Vector(data),col);
 			for(int i = 0; i < data.size(); i++) {
 				Vector row = new Vector((Vector<String>)data.get(i));
@@ -1032,7 +1085,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			return;
 		} else if(description.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) {
 			Vector col =new Vector(Constants.compartments_columns);
-			tableCompartmentsmodel = new CustomTableModel(Constants.TitlesTabs.COMPARTMENTS.description,col,this);
+			tableCompartmentsmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.COMPARTMENTS.description,col,new Vector(),this);
 			tableCompartmentsmodel.setDataVector(new Vector(data),col);
 			for(int i = 0; i < data.size(); i++) {
 				Vector row = new Vector((Vector<String>)data.get(i));
@@ -1044,7 +1097,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			return;
 		} else if(description.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) {
 			Vector col =new Vector(Constants.events_columns);
-			tableEventsmodel = new CustomTableModel(Constants.TitlesTabs.EVENTS.description,col,this);
+			tableEventsmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.EVENTS.description,col,new Vector(),this);
 			tableEventsmodel.setDataVector(new Vector(data),col);
 			for(int i = 0; i < data.size(); i++) {
 				Vector row = new Vector((Vector<String>)data.get(i));
@@ -1056,7 +1109,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			return;
 		} else if(description.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) {
 			Vector col =new Vector(Constants.functions_columns);
-			tableFunctionsmodel = new CustomTableModel(Constants.TitlesTabs.FUNCTIONS.description,col,this);
+			tableFunctionsmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.FUNCTIONS.description,col,new Vector(),this);
 			tableFunctionsmodel.setDataVector(new Vector(data),col);
 			for(int i = 0; i < data.size(); i++) {
 				Vector row = new Vector((Vector<String>)data.get(i));
@@ -1068,7 +1121,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			return;
 		} else if(description.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) {
 			Vector col =new Vector(Constants.globalQ_columns);
-			tableGlobalQmodel = new CustomTableModel(Constants.TitlesTabs.GLOBALQ.description,col,this);
+			tableGlobalQmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.GLOBALQ.description,col,new Vector(),this);
 			tableGlobalQmodel.setDataVector(new Vector(data),col);
 			for(int i = 0; i < data.size(); i++) {
 				Vector row = new Vector((Vector<String>)data.get(i));
@@ -1084,8 +1137,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	private JTable getJTableReactions() throws IOException {
 			Vector col = new Vector(Constants.reactions_columns);
 						
-			if(tableReactionmodel==null) tableReactionmodel = new CustomTableModel(Constants.TitlesTabs.REACTIONS.description,col,this);
-			jTableReactions = new CustomJTable();
+			if(tableReactionmodel==null) tableReactionmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.REACTIONS.description,col,new Vector(),this);
+			jTableReactions = new CustomJTable_MSMB();
 			jTableReactions.setModel(tableReactionmodel);
 		
 			jTableReactions.initializeCustomTable(tableReactionmodel);
@@ -1099,7 +1152,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	        typeColumn.setCellEditor(new DefaultCellEditor(comboBoxReactionType));
 	        
 	        TableColumn reactionStringColumn = jTableReactions.getColumnModel().getColumn(Constants.ReactionsColumns.REACTION.index);
-	        reactionStringColumn.setCellRenderer(new EditableCellRenderer());
+	        reactionStringColumn.setCellRenderer(new EditableCellRenderer_MSMB());
 	        reactionStringColumn.setCellEditor(new UnquotingCellEditor());
 			
 	        
@@ -1109,7 +1162,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	        
 	   
 	        reactionStringColumn = jTableReactions.getColumnModel().getColumn(Constants.ReactionsColumns.KINETIC_LAW.index);
-	        reactionStringColumn.setCellRenderer(new EditableCellRenderer());
+	        reactionStringColumn.setCellRenderer(new EditableCellRenderer_MSMB());
 	       // reactionStringColumn.setCellEditor(new UnquotingCellEditor());
 	        JTextField withAutoComplete = new JTextField();
 	   		AutoCompletion autoCompletion = new AutoCompletion(Constants.provider) {
@@ -1181,16 +1234,18 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	private JTable getJTableSpecies() {
 			Vector col = new Vector(Constants.species_columns);
 			
-			if(tableSpeciesmodel == null) tableSpeciesmodel = new CustomTableModel(Constants.TitlesTabs.SPECIES.description,col,this);
-			jTableSpecies = new CustomJTable();
+			//if(tableSpeciesmodel == null) tableSpeciesmodel = new CustomTableModel(Constants.TitlesTabs.SPECIES.description,col,this);
+			//jTableSpecies = new CustomJTable();
+			if(tableSpeciesmodel == null) tableSpeciesmodel = new CustomTableModel_MSMB(Constants.TitlesTabs.SPECIES.description,col,new Vector(),this);
+			jTableSpecies = new CustomJTable_MSMB();
 			jTableSpecies.setModel(tableSpeciesmodel);
 			
 			jTableSpecies.initializeCustomTable(tableSpeciesmodel);
 			
 			TableColumnModel colModel = jTableSpecies.getColumnModel();
-			colModel.getColumn(Constants.SpeciesColumns.NAME.index).setCellRenderer(new EditableCellRenderer());
+			colModel.getColumn(Constants.SpeciesColumns.NAME.index).setCellRenderer(new EditableCellRenderer_MSMB());
 			colModel.getColumn(Constants.SpeciesColumns.NAME.index).setCellEditor(new UnquotingCellEditor());
-			colModel.getColumn(Constants.SpeciesColumns.EXPRESSION.index).setCellRenderer(new EditableCellRenderer());
+			colModel.getColumn(Constants.SpeciesColumns.EXPRESSION.index).setCellRenderer(new EditableCellRenderer_MSMB());
 				
 			
 			JTextField withAutoComplete = new JTextField();
@@ -1221,13 +1276,13 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				}
 			}
 	        typeColumn.setCellEditor(new DefaultCellEditor(comboBoxSpeciesType));
-	        colModel.getColumn(Constants.SpeciesColumns.TYPE.index).setCellRenderer(new EditableCellRenderer());
+	        colModel.getColumn(Constants.SpeciesColumns.TYPE.index).setCellRenderer(new EditableCellRenderer_MSMB());
 		        
 	        TableColumn column = colModel.getColumn(Constants.SpeciesColumns.INITIAL_QUANTITY.index);  
 	        column.setCellRenderer(new ScientificFormatCellRenderer());
 	         
 	         column = colModel.getColumn(Constants.SpeciesColumns.COMPARTMENT.index);  
-	        column.setCellRenderer(new EditableCellRenderer());
+	        column.setCellRenderer(new EditableCellRenderer_MSMB());
 	        column.setCellEditor(new UnquotingCellEditor());
 			
 	        jTableSpecies.addMouseListener(new MouseAdapter()
@@ -1257,12 +1312,13 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	                    			if(CellParsers.isMultistateSpeciesName(name)) {
 	                    				multiBuilderFrame.setMultistateSpecies(multiModel.getMultistateSpecies(name));
 	                    				modify_multistate_species_from_builder = true;
+	                    				if(col == Constants.SpeciesColumns.INITIAL_QUANTITY.index) multiBuilderFrame.selectInitialQuantityTab();
+	        	                    	multiBuilderFrame.setVisible(true);
+	        	                    	jTableSpecies.revalidate();
 	                    			} 
 	                    		}
 	                    	}
-	                    	if(col == Constants.SpeciesColumns.INITIAL_QUANTITY.index) multiBuilderFrame.selectInitialQuantityTab();
-	                    	multiBuilderFrame.setVisible(true);
-	                    	jTableSpecies.revalidate();
+	                    	
 	                    } 
 	                } else {
 	                	 Point p = e.getPoint();
@@ -1271,9 +1327,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
                     	jTableSpecies.setColumnSelectionInterval(col, col);
                     	if(row > 0 && row < jTableSpecies.getRowCount())jTableSpecies.setRowSelectionInterval(row, row);
                     }
-	                jTabGeneral.setSelectedIndex(Constants.TitlesTabs.REACTIONS.index);
-	                jTableSpecies.revalidate();
-	                jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
+	         
 	            }
 	        });
 	        
@@ -1387,7 +1441,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 	}
 
-	private static void clearTable(CustomTableModel tableModel) {
+	/*private static void clearTable(CustomTableModel_MSMB tableModel) {
 		tableModel.clearData();
 		tableModel.removeAddEmptyRow_Listener();
 		tableModel.addRow(new Vector());
@@ -1396,8 +1450,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		String description = tableModel.getTableName();
 	    
 		CustomJTable table = null;
-		if(description.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {			table  = jTableSpecies;	}
-		else if(description.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	table = jTableCompartments;	}
+		//if(description.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {			table  = jTableSpecies;	}
+		//else 
+			if(description.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	table = jTableCompartments;	}
 		else if(description.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {		table = jTableEvents;	}
 		else if(description.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {		table = jTableGlobalQ;		}
 		else if(description.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {		table = jTableReactions;		}
@@ -1411,6 +1466,38 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						edi.clearCellsWithDefaults();
 				}
 			}
+	     	table.revalidate();
+		}
+     }
+	*/
+	
+	private static void clearTable(CustomTableModel_MSMB tableModel) {
+		tableModel.clearData();
+		tableModel.removeAddEmptyRow_Listener();
+		tableModel.addRow(new Vector());
+		tableModel.addAddEmptyRow_Listener();
+		tableModel.fireTableDataChanged();
+		String description = tableModel.getTableName();
+	    
+		CustomJTable_MSMB table = null;
+		if(description.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {			table  = jTableSpecies;	}
+		else if(description.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	table = jTableCompartments;	}
+		else if(description.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {		table = jTableEvents;	}
+		else if(description.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {		table = jTableGlobalQ;		}
+		else if(description.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {		table = jTableReactions;		}
+		if(table!= null) {
+			table.clearCellsWithErrors();
+			table.clearCellsWithDefaults();
+		/*	for(int indexColumn = 0; indexColumn < table.getColumnCount(); indexColumn++) {
+				TableColumn nameColumn = table.getColumnModel().getColumn(indexColumn);
+				TableCellRenderer cellRender = nameColumn.getCellRenderer();
+				if(cellRender instanceof EditableCellRenderer_MSMB) {
+						EditableCellRenderer_MSMB edi = ((EditableCellRenderer_MSMB) cellRender);
+						edi.clearCellsWithErrors();
+						edi.clearCellsWithDefaults();
+						
+				}
+			}*/
 	     	table.revalidate();
 		}
      }
@@ -1498,7 +1585,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	                    donotCleanDebugMessages = true;
 	                    importTablesMultistateFormat(file);
 	                    donotCleanDebugMessages = false;
-	                    
+	                   
 	                    startAutosave();
 	                    jTabGeneral.setSelectedIndex(Constants.TitlesTabs.REACTIONS.index);
 	                 }
@@ -1829,7 +1916,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			itemMU.setEnabled(false);
 			itemMU.addActionListener(new ActionListener(){
 	            public void actionPerformed(ActionEvent arg0) {
-	            	//TOOOOOOOOOO DO
+	            	//TO DO
 	            	System.out.println("Move up row");
 	            }
 			});
@@ -1839,7 +1926,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			itemMD.setEnabled(false);
 			itemMD.addActionListener(new ActionListener(){
 	            public void actionPerformed(ActionEvent arg0) {
-	            	//TOOOOOOOOOO DO
+	            	//TO DO
 	            	System.out.println("Move down row");
 	            }
 			});
@@ -1870,7 +1957,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	protected void changeViewAllExpression(String description, boolean selected) {
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		CustomTableModel tableModel = null;
+		CustomTableModel_MSMB tableModel = null;
 		Vector<Integer> columnWithExpressions = new Vector<Integer>();
 		MainGui.importFromSBMLorCPS = true;
 		if(description.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
@@ -1897,27 +1984,29 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		int whichView = -1;
 		if(selected) whichView = Constants.Views.EXPANDED.index;
 		else  whichView = Constants.Views.COMPRESSED.index;
-		for(int i = 0; i < tableModel.getRowCount()-1; i++) {
-			for(int j = 0; j < columnWithExpressions.size(); j++) {
-				 try {
-					setView(whichView,description,i,columnWithExpressions.get(j));
-				} catch (MySyntaxException e) {
-					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e.printStackTrace();
-					continue;
+		if(tableModel!=null) {
+			for(int i = 0; i < tableModel.getRowCount()-1; i++) {
+				for(int j = 0; j < columnWithExpressions.size(); j++) {
+					 try {
+						setView(whichView,description,i,columnWithExpressions.get(j));
+					} catch (MySyntaxException e) {
+						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e.printStackTrace();
+						continue;
+					}
 				}
 			}
-		}
+		} 
 		MainGui.importFromSBMLorCPS = false;
 		setCursor(null);
 		
 	}
 
-	protected CustomTableModel createMultistateTableModel() {
+	protected CustomTableModel_MSMB createMultistateTableModel() {
 		Vector col = new Vector();
 		col.add(Constants.SpeciesColumns.NAME.description);
 		col.add(Constants.SpeciesColumns.INITIAL_QUANTITY.description);
 			
-		CustomTableModel tableMultistateSpeciesmodel = new CustomTableModel(Constants.MULTISTATE_TITLE_TABLE_PDF,col,this);
+		CustomTableModel_MSMB tableMultistateSpeciesmodel = new CustomTableModel_MSMB(Constants.MULTISTATE_TITLE_TABLE_PDF,col,new Vector(),this);
 
 		Vector<MultistateSpecies> m = multiModel.getAllMultistateSpecies();
 		for(int i = 0; i < m.size(); i++) {
@@ -1926,8 +2015,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			try {
 				single = ms.getExpandedSpecies(multiModel);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
 			}
 			for(int j = 0; j < single.size(); j++) {
 				Vector row = new Vector();
@@ -2039,15 +2127,16 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 
 	protected MutablePair<FoundElementToDelete, DefaultMutableTreeTableNode> collectDeleteTreeTableModel() {
-			int whichTab = -1;
-			CustomJTable table = null;
-			CustomTableModel tableModel = null;
+	     int whichTab = -1;
+			CustomJTable_MSMB table = null;
+			CustomTableModel_MSMB tableModel = null;
 			int indexName = -1;
 			String nameTable = null;
+			Integer sel_idx = null;
 			DefaultMutableTreeTableNode invisibleRoot = new DefaultMutableTreeTableNode("invisibleRoot");
 			MutablePair<FoundElementToDelete, DefaultMutableTreeTableNode> ret = null;
-			
 			whichTab = jTabGeneral.getSelectedIndex();
+			sel_idx = MainGui.row_to_highlight.get(whichTab);
 				switch(whichTab) {
 					case 0: 
 							table = jTableReactions; tableModel = tableReactionmodel;
@@ -2073,13 +2162,12 @@ public class MainGui extends JFrame implements MSMB_Interface {
 							table = jTableCompartments; tableModel = tableCompartmentsmodel; 
 							indexName = Constants.CompartmentsColumns.NAME.index; nameTable = Constants.TitlesTabs.COMPARTMENTS.description;
 							break;
-					default: System.out.println("Error???"); break;
+					default: System.out.println("Error???");  sel_idx = null; break;
 				}
 			try {
-				
-				int[] sel = table.getSelectedRows();
+				int[] sel = {sel_idx} ; //table.getSelectedRows();
 				if(sel.length > 0) {
-					
+				
 					String message = new String();
 					boolean deleteToConfim = false;
 					Vector<DefaultMutableTreeTableNode> roots = new Vector<DefaultMutableTreeTableNode>();
@@ -2191,7 +2279,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {	return new HashSet();	}
 		else if(descr.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {	return new HashSet();	}
 		
-		CustomTableModel mod = null;
+		CustomTableModel_MSMB mod = null;
 		int nameCol = -1;
 		if(descr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	mod = tableSpeciesmodel;	nameCol = Constants.SpeciesColumns.NAME.index; }
 		else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	mod = tableCompartmentsmodel;	 nameCol = Constants.CompartmentsColumns.NAME.index;}
@@ -2248,8 +2336,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 
 	private void deleteSelected() {
 		int whichTab = -1;
-		CustomJTable table = null;
-		CustomTableModel tableModel = null;
+		CustomJTable_MSMB table = null;
+		CustomTableModel_MSMB tableModel = null;
 		int indexName = -1;
 		String nameTable = null;
 		whichTab = jTabGeneral.getSelectedIndex();
@@ -2342,7 +2430,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 	
 	public static String printCompleteRowContent(FoundElement el) {
-		CustomTableModel mod = null;
+		CustomTableModel_MSMB mod = null;
 		if(el==null) return new String();
 		String descr = el.getTableDescription();
 		String rowContent = new String();
@@ -2364,7 +2452,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 	
 	public static String printCellContent(FoundElement el) {
-		CustomTableModel mod = null;
+		CustomTableModel_MSMB mod = null;
 		String descr = el.getTableDescription();
 		String cellContent = new String();
 		if(descr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	mod = tableSpeciesmodel;	}
@@ -2378,7 +2466,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 	
 	public static String printCellHeader(FoundElement el) {
-		CustomTableModel mod = null;
 		String descr = el.getTableDescription();
 		String cellHeader = new String();
 		if(descr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	cellHeader = Constants.SpeciesColumns.getDescriptionFromIndex(el.getCol());	}
@@ -2394,7 +2481,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		int mainElementColumn = -1;
 		String descr = el.getTableDescription();
 		String cellContent = new String();
-		CustomTableModel mod = null;
+		CustomTableModel_MSMB mod = null;
 		if(descr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	mod = tableSpeciesmodel; mainElementColumn = Constants.SpeciesColumns.NAME.index;	}
 		else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	mod = tableCompartmentsmodel; mainElementColumn = Constants.CompartmentsColumns.NAME.index;		}
 		else if(descr.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {	mod = tableEventsmodel;	 mainElementColumn = Constants.EventsColumns.NAME.index;	}
@@ -2407,8 +2494,17 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	
 	
+	public static Vector<FoundElement> search_excludeTableColumn(String s, String tableToExclude, Integer columnToExclude)
+    {  
+		return search(s,tableToExclude,columnToExclude,false);
+    }
 
 	public static Vector<FoundElement> search(String s)
+    {  
+		return search(s,null,null,false);
+    }
+	
+	public static Vector<FoundElement> search(String s , String tableToExclude, Integer columnToExclude, boolean alsoInFunctionEquation)
     {  
 		if(s.trim().length() ==0) return new Vector<>();
 		renamingFrame.setRenamingString(s,"",null,-1);
@@ -2416,118 +2512,136 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 		Vector element = null;
 		
-		element = new Vector();
-		element.add(tableReactionmodel);
-		element.add(Constants.TitlesTabs.REACTIONS.description);
-		element.add(Constants.ReactionsColumns.REACTION.index);
-		element.add(Constants.ReactionsColumns.KINETIC_LAW.index);
-		tablesAndColumns.add(element);
 		
-		element = new Vector();
-		element.add(tableSpeciesmodel);
-		element.add(Constants.TitlesTabs.SPECIES.description);
-		element.add(Constants.SpeciesColumns.NAME.index);
-		element.add(Constants.SpeciesColumns.INITIAL_QUANTITY.index);
-		element.add(Constants.SpeciesColumns.EXPRESSION.index);
-		element.add(Constants.SpeciesColumns.COMPARTMENT.index);
-		tablesAndColumns.add(element);
+		if(tableToExclude==null || tableToExclude.compareTo(Constants.TitlesTabs.REACTIONS.description) != 0) {
+			element = new Vector();
+			element.add(tableReactionmodel);
+			element.add(Constants.TitlesTabs.REACTIONS.description);
+			if(columnToExclude==null || columnToExclude!=Constants.ReactionsColumns.REACTION.index) element.add(Constants.ReactionsColumns.REACTION.index);
+			if(columnToExclude==null || columnToExclude!=Constants.ReactionsColumns.KINETIC_LAW.index) element.add(Constants.ReactionsColumns.KINETIC_LAW.index);
+			tablesAndColumns.add(element);
+		}
 		
+		if(tableToExclude==null || tableToExclude.compareTo(Constants.TitlesTabs.SPECIES.description) != 0) {
+			element = new Vector();
+			element.add(tableSpeciesmodel);
+			element.add(Constants.TitlesTabs.SPECIES.description);
+			if(columnToExclude==null || columnToExclude!=Constants.SpeciesColumns.NAME.index )element.add(Constants.SpeciesColumns.NAME.index);
+			if(columnToExclude==null || columnToExclude!=Constants.SpeciesColumns.INITIAL_QUANTITY.index )element.add(Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+			if(columnToExclude==null ||  columnToExclude!=Constants.SpeciesColumns.EXPRESSION.index) element.add(Constants.SpeciesColumns.EXPRESSION.index);
+			if(columnToExclude==null ||  columnToExclude!=Constants.SpeciesColumns.COMPARTMENT.index) element.add(Constants.SpeciesColumns.COMPARTMENT.index);
+			tablesAndColumns.add(element);
+		}
 	
 
-		element = new Vector();
-		element.add(tableGlobalQmodel);
-		element.add(Constants.TitlesTabs.GLOBALQ.description);
-		element.add(Constants.GlobalQColumns.NAME.index);
-		element.add(Constants.GlobalQColumns.VALUE.index);
-		element.add(Constants.GlobalQColumns.EXPRESSION.index);
-		tablesAndColumns.add(element);
+		if(tableToExclude==null || tableToExclude.compareTo(Constants.TitlesTabs.GLOBALQ.description) != 0) {
+				element = new Vector();
+			element.add(tableGlobalQmodel);
+			element.add(Constants.TitlesTabs.GLOBALQ.description);
+			if(columnToExclude==null || columnToExclude!=Constants.GlobalQColumns.NAME.index) element.add(Constants.GlobalQColumns.NAME.index);
+			if(columnToExclude==null || columnToExclude!=Constants.GlobalQColumns.VALUE.index) element.add(Constants.GlobalQColumns.VALUE.index);
+			if(columnToExclude==null || columnToExclude!=Constants.GlobalQColumns.EXPRESSION.index) element.add(Constants.GlobalQColumns.EXPRESSION.index);
+			tablesAndColumns.add(element);
+		}
 		
-		element = new Vector();
-		element.add(tableEventsmodel);
-		element.add(Constants.TitlesTabs.EVENTS.description);
-		element.add(Constants.EventsColumns.TRIGGER.index);
-		element.add(Constants.EventsColumns.ACTIONS.index);
-		element.add(Constants.EventsColumns.DELAY.index);
-		tablesAndColumns.add(element);
 		
-		element = new Vector();
-		element.add(tableCompartmentsmodel);
-		element.add(Constants.TitlesTabs.COMPARTMENTS.description);
-		element.add(Constants.CompartmentsColumns.NAME.index);
-		element.add(Constants.CompartmentsColumns.INITIAL_SIZE.index);
-		element.add(Constants.CompartmentsColumns.EXPRESSION.index);
-		tablesAndColumns.add(element);
-		
-		element = new Vector();
-		element.add(tableFunctionsmodel);
-		element.add(Constants.TitlesTabs.FUNCTIONS.description);
-		element.add(Constants.FunctionsColumns.NAME.index);
-		tablesAndColumns.add(element);
+		if(tableToExclude==null || tableToExclude.compareTo(Constants.TitlesTabs.EVENTS.description) != 0) {
+			element = new Vector();
+			element.add(tableEventsmodel);
+			element.add(Constants.TitlesTabs.EVENTS.description);
+			if(columnToExclude==null || columnToExclude!=Constants.EventsColumns.TRIGGER.index) element.add(Constants.EventsColumns.TRIGGER.index);
+			if(columnToExclude==null || columnToExclude!=Constants.EventsColumns.ACTIONS.index) element.add(Constants.EventsColumns.ACTIONS.index);
+			if(columnToExclude==null || columnToExclude!=Constants.EventsColumns.DELAY.index) element.add(Constants.EventsColumns.DELAY.index);
+			tablesAndColumns.add(element);
+		}
+
+		if(tableToExclude==null || tableToExclude.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) != 0) {
+			element = new Vector();
+			element.add(tableCompartmentsmodel);
+			element.add(Constants.TitlesTabs.COMPARTMENTS.description);
+			if(columnToExclude==null || columnToExclude!=Constants.CompartmentsColumns.NAME.index) element.add(Constants.CompartmentsColumns.NAME.index);
+			if(columnToExclude==null || columnToExclude!=Constants.CompartmentsColumns.INITIAL_SIZE.index) element.add(Constants.CompartmentsColumns.INITIAL_SIZE.index);
+			if(columnToExclude==null || columnToExclude!=Constants.CompartmentsColumns.EXPRESSION.index) element.add(Constants.CompartmentsColumns.EXPRESSION.index);
+			tablesAndColumns.add(element);
+		}
+
+		if(tableToExclude==null || tableToExclude.compareTo(Constants.TitlesTabs.FUNCTIONS.description) != 0) {
+			element = new Vector();
+			element.add(tableFunctionsmodel);
+			element.add(Constants.TitlesTabs.FUNCTIONS.description);
+			if(columnToExclude==null || columnToExclude!=Constants.FunctionsColumns.NAME.index)  element.add(Constants.FunctionsColumns.NAME.index);
+			if(alsoInFunctionEquation) {
+				if(columnToExclude==null || columnToExclude!=Constants.FunctionsColumns.EQUATION.index) element.add(Constants.FunctionsColumns.EQUATION.index);
+			}
+			tablesAndColumns.add(element);
+		}
 		
 		Vector<FoundElement> found = new Vector<FoundElement>();
 		for(Vector el : tablesAndColumns) {
-			CustomTableModel tModel = (CustomTableModel) el.get(0);
-			String descr = (String) el.get(1);
-			for(int row = 0; row < (tModel).getRowCount(); row++){
-				for(int i = 2;  i < el.size(); i++)
-				{
-					int col = (int) el.get(i);
-					String next = (tModel.getValueAt(row, col).toString());
-					if(next.trim().length() ==0) continue;
-					if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && col==Constants.ReactionsColumns.REACTION.index) { 
-						try{
-							InputStream is = new ByteArrayInputStream(next.getBytes("UTF-8"));
-							MR_ChemicalReaction_Parser react = new MR_ChemicalReaction_Parser(is,"UTF-8");
-							CompleteReaction start = react.CompleteReaction();
-							ExtractNamesSpeciesUsedVisitor v = new ExtractNamesSpeciesUsedVisitor(multiModel);
-							start.accept(v);
-
-							if(v.getExceptions().size() != 0) {	continue;	}
-
-							Vector<String> names = v.getNamesSpeciesUsed();
-							for(String n : names) {
-								if(n.compareTo(s)==0)
-								{
-									found.add(new FoundElement(descr, row, col));
-									break;
-								}
-							}
-						} catch (Exception e) {
-							continue;
-						}
-					} else {
-						try{
-							Vector<String> names = new Vector<String>();
-							if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && col == Constants.FunctionsColumns.NAME.index) {
-								names.add(FunctionsDB.extractJustName(next));
-							} else {
+			if(el.get(0) instanceof CustomTableModel_MSMB) {
+				CustomTableModel_MSMB tModel = (CustomTableModel_MSMB) el.get(0);
+				String descr = (String) el.get(1);
+				for(int row = 0; row < (tModel).getRowCount(); row++){
+					for(int i = 2;  i < el.size(); i++)
+					{
+						int col = (int) el.get(i);
+						String next = (tModel.getValueAt(row, col).toString());
+						if(next.trim().length() ==0) continue;
+						if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && col==Constants.ReactionsColumns.REACTION.index) { 
+							try{
 								InputStream is = new ByteArrayInputStream(next.getBytes("UTF-8"));
-								 MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
-								 ExtractNamesUsedVisitor v = new ExtractNamesUsedVisitor(multiModel);
-								 CompleteExpression root = parser.CompleteExpression();
-								 root.accept(v);
-								 names.addAll(v.getNamesUsed());
-							}
-							  
-							 
-							
-							for(String n : names) {
-								if(n.compareTo(s)==0)
-								{
-									found.add(new FoundElement(descr, row, col));
-									break;
+								MR_ChemicalReaction_Parser react = new MR_ChemicalReaction_Parser(is,"UTF-8");
+								CompleteReaction start = react.CompleteReaction();
+								ExtractNamesSpeciesUsedVisitor v = new ExtractNamesSpeciesUsedVisitor(multiModel);
+								start.accept(v);
+
+								if(v.getExceptions().size() != 0) {	continue;	}
+
+								Vector<String> names = v.getNamesSpeciesUsed();
+								for(String n : names) {
+									if(n.compareTo(s)==0)
+									{
+										found.add(new FoundElement(descr, row, col));
+										break;
+									}
 								}
+							} catch (Exception e) {
+								continue;
 							}
-						} catch (Throwable e) {
-							
-							continue;
+						} else {
+							try{
+								Vector<String> names = new Vector<String>();
+								if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && col == Constants.FunctionsColumns.NAME.index) {
+									names.add(FunctionsDB.extractJustName(next));
+								} else {
+									InputStream is = new ByteArrayInputStream(next.getBytes("UTF-8"));
+									MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
+									ExtractNamesUsedVisitor v = new ExtractNamesUsedVisitor(multiModel);
+									CompleteExpression root = parser.CompleteExpression();
+									root.accept(v);
+									names.addAll(v.getNamesUsed());
+								}
+
+
+
+								for(String n : names) {
+									if(n.compareTo(s)==0)
+									{
+										found.add(new FoundElement(descr, row, col));
+										break;
+									}
+								}
+							} catch (Throwable e) {
+
+								continue;
+							}
+
 						}
-						
+
 					}
-					
 				}
 			}
-		}
+    	}
 		
         return found;
         
@@ -2652,6 +2766,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	//otherwise the model is saved in file, the model is cleared and null is returned
 	public String saveCPS(File file, boolean withProgressBar) throws Exception {
 		try {
+			//clearCopasiFunctions();
 			//System.out.println("....validation");
 			validateMultiModel(false,false);
 			//System.out.println("....validated");
@@ -2659,6 +2774,26 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			if(major.size() > 0) {
 				throw new Exception("Major issues in the model! It cannot be exported to Copasi-SBML");
 			}
+			
+			Vector<DebugMessage> minor = getDebugMessages(DebugConstants.PriorityType.MINOR.priorityCode);
+			if(minor.size() > 0 && !MainGui.fromMainGuiTest) {
+				Object[] options = {"Continue with Export",
+					                "Go back"};
+					int n = JOptionPane.showOptionDialog(frame,
+						    "There are some minor issues in the model.\n"
+								    + "The export can generate a model with issues for simulation/analysis.\n"
+								    + "Do you want to continue with the export or go back and fix the issues?",
+					"Minor issues in the model",
+					JOptionPane.YES_NO_OPTION,
+					JOptionPane.WARNING_MESSAGE,
+					null,     //do not use a custom Icon
+					options,  //the titles of buttons
+					options[0]); //default button title
+					if(n == 1) { //back
+					     return new String();
+					} 
+			}
+			
 			
 			if(withProgressBar && file!= null) createAndShowProgressBarFrame(file.getName());
 			String sbmlID =  multiModel.saveCPS(file, tableReactionmodel,progressBarFrame);
@@ -2668,10 +2803,13 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		} catch (Exception e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			if(MainGui.fromMainGuiTest) throw e;
-			Object[] options = {"Save as .msmb", "Cancel"};
+			Object[] options = {"Save as "+Constants.MULTISTATE_FILE_EXTENSION, "Go back"};
 			final JOptionPane optionPane = new JOptionPane(
-					e.getMessage(),
-					JOptionPane.QUESTION_MESSAGE,
+					 "There are some major issues in the model.\n"
+							   // + e.getMessage()+"\n" 
+							    +"The model cannot be exported to Copasi-SBML-XPP\n"
+							    +"Do you want to save it in "+Constants.TOOL_NAME+" format or go back and fix the issues?",
+					JOptionPane.ERROR_MESSAGE,
 					JOptionPane.YES_NO_OPTION,
 					null,     //do not use a custom Icon
 					options,  //the titles of buttons
@@ -2721,17 +2859,28 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 	
 
-	private String addChangeFunction(int row, String name, String equation) throws Exception{
+	private String addChangeFunction(int nrow, String name, String equation) throws Exception{
 		try{
 			int index = multiModel.funDB.getIndex(multiModel.funDB.getFunctionByName(name));
-		
+	
 			Function f = new Function(name);
 			f.setEquation(equation, CFunction.UserDefined, 0);
+			Vector<String> undefinedFunCalls = multiModel.funDB.correctRoles(f);
+
+			if(undefinedFunCalls.size() > 0 ) {
+				 DebugMessage dm = new DebugMessage();
+				 dm.setOrigin_table(Constants.TitlesTabs.FUNCTIONS.description);
+				 dm.setProblem("Missing definition of subfunctions: " + undefinedFunCalls.toString());
+				 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+				 dm.setOrigin_col(Constants.FunctionsColumns.EQUATION.index);
+				 dm.setOrigin_row(nrow);
+				 MainGui.addDebugMessage_ifNotPresent(dm);
+			}
 			if((MainGui.showAllAvailableFunctions || f.toShow()) && !listModel_FunctionToCompact.contains(f.getName())) listModel_FunctionToCompact.addElement(f.getName());
 			jListFunctionToCompact.revalidate();
 			scrollPaneListFunctionToCompact.revalidate();
-			multiModel.funDB.addChangeFunction(row, f);
-			functionParameterFrame.setFunction(row, f);
+			multiModel.funDB.addChangeFunction(nrow, f);
+			functionParameterFrame.setFunction(nrow, f);
 			return f.printCompleteSignature();
 		} catch(MyChangeNotAllowedException ex) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)			ex.printStackTrace();
@@ -2753,13 +2902,18 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		String expression = (String)tableGlobalQmodel.getValueAt(row, Constants.GlobalQColumns.EXPRESSION.index);
 		String notes = (String)tableGlobalQmodel.getValueAt(row, Constants.GlobalQColumns.NOTES.index);
 		
-		 EditableCellRenderer edi = (EditableCellRenderer)(jTableGlobalQ.getCellRenderer(row, Constants.GlobalQColumns.EXPRESSION.index));
+		
+		String cleanName = CellParsers.cleanName(name, false);
+		if(cleanName.compareTo(name)!=0) {
+			tableGlobalQmodel.setValueAt(cleanName, row,Constants.GlobalQColumns.NAME.index);
+			return;
+		}
+	
+		
+		 EditableCellRenderer_MSMB edi = (EditableCellRenderer_MSMB)(jTableGlobalQ.getCellRenderer(row, Constants.GlobalQColumns.EXPRESSION.index));
 			
 		 try {
-			
-			
 			boolean added = multiModel.updateGlobalQ(nrow, CellParsers.cleanName(name), value, type, expression, notes);
-			
 			
 			if(actionInColumnName) {
 				if(renamingOption != Constants.RENAMING_OPTION_NONE) {
@@ -2774,41 +2928,50 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 			statusBar.setMessage("...");
 				
-			
-			
-				edi.cell_no_errors(row);
-				edi = (EditableCellRenderer)(jTableGlobalQ.getCellRenderer(row, Constants.GlobalQColumns.VALUE.index));
-				edi.cell_no_errors(row);
-				edi = (EditableCellRenderer)(jTableGlobalQ.getCellRenderer(row, Constants.GlobalQColumns.EXPRESSION.index));
-				edi.cell_no_errors(row);
-				if(type.length()==0 && autocompleteWithDefaults) tableGlobalQmodel.setValueAt(Constants.GlobalQType.FIXED.description, row, Constants.GlobalQColumns.TYPE.index);
+			jTableGlobalQ.cell_no_errors(row, Constants.GlobalQColumns.VALUE.index);
+			jTableGlobalQ.cell_no_errors(row, Constants.GlobalQColumns.EXPRESSION.index);
+				if(type.length()==0 && autocompleteWithDefaults) {
+					tableGlobalQmodel.setValueAt(Constants.GlobalQType.FIXED.description, row, Constants.GlobalQColumns.TYPE.index);
+				}
 				if(value.length()==0 && autocompleteWithDefaults) {
-					TableColumn nameColumn = jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.VALUE.index);
-			        TableCellRenderer cellRender = nameColumn.getCellRenderer();
-			     	if(cellRender instanceof EditableCellRenderer) {
-			     		((EditableCellRenderer) cellRender).cell_has_defaults(row);
-			     		
-			     	}
+					jTableGlobalQ.cell_has_defaults(row, Constants.GlobalQColumns.VALUE.index);
 					tableGlobalQmodel.setValueAt(MainGui.globalQ_defaultValue_for_dialog_window, row, Constants.GlobalQColumns.VALUE.index);
+					
+					DebugMessage dm = new DebugMessage();
+					 dm.setOrigin_table(Constants.TitlesTabs.GLOBALQ.description);
+					 dm.setOrigin_col(Constants.GlobalQColumns.VALUE.index);
+					 dm.setOrigin_row(nrow);
+					 dm.setProblem("Defaut addition");
+					 dm.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
+					 MainGui.addDebugMessage_ifNotPresent(dm);
+					 recolorCellsWithErrors();
+				} else {
+					 if(value.trim().length()==0) {
+						 DebugMessage dm = new DebugMessage();
+						 dm.setOrigin_table(Constants.TitlesTabs.GLOBALQ.description);
+						 dm.setOrigin_col(Constants.GlobalQColumns.VALUE.index);
+						 dm.setOrigin_row(nrow);
+						 dm.setProblem("Missing global quantity value");
+						 dm.setPriority(DebugConstants.PriorityType.MINOR_EMPTY.priorityCode);
+						 MainGui.addDebugMessage_ifNotPresent(dm);
+
+						 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
+						 recolorCellsWithErrors();
+					 } else {
+						 clear_debugMessages_relatedWith(Constants.TitlesTabs.GLOBALQ.description, DebugConstants.PriorityType.MISSING.priorityCode, nrow, Constants.GlobalQColumns.VALUE.index);
+						 clear_debugMessages_relatedWith(Constants.TitlesTabs.GLOBALQ.description, DebugConstants.PriorityType.MINOR_EMPTY.priorityCode, nrow, Constants.GlobalQColumns.VALUE.index);
+					 }
 				}
 			
 			statusBar.setMessage("...");
 			 clear_debugMessages_relatedWith(Constants.TitlesTabs.GLOBALQ.description, DebugConstants.PriorityType.DEFAULTS.priorityCode, nrow, Constants.GlobalQColumns.NAME.index);
-			    
+			 jTableGlobalQ.revalidate();
 		 } catch(MySyntaxException ex ) {
-				
-				edi = (EditableCellRenderer)(jTableGlobalQ.getCellRenderer(row, ex.getColumn()));
-				
+			 	jTableGlobalQ.cell_has_errors(row, ex.getColumn());
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-				edi.cell_has_errors(row);
 				if(type.length()==0 && autocompleteWithDefaults) tableGlobalQmodel.setValueAt_withoutUpdate(Constants.GlobalQType.FIXED.description, row, Constants.GlobalQColumns.TYPE.index);
 				if(value.length()==0 && autocompleteWithDefaults) {
-					TableColumn nameColumn = jTableGlobalQ.getColumnModel().getColumn(Constants.GlobalQColumns.VALUE.index);
-			        TableCellRenderer cellRender = nameColumn.getCellRenderer();
-			     	if(cellRender instanceof EditableCellRenderer) {
-			     		((EditableCellRenderer) cellRender).cell_has_defaults(row);
-			     		
-			     	}
+					jTableGlobalQ.cell_has_defaults(row, Constants.GlobalQColumns.VALUE.index);
 					tableGlobalQmodel.setValueAt_withoutUpdate(MainGui.globalQ_defaultValue_for_dialog_window, row, Constants.GlobalQColumns.VALUE.index);
 				}
 			
@@ -2837,14 +3000,16 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			updateGlobalQ(row);
 		}*/
 	
-	 	jTableGlobalQ.revalidate();
+	 	
+	 	
+	 	
 		 //addRemoveEmptyFields_inConsistencyChecks(tableGlobalQmodel, Constants.TitlesTabs.GLOBALQ.description);
 
 	 }
 	
 
 	private void updateFunctions(int row) throws Exception{
-		
+
 		Integer nrow = (Integer)tableFunctionsmodel.getValueAt(row, 0);
 		String name = ((String)tableFunctionsmodel.getValueAt(row,  Constants.FunctionsColumns.NAME.index)).trim();
 		String equation = ((String)tableFunctionsmodel.getValueAt(row,  Constants.FunctionsColumns.EQUATION.index)).trim();
@@ -2861,8 +3026,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		}
 		
 		
-		EditableCellRenderer ediName = (EditableCellRenderer)(jTableFunctions.getCellRenderer(row, Constants.FunctionsColumns.NAME.index));
-		EditableCellRenderer ediEquation = (EditableCellRenderer)(jTableFunctions.getCellRenderer(row, Constants.FunctionsColumns.EQUATION.index));
 		
 		String funName = FunctionsDB.extractJustName(name.trim());
 		Function alreadyExist = multiModel.funDB.getFunctionByName(funName);
@@ -2873,13 +3036,15 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			  return;
 		}
 	
+		clear_debugMessages_relatedWith(Constants.TitlesTabs.FUNCTIONS.description, DebugConstants.PriorityType.MISSING.priorityCode, nrow, Constants.FunctionsColumns.EQUATION.index);
+		clear_debugMessages_relatedWith(Constants.TitlesTabs.FUNCTIONS.description, DebugConstants.PriorityType.PARSING.priorityCode, nrow, Constants.FunctionsColumns.EQUATION.index);
 		
 		String complete_signature = null;
 		try {
 			complete_signature = addChangeFunction(nrow,name, equation);
 			tableFunctionsmodel.setValueAt_withoutUpdate(complete_signature, row, Constants.FunctionsColumns.NAME.index);
-			 ediName.cell_no_errors(row);
-			 ediEquation.cell_no_errors(row);
+			jTableFunctions.cell_no_errors(row, Constants.FunctionsColumns.NAME.index);
+			jTableFunctions.cell_no_errors(row, Constants.FunctionsColumns.EQUATION.index);
 			 MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.FUNCTIONS.description, DebugConstants.PriorityType.PARSING.priorityCode, nrow,Constants.FunctionsColumns.NAME.index);
 			 MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.FUNCTIONS.description, DebugConstants.PriorityType.PARSING.priorityCode, nrow,Constants.FunctionsColumns.EQUATION.index);
 			 MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.FUNCTIONS.description, DebugConstants.PriorityType.INCONSISTENCIES.priorityCode, nrow,Constants.FunctionsColumns.EQUATION.index);
@@ -2898,7 +3063,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					if(cellValueBeforeChange.trim().length() > 0 
 							&& funNameInCellBefore.compareTo(f.getName()) != 0 && 
 							renamingOption != Constants.RENAMING_OPTION_NONE) {
-						renameFunction_fromCellOrfromFunctionParameterFrame(f, nrow,funNameInCellBefore);
+						renameFunction_fromCellOrfromFunctionParameterFrame(f, nrow,funNameInCellBefore, null);
 						funName = f.getName();
 					}
 			 }
@@ -2908,7 +3073,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			 if(ex instanceof MySyntaxException) {
 				 MySyntaxException s = (MySyntaxException)ex;
 				 if(s.getColumn() == Constants.FunctionsColumns.NAME.index) {
-					 ediName.cell_has_errors(row);
+					 jTableFunctions.cell_has_errors(row, Constants.FunctionsColumns.NAME.index);
+						
 					 DebugMessage dm = new DebugMessage();
 					 dm.setOrigin_table(Constants.TitlesTabs.FUNCTIONS.description);
 					 dm.setProblem("Parsing error: " + ex.getMessage());
@@ -2918,8 +3084,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					 MainGui.addDebugMessage_ifNotPresent(dm);
 				 } else {
 					 if(s.getColumn() == Constants.FunctionsColumns.EQUATION.index) {
-						 ediEquation.cell_has_errors(row);
-
+						 jTableFunctions.cell_has_errors(row, Constants.FunctionsColumns.EQUATION.index);
+							
 						 DebugMessage dm = new DebugMessage();
 						 dm.setOrigin_table(Constants.TitlesTabs.FUNCTIONS.description);
 						 dm.setProblem("Parsing error: " + ex.getMessage());
@@ -2929,7 +3095,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						 MainGui.addDebugMessage_ifNotPresent(dm);
 					 }
 				}
-			    JOptionPane.showMessageDialog(new JButton(),ex.getMessage(), "Syntax error!", JOptionPane.WARNING_MESSAGE);
+			    if(!MainGui.hidePopupWarning) JOptionPane.showMessageDialog(new JButton(),ex.getMessage(), "Syntax error!", JOptionPane.WARNING_MESSAGE);
 						
 			 } else if(ex instanceof MyChangeNotAllowedException) {
 				 MyChangeNotAllowedException s = (MyChangeNotAllowedException)ex;
@@ -2938,8 +3104,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			 } else  if(ex instanceof MyInconsistencyException) {
 				 	 MyInconsistencyException s = (MyInconsistencyException)ex;
 					 if(s.getColumn() == Constants.FunctionsColumns.EQUATION.index) {
-							 ediEquation.cell_has_errors(row);
-	
+							 jTableFunctions.cell_has_errors(row, Constants.FunctionsColumns.EQUATION.index);
+								
 							 DebugMessage dm = new DebugMessage();
 							 dm.setOrigin_table(Constants.TitlesTabs.FUNCTIONS.description);
 							 dm.setProblem("Inconsistency found: " + ex.getMessage());
@@ -2949,7 +3115,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 							 MainGui.addDebugMessage_ifNotPresent(dm);
 						 }
 					
-				    JOptionPane.showMessageDialog(new JButton(),ex.getMessage(), "Syntax error!", JOptionPane.WARNING_MESSAGE);
+					 if(!MainGui.hidePopupWarning) JOptionPane.showMessageDialog(new JButton(),ex.getMessage(), "Syntax error!", JOptionPane.WARNING_MESSAGE);
 				 }
 			
 			statusBar.setMessage("Problem in updating Function. See Debug tab for details.");
@@ -2982,7 +3148,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		String expression = (String)tableCompartmentsmodel.getValueAt(row, Constants.CompartmentsColumns.EXPRESSION.index);
 		String notes = (String)tableCompartmentsmodel.getValueAt(row, Constants.CompartmentsColumns.NOTES.index);
 		
-		EditableCellRenderer edi = (EditableCellRenderer)(jTableCompartments.getCellRenderer(row, Constants.CompartmentsColumns.NAME.index));
 		
 		try {
 			if(name.trim().length() ==0) return;
@@ -3002,30 +3167,52 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 			if(rowUpdatated==-1) {
 				statusBar.setMessage("System unable to parse assignment expression for the compartment. See Debug tab for details");
-				edi.cell_has_errors(row);
+				jTableCompartments.cell_has_errors(row, Constants.CompartmentsColumns.NAME.index);
 			} else {
 				statusBar.setMessage("...");
 				tableCompartmentsmodel.setValueAt_withoutUpdate(CellParsers.cleanName(name), row, Constants.CompartmentsColumns.NAME.index);
-				edi.cell_no_errors(row);
-				if(actionInColumnName && cellSelectedCol == Constants.CompartmentsColumns.NAME.index) {
-					
-				}
 				
+				jTableCompartments.cell_no_errors(row, Constants.CompartmentsColumns.INITIAL_SIZE.index);
+				jTableCompartments.cell_no_errors(row, Constants.CompartmentsColumns.EXPRESSION.index);
+				if(type.length()==0 && autocompleteWithDefaults) {
+					tableCompartmentsmodel.setValueAt_withoutUpdate(Constants.CompartmentsType.FIXED.description, row, Constants.CompartmentsColumns.TYPE.index);
+				}  else {
+					 if(type.length()==0) {
+						 DebugMessage dm = new DebugMessage();
+						 dm.setOrigin_table(Constants.TitlesTabs.COMPARTMENTS.description);
+						 dm.setOrigin_col(Constants.CompartmentsColumns.TYPE.index);
+						 dm.setOrigin_row(nrow);
+						 dm.setProblem("Missing compartment type");
+						 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+						 MainGui.addDebugMessage_ifNotPresent(dm);
+
+						 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
+						 recolorCellsWithErrors();
+					 } else {
+						 clear_debugMessages_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, DebugConstants.PriorityType.MISSING.priorityCode, nrow, Constants.CompartmentsColumns.TYPE.index);
+					 }
+				 }
 				
-				edi = (EditableCellRenderer)(jTableCompartments.getCellRenderer(row, Constants.CompartmentsColumns.INITIAL_SIZE.index));
-				edi.cell_no_errors(row);
-				edi = (EditableCellRenderer)(jTableCompartments.getCellRenderer(row, Constants.CompartmentsColumns.EXPRESSION.index));
-				edi.cell_no_errors(row);
-				if(type.length()==0 && autocompleteWithDefaults) tableCompartmentsmodel.setValueAt_withoutUpdate(Constants.CompartmentsType.FIXED.description, row, Constants.CompartmentsColumns.TYPE.index);
 				if(initial.length()==0 && autocompleteWithDefaults) {
-					 TableColumn nameColumn = jTableCompartments.getColumnModel().getColumn(Constants.CompartmentsColumns.INITIAL_SIZE.index);
-				        TableCellRenderer cellRender = nameColumn.getCellRenderer();
-				     	if(cellRender instanceof EditableCellRenderer) {
-				     		((EditableCellRenderer) cellRender).cell_has_defaults(row);
-				     		
-				     	}
+					jTableCompartments.cell_has_defaults(row, Constants.CompartmentsColumns.INITIAL_SIZE.index);
 					tableCompartmentsmodel.setValueAt_withoutUpdate(MainGui.compartment_defaultInitialValue, row, Constants.CompartmentsColumns.INITIAL_SIZE.index);
-				}
+				} else {
+					 if(initial.length()==0) {
+						 DebugMessage dm = new DebugMessage();
+						 dm.setOrigin_table(Constants.TitlesTabs.COMPARTMENTS.description);
+						 dm.setOrigin_col(Constants.CompartmentsColumns.INITIAL_SIZE.index);
+						 dm.setOrigin_row(nrow);
+						 dm.setProblem("Missing compartment initial size");
+						 dm.setPriority(DebugConstants.PriorityType.MINOR_EMPTY.priorityCode);
+						 MainGui.addDebugMessage_ifNotPresent(dm);
+
+						 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
+						 recolorCellsWithErrors();
+					 } else {
+						 clear_debugMessages_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, DebugConstants.PriorityType.MISSING.priorityCode, nrow, Constants.CompartmentsColumns.INITIAL_SIZE.index);
+						 clear_debugMessages_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, DebugConstants.PriorityType.MINOR_EMPTY.priorityCode, nrow, Constants.CompartmentsColumns.INITIAL_SIZE.index);
+					}
+				 }
 			}
 
 			if(row == tableCompartmentsmodel.getRowCount()-1) { 
@@ -3035,13 +3222,17 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			}
 		} catch(MySyntaxException ex ) {
 			
-			edi = (EditableCellRenderer)(jTableCompartments.getCellRenderer(row, ex.getColumn()));
 			
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-			 edi.cell_has_errors(row);
+			jTableCompartments.cell_has_errors(row, ex.getColumn());
+			
 		}
-		 jTableCompartments.revalidate();
-	   
+		
+	   finally{
+		
+		   jTableCompartments.highlightCellSelectedRow();
+		   jTableCompartments.revalidate();
+	   }
 	    
 	 }
 	
@@ -3066,7 +3257,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	static boolean showedMessageEmptyNameField = false;
 	
 	private void updateSpecies(int row) throws Exception{
-		
+		if(tableSpeciesmodel.isEmpty(row)) return;
 		Integer nrow = (Integer)tableSpeciesmodel.getValueAt(row, 0);
 		String name = ((String)tableSpeciesmodel.getValueAt(row, Constants.SpeciesColumns.NAME.index)).trim();
 		String initialQuantity = (String)tableSpeciesmodel.getValueAt(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
@@ -3084,7 +3275,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		String expression = ((String)tableSpeciesmodel.getValueAt(row, Constants.SpeciesColumns.EXPRESSION.index)).trim();
 		String notes = (String)tableSpeciesmodel.getValueAt(row, Constants.SpeciesColumns.NOTES.index);
 		  
-		EditableCellRenderer edi = (EditableCellRenderer)(jTableSpecies.getCellRenderer(row, Constants.SpeciesColumns.NAME.index));
 		//String allRow = new String(name+initialQuantity+type+comp+expression+notes);
 		
 		if(type.compareTo(Constants.SpeciesType.MULTISTATE.description)==0) {
@@ -3102,7 +3292,24 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		} else {
 			clear_debugMessages_relatedWith(Constants.TitlesTabs.SPECIES.description, DebugConstants.PriorityType.INCONSISTENCIES.priorityCode, nrow, Constants.SpeciesColumns.TYPE.index);
 		}
+		
+		
+		if(CellParsers.isMultistateSpeciesName(name)) {
+			if(type.compareTo(Constants.SpeciesType.MULTISTATE.description)!=0) {
+				DebugMessage dm = new DebugMessage();
+				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				dm.setProblem("Species "+ name + " has a name that fulfills the multistate syntax but the type is "+type +". \nChange the Type to Multistate or modify the name.");
+				dm.setPriority(DebugConstants.PriorityType.INCONSISTENCIES.priorityCode);
+				dm.setOrigin_col(Constants.SpeciesColumns.TYPE.index);
+				dm.setOrigin_row(nrow);
+				MainGui.addDebugMessage_ifNotPresent(dm);
+			} else {
+				clear_debugMessages_relatedWith(Constants.TitlesTabs.SPECIES.description, DebugConstants.PriorityType.INCONSISTENCIES.priorityCode, nrow, Constants.SpeciesColumns.TYPE.index);
+			}
+		
+		}
 		recolorCellsWithErrors();
+		
 		
 		if(tableSpeciesmodel.disabledCell.contains(row+"_"+Constants.SpeciesColumns.EXPRESSION.index)) {
 			expression = Constants.NOT_EDITABLE_VIEW;
@@ -3112,8 +3319,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			initialQuantity = Constants.NOT_EDITABLE_VIEW;
 		}
 		
-		if(name.length() == 0 
-				//&& nrow!=tableSpeciesmodel.getRowCount()
+		if(name.length() == 0 && !tableSpeciesmodel.isEmpty(nrow-1)
+			//	&& nrow!=tableSpeciesmodel.getRowCount()
 				) {
 			 if(!showedMessageEmptyNameField) JOptionPane.showMessageDialog(new JButton(),"Empty name field: not allowed", "Syntax error!", JOptionPane.ERROR_MESSAGE);
 			 showedMessageEmptyNameField = true;
@@ -3145,8 +3352,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				
 				String cmp1 = (String) tableSpeciesmodel.getValueAt(multiModel.getSpeciesIndex(name)-1, Constants.SpeciesColumns.COMPARTMENT.index);
 				String cmp2 = (String) tableSpeciesmodel.getValueAt(row, Constants.SpeciesColumns.COMPARTMENT.index);
-				if(cmp1.length() > 0 && cmp2.length() > 0  && cmp1 != cmp2) {
-					System.out.println("DIFFERENT COMPARTMENT SO OK");
+				if(cmp1.length() > 0 && cmp2.length() > 0  && cmp1.compareTo(cmp2)!=0) {
+					//System.out.println("DIFFERENT COMPARTMENT SO OK");
 					tableSpeciesmodel.setValueAt_withoutUpdate(name, row, Constants.SpeciesColumns.NAME.index);
 				} 
 				else {
@@ -3167,18 +3374,43 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						else {
 							if(newName.compareTo("NEW_NAME")==0) {
 								String spcName = dialog.getNewSpeciesName();
+						
 								String cmpName = dialog.getNewCompartmentName();
-								if(spcName.length() >0) {
+								if(spcName!= null && spcName.length() >0) {
 									tableSpeciesmodel.setValueAt(spcName, row, Constants.SpeciesColumns.NAME.index);
+									name = spcName;
 								} else {
-									if(cmpName.length() > 0) {
+									if(cmpName!= null&& cmpName.length() > 0) {
 										tableSpeciesmodel.setValueAt_withoutUpdate("TO_BE_DELETED", row, Constants.SpeciesColumns.NAME.index);
 										jTableSpecies.setRowSelectionInterval(row, row);
 										jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
 										addedByReaction = true;
 										deleteSelected();
-										System.out.println("AGGIUNGERE 1 "+cmpName +" nella lista dei cmp della specie");
-										
+										Species existingSp = multiModel.getSpecies(name);
+										if(!existingSp.alreadyInComp(cmpName)) {
+											//change each reference that before didn't have a compartment, to the complex string with the original compartment
+											if(existingSp.getCompartments().size()==1) {
+												String originalCmp = existingSp.getCompartments().get(0);
+												String newSpeciesString = CellParsers.addCompartmentLabel(name, originalCmp);
+												MainGui.donotCleanDebugMessages = true;
+												boolean oldAutocompleteOption = autocompleteWithDefaults;
+												boolean oldShowMessage = show_defaults_dialog_window;
+												autocompleteWithDefaults = false;
+												show_defaults_dialog_window = false;
+												findAndReplace_excludeTableColumn(name, row, newSpeciesString,Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.NAME.index,Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.NAME.index);
+												MainGui.donotCleanDebugMessages = false;
+												autocompleteWithDefaults = oldAutocompleteOption;
+												show_defaults_dialog_window = oldShowMessage;
+											}
+											//change the variable name so that the following findAndReplace will replace the right element with the new complex string
+											int existing = multiModel.getSpeciesIndex(name);
+											String compList = new String();
+											compList = existingSp.getCompartment_listString();
+											compList += ", " + cmpName; 
+											tableSpeciesmodel.setValueAt(compList, existing-1, Constants.SpeciesColumns.COMPARTMENT.index);
+											name = CellParsers.addCompartmentLabel(name, cmpName);
+										}
+								
 									}
 									else {
 										tableSpeciesmodel.setValueAt_withoutUpdate(cellValueBeforeChange, row, Constants.SpeciesColumns.NAME.index);
@@ -3251,22 +3483,18 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		try{ 
 			updated_rows = multiModel.updateSpecies(nrow, name, initialQuantity, type, comp, expression, autocompleteWithDefaults,notes,autoMergeSpecies);
 		if(updated_rows == null) {
-	    	 edi.cell_has_errors(row);
+			jTableSpecies.cell_has_errors(row, Constants.SpeciesColumns.NAME.index);
 	    	 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
 		 } else {
-			 edi.cell_no_errors(row);
-			 EditableCellRenderer	edi2 = (EditableCellRenderer)(jTableSpecies.getCellRenderer(row, Constants.SpeciesColumns.EXPRESSION.index));
-			 edi2.cell_no_errors(row);
-			 EditableCellRenderer	edi3 = (EditableCellRenderer)(jTableSpecies.getCellRenderer(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index));
-			 edi3.cell_no_errors(row);
+				jTableSpecies.cell_no_errors(row, Constants.SpeciesColumns.NAME.index);
+				jTableSpecies.cell_no_errors(row, Constants.SpeciesColumns.EXPRESSION.index);
+				jTableSpecies.cell_no_errors(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			 
 			 
 	    	 statusBar.setMessage("...");
 			 updateCompartmentTable(updated_rows); 
 			 addedByReaction = true;
-			 if(expression.length() >0 && type.compareTo(Constants.SpeciesType.REACTIONS.description)==0) {
-				 tableSpeciesmodel.setValueAt(Constants.SpeciesType.ASSIGNMENT.description, row, Constants.SpeciesColumns.TYPE.index);
-			 }
+		
 			 
 			 if(type.length()==0 && autocompleteWithDefaults) {
 				// if(!name.contains("(")) tableSpeciesmodel.setValueAt_withoutUpdate(Constants.SpeciesType.REACTIONS.description, row, Constants.SpeciesColumns.TYPE.index);
@@ -3274,45 +3502,97 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				 
 				 if(!CellParsers.isMultistateSpeciesName(name)) tableSpeciesmodel.setValueAt(Constants.SpeciesType.REACTIONS.description, row, Constants.SpeciesColumns.TYPE.index);
 				 else tableSpeciesmodel.setValueAt(Constants.SpeciesType.MULTISTATE.description, row, Constants.SpeciesColumns.TYPE.index);
+			 } else {
+				 if(type.length()==0) {
+					 DebugMessage dm = new DebugMessage();
+					 dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+					 dm.setOrigin_col(Constants.SpeciesColumns.TYPE.index);
+					 dm.setOrigin_row(nrow);
+					 dm.setProblem("Missing species type");
+					 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+					 MainGui.addDebugMessage_ifNotPresent(dm);
+
+					 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
+					 recolorCellsWithErrors();
+				 } else {
+						clear_debugMessages_relatedWith(Constants.TitlesTabs.SPECIES.description, DebugConstants.PriorityType.MISSING.priorityCode, nrow, Constants.SpeciesColumns.TYPE.index);
 				 }
+			 }
 			 //if(comp.length()==0 && autocompleteWithDefaults) tableSpeciesmodel.setValueAt_withoutUpdate("cell", row, Constants.SpeciesColumns.COMPARTMENT.index);
 			 //if(initialQuantity.trim().length() ==0)tableSpeciesmodel.setValueAt_withoutUpdate(MainGui.species_defaultInitialValue, row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			 if(comp.length()==0 && autocompleteWithDefaults) {
-				 TableColumn nameColumn = jTableSpecies.getColumnModel().getColumn(Constants.SpeciesColumns.COMPARTMENT.index);
-			        TableCellRenderer cellRender = nameColumn.getCellRenderer();
-			     	if(cellRender instanceof EditableCellRenderer) {
-			     		((EditableCellRenderer) cellRender).cell_has_defaults(row);
-			     		
-			     	}
+				 jTableSpecies.cell_has_defaults(row,Constants.SpeciesColumns.COMPARTMENT.index);
 				 tableSpeciesmodel.setValueAt(MainGui.compartment_default_for_dialog_window, row, Constants.SpeciesColumns.COMPARTMENT.index);
+				 DebugMessage dm = new DebugMessage();
+				 dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				 dm.setOrigin_col(Constants.SpeciesColumns.COMPARTMENT.index);
+				 dm.setOrigin_row(nrow);
+				 dm.setProblem("Defaut addition");
+				 dm.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
+				 MainGui.addDebugMessage_ifNotPresent(dm);
+				 recolorCellsWithErrors();
+			 } else {
+				 if(comp.length()==0) {
+					 DebugMessage dm = new DebugMessage();
+					 dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+					 dm.setOrigin_col(Constants.SpeciesColumns.COMPARTMENT.index);
+					 dm.setOrigin_row(nrow);
+					 dm.setProblem("Missing species compartment");
+					 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+					 MainGui.addDebugMessage_ifNotPresent(dm);
+
+					 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
+					 recolorCellsWithErrors();
+				 } else {
+					 clear_debugMessages_relatedWith(Constants.TitlesTabs.SPECIES.description, DebugConstants.PriorityType.MISSING.priorityCode, nrow, Constants.SpeciesColumns.COMPARTMENT.index);
+				 }
 			 }
 			 
 			 if(initialQuantity.trim().length()==0 && autocompleteWithDefaults){
-				 TableColumn nameColumn = jTableSpecies.getColumnModel().getColumn(Constants.SpeciesColumns.INITIAL_QUANTITY.index);
-			        TableCellRenderer cellRender = nameColumn.getCellRenderer();
-			     	if(cellRender instanceof EditableCellRenderer) {
-			     		((EditableCellRenderer) cellRender).cell_has_defaults(row);
-			     		
-			     	}
+				 jTableSpecies.cell_has_defaults(row,Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 				 tableSpeciesmodel.setValueAt(MainGui.species_defaultInitialValue, row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+				 DebugMessage dm = new DebugMessage();
+				 dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				 dm.setOrigin_col(Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+				 dm.setOrigin_row(nrow);
+				 dm.setProblem("Defaut addition");
+				 dm.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
+				 MainGui.addDebugMessage_ifNotPresent(dm);
+				 recolorCellsWithErrors();
+			 } else {
+				 if(initialQuantity.trim().length()==0) {
+					 DebugMessage dm = new DebugMessage();
+					 dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+					 dm.setOrigin_col(Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+					 dm.setOrigin_row(nrow);
+					 dm.setProblem("Missing species initial quantity");
+					 dm.setPriority(DebugConstants.PriorityType.MINOR_EMPTY.priorityCode);
+					 MainGui.addDebugMessage_ifNotPresent(dm);
+
+					 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
+					 recolorCellsWithErrors();
+				 } else {
+					 clear_debugMessages_relatedWith(Constants.TitlesTabs.SPECIES.description, DebugConstants.PriorityType.MISSING.priorityCode, nrow, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+					 clear_debugMessages_relatedWith(Constants.TitlesTabs.SPECIES.description, DebugConstants.PriorityType.MINOR_EMPTY.priorityCode, nrow, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+				 }
 			 }
 			 addedByReaction = false;
 	 	 }
 		} catch(MySyntaxException ex ) {
 			
-			edi = (EditableCellRenderer)(jTableSpecies.getCellRenderer(row, ex.getColumn()));
 			
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-			 edi.cell_has_errors(row);
+			jTableSpecies.cell_has_errors(row, ex.getColumn());
+		
 			 tableSpeciesmodel.setValueAt_withoutUpdate(name, row, Constants.SpeciesColumns.NAME.index);
 	    	 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
 	    	 addedByReaction = true;
-	    	 if(type.length()==0 && autocompleteWithDefaults) {
+	    	 if(type.length()==0 && autocompleteWithDefaults&&!tableSpeciesmodel.isEmpty(nrow-1)) {
 	    		 if(!CellParsers.isMultistateSpeciesName(name)) tableSpeciesmodel.setValueAt_withoutUpdate(Constants.SpeciesType.REACTIONS.description, row, Constants.SpeciesColumns.TYPE.index);
 	    		 else tableSpeciesmodel.setValueAt_withoutUpdate(Constants.SpeciesType.MULTISTATE.description, row, Constants.SpeciesColumns.TYPE.index);
 	    	 }
-	    	 if(comp.length()==0 && autocompleteWithDefaults) tableSpeciesmodel.setValueAt_withoutUpdate(MainGui.compartment_default_for_dialog_window, row, Constants.SpeciesColumns.COMPARTMENT.index);
-	    	 if(initialQuantity.trim().length() ==0 && autocompleteWithDefaults)tableSpeciesmodel.setValueAt_withoutUpdate(MainGui.species_defaultInitialValue, row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+	    	 if(comp.length()==0 && autocompleteWithDefaults&&!tableSpeciesmodel.isEmpty(nrow-1)) tableSpeciesmodel.setValueAt_withoutUpdate(MainGui.compartment_default_for_dialog_window, row, Constants.SpeciesColumns.COMPARTMENT.index);
+	    	 if(initialQuantity.trim().length() ==0 && autocompleteWithDefaults&&!tableSpeciesmodel.isEmpty(nrow-1))tableSpeciesmodel.setValueAt_withoutUpdate(MainGui.species_defaultInitialValue, row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 	    	 addedByReaction = false;
 			
 		} catch(MyInconsistencyException ex) { 
@@ -3357,9 +3637,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 									jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
 									addedByReaction = true;
 									deleteSelected();
-									System.out.println("AGGIUNGERE 2 "+cmpName +" nella lista dei cmp della specie");
-									
-									
+									multiModel.addCompartmentToSpecies(name, cmpName);
 								}
 								else {
 									tableSpeciesmodel.setValueAt_withoutUpdate(cellValueBeforeChange, row, Constants.SpeciesColumns.NAME.index);
@@ -3465,30 +3743,35 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 	 }
 
-	private void addDefaultCompartment_ifNecessary(String comp) {
+	private void addDefaultCompartment_ifNecessary(String compList) {
 		if(autocompleteWithDefaults) {
 			Compartment cp =  null;
 			Integer indexes_row_comp = 0;
 			try{
-				if (comp.length()>0) {
-					if(multiModel.getComp(comp)==null) {
-						indexes_row_comp = multiModel.updateCompartment(-1, 
-								comp, 
-								Constants.CompartmentsType.FIXED.description, 
-								MainGui.compartment_defaultInitialValue, 
-								new String(), 
-								new String());
-							DebugMessage dm = new DebugMessage();
-							//dm.setOrigin_cause("Default Element");
-							dm.setOrigin_table(Constants.TitlesTabs.COMPARTMENTS.description);
-							dm.setProblem("Compartment "+ comp + " has been added by default.");
-							dm.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
-							dm.setOrigin_col(Constants.CompartmentsColumns.NAME.index);
-							dm.setOrigin_row(indexes_row_comp);
-							MainGui.addDebugMessage_ifNotPresent(dm);
-							updateCompartmentsTableFromMultiModel();
+				Vector<String> splittedList = CellParsers.extractElementsInList(multiModel, compList, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.description);
+					
+				for(int i = 0; i < splittedList.size(); i++) {
+					String comp = splittedList.get(i);
+					if (comp.length()>0) {
+						if(multiModel.getComp(comp)==null) {
+							indexes_row_comp = multiModel.updateCompartment(-1, 
+									comp, 
+									Constants.CompartmentsType.FIXED.description, 
+									MainGui.compartment_defaultInitialValue, 
+									new String(), 
+									new String());
+								DebugMessage dm = new DebugMessage();
+								//dm.setOrigin_cause("Default Element");
+								dm.setOrigin_table(Constants.TitlesTabs.COMPARTMENTS.description);
+								dm.setProblem("Compartment "+ comp + " has been added by default.");
+								dm.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
+								dm.setOrigin_col(Constants.CompartmentsColumns.NAME.index);
+								dm.setOrigin_row(indexes_row_comp);
+								MainGui.addDebugMessage_ifNotPresent(dm);
+								updateCompartmentsTableFromMultiModel();
+							}
 						}
-					}
+			}
 				
 				
 				
@@ -3499,11 +3782,19 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 	}
 
+	
 	private String findAndReplace(String toSearch, int row, String replace, String fromTableDescription, int fromColumnNameIndex) throws Exception {
-		if(cellValueBeforeChange.trim().length() == 0) return null;
-		if(cellValueBeforeChange.compareTo(replace) == 0) return null;
+		return findAndReplace_excludeTableColumn(toSearch,row,replace,fromTableDescription, fromColumnNameIndex, null, null);
+	}
+	
+	private String findAndReplace_excludeTableColumn(String toSearch, int row, String replace, String fromTableDescription, int fromColumnNameIndex, String excludeTableDescription, Integer excludeColumn) throws Exception {
+		//if(cellValueBeforeChange.trim().length() == 0) return null;
+		//if(cellValueBeforeChange.compareTo(replace) == 0) return null;
 		
-		Vector<FoundElement> found = search(toSearch);
+		if(toSearch.trim().length() == 0) return null;
+		if(toSearch.compareTo(replace) == 0) return null;
+		
+		Vector<FoundElement> found = search_excludeTableColumn(toSearch, excludeTableDescription, excludeColumn);
 		int minSize = 0;
 		/*if(cellValueBeforeChange.compareTo(replace) != 0 
 				//&& fromTableDescription.compareTo(Constants.TitlesTabs.SPECIES.description)==0
@@ -3511,6 +3802,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			found.insertElementAt(new FoundElement(fromTableDescription, row, fromColumnNameIndex),0);
 			minSize = 1;
 //		}
+			
+			
+			
 		if(found.size() > minSize ) {
 			renamingFrame.setRenamingString(toSearch, replace, fromTableDescription, row);
 			renamingFrame.fillFrameFields(found);
@@ -3591,7 +3885,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			 metabolites = CellParsers.parseReaction(this.multiModel,reaction_string,nrow-1);
 		} catch(Exception ex) { //stop strings like 2*a -> which are wrong formatted
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-			EditableCellRenderer edicr = (EditableCellRenderer)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.REACTION.index));
+			EditableCellRenderer_MSMB edicr = (EditableCellRenderer_MSMB)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.REACTION.index));
 			//edicr.cell_has_errors(row);
 			tableReactionmodel.setValueAt_withoutUpdate(reaction_string, row, Constants.ReactionsColumns.REACTION.index);
 			statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
@@ -3736,7 +4030,26 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				*/		
 				Vector<Vector<String>> elementsToDefine = multiModel.check_ifSingleFunctionCallOrSingleGlobalQ(massAction,nrow,name,equation);
 				if(elementsToDefine.size()!=0 && !dialogAcceptRejectShowed && cellSelectedRow == row) {
-						
+						if(!oldAutocompleteWithDefaults) {
+							tableReactionmodel.setValueAt_withoutUpdate(equation, row, Constants.ReactionsColumns.KINETIC_LAW.index);
+							multiModel.updateReactionEditableView(row,equation);
+							updateFunctionsTableFromMultiModel();
+							updateGlobalQTableFromMultiModel();
+							autocompleteWithDefaults = oldAutocompleteWithDefaults;
+							DebugMessage dm = new DebugMessage();
+							dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+							dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
+							dm.setOrigin_row(nrow);
+							dm.setProblem("Problem parsing Kinetic law.\nMake sure the expression is a single (properly defined) function call with single parameters names as actual parameters.");
+							dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
+							MainGui.addDebugMessage_ifNotPresent(dm);
+
+							statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
+							jTableReactions.revalidate();
+							recolorCellsWithErrors();
+							return;
+						}
+					
 						FunctionFromExpressionDialog newFunctionDialog = new FunctionFromExpressionDialog(elementsToDefine, equation,massAction);
 						newFunctionDialog.pack();
 						newFunctionDialog.setLocationRelativeTo(null);
@@ -3768,6 +4081,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 							Vector noDuplicatesElement = new Vector<>();
 							noDuplicatesElement.add(returnedElements.get(j).get(0));
 							noDuplicatesElement.add(nameToCheck);
+							
 							String newEquation = CellParsers.replaceVariableInExpression(returnedElements.get(j).get(2), returnedElements.get(j).get(1), nameToCheck);
 							noDuplicatesElement.add(newEquation);
 							if(returnedElements.get(j).size() > 3) noDuplicatesElement.add(returnedElements.get(j).get(3));
@@ -3892,7 +4206,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						*/
 					//} else if(listOfNewNames.size() > 0) { //dialog already shown but something is still wrong
 				} else if (elementsToDefine.size()!=0) { //dialog already shown but something is still wrong
-						EditableCellRenderer edi = (EditableCellRenderer)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.KINETIC_LAW.index));
+						//EditableCellRenderer edi = (EditableCellRenderer)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.KINETIC_LAW.index));
 						//edi.cell_has_errors(row);
 						//multiModel.removeSpecies(species_default_for_dialog_window);
 						
@@ -3985,26 +4299,20 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 		}
 		
-	    EditableCellRenderer edi = (EditableCellRenderer)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.REACTION.index));
-
-	
-	    
-	    
+	  
 		if(updated_rows == null) {
 	    	// edi.cell_has_errors(row);
 	    	 statusBar.setMessage("System unable to parse part of the model. See Debug tab for details");
 			 
 		 } else {
-			 edi.cell_no_errors(row);
+			 jTableReactions.cell_no_errors(row,Constants.ReactionsColumns.REACTION.index);
 			 if(!parseErrors) {
-				 edi = (EditableCellRenderer)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.KINETIC_LAW.index));
+				 jTableReactions.cell_no_errors(row,Constants.ReactionsColumns.KINETIC_LAW.index);
 				 clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.PARSING.priorityCode, nrow, Constants.ReactionsColumns.KINETIC_LAW.index);
-				 edi.cell_no_errors(row);
 				 statusBar.setMessage("...");
 				 clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.PARSING.priorityCode, nrow, Constants.ReactionsColumns.REACTION.index);
 			} else {
-				 edi = (EditableCellRenderer)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.KINETIC_LAW.index));
-				 //edi.cell_has_errors(row);
+				 jTableReactions.cell_has_errors(row,Constants.ReactionsColumns.KINETIC_LAW.index);
 			 }
 			 addedByReaction = true;
 			 updateSpeciesTable_defaults(updated_rows);
@@ -4025,7 +4333,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
 		MainGui.addDebugMessage_ifNotPresent(dm);
 		
-		EditableCellRenderer edi = (EditableCellRenderer)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.REACTION.index));
+		EditableCellRenderer_MSMB edi = (EditableCellRenderer_MSMB)(jTableReactions.getCellRenderer(row, Constants.ReactionsColumns.REACTION.index));
 		// edi.cell_has_errors(row);	
 		
 		//throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description);
@@ -4079,7 +4387,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		return ret;
 	}
 
-	public static void addRemoveEmptyFields_inConsistencyChecks(CustomTableModel tableModel, String table_name) {
+	public static void addRemoveEmptyFields_inConsistencyChecks(CustomTableModel_MSMB tableModel, String table_name) {
 		try {
 			int nrow = tableModel.getRowCount();
 			int ncol = tableModel.getColumnCount();
@@ -4095,20 +4403,48 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						if(table_name.compareTo(Constants.TitlesTabs.SPECIES.description)==0 &&
 							j==Constants.SpeciesColumns.INITIAL_QUANTITY.index) {
 							String type = tableModel.getValueAt(i, Constants.SpeciesColumns.TYPE.index).toString().trim();
-							if(type.compareTo(Constants.SpeciesType.MULTISTATE.description)==0)
+							if(type.compareTo(Constants.SpeciesType.MULTISTATE.description)==0){
 								to_be_removed.add(table_name);
 								to_be_removed.add((i+1));
 								to_be_removed.add((j));
+							}
+							else { 
+								to_be_added.add(table_name);
+								to_be_added.add((i+1));
+								to_be_added.add((j));
+							}
 						}
-						to_be_added.add(table_name);
-						to_be_added.add((i+1));
-						to_be_added.add((j));
+						else if(table_name.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0 &&
+								j==Constants.GlobalQColumns.VALUE.index) {
+								String type = tableModel.getValueAt(i, Constants.GlobalQColumns.TYPE.index).toString().trim();
+								if(type.compareTo(Constants.GlobalQType.ASSIGNMENT.description)==0){
+									to_be_removed.add(table_name);
+									to_be_removed.add((i+1));
+									to_be_removed.add((j));
+								}
+								else { 
+									to_be_added.add(table_name);
+									to_be_added.add((i+1));
+									to_be_added.add((j));
+								}
+						} 
+						
 					} else {
 						if(!(tableModel.getValueAt(i, j) instanceof Boolean)) {
-							to_be_removed.add(table_name);
-							to_be_removed.add((i+1));
-							to_be_removed.add((j));
-							all_empty = false;
+							if(!CellParsers.isNaN(element)) {
+								to_be_removed.add(table_name);
+								to_be_removed.add((i+1));
+								to_be_removed.add((j));
+								all_empty = false;
+							} else {
+								DebugMessage dm = new DebugMessage();
+								dm.setOrigin_table(table_name);
+								dm.setProblem("The field contains NaN. If you want to simulate the model in the future this field has to be otherwise defined.");
+								dm.setPriority(DebugConstants.PriorityType.MINOR_EMPTY.priorityCode);
+								dm.setOrigin_col(j);
+								dm.setOrigin_row(i+1);
+								MainGui.addDebugMessage_ifNotPresent(dm);
+							}
 						}
 					}
 				}
@@ -4128,6 +4464,83 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			return;
 		}
 	}
+	/*public static void addRemoveEmptyFields_inConsistencyChecks(CustomTableModel_MSMB tableModel, String table_name) {
+		try {
+			int nrow = tableModel.getRowCount();
+			int ncol = tableModel.getColumnCount();
+			Vector to_be_added = new Vector();
+			Vector to_be_removed = new Vector();
+			for(int i = 0; i < nrow; i++) {
+				boolean all_empty = true;
+				to_be_added= new Vector();
+				to_be_removed= new Vector();
+				for(int j = 1; j < ncol; j++) {
+					String element = tableModel.getValueAt(i, j).toString().trim();
+					if(element.length() == 0) {
+						if(table_name.compareTo(Constants.TitlesTabs.SPECIES.description)==0 &&
+							j==Constants.SpeciesColumns.INITIAL_QUANTITY.index) {
+							String type = tableModel.getValueAt(i, Constants.SpeciesColumns.TYPE.index).toString().trim();
+							if(type.compareTo(Constants.SpeciesType.MULTISTATE.description)==0){
+								to_be_removed.add(table_name);
+								to_be_removed.add((i+1));
+								to_be_removed.add((j));
+							}
+							else { 
+								to_be_added.add(table_name);
+								to_be_added.add((i+1));
+								to_be_added.add((j));
+							}
+						}
+						else if(table_name.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0 &&
+								j==Constants.GlobalQColumns.VALUE.index) {
+								String type = tableModel.getValueAt(i, Constants.GlobalQColumns.TYPE.index).toString().trim();
+								if(type.compareTo(Constants.GlobalQType.ASSIGNMENT.description)==0){
+									to_be_removed.add(table_name);
+									to_be_removed.add((i+1));
+									to_be_removed.add((j));
+								}
+								else { 
+									to_be_added.add(table_name);
+									to_be_added.add((i+1));
+									to_be_added.add((j));
+								}
+						} 
+						
+					} else {
+						if(!(tableModel.getValueAt(i, j) instanceof Boolean)) {
+							if(!CellParsers.isNaN(element)) {
+								to_be_removed.add(table_name);
+								to_be_removed.add((i+1));
+								to_be_removed.add((j));
+								all_empty = false;
+							} else {
+								DebugMessage dm = new DebugMessage();
+								dm.setOrigin_table(table_name);
+								dm.setProblem("The field contains NaN. If you want to simulate the model in the future this field has to be otherwise defined.");
+								dm.setPriority(DebugConstants.PriorityType.MINOR_EMPTY.priorityCode);
+								dm.setOrigin_col(j);
+								dm.setOrigin_row(i+1);
+								MainGui.addDebugMessage_ifNotPresent(dm);
+							}
+						}
+					}
+				}
+				if(!all_empty) {
+					for(int ii = 0; ii < to_be_added.size(); ii=ii+3) {
+						ConsistencyChecks.put_EmptyFields((String)to_be_added.get(ii),(Integer)to_be_added.get(ii+1),(Integer)to_be_added.get(ii+2));
+					}
+					for(int ii = 0; ii < to_be_removed.size(); ii=ii+3) {
+						ConsistencyChecks.remove_EmptyFields((String)to_be_removed.get(ii),(Integer)to_be_removed.get(ii+1),(Integer)to_be_removed.get(ii+2));
+					}
+
+				}
+			}
+			updateDebugTab();
+		} catch (Exception e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			return;
+		}
+	}*/
 
 	private void updateEvents(int row) {
 		Integer nrow = (Integer)tableEventsmodel.getValueAt(row, 0);
@@ -4175,9 +4588,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 		int nrow = tableSpeciesmodel.getRowCount()-1;
 		if(modify_multistate_species_from_builder==true) {
-			nrow = jTableSpecies.getSelectedRow();
+			nrow = row_to_highlight.get(Constants.TitlesTabs.SPECIES.index);
 		}
-		
+
 		multiModel.clearDataOldMultistateSpecies((String)tableSpeciesmodel.getValueAt(nrow, Constants.SpeciesColumns.NAME.index));
 		multiModel.modifyMultistateSpecies(sp,true, nrow,true);
 		
@@ -4192,9 +4605,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	     row.add(sp.getCompartment_listString());
 	     tableSpeciesmodel.setRow(nrow, row);
          
-	     tableSpeciesmodel.disableCell(nrow,Constants.SpeciesColumns.INITIAL_QUANTITY.index);
-	     tableSpeciesmodel.disableCell(nrow,Constants.SpeciesColumns.TYPE.index);
-	     
 	     if(modify_multistate_species_from_builder==false) {
             	tableSpeciesmodel.addRow(new Vector());
             }
@@ -4217,9 +4627,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	        jTableSpecies.revalidate();
 	}
 	
-	public void renameFunction_fromCellOrfromFunctionParameterFrame(Function f, int nrow, String oldName){
-		Vector<FoundElement> found = search(oldName);
-		
+	
+	public void renameFunction_fromCellOrfromFunctionParameterFrame(Function f, int nrow, String oldName, HashMap<String, MutablePair<Integer, Integer>> changedOrders){
+	
+		Vector<FoundElement> found = search(oldName,null,null,true);
+
 		Iterator it = found.iterator();
 		FoundElement fDecl = null;
 		while(it.hasNext()) {
@@ -4231,31 +4643,102 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			found.removeElement(f1);
 			break;
 		}
+
+
 		if(fDecl!=null) found.insertElementAt(fDecl,0);
-		
+
 		MainGui.cellValueBeforeChange = null;
-	
-		
+
 		MainGui.donotCleanDebugMessages = true;
 		try {
-			replace(found,oldName, nrow-1, f.getName(),Constants.TitlesTabs.FUNCTIONS.description, Constants.FunctionsColumns.NAME.index);
+			if(f.getName().compareTo(oldName) != 0) {
+				if(changedOrders== null || changedOrders.size() == 0 ) {
+					replace(found,oldName, nrow-1, f.getName(),Constants.TitlesTabs.FUNCTIONS.description, Constants.FunctionsColumns.NAME.index);
+					if(renamingFrame.getClosingOperation()=="Cancel") { f.setName(oldName); }
+				}
+			}
 		} catch (Exception e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}
 		MainGui.donotCleanDebugMessages = false;
+
+		try {
+
+			if(changedOrders!= null && changedOrders.size() > 0 && renamingOption != Constants.RENAMING_OPTION_NONE) {
+				int original_focus = jTabGeneral.getSelectedIndex();
+				Vector<MutablePair<String, String>> from_to = new Vector<MutablePair<String, String>>();
+				String newSignature = f.printCompleteSignature();
+				if(f.getName().compareTo(oldName) != 0) {
+					newSignature = CellParsers.replaceVariableInExpression(newSignature, oldName, f.getName());
+				}
+				from_to.add(new MutablePair<String, String>(new String(), newSignature));
+				for(int i = 1; i < found.size(); i++ ) {
+					FoundElement where = (FoundElement) found.get(i);
+					CustomTableModel_MSMB tModel = getTableModelFromDescription(where.getTableDescription());
+					if(tModel != null) {
+						String currentString = tModel.getValueAt(where.getRow(), where.getCol()).toString();
+
+						InputStream is = new ByteArrayInputStream(currentString.getBytes("UTF-8"));
+						MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
+						CompleteExpression root = parser.CompleteExpression();
+						SwapParametersVisitor mySW= new SwapParametersVisitor(changedOrders);
+						root.accept(mySW);
+						String newString = mySW.getNewExpression();
+
+						if(renamingOption == Constants.RENAMING_OPTION_ALL	) {
+							jTabGeneral.setSelectedIndex(Constants.TitlesTabs.getIndexFromDescription(where.getTableDescription()));
+							tModel.setValueAt(newString, where.getRow(), where.getCol());
+						} else { //custom renaming
+							String toSearch = currentString;
+							String replace = newString;
+							
+							if(f.getName().compareTo(oldName) != 0) {
+								replace = CellParsers.replaceVariableInExpression(replace, oldName, f.getName());
+							}
+							from_to.add(new MutablePair<String,String>(toSearch, replace)); 
+
+						}
+					} 
+				}
+
+
+				if(from_to.size() > 0 ) {
+					renamingFrame.setRenamingStringVectors(from_to, Constants.TitlesTabs.FUNCTIONS.description, nrow-1);
+					renamingFrame.fillFrameFields(found);
+					if(renamingOption == Constants.RENAMING_OPTION_CUSTOM) {
+						renamingFrame.setSelected(new FoundElement(Constants.TitlesTabs.FUNCTIONS.description, nrow-1, Constants.FunctionsColumns.NAME.index));
+						int oldRenaming = renamingOption;
+						renamingOption = Constants.RENAMING_OPTION_NONE;
+						renamingFrame.setVisible(true);
+						renamingOption = oldRenaming;
+						if(renamingFrame.getClosingOperation()=="Cancel") { 
+							f = multiModel.getFunctionByName(oldName);
+						}
+					} 
+				}
+				jTabGeneral.setSelectedIndex(original_focus);
+
+
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+
 		
 		if(f!= null) {
 			try {
 				multiModel.funDB.addChangeFunction(nrow, f);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
-			tableFunctionsmodel.setValueAt_withoutUpdate(f.printCompleteSignature(), nrow-1, 1);
-		}
+			tableFunctionsmodel.setValueAt(f.printCompleteSignature(), nrow-1, 1);
+			
 		
+		}
+
 		if(fDecl!=null) found.remove(0);
 		revalidateExpressions(found);
+		
 	}
 	
 	private void updateCompartmentTable(Vector updated_rows) {
@@ -4284,13 +4767,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 			String key = Constants.TitlesTabs.COMPARTMENTS.description+"@"+DebugConstants.PriorityType.PARSING.priorityCode+"_"+(modified_row+1)+"_"+Constants.CompartmentsColumns.INITIAL_SIZE.index;
 			if(MainGui.debugMessages.containsKey(key)) {
-				EditableCellRenderer edi = (EditableCellRenderer)(jTableCompartments.getCellRenderer(modified_row, Constants.CompartmentsColumns.INITIAL_SIZE.index));
-				edi.cell_has_errors(modified_row);
+				jTableCompartments.cell_has_errors(modified_row, Constants.CompartmentsColumns.INITIAL_SIZE.index);
 			}
 			key = Constants.TitlesTabs.COMPARTMENTS.description+"@"+DebugConstants.PriorityType.PARSING.priorityCode+"_"+(modified_row+1)+"_"+Constants.CompartmentsColumns.EXPRESSION.index;
 			if(MainGui.debugMessages.containsKey(key)) {
-				EditableCellRenderer edi = (EditableCellRenderer)(jTableCompartments.getCellRenderer(modified_row, Constants.CompartmentsColumns.EXPRESSION.index));
-				edi.cell_has_errors(modified_row);
+				jTableCompartments.cell_has_errors(modified_row, Constants.CompartmentsColumns.EXPRESSION.index);
 			}
 			
 		}
@@ -4362,7 +4843,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
         } 
 	}
 	
-	private int readTable(CustomTableModel tablemodel, String file) throws IOException{
+	private int readTable(CustomTableModel_MSMB tablemodel, String file) throws IOException{
 		clearTable(tablemodel);
 		
 		BufferedReader buffin= new BufferedReader(new FileReader(file));
@@ -4411,14 +4892,15 @@ public class MainGui extends JFrame implements MSMB_Interface {
             	HashMap<String, HashMap<String, String>> multistateInitials = ExportMultistateFormat.importMultistateFormat();
         		
             	
-             
-            	jTableFunctions.revalidate(); 
+              	jTableFunctions.revalidate(); 
             	int imported_rows = tableFunctionsmodel.getRowCount();
              	tableFunctionsmodel.fireTableDataChanged();
             	jTableFunctions.validate();
             	jTabGeneral.setSelectedIndex(Constants.TitlesTabs.FUNCTIONS.index);
             	for(int i = 0; i < imported_rows; i++) {	if(!tableFunctionsmodel.isEmpty(i))  updateFunctions(i); 		}
-            	
+            
+            	 loadBuiltInFunctionsTable();
+        		
             	jTableCompartments.revalidate();
         		 imported_rows= tableCompartmentsmodel.getRowCount();
              	tableCompartmentsmodel.fireTableDataChanged();
@@ -4636,10 +5118,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				
 	          
 		    }
-			
+			MainGui.donotCleanDebugMessages = true;
 	  		validateMultiModel(false,false);
 		jTableGlobalQ.revalidate();
-		
+		MainGui.donotCleanDebugMessages = false;
 	}
 
 	
@@ -4665,71 +5147,47 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	private static void decolorRow(int row, String table) throws Exception {
 		if(table.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
 			for(int col = 1; col < Constants.species_columns.size(); col++) {
-	    		TableCellRenderer ren = jTableSpecies.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableSpecies.revalidate();
-	    			} 
+				jTableSpecies.cell_no_defaults(row,col);
+				jTableSpecies.cell_no_errors(row,col);
+				jTableSpecies.revalidate();
 				}
 			}
 		else if(table.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
 			for(int col = 1; col < Constants.reactions_columns.size(); col++) {
-	    		TableCellRenderer ren = jTableReactions.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableReactions.revalidate();
-	    			} 
-				}
+				jTableReactions.cell_no_defaults(row,col);
+				jTableReactions.cell_no_errors(row,col);
+				jTableReactions.revalidate();
+	    		}
 			}	
 		else if(table.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
 			for(int col = 1; col < Constants.globalQ_columns.size(); col++) {
-	    		TableCellRenderer ren = jTableGlobalQ.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableGlobalQ.revalidate();
-	    			} 
+				jTableGlobalQ.cell_no_defaults(row,col);
+				jTableGlobalQ.cell_no_errors(row,col);
+				jTableGlobalQ.revalidate();
 				}
 			}	
 		
 		else if(table.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {
 			for(int col = 1; col < Constants.compartments_columns.size(); col++) {
-	    		TableCellRenderer ren = jTableCompartments.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableCompartments.revalidate();
-	    			} 
+				jTableCompartments.cell_no_defaults(row,col);
+				jTableCompartments.cell_no_errors(row,col);
+				jTableCompartments.revalidate();
 				}
 			}	
 		
 		else if(table.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {
 			for(int col = 1; col < Constants.events_columns.size(); col++) {
-	    		TableCellRenderer ren = jTableEvents.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableEvents.revalidate();
-	    			} 
+				jTableEvents.cell_no_defaults(row,col);
+				jTableEvents.cell_no_errors(row,col);
+				jTableEvents.revalidate(); 
 				}
 			}	
 		
 		else if(table.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {
 			for(int col = 1; col < Constants.functions_columns.size(); col++) {
-	    		TableCellRenderer ren = jTableFunctions.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableFunctions.revalidate();
-	    			} 
+				jTableFunctions.cell_no_defaults(row,col);
+				jTableFunctions.cell_no_errors(row,col);
+				jTableFunctions.revalidate();  
 				}
 			}	
 	}
@@ -4737,66 +5195,70 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	private static void decolorCell(int row, int col, String table) throws Exception {
 		if(table.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
-	    		TableCellRenderer ren = jTableSpecies.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableSpecies.revalidate();
-	    			} 
-			}
+			jTableSpecies.cell_no_defaults(row,col);
+			jTableSpecies.cell_no_errors(row,col);
+			jTableSpecies.revalidate(); 
+		}
 		else if(table.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
-	    		TableCellRenderer ren = jTableReactions.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableReactions.revalidate();
-				}
+			jTableReactions.cell_no_defaults(row,col);
+			jTableReactions.cell_no_errors(row,col);
+			jTableReactions.revalidate(); 
 			}	
 		else if(table.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
-	    		TableCellRenderer ren = jTableGlobalQ.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableGlobalQ.revalidate();
-	    			} 
+			jTableGlobalQ.cell_no_defaults(row,col);
+			jTableGlobalQ.cell_no_errors(row,col);
+			jTableGlobalQ.revalidate();  
 			}	
 		
 		else if(table.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {
-	    		TableCellRenderer ren = jTableCompartments.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableCompartments.revalidate();
-	    			} 
+			jTableCompartments.cell_no_defaults(row,col);
+			jTableCompartments.cell_no_errors(row,col);
+			jTableCompartments.revalidate();  
 			}	
 		
 		else if(table.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {
-	    		TableCellRenderer ren = jTableEvents.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableEvents.revalidate();
-	    			} 
+			jTableEvents.cell_no_defaults(row,col);
+			jTableEvents.cell_no_errors(row,col);
+			jTableEvents.revalidate();  
 			}	
 		
 		else if(table.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {
-	    		TableCellRenderer ren = jTableFunctions.getCellRenderer(row,col);
-	    			if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				edi.cell_no_defaults(row);
-	    				edi.cell_no_errors(row);
-	    				jTableFunctions.revalidate();
-	    			} 
+			jTableFunctions.cell_no_defaults(row, col);
+			jTableFunctions.cell_no_errors(row, col);
+			jTableFunctions.revalidate();
+			
 			}	
 	}
 	
+	private static void recolorCell(DebugMessage dm, boolean asError) {
+		if(dm==null) return;
+		if(importFromSBMLorCPS) return; 
+		String tableDescr = dm.getOrigin_table();
+		CustomJTable_MSMB table = getTableFromDescription(tableDescr);
+		if(dm.getPriority()==DebugConstants.PriorityType.PARSING.priorityCode 
+				|| dm.getPriority()==DebugConstants.PriorityType.INCONSISTENCIES.priorityCode
+				|| dm.getPriority()==DebugConstants.PriorityType.MISSING.priorityCode
+				|| dm.getPriority()== DebugConstants.PriorityType.EMPTY.priorityCode) {
 	
-	private static void recolorCell(DebugMessage dm, boolean asError) throws Exception {
+				if(asError) table.cell_has_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+				else  table.cell_no_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+				table.revalidate();
+		}
+		else if(dm.getPriority()==DebugConstants.PriorityType.DEFAULTS.priorityCode) {
+			if(asError) table.cell_has_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+			else  table.cell_no_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+			table.revalidate();
+		}else if(dm.getPriority()==DebugConstants.PriorityType.MINOR_EMPTY.priorityCode
+				||dm.getPriority()==DebugConstants.PriorityType.MINOR_IMPORT_ISSUES.priorityCode
+				) {
+			if(asError) table.cell_has_minorIssue(dm.getOrigin_row()-1,dm.getOrigin_col());
+			else  table.cell_no_minorIssue(dm.getOrigin_row()-1,dm.getOrigin_col());
+			table.revalidate();
+		}
+	}
+	
+	
+	/*private static void recolorCell_2(DebugMessage dm, boolean asError) throws Exception {
 		if(dm==null) return;
 		if(importFromSBMLorCPS) return;
 		if(dm.getOrigin_table().compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
@@ -4804,96 +5266,66 @@ public class MainGui extends JFrame implements MSMB_Interface {
     				|| dm.getPriority()==DebugConstants.PriorityType.INCONSISTENCIES.priorityCode
     				|| dm.getPriority()==DebugConstants.PriorityType.MISSING.priorityCode
     				|| dm.getPriority()== DebugConstants.PriorityType.EMPTY.priorityCode) {
-    			TableCellRenderer ren = jTableSpecies.getCellRenderer(dm.getOrigin_row()-1,dm.getOrigin_col());
-    			if(ren instanceof EditableCellRenderer) {
-    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-    				if(asError) edi.cell_has_errors(dm.getOrigin_row()-1);
-    				else edi.cell_no_errors(dm.getOrigin_row()-1);
-					jTableSpecies.revalidate();
-    			} 
+    			if(asError) jTableSpecies.cell_has_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			else  jTableSpecies.cell_no_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			jTableSpecies.revalidate();
+        	 
 			}
     		
     		if(dm.getPriority()==DebugConstants.PriorityType.DEFAULTS.priorityCode) {
-    			TableCellRenderer ren = jTableSpecies.getCellRenderer(dm.getOrigin_row()-1,dm.getOrigin_col());
-    			if(ren instanceof EditableCellRenderer) {
-    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-    				if(asError) edi.cell_has_defaults(dm.getOrigin_row()-1);
-    				else edi.cell_no_defaults(dm.getOrigin_row()-1);
-					jTableSpecies.revalidate();
-    			}
-			
+    			if(asError) jTableSpecies.cell_has_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			else  jTableSpecies.cell_no_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			jTableSpecies.revalidate();
     		}
+    		
+    
+    		
     	} else if(dm.getOrigin_table().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
     		if(dm.getPriority()==DebugConstants.PriorityType.PARSING.priorityCode 
     				|| dm.getPriority()==DebugConstants.PriorityType.MISSING.priorityCode
     				|| dm.getPriority()== DebugConstants.PriorityType.EMPTY.priorityCode) {
-    			TableCellRenderer ren = jTableGlobalQ.getCellRenderer(dm.getOrigin_row()-1,dm.getOrigin_col());
-    			if(ren instanceof EditableCellRenderer) {
-    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-    				if(asError) edi.cell_has_errors(dm.getOrigin_row()-1);
-    				else edi.cell_no_errors(dm.getOrigin_row()-1);
-    				jTableGlobalQ.revalidate();
-    			}
+    			if(asError) jTableGlobalQ.cell_has_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			else  jTableGlobalQ.cell_no_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			jTableGlobalQ.revalidate();
     		}
     		if(dm.getPriority()==DebugConstants.PriorityType.DEFAULTS.priorityCode) {
-    			TableCellRenderer ren = jTableGlobalQ.getCellRenderer(dm.getOrigin_row()-1,dm.getOrigin_col());
-    			if(ren instanceof EditableCellRenderer) {
-    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-    				if(asError) edi.cell_has_defaults(dm.getOrigin_row()-1);
-    				else edi.cell_no_defaults(dm.getOrigin_row()-1);
-    				jTableGlobalQ.revalidate();
-    			}
-			
+    			if(asError) jTableGlobalQ.cell_has_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			else  jTableGlobalQ.cell_no_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			jTableGlobalQ.revalidate();
     		}
 	    } else if(dm.getOrigin_table().compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {
 	    	if(dm.getPriority()==DebugConstants.PriorityType.PARSING.priorityCode
 	    			|| dm.getPriority()==DebugConstants.PriorityType.MISSING.priorityCode
 	    			|| dm.getPriority()== DebugConstants.PriorityType.EMPTY.priorityCode) {
-	    		TableCellRenderer ren = jTableCompartments.getCellRenderer(dm.getOrigin_row()-1,dm.getOrigin_col());
-	    		if(ren instanceof EditableCellRenderer) {
-	    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	    				if(asError) edi.cell_has_errors(dm.getOrigin_row()-1);
-	    				else edi.cell_no_errors(dm.getOrigin_row()-1);
-	    				jTableCompartments.revalidate();
-	    		}
+	    		if(asError) jTableCompartments.cell_has_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			else  jTableCompartments.cell_no_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+	    		jTableCompartments.revalidate();
     		}
 	    	if(dm.getPriority()==DebugConstants.PriorityType.DEFAULTS.priorityCode) {
-    			TableCellRenderer ren = jTableCompartments.getCellRenderer(dm.getOrigin_row()-1,dm.getOrigin_col());
-    			if(ren instanceof EditableCellRenderer) {
-    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-    				if(asError) edi.cell_has_defaults(dm.getOrigin_row()-1);
-    				else edi.cell_no_defaults(dm.getOrigin_row()-1);
-    				jTableCompartments.revalidate();
-    			}
-			
+	    		if(asError) jTableCompartments.cell_has_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			else  jTableCompartments.cell_no_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+	    		jTableCompartments.revalidate();
+  		
     		}
 	    } else if(dm.getOrigin_table().compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
 	     	if(dm.getPriority()==DebugConstants.PriorityType.PARSING.priorityCode
 	     			|| dm.getPriority()==DebugConstants.PriorityType.MISSING.priorityCode
 	     			|| dm.getPriority()==DebugConstants.PriorityType.INCONSISTENCIES.priorityCode) {
-	     		TableCellRenderer ren = jTableReactions.getCellRenderer(dm.getOrigin_row()-1,dm.getOrigin_col());
-	     		if(ren instanceof EditableCellRenderer) {
-	     				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-	     				if(asError) edi.cell_has_errors(dm.getOrigin_row()-1);
-	    				else edi.cell_no_errors(dm.getOrigin_row()-1);
-	     				jTableReactions.revalidate();
-	     		}
+	     		if(asError) jTableReactions.cell_has_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			else  jTableReactions.cell_no_errors(dm.getOrigin_row()-1,dm.getOrigin_col());
+	     		jTableReactions.revalidate();
     		}
 	     	if(dm.getPriority()==DebugConstants.PriorityType.DEFAULTS.priorityCode) {
-    			TableCellRenderer ren = jTableReactions.getCellRenderer(dm.getOrigin_row()-1,dm.getOrigin_col());
-    			if(ren instanceof EditableCellRenderer) {
-    				EditableCellRenderer edi = (EditableCellRenderer)(ren);
-    				if(asError) edi.cell_has_defaults(dm.getOrigin_row()-1);
-    				else edi.cell_no_defaults(dm.getOrigin_row()-1);
-    				jTableReactions.revalidate();
-    			}
+	     		if(asError) jTableReactions.cell_has_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+    			else  jTableReactions.cell_no_defaults(dm.getOrigin_row()-1,dm.getOrigin_col());
+	     		jTableReactions.revalidate();
 			
     		}
 	    }
 	   
 		
 	}
-
+*/
 	public static boolean containsKey_debugMessages_relatedWith(String table, double priority, int row, int col) {
 		String key = table+"@"+priority+"_"+row+"_"+col;
 		return debugMessages.containsKey(key);
@@ -4901,7 +5333,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	
 	public static void clear_debugMessages_defaults_relatedWith(String table, int nrow) throws Exception {
-		
+		if(MainGui.donotCleanDebugMessages) return;
 		
 		HashMap<String, DebugMessage> remaining_messages = new HashMap<String, DebugMessage>();
 		Iterator it = debugMessages.keySet().iterator();
@@ -4910,7 +5342,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			DebugMessage dm = (DebugMessage)(debugMessages.get(key));
 	    	int origin_row = dm.getOrigin_row();
 	    	String origin_table= dm.getOrigin_table();
-	    	if(origin_row != nrow-1 || origin_table.compareTo(table)!=0 || 
+	    	if(origin_row != nrow || origin_table.compareTo(table)!=0 || 
 	    			dm.getPriority() !=DebugConstants.PriorityType.DEFAULTS.priorityCode) {
 	    			remaining_messages.put(key,dm);
 	    	} else {
@@ -4953,6 +5385,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		String table =  jTabGeneral.getTitleAt(jTabGeneral.getSelectedIndex());
 		HashMap<String, DebugMessage> remaining_messages = new HashMap<String, DebugMessage>();
 		Iterator it = debugMessages.keySet().iterator();
+		Vector<DebugMessage> toclear = new Vector<DebugMessage>();
 		while(it.hasNext()){
 			String key = (String) it.next();
 			DebugMessage dm = (DebugMessage)(debugMessages.get(key));
@@ -4968,15 +5401,21 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	    		dmNew.setPriority(dm.getPriority());
 	    		dmNew.setProblem(dm.getProblem());
 	    		dmNew.setStatus(dm.getStatus());
-	    		
+	    		toclear.add(dm);
 	    		remaining_messages.put(generateKey(dmNew),dmNew);
 	    	}
+		}
+		
+		for(int i = 0; i < toclear.size(); i++){
+			DebugMessage element = toclear.get(i);
+			recolorCell(element, false);
 		}
 		
 		debugMessages.clear();
 		debugMessages.putAll(remaining_messages);
 		//printDebugMessages();
 		updateDebugTab();
+		
 	}
 	
 	public static void clear_debugMessages_relatedWith_table_col_priority(String table, int col, double priority) throws Exception {
@@ -5023,8 +5462,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			}
 			revalidateExpressions();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
 		}
 	}
 	
@@ -5038,7 +5476,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	    Vector to_be_deleted = new Vector();
 	    while (iterator.hasNext()) {  
 	    	DebugMessage dm = (DebugMessage)debugMessages.get(iterator.next());
-	    	if(dm.getPriority()!=DebugConstants.PriorityType.PARSING.priorityCode && dm.getPriority()!=DebugConstants.PriorityType.MISSING.priorityCode) {
+	    	if(dm.getPriority()!=DebugConstants.PriorityType.PARSING.priorityCode 
+	    			&& dm.getPriority()!=DebugConstants.PriorityType.MISSING.priorityCode
+	    			&& dm.getPriority()!=DebugConstants.PriorityType.MINOR_EMPTY.priorityCode) {
 	    		continue;
 	    	}
 	    	if(dm.getOrigin_table().compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
@@ -5132,7 +5572,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						else actionInColumnName = false; 
 						if(col == Constants.ReactionsColumns.EXPANDED.index) return;
 						updateReaction(row); 	break;
-				case 1: if(col == Constants.SpeciesColumns.NAME.index) actionInColumnName = true;
+				case 1: if(col == Constants.SpeciesColumns.NAME.index) {
+							actionInColumnName = true;
+							
+						}
 						else actionInColumnName = false;
 						updateSpecies(row); break;
 				case 2: if(col == Constants.GlobalQColumns.NAME.index) actionInColumnName = true;
@@ -5175,6 +5618,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				if(ind!= -1)jTabGeneral.setSelectedIndex(ind);
 			}
 			dialogAcceptRejectShowed = false;
+			
 		} catch(Exception ex) {
 			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				ex.printStackTrace();
@@ -5198,11 +5642,14 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				}
 				out.flush();
 				out.close();
+				
 			}
 			catch (Exception e) {
 				System.err.println("Trouble writing recentFiles directories: "+ e);
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			}
+			
+			preferenceFrame.savePreferencesToFile();
 		
 		if(modelHasBeenModified) {
 			//Custom button text
@@ -5628,8 +6075,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			try {
 				tableFunctionsmodel.setValueAt_withoutUpdate(el.getExpandedEquation(new Vector()), i-1, Constants.FunctionsColumns.EQUATION.index);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
 			}
 		}
 		jTableFunctions.revalidate();
@@ -5714,13 +6160,14 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			val = db.findFunction(funcs.get(i).getObjectName());
 					
 			String pureNameFunc = CellParsers.cleanName(val.getObjectName());
-		
 			CFunction cfun = (CFunction)val;
 			try {
 				Function f = new Function(pureNameFunc); 
 				f.setCompleteFunSignatureInTable(false);
 				if(!MainGui.showAllAvailableFunctions) f.setShow(false);
-				//System.out.println("Analyzing... "+pureNameFunc);
+				/*System.out.println("Analyzing... "+pureNameFunc);
+				System.out.flush();
+				*/
 				if(cfun.getType() == CFunction.PreDefined) {
 					f.setEquation(val.getInfix(), CFunction.PreDefined, 0);
 				} else {
@@ -5728,21 +6175,31 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				}
 				Vector<String> names = f.getParametersNames();
 				CFunctionParameters variables = cfun.getVariables();
-				
 				for(int n = 0; n < names.size(); n++) {
-					String unquoted = names.get(n);
-					if(unquoted.startsWith("\"")&&unquoted.endsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
-					int type = (variables.getParameter(cfun.getVariableIndex(unquoted))).getUsage(); 
+					//String unquoted = names.get(n);
+					//if(unquoted.startsWith("\"")&&unquoted.endsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
+					
+					String quoted = names.get(n);
+					long index = cfun.getVariableIndex(quoted);
+					if(index ==-1) {
+						String unquoted = quoted;
+						if(unquoted.startsWith("\"")&&unquoted.endsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
+						index = cfun.getVariableIndex(unquoted);
+					}
+					CFunctionParameter param = (variables.getParameter(index));
+					
+					int type = param.getUsage(); 
 					//PAR in native function can be a number --> VAR in my interpretation
 					if(type==CFunctionParameter.PARAMETER) type = CFunctionParameter.VARIABLE;
 					f.setParameterRole(names.get(n), type  );
 				}
 				for(int n = 0; n < names.size(); n++) {
 					//System.out.println("index:" + names.get(n));
-					String unquoted = names.get(n);
-					if(unquoted.startsWith("\"")&&unquoted.endsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
-				
-					f.setParameterIndex(names.get(n), cfun.getVariableIndex(unquoted));
+					//String unquoted = names.get(n);
+					//if(unquoted.startsWith("\"")&&unquoted.endsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
+					String quoted = names.get(n);
+					
+					f.setParameterIndex(names.get(n), cfun.getVariableIndex(quoted));
 				}
 				f.setCompleteFunSignatureInTable(true);
 
@@ -5817,6 +6274,99 @@ public class MainGui extends JFrame implements MSMB_Interface {
         return predefined_not_loaded;
         
        
+	}
+	
+	private static void  loadBuiltInFunctionsTable() throws Exception {
+		if(tableBuiltInFunctionsmodel== null) return;
+		tableBuiltInFunctionsmodel.clearData();
+		tableBuiltInFunctionsmodel.removeAddEmptyRow_Listener();
+		
+		CFunctionDB db = CCopasiRootContainer.getFunctionList();
+		
+     	Vector printedFunctions = new Vector();
+		CFunctionVectorN funcs = db.loadedFunctions();
+		
+		
+		int row = 0;
+		int indexFun = 0;
+		//System.out.println("tot function:" + funcs.size());
+		for (int i = 0; i < funcs.size();i++)
+		{
+			//System.out.println("function "+i + " of "+funcs.size());	System.out.flush();
+			CEvaluationTree val = null;
+			val = db.findFunction(funcs.get(i).getObjectName());
+					
+			String pureNameFunc = CellParsers.cleanName(val.getObjectName());
+			CFunction cfun = (CFunction)val;
+			if(cfun.getType() != CFunction.PreDefined) continue;
+			try {
+				Function f = new Function(pureNameFunc); 
+				f.setCompleteFunSignatureInTable(false);
+				if(!MainGui.showAllAvailableFunctions) f.setShow(false);
+				/*System.out.println("Analyzing... "+pureNameFunc);
+				System.out.flush();
+				*/
+				f.setEquation(val.getInfix(), CFunction.PreDefined, 0);
+				Vector<String> names = f.getParametersNames();
+				CFunctionParameters variables = cfun.getVariables();
+				for(int n = 0; n < names.size(); n++) {
+					//String unquoted = names.get(n);
+					//if(unquoted.startsWith("\"")&&unquoted.endsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
+					
+					String quoted = names.get(n);
+					long index = cfun.getVariableIndex(quoted);
+					if(index ==-1) {
+						String unquoted = quoted;
+						if(unquoted.startsWith("\"")&&unquoted.endsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
+						index = cfun.getVariableIndex(unquoted);
+					}
+					CFunctionParameter param = (variables.getParameter(index));
+					
+					int type = param.getUsage(); 
+					//PAR in native function can be a number --> VAR in my interpretation
+					if(type==CFunctionParameter.PARAMETER) type = CFunctionParameter.VARIABLE;
+					f.setParameterRole(names.get(n), type  );
+				}
+				for(int n = 0; n < names.size(); n++) {
+					//System.out.println("index:" + names.get(n));
+					//String unquoted = names.get(n);
+					//if(unquoted.startsWith("\"")&&unquoted.endsWith("\"")) unquoted = unquoted.substring(1, unquoted.length()-1);
+					String quoted = names.get(n);
+					
+					f.setParameterIndex(names.get(n), cfun.getVariableIndex(quoted));
+				}
+				f.setCompleteFunSignatureInTable(true);
+
+			   multiModel.funDB.addChangeFunction(indexFun, f);
+			   indexFun++;
+			   
+			
+			} catch (Exception ex) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex.printStackTrace();
+				if(val.getObjectName().compareTo("Mass action (irreversible)")!=0 &&
+						val.getObjectName().compareTo("Mass action (reversible)")!=0	) {
+					System.out.println("FUNCTION NOT IMPORTED: " +val.getObjectName());
+					System.out.println("Parse error in string: " +val.getInfix());
+					if(MainGui.fromMainGuiTest) throw ex;
+				}
+				continue;
+			}
+			
+		}
+		
+		
+		for(int i = 0; i < multiModel.funDB.getNumBuiltInFunctions(); i++) {
+			Function f = multiModel.funDB.getBuiltInFunctionByIndex(i);
+			if(f ==null) continue;
+			tableBuiltInFunctionsmodel.setValueAt_withoutUpdate(f.printCompleteSignature(), i-1, 1);
+			tableBuiltInFunctionsmodel.setValueAt_withoutUpdate(f.getExpandedEquation(new Vector()), i-1, 2);
+			tableBuiltInFunctionsmodel.disableCell(i-1, Constants.FunctionsColumns.NAME.index);
+			tableBuiltInFunctionsmodel.disableCell(i-1, Constants.FunctionsColumns.EQUATION.index);
+			//tableBuiltInFunctionsmodel.enableCell(row, Constants.FunctionsColumns.PARAMETER_ROLES.index);
+			//tableFunctionsmodel.enableCell(row, Constants.FunctionsColumns.SIGNATURE.index);
+		}
+        
+		 
 	}
 	
 	public void setUnits(int unitTime, int unitVolume, int unitQuantity) {
@@ -6429,7 +6979,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		int col = toBeAck_debugMessage.getOrigin_col();
 		if(toBeAck_debugMessage.getPriority() == DebugConstants.PriorityType.DEFAULTS.priorityCode) {
 			String descr = toBeAck_debugMessage.getOrigin_table();
-			CustomJTable table1 = null;
+			CustomJTable_MSMB table1 = null;
 			Vector<Integer> columns = new Vector<>();
 			if(descr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	
 				table1 = jTableSpecies;	
@@ -6455,11 +7005,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			else if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {	table1 = jTableReactions;	}
 
 			for(Integer cols : columns) {
-				TableColumn nameColumn = table1.getColumnModel().getColumn(cols);
-				TableCellRenderer cellRender = nameColumn.getCellRenderer();
-				if(cellRender instanceof EditableCellRenderer) {	
-					((EditableCellRenderer) cellRender).cell_no_defaults(toBeAck_debugMessage.getOrigin_row()-1);      	 
-				};
+				table1.cell_no_defaults(toBeAck_debugMessage.getOrigin_row()-1,cols);
 			}
 			table1.repaint();
 		}
@@ -6565,8 +7111,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		try{ 
 			metabolites = CellParsers.parseReaction(multiModel,string_reaction,row+1);
 		} catch(Exception ex) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
-				ex.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)		ex.printStackTrace();
 			metabolites.add(new Vector());
 			metabolites.add(new Vector());
 			metabolites.add(new Vector());
@@ -6632,8 +7177,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		try {
 			recolorCell(dm,true);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)		e.printStackTrace();
 		}
 	}
 	
@@ -6655,7 +7199,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					 try {
 						clear_debugMessages_relatedWith(dm.getOrigin_table(), DebugConstants.PriorityType.PARSING.priorityCode, dm.getOrigin_row(), dm.getOrigin_col());
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					 debugMessages.put(key, dm);
@@ -6665,8 +7208,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		 
 		if(dm.getPriority() == DebugConstants.PriorityType.DEFAULTS.priorityCode) {
 			String descr = dm.getOrigin_table();
-			CustomJTable table = null;
-			Vector<Integer> columns = new Vector<>();
+			CustomJTable_MSMB table = null;
+		Vector<Integer> columns = new Vector<>();
 			if(descr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	
 				table = jTableSpecies;	
 				columns.add(Constants.SpeciesColumns.INITIAL_QUANTITY.index); 
@@ -6682,13 +7225,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {	table = jTableGlobalQ; columns.add(Constants.GlobalQColumns.VALUE.index);	}
 			else if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {	table = jTableReactions;	}
 
-			for(Integer cols : columns) {
-				TableColumn nameColumn = table.getColumnModel().getColumn(cols);
-				TableCellRenderer cellRender = nameColumn.getCellRenderer();
-				if(cellRender instanceof EditableCellRenderer) {	
-					((EditableCellRenderer) cellRender).cell_has_defaults(dm.getOrigin_row()-1);      	 
-				};
-			}
+			/*for(Integer cols : columns) {
+				table.cell_has_defaults(dm.getOrigin_row()-1,cols);
+			}*/
 		}
 		updateDebugTab();
 	}
@@ -6723,9 +7262,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		jTabGeneral.setSelectedIndex(Constants.TitlesTabs.getIndexFromDescription(dm.getOrigin_table()));
 		MainGui.cell_to_highlight = new MutablePair(dm.getOrigin_row(),  dm.getOrigin_col());
 		
+		
 		MainGui.row_to_highlight.set(Constants.TitlesTabs.getIndexFromDescription(dm.getOrigin_table()),-1);
 		
-		 if(dm.getOrigin_table().compareTo(Constants.TitlesTabs.SPECIES.description)==0) { 
+		if(dm.getOrigin_table().compareTo(Constants.TitlesTabs.SPECIES.description)==0) { 
+				jTableSpecies.setCell_to_highlight(new MutablePair(dm.getOrigin_row(),  dm.getOrigin_col()));
 			   jTableSpecies.scrollRectToVisible(new Rectangle(jTableSpecies.getCellRect(dm.getOrigin_row()-1, 0, true)));  
  				MainGui.jTableSpecies.clearSelection();
 	     		MainGui.jTableSpecies.revalidate();
@@ -6761,7 +7302,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 
 	public static String getCellContent(FoundElement foundElement) {
 		String ret = new String();
-		CustomTableModel tModel;
+		CustomTableModel_MSMB tModel = null;
+		
 		String descr = foundElement.getTableDescription();
 		     if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) { tModel = tableReactionmodel;	}
 		else if(descr.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) { tModel = tableSpeciesmodel;	}
@@ -6769,7 +7311,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		else if(descr.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) { tModel = tableEventsmodel;	}
 		else if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) { tModel = tableFunctionsmodel;	}
 		else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) { tModel = tableGlobalQmodel;	}
-		else tModel = null;
+		
 		ret = (tModel.getValueAt(foundElement.getRow(), foundElement.getCol())).toString();
 		return ret;
 		
@@ -6777,7 +7319,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	public static String getRowContent(FoundElement foundElement) {
 		String ret = new String();
-		CustomTableModel tModel;
+		CustomTableModel_MSMB tModel = null;
 		Vector cols = new Vector();
 		String descr = foundElement.getTableDescription();
 		     if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) { tModel = tableReactionmodel; cols = Constants.reactions_columns;	}
@@ -6786,7 +7328,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		else if(descr.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) { tModel = tableEventsmodel;cols = Constants.events_columns;	}
 		else if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) { tModel = tableFunctionsmodel;	cols = Constants.functions_columns;}
 		else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) { tModel = tableGlobalQmodel;	cols = Constants.globalQ_columns;}
-		else tModel = null;
 		int row = foundElement.getRow();
 		for(int i = 0; i < cols.size(); i++) {
 			  if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) {	ret += tModel.getValueAt(row, Constants.ReactionsColumns.getIndex((String) cols.get(i))).toString();}
@@ -6801,9 +7342,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		return ret;
 	}
 	
-	public static CustomTableModel getTableModelFromDescription(String descr) {
-		CustomTableModel tModel;
-		     if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) { tModel = tableReactionmodel;	}
+	public static CustomTableModel_MSMB getTableModelFromDescription(String descr) {
+		CustomTableModel_MSMB tModel;
+		if(descr==null) return null;
+		if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) { tModel = tableReactionmodel;	}
 		else if(descr.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) { tModel = tableSpeciesmodel;	}
 		else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) { tModel = tableCompartmentsmodel;	}
 		else if(descr.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) { tModel = tableEventsmodel;	}
@@ -6812,16 +7354,45 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		else tModel = null;
 		return tModel;
 	}
+	
+	public static CustomJTable_MSMB getTableFromDescription(String descr) {
+		CustomJTable_MSMB table;
+		if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) { table = jTableReactions;	}
+		else if(descr.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) { table = jTableSpecies;}
+		else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) { table = jTableCompartments;	}
+		else if(descr.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) { table = jTableEvents;	}
+		else if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) { table = jTableFunctions;	}
+		else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) { table = jTableGlobalQ;	}
+		else table = null;
+		return table;
+	}
 
+	/*public static CustomTableModel_MSMB getTableModelFromDescription(String descr) {
+		CustomTableModel_MSMB tModel;
+		if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) { tModel = tableReactionmodel;	}
+		else if(descr.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) { tModel = tableSpeciesmodel;	}
+		else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) { tModel = tableCompartmentsmodel;	}
+		else if(descr.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) { tModel = tableEventsmodel;	}
+		else if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) { tModel = tableFunctionsmodel;	}
+		else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) { tModel = tableGlobalQmodel;	}
+		else tModel = null;
+		return tModel;
+	}*/
+	
 	public static void applyRenaming(Vector collectedRenamingElements) {
 		int original_focus = jTabGeneral.getSelectedIndex();
 		for(int i = 0; i < collectedRenamingElements.size(); i++ ) {
 			Vector el = (Vector) collectedRenamingElements.get(i);
 			String newString = (String) el.get(0);
 			FoundElement where = (FoundElement) el.get(1);
-			CustomTableModel tModel = getTableModelFromDescription(where.getTableDescription());
-			jTabGeneral.setSelectedIndex(Constants.TitlesTabs.getIndexFromDescription(where.getTableDescription()));
-			tModel.setValueAt(newString, where.getRow(), where.getCol());
+			CustomTableModel_MSMB tModel = getTableModelFromDescription(where.getTableDescription());
+			if(tModel != null) {
+				jTabGeneral.setSelectedIndex(Constants.TitlesTabs.getIndexFromDescription(where.getTableDescription()));
+				tModel.setValueAt(newString, where.getRow(), where.getCol());
+			} else {
+				jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
+				tableSpeciesmodel.setValueAt(newString, where.getRow(), where.getCol());
+			}
 			
 		}
 		jTabGeneral.setSelectedIndex(original_focus);
@@ -6834,7 +7405,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	public static void undoRenaming(String inTable, int row, String toOriginal) {
 		int original_focus = jTabGeneral.getSelectedIndex();
-		CustomTableModel tModel = getTableModelFromDescription(inTable);
+		CustomTableModel_MSMB tModel = getTableModelFromDescription(inTable);
 		jTabGeneral.setSelectedIndex(Constants.TitlesTabs.getIndexFromDescription(inTable));
 		int col = -1;
 		if(inTable.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	col = Constants.SpeciesColumns.NAME.index;	}
@@ -6842,7 +7413,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		else if(inTable.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {	col = Constants.EventsColumns.NAME.index;	}
 		else if(inTable.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {	col = Constants.GlobalQColumns.NAME.index;		}
 		else if(inTable.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) { col = Constants.ReactionsColumns.NAME.index;		}
-	
+		if(col==-1) return;
 		tModel.setValueAt(toOriginal, row, col);
 		jTabGeneral.setSelectedIndex(original_focus);
 		revalidateAllTables();
@@ -6881,11 +7452,18 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			FoundElement where = (FoundElement) collectedElements.get(i);
 			
 			//because I don't want to replace local name of variables... CHEEEEEEEEEEEECK if that is in conflict with actual renames of local variables or the rename of a function 
-			if(where.getTableDescription().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) continue; 
+			if(where.getTableDescription().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && 
+					where.getCol() == Constants.FunctionsColumns.NAME.index) continue; 
 			
-			CustomTableModel tModel = getTableModelFromDescription(where.getTableDescription());
-			jTabGeneral.setSelectedIndex(Constants.TitlesTabs.getIndexFromDescription(where.getTableDescription()));
-			tModel.setValueAt(tModel.getValueAt(where.getRow(), where.getCol()), where.getRow(), where.getCol()); //reassign same value but cause an update and a revalidation
+			CustomTableModel_MSMB tModel = getTableModelFromDescription(where.getTableDescription());
+			if(tModel!=null) {
+				jTabGeneral.setSelectedIndex(Constants.TitlesTabs.getIndexFromDescription(where.getTableDescription()));
+				tModel.setValueAt(tModel.getValueAt(where.getRow(), where.getCol()), where.getRow(), where.getCol()); //reassign same value but cause an update and a revalidation
+			} else {
+				jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
+				tableSpeciesmodel.setValueAt(tableSpeciesmodel.getValueAt(where.getRow(), where.getCol()), where.getRow(), where.getCol()); //reassign same value but cause an update and a revalidation
+			
+			}
 		}
 		jTabGeneral.setSelectedIndex(original_focus);
 		revalidateAllTables();
@@ -6942,7 +7520,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 
 	public static boolean isCellWithMultipleView(String tableName, int row, int col) {
-		CustomJTable table = null;
+		CustomJTable_MSMB table = null;
 		if(tableName.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {			table = jTableSpecies;	}
 		else if(tableName.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	table = jTableCompartments;		}
 		else if(tableName.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {		table = jTableEvents;	}
@@ -6958,9 +7536,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		if(tableName.compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && col==Constants.ReactionsColumns.KINETIC_LAW.index) return true;
 		
 		else if(tableName.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
-			
-			EditableCellRenderer edi  = (EditableCellRenderer) jTableSpecies.getCellRenderer(row,col);
-			if(edi.isCellWithError(row)) return false;
+			if(jTableSpecies.isCellWithError(row, col)) return false;
 			if(col==Constants.SpeciesColumns.INITIAL_QUANTITY.index) return true;
 			else if(col==Constants.SpeciesColumns.EXPRESSION.index) return true;
 		}
@@ -7144,8 +7720,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 
 	public static void updateDefaultValue(String description, int indexColumn ,String species_defaultInitialValue2) {
 		if(multiModel == null) return;
-		CustomTableModel mod = null;
-		CustomJTable table = null;
+		CustomTableModel_MSMB mod = null;
+		CustomJTable_MSMB table = null;
+		
 		int tabToSelect = -1;
 				
 		int selectedTab = jTabGeneral.getSelectedIndex();
@@ -7181,25 +7758,25 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			jTabGeneral.setSelectedIndex(tabToSelect);
 			table.setColumnSelectionInterval(indexColumn, indexColumn);
 	     
-			TableColumn nameColumn = table.getColumnModel().getColumn(indexColumn);
-	        TableCellRenderer cellRender = nameColumn.getCellRenderer();
-	     	if(cellRender instanceof EditableCellRenderer) {
+			//TableColumn nameColumn = table.getColumnModel().getColumn(indexColumn);
+	        //TableCellRenderer cellRender = nameColumn.getCellRenderer();
+	     	//if(cellRender instanceof EditableCellRenderer_MSMB) {
 	     		for(int row = 0; row < mod.getRowCount(); row++) {
-	     			if(((EditableCellRenderer) cellRender).isCellWithDefaults(row))	 mod.setValueAt_withoutUpdate(species_defaultInitialValue2, row, indexColumn);
+	     			if(table.isCellWithDefaults(row,indexColumn))	 mod.setValueAt_withoutUpdate(species_defaultInitialValue2, row, indexColumn);
 	     		}
-	     	}
+	     	//}
 	     	
 			
 	     	table.revalidate();
 			
 	    	jTabGeneral.setSelectedIndex(selectedTab);
 		}
-
+		
 	}
 	
 	
 	public static boolean isCellWithDefaultValue(String description, int row, int col) {
-		CustomJTable table = null;
+		CustomJTable_MSMB table = null;
 		if(description.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {			table = jTableSpecies;	}
 		else if(description.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	table = jTableCompartments;		}
 		else if(description.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {		table = jTableEvents;	}
@@ -7208,15 +7785,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		else return false;
 		
 		table.setRowSelectionInterval(row, row);
-		TableColumn nameColumn = table.getColumnModel().getColumn(col);
-        TableCellRenderer cellRender = nameColumn.getCellRenderer();
-     	if(cellRender instanceof EditableCellRenderer) {
-     		EditableCellRenderer edi = (EditableCellRenderer) cellRender;
-     		if(edi.isCellWithError(row)) return false;
-			return edi.isCellWithDefaults(row);
-     		
-     	}
-     	return false;
+		if(table.isCellWithError(row,col)) return false;
+		return table.isCellWithDefaults(row,col);
+		
+     	//return false;
 	}
 
 	static HashMap<String,Integer> indexToDelete = new HashMap<String,Integer>();
@@ -7333,8 +7905,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		addedByReaction = true;
 		String description = element.getTableDescription();
 		
-		CustomTableModel mod = null;
-		CustomJTable table = null;
+		CustomTableModel_MSMB mod = null;
+		CustomJTable_MSMB table = null;
 		int tabToSelect = 0;
 		
 		if(description.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	
@@ -7458,8 +8030,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					  
 				  }
 				} catch (Throwable e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 				}
 			  }
 			  
@@ -7473,6 +8044,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 		  System.out.println("updateAutocompletionContext autocompletionContext: "+Constants.FunctionParamType.getSignatureDescriptionFromCopasiType(autocompletionContext));
 	}
+	
+	
 
 	
 	

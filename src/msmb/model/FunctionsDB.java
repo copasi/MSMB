@@ -8,12 +8,14 @@ import java.util.*;
 
 import msmb.parsers.mathExpression.syntaxtree.CompleteExpression;
 import msmb.parsers.mathExpression.syntaxtree.CompleteFunctionDeclaration;
+import msmb.parsers.mathExpression.visitor.GetFunctionCallsInEquation;
 import msmb.parsers.mathExpression.visitor.GetFunctionNameVisitor;
 import msmb.parsers.mathExpression.visitor.Look4UndefinedMisusedVisitor;
 import msmb.parsers.mathExpression.visitor.RateLawMappingVisitor;
 
 import msmb.utility.CellParsers;
 import msmb.utility.Constants;
+import msmb.utility.MyInconsistencyException;
 import msmb.utility.MySyntaxException;
 
 import org.COPASI.CFunction;
@@ -46,6 +48,78 @@ public class FunctionsDB {
 	
 	HashMap<String, Vector> mappings_weight_subFunctions_Functions = new HashMap<String, Vector>(); 
 	
+	
+	public Vector<String> correctRoles(Function f) throws MyInconsistencyException {
+		String mathematicalExpression = f.getEquation();
+		Vector ret = new Vector();
+		InputStream is =null;
+		  MR_Expression_Parser parser = null;
+		  CompleteExpression root = null;
+		try {
+			is = new ByteArrayInputStream(mathematicalExpression.getBytes("UTF-8"));
+			   parser = new MR_Expression_Parser(is,"UTF-8");
+			  root = parser.CompleteExpression();
+		} catch (Throwable e1) {
+			// TODO Auto-generated catch block
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
+			return ret;
+		}
+		
+		
+		GetFunctionCallsInEquation v_fun = new GetFunctionCallsInEquation();
+		root.accept(v_fun);
+		HashMap<String, Vector> funCalls = v_fun.getFunctionCallsWithActualParam();
+		Iterator it = funCalls.keySet().iterator();
+			
+		while(it.hasNext()) {
+			String call = (String) it.next();
+			Function called = null;
+			try {
+				called = multiModel.getFunctionByName(call);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
+				called = null;
+			
+			}
+			if(called == null) {
+				ret.add(call);
+				continue;
+			}
+			Vector<String> types = called.getParametersTypes();
+			Vector names = funCalls.get(call);
+			
+			for(int i = 0; i< names.size(); i++) {
+				String parName =(String) names.get(i);
+				Integer called_role= Constants.FunctionParamType.getCopasiTypeFromSignatureType(types.get(i));
+				Integer current_role= f.getParameterRole(parName);
+				if(current_role == null) {
+					if(called_role==Constants.FunctionParamType.VARIABLE.copasiType) { 
+						continue;//is an expression, so the type should not be changed, each element in the expression will have a VAR type
+					} else {
+						//subfunction is expecting something specific, but the current state is an expression --> error
+						throw new MyInconsistencyException(Constants.FunctionsColumns.EQUATION.index, 
+								"Incompatible usage of "+parName+": subfunction is expecting a "+Constants.FunctionParamType.getSignatureDescriptionFromCopasiType(called_role)
+								+ " not a complex expression.");
+				
+					}
+				}
+				if(current_role==Constants.FunctionParamType.VARIABLE.copasiType) {
+					f.setParameterRole(parName, called_role.intValue());
+				} else {
+					if(current_role!=called_role) {
+						throw new MyInconsistencyException(Constants.FunctionsColumns.EQUATION.index, 
+								"Incompatible usage of parameter "+parName+": "+Constants.FunctionParamType.getSignatureDescriptionFromCopasiType(called_role)+ " in one subfuction, "
+										+Constants.FunctionParamType.getSignatureDescriptionFromCopasiType(current_role)+"in another subfunction."   );
+					}
+				}
+				
+			}
+			
+		}
+		return ret;
+		
+	}
 	
 	
 	public void addChangeFunction(int row, Function f) throws Exception {

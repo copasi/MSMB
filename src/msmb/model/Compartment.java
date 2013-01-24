@@ -17,11 +17,13 @@ public class Compartment {
 	String notes = new String();
 	String expression = new String();
 	
+	private String editableVolume= new String();
+	private String editableExpression = expression;
+	public String getEditableVolume() {	return editableVolume; }
+	public String getEditableExpression() {	return editableExpression; }
 	
 	
-	public String getExpression() {
-		return expression;
-	}
+	public String getExpression() {	return expression;}
 	
 	public void setExpression(MultiModel m, String expr) throws MySyntaxException {
 		if(expr.length()==0) return;
@@ -31,6 +33,9 @@ public class Compartment {
 			} catch (MySyntaxException ex) {
 				throw ex;
 			}
+		finally {
+			editableExpression = expression;
+		}
 	}
 	
 	public void setExpression_withoutParsing(String expression2) {
@@ -70,6 +75,9 @@ public class Compartment {
 			} catch (Exception ex) {
 				throw ex;
 			}
+		}
+		 finally {
+			 editableVolume = getInitialVolume();
 		}
 	}
 

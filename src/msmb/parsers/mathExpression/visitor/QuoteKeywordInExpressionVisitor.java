@@ -33,11 +33,19 @@ public class QuoteKeywordInExpressionVisitor extends DepthFirstVoidVisitor {
 				out.print(formatter.format(d));
 			} catch(Exception ex) { out.print(s);}
 			finally { out.flush();}	
+			
 		}
 
 	
 		@Override
-		public void visit(final NodeToken n) {   printToken(n.tokenImage); }
+		public void visit(final NodeToken n) {   
+				if(n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0) out.print(" ");
+				printToken(n.tokenImage); 
+				if(n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0) out.print(" ");
+				super.visit(n);
+			}
+			
+		
 
 		
 		@Override

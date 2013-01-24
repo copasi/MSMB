@@ -118,12 +118,13 @@ public class GlobalQDB {
 					  undef = undefVisitor.getUndefinedElements();
 				}
 				if(undef != null){
-					 if(undef.size()==1 && undef.get(0).compareTo(name)==0) { //just self reference in ode/expression and it is allowed
+					if(undef.size() ==0) throw ex; 
+					if(undef.size()==1 && undef.get(0).compareTo(name)==0) { //just self reference in ode/expression and it is allowed
 						return addChangeGlobalQ_withoutParsing(name,  initialValue, type, expression, notes);
 					} 
 					 
 					 else {
-						  for(int i = 0; i < undef.size(); i++) {
+						for(int i = 0; i < undef.size(); i++) {
 							 if(undef.get(i).compareTo(name)==0){
 								 undef.remove(i);
 								 break;
@@ -201,5 +202,14 @@ public class GlobalQDB {
 	public void clear() {
 		globalQVector.clear();
 		globalQIndexes.clear();
+	}
+
+	public String getEditableExpression(int row, int column) {
+			GlobalQ element = this.globalQVector.get(row+1);
+			String ret = null;
+			if(column == Constants.GlobalQColumns.VALUE.index) {ret = element.getEditableValue();}
+			if (column == Constants.GlobalQColumns.EXPRESSION.index) { ret = element.getEditableExpression();}
+			return ret;
+		
 	}
 }

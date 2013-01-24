@@ -1,5 +1,8 @@
 package  msmb.gui;
 
+import org.apache.commons.lang3.*;
+import org.apache.commons.lang3.tuple.MutablePair;
+
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -18,6 +21,7 @@ import msmb.model.Function;
 import msmb.utility.Constants;
 import msmb.utility.GridLayout2;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Vector;
 import javax.swing.JButton;
@@ -49,7 +53,7 @@ public class FunctionParameterFrame extends JDialog {
 		parentFrame  = owner;
 		if(f!= null)
 			try {
-				function = f;
+				function = new Function(f);
 				fillFrameFields(f);
 			} catch (Exception e) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
@@ -59,7 +63,7 @@ public class FunctionParameterFrame extends JDialog {
 	public void setFunction(int row, Function f) {
 		if(f!= null)
 			try {
-				function = f;
+				function = new Function(f);
 				modifiedRow = row;
 				oldName = f.getName();
 				fillFrameFields(f);
@@ -201,7 +205,7 @@ public class FunctionParameterFrame extends JDialog {
 			jButton.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					
-					Function alreadyExist = null;
+			Function alreadyExist = null;
 					try {
 						alreadyExist = parentFrame.multiModel.funDB.getFunctionByName(jLabelFunName.getText());
 					} catch (Exception e2) {
@@ -209,7 +213,7 @@ public class FunctionParameterFrame extends JDialog {
 						e2.printStackTrace();
 					}
 					int alreadyExIndex = parentFrame.multiModel.funDB.getFunctionIndex(alreadyExist);
-					if(alreadyExIndex!=-1 && alreadyExIndex+1!=modifiedRow) {
+					if(alreadyExIndex!=-1 && alreadyExIndex!=modifiedRow) {
 						  JOptionPane.showMessageDialog(new JButton(),"The new name you chose already exists!", "Invalid name!", JOptionPane.ERROR_MESSAGE);
 						  return;
 					}
@@ -220,15 +224,19 @@ public class FunctionParameterFrame extends JDialog {
 					} catch (Exception ex) {
 						ex.printStackTrace();
 					}
+					HashMap<String, MutablePair<Integer, Integer>> changedOrders = null;
 					if(modifiedRow != -1) {
 						try {
-							updateFunctionParameter();
+							changedOrders = updateFunctionParameter();
 						} catch (Exception e1) {
 							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
 							  JOptionPane.showMessageDialog(new JButton(),e1.getMessage(), "Invalid change!", JOptionPane.ERROR_MESSAGE);
 							  return;
 						}
-						parentFrame.renameFunction_fromCellOrfromFunctionParameterFrame(function, modifiedRow,oldName);
+						boolean oldHidePopupWarning = MainGui.hidePopupWarning;
+						MainGui.hidePopupWarning = true;
+						parentFrame.renameFunction_fromCellOrfromFunctionParameterFrame(function, modifiedRow,oldName,changedOrders);
+						MainGui.hidePopupWarning = oldHidePopupWarning;
 					}
 					setVisible(false);
 				}
@@ -239,13 +247,16 @@ public class FunctionParameterFrame extends JDialog {
 		return jButton;
 	}
 	
-	private void updateFunctionParameter() throws Exception {
+	private HashMap<String, MutablePair<Integer, Integer>> updateFunctionParameter() throws Exception {
 		Component[] comp = jPanel.getComponents();
 		String paramName = null;
 		String paramType = null;
 		Integer cparamType = null;
 		Integer paramOrder = null;
 		HashSet<Integer> indexes = new HashSet<Integer>();
+		
+		HashMap<String, MutablePair<Integer, Integer>> ret = new HashMap<String, MutablePair<Integer, Integer>>();
+		
 		for(int i = 0; i < comp.length; i++) {
 			Component current = comp[i];
 			if(current instanceof JTextField) {
@@ -275,12 +286,20 @@ public class FunctionParameterFrame extends JDialog {
 				
 				cparamType = Constants.FunctionParamType.getCopasiTypeFromDescription(paramType);
 				function.setParameterRole(paramName, cparamType);
+				int before = function.getParameterIndex(paramName);
+				paramOrder = paramOrder-1;
 				function.setParameterIndex(paramName, paramOrder);
+				if(before != paramOrder) {
+					ret.put(paramName, new MutablePair<Integer, Integer>(before, paramOrder));
+				}
 				paramName = null;
 				paramType = null;
 				paramOrder = null;
 			}
 		}
+		
+		return ret;
+		
 	}
 
 	public String getSignature() {

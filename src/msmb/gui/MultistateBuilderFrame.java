@@ -8,6 +8,7 @@ import javax.swing.border.*;
 import javax.swing.table.TableColumn;
 import java.util.*;
 
+import msmb.commonUtilities.tables.ScientificFormatCellRenderer;
 import msmb.model.*;
 import msmb.utility.*;
 
@@ -17,6 +18,7 @@ import java.awt.event.ItemEvent;
 public class MultistateBuilderFrame extends JDialog	 {
 
 	private static final long serialVersionUID = 1L;
+	protected static int row_to_highlight;
 	private JPanel jContentPane = null;
 	private JLabel jLabel = null;
 	private JTextField jTextField_species = null;
@@ -40,8 +42,8 @@ public class MultistateBuilderFrame extends JDialog	 {
 	private JTabbedPane jTabbedPane = null;
 	private JPanel jPanelConcentrationSpecies = null;
 	private JScrollPane jScrollPaneConcentrationSpecies= null;
-	private CustomTableModel tableConcentrationSpeciesmodel= null;
-	private CustomJTable jTableConcentrationSpecies;
+	private CustomTableModel_MSMB tableConcentrationSpeciesmodel= null;
+	private CustomJTable_MSMB jTableConcentrationSpecies;
 	private JList<String> jListSite = null;
 	private JPanel panel;
 	private JLabel lblWarning;
@@ -277,8 +279,8 @@ public class MultistateBuilderFrame extends JDialog	 {
 				col.add("Initial Quantity");
 			
 						
-			tableConcentrationSpeciesmodel = new CustomTableModel(Constants.MultistateBuilder_QUANTITIES_description,col,this);
-			jTableConcentrationSpecies = new CustomJTable();
+			tableConcentrationSpeciesmodel = new CustomTableModel_MSMB(Constants.MultistateBuilder_QUANTITIES_description,col,new Vector(),this);
+			jTableConcentrationSpecies = new CustomJTable_MSMB();
 			jTableConcentrationSpecies.setModel(tableConcentrationSpeciesmodel);
 
 			
@@ -305,9 +307,9 @@ public class MultistateBuilderFrame extends JDialog	 {
 	    }
 		col.add("Initial Quantity");
 		
-		tableConcentrationSpeciesmodel = new CustomTableModel(Constants.MultistateBuilder_QUANTITIES_description,col,this,false,true);
+		tableConcentrationSpeciesmodel = new CustomTableModel_MSMB(Constants.MultistateBuilder_QUANTITIES_description,col,new Vector(),this,false,true);
 		
-		jTableConcentrationSpecies = new CustomJTable();
+		jTableConcentrationSpecies = new CustomJTable_MSMB();
 		jTableConcentrationSpecies.setModel(tableConcentrationSpeciesmodel);
 		
 		jTableConcentrationSpecies.initializeCustomTable(tableConcentrationSpeciesmodel);
@@ -315,10 +317,10 @@ public class MultistateBuilderFrame extends JDialog	 {
 		jScrollPaneConcentrationSpecies.setViewportView(jTableConcentrationSpecies);
 	
 		
-		TableColumn column = jTableConcentrationSpecies.getColumnModel().getColumn(col.size());  
+		TableColumn column = jTableConcentrationSpecies.getColumnModel().getColumn(col.size()-1);  
         column.setCellRenderer(new ScientificFormatCellRenderer());
         
-        TableColumn column2 = jTableConcentrationSpecies.getColumnModel().getColumn(col.size()-1);  
+        TableColumn column2 = jTableConcentrationSpecies.getColumnModel().getColumn(col.size()-2);  
         column2.setCellRenderer(new ScientificFormatCellRenderer());
       
         
@@ -603,7 +605,8 @@ public class MultistateBuilderFrame extends JDialog	 {
 						updateModel();
 						
 					} catch(Exception ex) {
-						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+						//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+							ex.printStackTrace();
 					}
 				}
 			});

@@ -347,7 +347,7 @@ public class DeleteFrame extends JDialog {
 			
 			
 			//add a highlighter, pretty.
-			treeTable.addHighlighter(HighlighterFactory.createAlternateStriping(Color.white,MainGui.color_shading_table));
+			treeTable.addHighlighter(HighlighterFactory.createAlternateStriping(Color.white,GraphicalProperties.color_shading_table));
 		
 			treeTable.initializeRowEditorModel();
 				

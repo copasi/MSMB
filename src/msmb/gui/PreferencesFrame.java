@@ -56,6 +56,7 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.GroupLayout;
 
 import msmb.utility.Constants;
+import msmb.utility.GraphicalProperties;
 
 public class PreferencesFrame extends JDialog {
 
@@ -67,7 +68,7 @@ public class PreferencesFrame extends JDialog {
 
 	private javax.swing.ButtonGroup buttonGroup1;
 	private javax.swing.ButtonGroup buttonGroup2;
-//	private JCheckBox jCheckBoxHighlightCellOpenIssues = null;
+	private JCheckBox jCheckBoxHighlightCellOpenIssues = null;
 //	private javax.swing.JCheckBox jCheckBoxPopUpWarnings;
 //	private JCheckBox jCheckBoxShowAllAvailableFunctions = null;
 	private javax.swing.JPanel jPanel1;
@@ -146,7 +147,7 @@ public class PreferencesFrame extends JDialog {
 	private JCheckBox chckbxNewCheckBox;
 	private JButton btnNewButton_4;
 	private JPanel panel_vtpalette;
-	private JSpinner spinnerAutocompletionDelay;
+	//private JSpinner spinnerAutocompletionDelay;
 	/**
 	 * Launch the application.
 	 */
@@ -368,13 +369,13 @@ public class PreferencesFrame extends JDialog {
 		};
 
 		labelDefaults = new JLabel(" Border cell with Default value ");
-		labelDefaults.setBorder(new LineBorder(MainGui.color_border_defaults, 3));
+		labelDefaults.setBorder(new LineBorder(GraphicalProperties.color_border_defaults, 3));
 		labelDefaults.addMouseListener(pickLabelToChange_listener);
 		colorchooserPreview.setLayout(new GridLayout(0, 2, 0, 0));
 		colorchooserPreview.add(labelDefaults);
 
 		labelMajourIssues = new JLabel(" Background cell with Major Issue ");
-		labelMajourIssues.setBackground(MainGui.color_cell_with_errors);
+		labelMajourIssues.setBackground(GraphicalProperties.color_cell_with_errors);
 
 		buttonGroup2 = new ButtonGroup();
 		
@@ -400,7 +401,7 @@ public class PreferencesFrame extends JDialog {
 		
 		
 		labelHightlight = new JLabel(" Background Highlighted cell ");
-		labelHightlight.setBackground(MainGui.color_cell_to_highlight);
+		labelHightlight.setBackground(GraphicalProperties.color_cell_to_highlight);
 		labelHightlight.setOpaque(true);
 		labelHightlight.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
 		labelHightlight.addMouseListener(pickLabelToChange_listener);
@@ -445,9 +446,9 @@ public class PreferencesFrame extends JDialog {
 					MainGui.revalidateExpressions(usage);
 					usage = MainGui.search(defaultCompartmentInitialValue.getText());
 					MainGui.revalidateExpressions(usage);
-					MainGui.color_border_defaults = ((LineBorder)(labelDefaults.getBorder())).getLineColor();
-					MainGui.color_cell_to_highlight = labelHightlight.getBackground();
-					MainGui.color_cell_with_errors = labelMajourIssues.getBackground();
+					GraphicalProperties.color_border_defaults = ((LineBorder)(labelDefaults.getBorder())).getLineColor();
+					GraphicalProperties.color_cell_to_highlight = labelHightlight.getBackground();
+					GraphicalProperties.color_cell_with_errors = labelMajourIssues.getBackground();
 				} catch (Exception e1) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
 				} finally {
@@ -830,7 +831,7 @@ public class PreferencesFrame extends JDialog {
 		jPanel1 = new javax.swing.JPanel();
 		jCheckBoxAutocomplete = new javax.swing.JCheckBox();
 		jCheckBoxDialogWindow = new javax.swing.JCheckBox();
-	//	jCheckBoxHighlightCellOpenIssues = new javax.swing.JCheckBox();
+		jCheckBoxHighlightCellOpenIssues = new javax.swing.JCheckBox();
 	//	jCheckBoxPopUpWarnings = new javax.swing.JCheckBox();
 	//	jCheckBoxShowAllAvailableFunctions = new javax.swing.JCheckBox();
 		jPanel2 = new javax.swing.JPanel();
@@ -877,21 +878,29 @@ public class PreferencesFrame extends JDialog {
 			}
 		});
 
-	/*	jCheckBoxHighlightCellOpenIssues.setText("Highlight all cells with open issues");
-		jCheckBoxHighlightCellOpenIssues.setEnabled(false);
-		jCheckBoxPopUpWarnings.setText("Show pop-up windows for warning messages");
+		jCheckBoxHighlightCellOpenIssues.setText("Color cells with minor issues");
+		jCheckBoxHighlightCellOpenIssues.addChangeListener(new javax.swing.event.ChangeListener() {
+			public void stateChanged(javax.swing.event.ChangeEvent e) {
+				if(jCheckBoxHighlightCellOpenIssues.isSelected()) {
+						GraphicalProperties.color_cell_with_minorIssues = GraphicalProperties.color_cell_with_errors;
+				} else {
+					GraphicalProperties.color_cell_with_minorIssues = null;
+				}
+			}
+		});
+		/*jCheckBoxPopUpWarnings.setText("Show pop-up windows for warning messages");
 		jCheckBoxPopUpWarnings.setEnabled(false);*/
 		
-		JLabel lblNewLabel_3 = new JLabel("Delay autocompletion pop-up (in ms)");
+		//JLabel lblNewLabel_3 = new JLabel("Delay autocompletion pop-up (in ms)");
 		
-		spinnerAutocompletionDelay = new JSpinner();
+		/*spinnerAutocompletionDelay = new JSpinner();
 		spinnerAutocompletionDelay.setModel(new SpinnerNumberModel(0, 0, 600000, 100));
 		if(MainGui.delayAutocompletion == Integer.MAX_VALUE) spinnerAutocompletionDelay.setValue(((SpinnerNumberModel)spinnerAutocompletionDelay.getModel()).getMaximum());
 		spinnerAutocompletionDelay.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				MainGui.delayAutocompletion = (int) spinnerAutocompletionDelay.getValue();
 			}
-		});
+		});*/
 		javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
 		jPanel1Layout.setHorizontalGroup(
 			jPanel1Layout.createParallelGroup(Alignment.LEADING)
@@ -901,9 +910,11 @@ public class PreferencesFrame extends JDialog {
 						.addComponent(jCheckBoxAutocomplete)
 						.addComponent(jCheckBoxDialogWindow)
 						.addGroup(jPanel1Layout.createSequentialGroup()
-							.addComponent(lblNewLabel_3)
+							.addComponent(jCheckBoxHighlightCellOpenIssues)
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(spinnerAutocompletionDelay, GroupLayout.DEFAULT_SIZE, 86, Short.MAX_VALUE)))
+							//.addComponent(spinnerAutocompletionDelay, GroupLayout.DEFAULT_SIZE, 86, Short.MAX_VALUE)
+							)
+							)
 					.addGap(6))
 		);
 		jPanel1Layout.setVerticalGroup(
@@ -914,8 +925,9 @@ public class PreferencesFrame extends JDialog {
 					.addComponent(jCheckBoxDialogWindow)
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(jPanel1Layout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(lblNewLabel_3)
-						.addComponent(spinnerAutocompletionDelay, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+						.addComponent(jCheckBoxHighlightCellOpenIssues)
+						//.addComponent(spinnerAutocompletionDelay, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						)
 					.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 		);
 		jPanel1.setLayout(jPanel1Layout);
@@ -1092,7 +1104,7 @@ public class PreferencesFrame extends JDialog {
 				continue;
 			} */
 
-			if(name.compareTo(Constants.Preferences.AUTOCOMPLETION_DELAY.description)==0) {
+			/*if(name.compareTo(Constants.Preferences.AUTOCOMPLETION_DELAY.description)==0) {
 				try{
 					Integer val = new Integer(value);
 					Integer max = new Integer((Integer) ((SpinnerNumberModel)spinnerAutocompletionDelay.getModel()).getMaximum());
@@ -1104,7 +1116,7 @@ public class PreferencesFrame extends JDialog {
 				} finally {
 					continue;
 				}
-			} 
+			} */
 
 			if(name.compareTo(Constants.Preferences.COMP_NAME.description)==0) {
 				defaultCompName.setText(value);
@@ -1136,24 +1148,36 @@ public class PreferencesFrame extends JDialog {
 
 			if(name.compareTo(Constants.Preferences.COLOR_DEFAULTS.description)==0) {
 				labelDefaults.setBorder(new LineBorder(new Color(Integer.parseInt(value),true), 3));
-				MainGui.color_border_defaults = new Color(Integer.parseInt(value),true);
+				GraphicalProperties.color_border_defaults = new Color(Integer.parseInt(value),true);
 				continue;
 			} 
 
 			if(name.compareTo(Constants.Preferences.COLOR_HIGHLIGHT.description)==0) {
 				labelHightlight.setBackground(new Color(Integer.parseInt(value),true));
-				MainGui.color_cell_to_highlight = new Color(Integer.parseInt(value),true);
+				GraphicalProperties.color_cell_to_highlight = new Color(Integer.parseInt(value),true);
 				continue;
 			} 
 
 			if(name.compareTo(Constants.Preferences.COLOR_MAJOR.description)==0) {
 				labelMajourIssues.setBackground(new Color(Integer.parseInt(value),true));
-				MainGui.color_cell_with_errors = new Color(Integer.parseInt(value),true);
+				GraphicalProperties.color_cell_with_errors = new Color(Integer.parseInt(value),true);
 				continue;
 			} 
+			
+			if(name.compareTo(Constants.Preferences.COLOR_MINOR.description)==0) {
+				if(value.compareTo("null")==0) {
+					jCheckBoxHighlightCellOpenIssues.setSelected(false);
+					GraphicalProperties.color_cell_with_minorIssues =null;
+					} else {
+						GraphicalProperties.color_cell_with_minorIssues =GraphicalProperties.color_cell_with_errors;
+						jCheckBoxHighlightCellOpenIssues.setSelected(true);
+					}
+				continue;
+			} 
+			
 			if(name.compareTo(Constants.Preferences.FONT_SIZE.description)==0) {
 				slider.setValue(Integer.parseInt(value));
-				MainGui.customFont = MainGui.customFont.deriveFont(Float.parseFloat(value));
+				GraphicalProperties.customFont = GraphicalProperties.customFont.deriveFont(Float.parseFloat(value));
 				continue;
 			} 
 			if(name.compareTo(Constants.Preferences.AUTOSAVE_PATH.description)==0) {
@@ -1175,7 +1199,7 @@ public class PreferencesFrame extends JDialog {
 		}
 	}
 
-	private void savePreferencesToFile() {
+	void savePreferencesToFile() {
 		BufferedWriter out; 
 		try {
 			out = new BufferedWriter(new FileWriter(MainGui.file_preferences));
@@ -1206,11 +1230,11 @@ public class PreferencesFrame extends JDialog {
 			else out.write(Constants.Preferences.UNCHECKED.description);
 			out.write(System.getProperty("line.separator"));
 			
-			out.write(Constants.Preferences.AUTOCOMPLETION_DELAY.description+Constants.Preferences.SEPARATOR.description);
+			/*	out.write(Constants.Preferences.AUTOCOMPLETION_DELAY.description+Constants.Preferences.SEPARATOR.description);
 			out.write(new String(new Integer(MainGui.delayAutocompletion).toString()));
 			out.write(System.getProperty("line.separator"));
 
-		/*	out.write(Constants.Preferences.SHOW_ALL_FUNCTIONS.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.SHOW_ALL_FUNCTIONS.description+Constants.Preferences.SEPARATOR.description);
 			if(jCheckBoxShowAllAvailableFunctions.isSelected()) out.write(Constants.Preferences.CHECKED.description);
 			else out.write(Constants.Preferences.UNCHECKED.description);
 			out.write(System.getProperty("line.separator"));
@@ -1222,19 +1246,24 @@ public class PreferencesFrame extends JDialog {
 			out.write(System.getProperty("line.separator"));
 
 			out.write(Constants.Preferences.COLOR_DEFAULTS.description+Constants.Preferences.SEPARATOR.description);
-			out.write(new Integer(MainGui.color_border_defaults.getRGB()).toString());
+			out.write(new Integer(GraphicalProperties.color_border_defaults.getRGB()).toString());
+			out.write(System.getProperty("line.separator"));
+
+			out.write(Constants.Preferences.COLOR_MINOR.description+Constants.Preferences.SEPARATOR.description);
+			if(GraphicalProperties.color_cell_with_minorIssues==null)out.write("null");
+			else out.write(new Integer(GraphicalProperties.color_cell_with_minorIssues.getRGB()).toString());
 			out.write(System.getProperty("line.separator"));
 
 			out.write(Constants.Preferences.COLOR_MAJOR.description+Constants.Preferences.SEPARATOR.description);
-			out.write(new Integer(MainGui.color_cell_with_errors.getRGB()).toString());
+			out.write(new Integer(GraphicalProperties.color_cell_with_errors.getRGB()).toString());
 			out.write(System.getProperty("line.separator"));
 
 			out.write(Constants.Preferences.COLOR_HIGHLIGHT.description+Constants.Preferences.SEPARATOR.description);
-			out.write(new Integer(MainGui.color_cell_to_highlight.getRGB()).toString());
+			out.write(new Integer(GraphicalProperties.color_cell_to_highlight.getRGB()).toString());
 			out.write(System.getProperty("line.separator"));
 			
 			out.write(Constants.Preferences.FONT_SIZE.description+Constants.Preferences.SEPARATOR.description);
-			out.write(new Integer(MainGui.customFont.getSize()).toString());
+			out.write(new Integer(GraphicalProperties.customFont.getSize()).toString());
 			out.write(System.getProperty("line.separator"));
 			
 			out.write(Constants.Preferences.AUTOSAVE_ACTIVE.description+Constants.Preferences.SEPARATOR.description);

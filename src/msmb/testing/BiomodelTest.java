@@ -9,6 +9,7 @@ import org.COPASI.*;
 
 
 public class BiomodelTest {
+	static boolean alsoNonCurated = false;
 	static boolean deleteFilesAfterProcessing = true;
 	static boolean collectStatisticsMode = false;
 	static 	String subdirectoryTests = "tests/BiomodelTests/";
@@ -39,13 +40,11 @@ public class BiomodelTest {
 	public static final Vector<String> models_with_known_problems;
 	static {
 		models_with_known_problems = new Vector<String>();
-		models_with_known_problems.add("BIOMD0000000248");//convert to irreversible not correct because a global quantity was referring to the flux of a reversible reaction, error not catched
+		models_with_known_problems.add("BIOMD0000000248");//BUG REPORTED - convert to irreversible not correct because a global quantity was referring to the flux of a reversible reaction, error not catched
 		models_with_known_problems.add("BIOMD0000000408");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
 														  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
-		models_with_known_problems.add("BIOMD0000000411");//variable not assigned in GUI
-
-		models_with_known_problems.add("BIOMD0000000056"); //BUG REPORTED TO FRANK - unsupported annotations
-		models_with_known_problems.add("BIOMD0000000169");//BUG REPORTED TO FRANK - unsupported annotations but somehow broken
+		models_with_known_problems.add("BIOMD0000000428");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
+  	  													  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
 	}
 		
 		
@@ -53,7 +52,7 @@ public class BiomodelTest {
 	
 	public static void main(String[] args) {
 		try {
-			String rscriptPath = new String("C:\\Program Files\\R\\R-2.13.2\\bin\\x64\\RScript");
+			String rscriptPath = new String("C:\\Program Files\\R\\R-2.15.2\\bin\\x64\\RScript");
 			RunSimulation.setRScriptPath(rscriptPath);
 			if(args.length > 0) { 
 				for(int i = 0; i<args.length; i++) {
@@ -143,13 +142,27 @@ public class BiomodelTest {
 			BioModelsWSClient client = new BioModelsWSClient();
 			System.out.println("... WS retrieval of all curated IDs ...");
 			System.out.flush();
-
+			
 			String[] curated = client.getAllCuratedModelsId();
 			System.out.println("... total curated IDs: "+curated.length+" ...");
 			System.out.println("... done ...");
 			System.out.flush();
 			ArrayList<String> curatedIDs = new ArrayList<String>();
+			
+			String[] noncurated = null;
+			
+			if(alsoNonCurated) {
+				noncurated = client.getAllNonCuratedModelsId();
+				System.out.println("... total non-curated IDs: "+noncurated.length+" ...");
+				System.out.println("... done ...");
+				System.out.flush();
+				
+			}
+			
 			curatedIDs.addAll(Arrays.asList(curated));
+			if(alsoNonCurated) {
+				curatedIDs.addAll(Arrays.asList(noncurated));
+			}
 			Collections.sort(curatedIDs);
 
 			ArrayList<Integer> indices = new ArrayList<Integer>();
@@ -170,18 +183,17 @@ public class BiomodelTest {
 			SimpleDateFormat formatDate = new SimpleDateFormat("HH:mm:ss:SS");
 
 		/*indices.clear();
-			//indices.add(new Integer(39)); //1% should be ok
-			//indices.add(new Integer(206));//1% should be ok
-			//indices.add(new Integer(18)); //high% e-021
-			//indices.add(new Integer(85));//high% e-028
-			
-		//	indices.add(new Integer(3));
-			indices.add(new Integer(18));
-			indices.add(new Integer(51));
-			indices.add(new Integer(61));
-			indices.add(new Integer(63));*/
-				
-					
+		//indices.add(new Integer(18)); //high% e-021
+		//indices.add(new Integer(19));//high relative, but in a single point, all the previous/following are the same -> rounding issue
+		//indices.add(new Integer(39)); //1% should be ok
+		//indices.add(new Integer(85));//high% e-028
+		//indices.add(new Integer(206));//1% should be ok
+		//indices.add(new Integer(232));//high relative, but in a single point, all the previous/following points are the same -> rounding issue
+		//indices.add(new Integer(399));//high relative, but in a single point, all the previous/following points are the same -> rounding issue
+
+
+			indices.add(new Integer(429));
+			*/	
 
 			for(int i = 0; i < indices.size(); i++) {
 				Integer index = indices.get(i);
@@ -243,6 +255,7 @@ public class BiomodelTest {
 
 
 				} catch(Throwable t){
+					t.printStackTrace();
 					if(t instanceof FileNotFoundException) {
 						throw t;
 					}

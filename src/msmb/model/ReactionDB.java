@@ -155,6 +155,8 @@ public class ReactionDB {
 		
 		Reaction r = this.reactionVector.get(row+1);
 		Vector<String> subs = r.getSubstrates(multiModel);
+		Vector<String> prod = r.getProducts(multiModel);
+		Vector<String> mod = r.getModifiers(multiModel);
 		for(int i = 0; i < usedAsElements.size(); i++) {
 			MutablePair<String, String> element = usedAsElements.get(i);
 			String name = element.left;
@@ -162,14 +164,35 @@ public class ReactionDB {
 			boolean ok = false;
 			if(type.compareTo(Constants.FunctionParamType.SUBSTRATE.signatureType)==0) {
 				for(int j = 0; j < subs.size(); j++){
-					if(subs.get(j).compareTo(name)==0) {
+					String element1 = subs.get(j);
+					element1 = multiModel.extractName(element1);
+					if(element1.compareTo(name)==0) {
+						ok = true;
+						break;
+					}
+				}
+				if(!ok) misused.add(name);
+			} else if(type.compareTo(Constants.FunctionParamType.PRODUCT.signatureType)==0) {
+				for(int j = 0; j < prod.size(); j++){
+					String element1 = prod.get(j);
+					element1 = multiModel.extractName(element1);
+					if(element1.compareTo(name)==0) {
+						ok = true;
+						break;
+					}
+				}
+				if(!ok) misused.add(name);
+			}else if(type.compareTo(Constants.FunctionParamType.MODIFIER.signatureType)==0) {
+				for(int j = 0; j < mod.size(); j++){
+					String element1 = mod.get(j);
+					element1 = multiModel.extractName(element1);
+					if(element1.compareTo(name)==0) {
 						ok = true;
 						break;
 					}
 				}
 				if(!ok) misused.add(name);
 			}
-			//ADD PRODUCTS AND MODIFIERS
 		}
 		
 		return misused;

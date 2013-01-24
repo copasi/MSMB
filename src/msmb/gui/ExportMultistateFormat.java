@@ -34,7 +34,7 @@ class ExportMultistateFormat {
 			
 			Vector<Vector<Vector<String>>> data = new Vector<Vector<Vector<String>>>();
 			
-			Vector<CustomTableModel> tables = new Vector<CustomTableModel>(Constants.TitlesTabs.getNumTabs());
+			Vector<CustomTableModel_MSMB> tables = new Vector<CustomTableModel_MSMB>(Constants.TitlesTabs.getNumTabs());
 			
 			tables.setSize(Constants.TitlesTabs.getNumTabs());
 			
@@ -48,7 +48,7 @@ class ExportMultistateFormat {
 			for(int t = 0; t < tables.size(); t++) {
 				if(mainW!=null)mainW.progress(10+t*10);
 				Vector<Vector<String>> singleTable = new Vector<Vector<String>>();
-				CustomTableModel tablemodel = tables.get(t);
+				CustomTableModel_MSMB tablemodel = tables.get(t);
 				if(tablemodel==null) continue;
 				for(int i = 0; i < tablemodel.getRowCount()-1; i++) {
 					Vector<String> row = new Vector<String>();
@@ -154,8 +154,8 @@ class ExportMultistateFormat {
 		
 	}
 		
-	public static void exportTxtTables(CustomTableModel tableReactionmodel,CustomTableModel tableSpeciesmodel, CustomTableModel tableFunctionsmodel,
-			CustomTableModel tableGlobalQmodel, CustomTableModel tableEventsmodel, CustomTableModel tableCompartmentsmodel) {
+	public static void exportTxtTables(CustomTableModel_MSMB tableReactionmodel,CustomTableModel_MSMB tableSpeciesmodel, CustomTableModel_MSMB tableFunctionsmodel,
+			CustomTableModel_MSMB tableGlobalQmodel, CustomTableModel_MSMB tableEventsmodel, CustomTableModel_MSMB tableCompartmentsmodel) {
 		 try {
          	writeTable(tableReactionmodel, file.getAbsoluteFile()+".reactions.txt");
          	writeTableSpecies(tableSpeciesmodel, file.getAbsoluteFile()+".species.txt");
@@ -168,16 +168,16 @@ class ExportMultistateFormat {
 		}
 	}
 	
-	private static void writeTableSpecies(CustomTableModel tablemodel, String file) throws Exception{
+	private static void writeTableSpecies(CustomTableModel_MSMB tableSpeciesmodel, String file) throws Exception{
 		BufferedWriter buffout= new BufferedWriter(new FileWriter(file));
 		PrintWriter out = new PrintWriter(buffout);
 		int realRowCount = 1;
-		for(int i = 0; i < tablemodel.getRowCount()-1; i++) {
+		for(int i = 0; i < tableSpeciesmodel.getRowCount()-1; i++) {
     		String row = new String();
-    		String nameSpecie = tablemodel.getValueAt(i, 1).toString();
+    		String nameSpecie = tableSpeciesmodel.getValueAt(i, 1).toString();
     		if(!CellParsers.isMultistateSpeciesName(nameSpecie)) {
-    			for(int j = 1; j < tablemodel.getColumnCount(); j++) {
-    				String value = tablemodel.getValueAt(i, j).toString();
+    			for(int j = 1; j < tableSpeciesmodel.getColumnCount(); j++) {
+    				String value = tableSpeciesmodel.getValueAt(i, j).toString();
     				if(value.length() <=0) value = " ";
     				value = value.replace("\n", "\\n");
     				row += value + "\t";
@@ -208,13 +208,13 @@ class ExportMultistateFormat {
     	out.close();
 	}
 	
-	private static void writeTable(CustomTableModel tablemodel, String file) throws IOException{
+	private static void writeTable(CustomTableModel_MSMB tableReactionmodel, String file) throws IOException{
 		BufferedWriter buffout= new BufferedWriter(new FileWriter(file));
 		PrintWriter out = new PrintWriter(buffout);
 		
-		for(int i = 0; i < tablemodel.getRowCount()-1; i++) {
-    		for(int j = 0; j < tablemodel.getColumnCount(); j++) {
-    			String value = tablemodel.getValueAt(i, j).toString();
+		for(int i = 0; i < tableReactionmodel.getRowCount()-1; i++) {
+    		for(int j = 0; j < tableReactionmodel.getColumnCount(); j++) {
+    			String value = tableReactionmodel.getValueAt(i, j).toString();
     			if(value.length() <=0) value = " ";
     			out.print(value + "\t");
     		}
@@ -226,16 +226,16 @@ class ExportMultistateFormat {
 	
 	//I have to export the complete signature for all the functions if I want to be able to
 	//import from txt in a correct way!!!
-	private static void writeTableFunctions(CustomTableModel tablemodel, String file) throws Exception{
+	private static void writeTableFunctions(CustomTableModel_MSMB tableFunctionsmodel, String file) throws Exception{
 		BufferedWriter buffout= new BufferedWriter(new FileWriter(file));
 		PrintWriter out = new PrintWriter(buffout);
 		
-		for(int i = 0; i < tablemodel.getRowCount()-1; i++) {
-			String nameFunction = tablemodel.getValueAt(i, 1).toString();
+		for(int i = 0; i < tableFunctionsmodel.getRowCount()-1; i++) {
+			String nameFunction = tableFunctionsmodel.getValueAt(i, 1).toString();
 			Function f = MainGui.multiModel.funDB.getFunctionByName(nameFunction);
-			out.print(tablemodel.getValueAt(i, 0).toString()+"\t" +f.printCompleteSignature() + "\t");	
-    		for(int j = 2; j < tablemodel.getColumnCount(); j++) {
-    			String value = tablemodel.getValueAt(i, j).toString();
+			out.print(tableFunctionsmodel.getValueAt(i, 0).toString()+"\t" +f.printCompleteSignature() + "\t");	
+    		for(int j = 2; j < tableFunctionsmodel.getColumnCount(); j++) {
+    			String value = tableFunctionsmodel.getValueAt(i, j).toString();
     			if(value.length() <=0) value = " ";
     			out.print(value + "\t");
     		}

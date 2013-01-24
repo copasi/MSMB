@@ -31,7 +31,8 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		private boolean getSubName;
 		MultiModel multiModel = null;
 		
-		Vector<String> tempSiteName = new Vector<String>(); //used to collect variable associated to the SITE type for function, so that to the multiModel they look as named Element and they will not be flagged as missing. If they are really missing SUM is going to realize that
+		Vector<String> tempSiteName = new Vector<String>();
+		//used to collect variable associated to the SITE type for function, so that to the multiModel they look as named Element and they will not be flagged as missing. If they are really missing SUM is going to realize that
 	
 	   public Look4UndefinedMisusedVisitor(MultiModel mm)  {
 		   missing = new Vector<String>();

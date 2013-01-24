@@ -89,99 +89,137 @@ public interface MR_Expression_ParserConstants {
   /** RegularExpression Id. */
   int TAN = 45;
   /** RegularExpression Id. */
-  int TANH = 46;
+  int ACOS = 46;
   /** RegularExpression Id. */
-  int COSH = 47;
+  int ASIN = 47;
   /** RegularExpression Id. */
-  int SQRT = 48;
+  int ATAN = 48;
   /** RegularExpression Id. */
-  int EXP = 49;
+  int TANH = 49;
   /** RegularExpression Id. */
-  int LOG = 50;
+  int COSH = 50;
   /** RegularExpression Id. */
-  int LOG10 = 51;
+  int SEC = 51;
   /** RegularExpression Id. */
-  int ABS = 52;
+  int CSC = 52;
   /** RegularExpression Id. */
-  int PI = 53;
+  int COT = 53;
   /** RegularExpression Id. */
-  int NAN = 54;
+  int SINH = 54;
   /** RegularExpression Id. */
-  int CONST_AVOGADRO = 55;
+  int ARCSEC = 55;
   /** RegularExpression Id. */
-  int CONST_QUANTITY_CONV_FACTOR = 56;
+  int ARCCSC = 56;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME = 57;
+  int ARCCOT = 57;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME_INITIAL = 58;
+  int ARCSINH = 58;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 59;
+  int ARCCOSH = 59;
   /** RegularExpression Id. */
-  int FLOATING_POINT_LITERAL = 60;
+  int ARCTANH = 60;
   /** RegularExpression Id. */
-  int EXPONENT = 61;
+  int ARCSECH = 61;
   /** RegularExpression Id. */
-  int LPAREN = 62;
+  int ARCCSCH = 62;
   /** RegularExpression Id. */
-  int RPAREN = 63;
+  int ARCCOTH = 63;
   /** RegularExpression Id. */
-  int LBRACE = 64;
+  int SQRT = 64;
   /** RegularExpression Id. */
-  int RBRACE = 65;
+  int FACTORIAL = 65;
   /** RegularExpression Id. */
-  int LBRACKET = 66;
+  int EXP = 66;
   /** RegularExpression Id. */
-  int RBRACKET = 67;
+  int LOG = 67;
   /** RegularExpression Id. */
-  int SEMICOLON = 68;
+  int LOG10 = 68;
   /** RegularExpression Id. */
-  int COMMA = 69;
+  int ABS = 69;
   /** RegularExpression Id. */
-  int COLON = 70;
+  int PI = 70;
   /** RegularExpression Id. */
-  int DOT = 71;
+  int EXPONENTIALE = 71;
   /** RegularExpression Id. */
-  int PLUS = 72;
+  int NAN1 = 72;
   /** RegularExpression Id. */
-  int MINUS = 73;
+  int NAN2 = 73;
   /** RegularExpression Id. */
-  int TIMES = 74;
+  int CONST_AVOGADRO = 74;
   /** RegularExpression Id. */
-  int DIV = 75;
+  int CONST_QUANTITY_CONV_FACTOR = 75;
   /** RegularExpression Id. */
-  int ASSIGN = 76;
+  int CONST_MODEL_TIME = 76;
   /** RegularExpression Id. */
-  int GT = 77;
+  int CONST_MODEL_TIME_INITIAL = 77;
   /** RegularExpression Id. */
-  int LT = 78;
+  int INTEGER_LITERAL = 78;
   /** RegularExpression Id. */
-  int BANG = 79;
+  int FLOATING_POINT_LITERAL = 79;
   /** RegularExpression Id. */
-  int CARET = 80;
+  int EXPONENT = 80;
   /** RegularExpression Id. */
-  int PERC = 81;
+  int LPAREN = 81;
   /** RegularExpression Id. */
-  int EQ = 82;
+  int RPAREN = 82;
   /** RegularExpression Id. */
-  int LEQ = 83;
+  int LBRACE = 83;
   /** RegularExpression Id. */
-  int GEQ = 84;
+  int RBRACE = 84;
   /** RegularExpression Id. */
-  int NE = 85;
+  int LBRACKET = 85;
   /** RegularExpression Id. */
-  int OR = 86;
+  int RBRACKET = 86;
   /** RegularExpression Id. */
-  int XOR = 87;
+  int SEMICOLON = 87;
   /** RegularExpression Id. */
-  int AND = 88;
+  int COMMA = 88;
   /** RegularExpression Id. */
-  int IDENTIFIER = 89;
+  int COLON = 89;
   /** RegularExpression Id. */
-  int LETTER = 90;
+  int DOT = 90;
   /** RegularExpression Id. */
-  int DIGIT = 91;
+  int PLUS = 91;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 92;
+  int MINUS = 92;
+  /** RegularExpression Id. */
+  int TIMES = 93;
+  /** RegularExpression Id. */
+  int DIV = 94;
+  /** RegularExpression Id. */
+  int ASSIGN = 95;
+  /** RegularExpression Id. */
+  int GT = 96;
+  /** RegularExpression Id. */
+  int LT = 97;
+  /** RegularExpression Id. */
+  int BANG = 98;
+  /** RegularExpression Id. */
+  int CARET = 99;
+  /** RegularExpression Id. */
+  int PERC = 100;
+  /** RegularExpression Id. */
+  int EQ = 101;
+  /** RegularExpression Id. */
+  int LEQ = 102;
+  /** RegularExpression Id. */
+  int GEQ = 103;
+  /** RegularExpression Id. */
+  int NE = 104;
+  /** RegularExpression Id. */
+  int OR = 105;
+  /** RegularExpression Id. */
+  int XOR = 106;
+  /** RegularExpression Id. */
+  int AND = 107;
+  /** RegularExpression Id. */
+  int IDENTIFIER = 108;
+  /** RegularExpression Id. */
+  int LETTER = 109;
+  /** RegularExpression Id. */
+  int DIGIT = 110;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 111;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -234,16 +272,35 @@ public interface MR_Expression_ParserConstants {
     "\"cos\"",
     "\"sin\"",
     "\"tan\"",
+    "\"acos\"",
+    "\"asin\"",
+    "\"atan\"",
     "\"tanh\"",
     "\"cosh\"",
+    "\"sec\"",
+    "\"csc\"",
+    "\"cot\"",
+    "\"sinh\"",
+    "\"arcsec\"",
+    "\"arccsc\"",
+    "\"arccot\"",
+    "\"arcsinh\"",
+    "\"arccosh\"",
+    "\"arctanh\"",
+    "\"arcsech\"",
+    "\"arccsch\"",
+    "\"arccoth\"",
     "\"sqrt\"",
+    "\"factorial\"",
     "\"exp\"",
     "\"log\"",
     "\"log10\"",
     "\"abs\"",
     "\"PI\"",
-    "<NAN>",
-    "\"%NA%\"",
+    "\"EXPONENTIALE\"",
+    "\"NaN\"",
+    "\"nan\"",
+    "\"NA\"",
     "\"%QFC%\"",
     "\"%ModTime%\"",
     "\"%ModTime.i%\"",
@@ -267,7 +324,7 @@ public interface MR_Expression_ParserConstants {
     "\"=\"",
     "\">\"",
     "\"<\"",
-    "\"!\"",
+    "\"not\"",
     "\"^\"",
     "\"%\"",
     "\"==\"",

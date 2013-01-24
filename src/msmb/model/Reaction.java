@@ -6,6 +6,7 @@ import java.util.Vector;
 
 import msmb.gui.MainGui;
 import msmb.parsers.chemicalReaction.MR_ChemicalReaction_Parser;
+import msmb.parsers.chemicalReaction.ParseException;
 import msmb.parsers.chemicalReaction.syntaxtree.CompleteReaction;
 import msmb.parsers.chemicalReaction.visitor.ExtractSubProdModVisitor;
 import msmb.utility.CellParsers;
@@ -25,21 +26,11 @@ public class Reaction {
 	
 	public Vector<String> getSubstrates(MultiModel m) {
 		Vector ret = new Vector<>();
-		Vector metabolites = new Vector<>();
+		Vector metabolites;
 		try {
-				InputStream is = new ByteArrayInputStream(reactionString.getBytes("UTF-8"));
-				MR_ChemicalReaction_Parser react = new MR_ChemicalReaction_Parser(is,"UTF-8");
-			  	CompleteReaction start = react.CompleteReaction();
-			  	ExtractSubProdModVisitor v = new ExtractSubProdModVisitor(m);
-			    start.accept(v);
-			    
-			    if(v.getExceptions().size() != 0) {
-			    	throw new Exception(v.getExceptions().get(0).getMessage());
-			    }
-			   
-			    metabolites.addAll(v.getAll_asString());
-		} catch(Exception ex) { 
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+			metabolites = getSubProdMod(m);
+		} catch (Throwable e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			return null;
 		}
 		Vector subs = (Vector)metabolites.get(0);
@@ -48,7 +39,56 @@ public class Reaction {
 	 
 	}
 	
+	public Vector<String> getProducts(MultiModel m) {
+		Vector ret = new Vector<>();
+		Vector metabolites;
+		try {
+			metabolites = getSubProdMod(m);
+		} catch (Throwable e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			return null;
+		}
+		Vector prod = (Vector)metabolites.get(1);
+		 ret.addAll(prod);
+		return ret;
+	 
+	}
 	
+	
+	public Vector<String> getModifiers(MultiModel m) {
+		Vector ret = new Vector<>();
+		Vector metabolites;
+		try {
+			metabolites = getSubProdMod(m);
+		} catch (Throwable e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			return null;
+		}
+		Vector mod = (Vector)metabolites.get(2);
+		 ret.addAll(mod);
+		return ret;
+	 
+	}
+	
+	private Vector getSubProdMod(MultiModel m) throws Throwable {
+		Vector metabolites = new Vector<>();
+
+		InputStream is = new ByteArrayInputStream(reactionString.getBytes("UTF-8"));
+		MR_ChemicalReaction_Parser react = new MR_ChemicalReaction_Parser(is,"UTF-8");
+		CompleteReaction start = react.CompleteReaction();
+		ExtractSubProdModVisitor v = new ExtractSubProdModVisitor(m);
+		start.accept(v);
+
+		if(v.getExceptions().size() != 0) {
+			throw new Exception(v.getExceptions().get(0).getMessage());
+		}
+
+		metabolites.addAll(v.getAll_asString());
+		
+		return metabolites;
+	}
+
+
 	public String getRateLaw() { 	return rateLaw.trim();	}
 		
 	public void setRateLaw(MultiModel m, String expr) throws MySyntaxException {	

@@ -64,9 +64,11 @@ public class RenamingDialog extends JDialog {
 	private String newCompartmentName;
 	
 	public String getNewSpeciesName() {
+		if(newSpeciesName==null) return null;
 		return newSpeciesName.trim();
 	}
 	public String getNewCompartmentName() {
+		if(newCompartmentName==null) return null;
 		return newCompartmentName.trim();
 	}
 	
@@ -74,9 +76,7 @@ public class RenamingDialog extends JDialog {
 		return returnString;
 	}
 
-	/**
-	 * @wbp.parser.constructor
-	 */
+	
 	public RenamingDialog(MultiModel m, String clashingName, String speciesRow, String speciesOldName, int actionsType) {
 		multiModel=m;
 		this.clashingName = clashingName;
@@ -103,7 +103,7 @@ public class RenamingDialog extends JDialog {
 			contentPanel.add(panel);
 			btnNewButton_1 = new JLabel(icon);
 			{
-				lblASpeciesWith = new JLabel("A Species with that name already exists.");
+				lblASpeciesWith = new JLabel("A Species with that name already exists. You can provide a");
 				lblASpeciesWith.setHorizontalAlignment(SwingConstants.LEFT);
 			}
 			
@@ -218,8 +218,7 @@ public class RenamingDialog extends JDialog {
 				});
 				buttonPane.add(btnNewButton);
 			}
-			else
-			{
+			/*else		{
 				
 				JButton btnNewButton = new JButton("Use new name\n");
 				btnNewButton.addActionListener(new ActionListener() {
@@ -228,20 +227,31 @@ public class RenamingDialog extends JDialog {
 					}
 				});
 				buttonPane.add(btnNewButton);
-			}
+			}*/
+			
+			
 			{
 				String cancelButtonText = new String();
 				if(actionsType == Constants.MERGE_SPECIES || actionsType == Constants.DELETE_SPECIES_AND_REDIRECT) {
-					cancelButtonText = "Go back and provide New Name";
+					cancelButtonText = "Use New Name";
 				}
 				else cancelButtonText = "Cancel";
 				JButton cancelButton = new JButton(cancelButtonText);
-				cancelButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						cancelOption();
-					}
-				});
-				cancelButton.setActionCommand("Cancel");
+				if(cancelButtonText.compareTo("Cancel")==0)	{
+					cancelButton.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							cancelOption();
+						}
+					});
+					cancelButton.setActionCommand("Cancel");
+				} else {
+					cancelButton.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							useNewName();
+						}
+					});
+				}
+				
 				buttonPane.add(cancelButton);
 			}
 		}
@@ -307,8 +317,13 @@ public class RenamingDialog extends JDialog {
 	}
 	
 	protected void useNewName() {
-		newCompartmentName = textField_2.getText();
-		newSpeciesName = textField_1.getText();
+		if(rdbtnNewCompartmentName.isSelected()) {
+			newCompartmentName = textField_2.getText();
+			newSpeciesName = null;
+		} else {
+			newCompartmentName = null;
+			newSpeciesName = textField_1.getText();
+		}
 		returnString = "NEW_NAME";
 		setVisible(false);
 	}

@@ -659,29 +659,6 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     finally { jj_save(2, xla); }
   }
 
-  private boolean jj_3R_23() {
-    if (jj_3R_21()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_17() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_21() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_24()) jj_scanpos = xsp;
-    if (jj_3R_25()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_20() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
   private boolean jj_3R_28() {
     if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
     return false;
@@ -756,6 +733,29 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
 
   private boolean jj_3R_24() {
     if (jj_3R_26()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_23() {
+    if (jj_3R_21()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_17() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_21() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_24()) jj_scanpos = xsp;
+    if (jj_3R_25()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_20() {
+    if (jj_3R_22()) return true;
     return false;
   }
 
@@ -1074,15 +1074,21 @@ class JTBToolkit {
     final NodeToken node = new NodeToken(tok.image.intern(), tok.kind, tok.beginLine, tok.beginColumn, tok.endLine, tok.endColumn);
     if (tok.specialToken == null)
       return node;
-    final java.util.ArrayList<NodeToken> temp = new java.util.ArrayList<NodeToken>();
     Token t = tok;
+    int nbt = 0;
+    while (t.specialToken != null) {
+      t = t.specialToken;
+      nbt++;
+    }
+    final java.util.ArrayList<NodeToken> temp = new java.util.ArrayList<NodeToken>(nbt);
+    t = tok;
     while (t.specialToken != null) {
       t = t.specialToken;
       temp.add(new NodeToken(t.image.intern(), t.kind, t.beginLine, t.beginColumn, t.endLine, t.endColumn));
     }
-    for (int i = temp.size() - 1; i >= 0; --i)
+    for (int i = nbt - 1; i >= 0; --i)
       node.addSpecial(temp.get(i));
-    node.trimSpecials();
+    // node.trimSpecials();
     return node;
   }
 }

@@ -24,6 +24,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.commons.lang3.tuple.MutablePair;
+
+import msmb.utility.CellParsers;
 import msmb.utility.GridLayout2;
 
 import msmb.debugTab.FoundElement;
@@ -52,6 +55,7 @@ public class RenamingFrame extends JDialog implements WindowListener{
 	private int rowDeclaration = -1;
 	private String from = new String();
 	private String to = new String();
+	private Vector<MutablePair<String, String>> from_to = new Vector<MutablePair<String,String>>();
 	private Vector<FoundElement> foundElements = new Vector<FoundElement>();
 	private String closingOperation  = new String();
 
@@ -71,6 +75,15 @@ public class RenamingFrame extends JDialog implements WindowListener{
 		this.rowDeclaration = rowDeclaration;
 	}
 	
+	public void setRenamingStringVectors(Vector<MutablePair<String, String>> from_to, String fromTable, int rowDeclaration) {
+		this.from_to.clear();
+		this.from_to.addAll(from_to);
+		this.from = new String();
+		this.to = new String();
+		this.fromTable = fromTable;
+		this.rowDeclaration = rowDeclaration;
+			}
+	
 	public void clearAll() {
 		jLabelOriginalName.setText("");
 		jLabelNewName.setText("");
@@ -82,7 +95,7 @@ public class RenamingFrame extends JDialog implements WindowListener{
 	private void initialize() {
 		this.setSize(272, 350);
 		this.setContentPane(getJContentPane());
-		this.setTitle("Renaming");
+		this.setTitle("Apply change to connected cells");
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
 	}
@@ -196,7 +209,7 @@ public class RenamingFrame extends JDialog implements WindowListener{
 			jLabelComment.setFont(jLabelS.getFont());
 		
 			jLabelComment.setBounds(new Rectangle(13, 228+20+6, jScrollPane.getWidth()-6, 40));
-			jLabelComment.setText("<html>(general renaming strategies can be customized <p> through File-Preferences...)<html>");
+			jLabelComment.setText("<html>(general renaming strategies can be customized <p> in File-Preferences...)<html>");
 			jContentPane.add(jLabelComment, null);
 			
 			jButtonRename = new JButton("Rename");
@@ -219,7 +232,7 @@ public class RenamingFrame extends JDialog implements WindowListener{
 			jContentPane.add(jButtonRename, null);
 			
 			
-			jButtonBack = new JButton("Back");
+			jButtonBack = new JButton("Cancel");
 			jButtonBack.setBounds(new Rectangle(11, 228+20+6+20+6+6+6, 80, 26));
 			jButtonBack.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -236,10 +249,12 @@ public class RenamingFrame extends JDialog implements WindowListener{
 	}
 	
 	private void closingCancel() {
-		boolean oldAutocompleteWithDefaults = MainGui.autocompleteWithDefaults;
-		MainGui.autocompleteWithDefaults = false;
-		MainGui.undoRenaming(fromTable, rowDeclaration, jLabelOriginalName.getText());
-		MainGui.autocompleteWithDefaults = oldAutocompleteWithDefaults;
+		if(from.length()>0) {
+			boolean oldAutocompleteWithDefaults = MainGui.autocompleteWithDefaults;
+			MainGui.autocompleteWithDefaults = false;
+			MainGui.undoRenaming(fromTable, rowDeclaration, jLabelOriginalName.getText());
+			MainGui.autocompleteWithDefaults = oldAutocompleteWithDefaults;
+		}
 		closingOperation = "Cancel";
 		this.setVisible(false);
 	}
@@ -314,8 +329,10 @@ public String getClosingOperation() {
 		jPanel.removeAll();
 		this.foundElements.clear();
 		this.foundElements.addAll(found);	
-		this.jLabelOriginalName.setText(this.from);
-		this.jLabelNewName.setText(this.to);
+		if(this.from.trim().length() >0) {
+			this.jLabelOriginalName.setText(this.from);
+			this.jLabelNewName.setText(this.to);
+		}
 		
 		gridLayout = new GridLayout2();
 		int nparam = found.size();
@@ -336,11 +353,7 @@ public String getClosingOperation() {
 			foundCB.setBackground(jPanel.getBackground());
 			if(foundCB.getPreferredSize().width < dim.width) foundCB.setPreferredSize(dim);
 			if(foundCB.getMinimumSize().width < dim.width) foundCB.setMinimumSize(dim);
-			foundCB.addItemListener(new ItemListener() {
-			    public void itemStateChanged(ItemEvent e) {
-			    	updateCurrentText(((JCheckBox)(e.getSource())));
-			      }
-			});
+			foundCB.addItemListener(new MyItemListener(i,this));
 
 			foundCB.setText(MainGui.getCellContent(found.get(i)));
 			
@@ -366,8 +379,8 @@ public String getClosingOperation() {
 	}
 
 	static String replaceAllWords(String original, String find, String replacement) {
-	    StringBuilder result = new StringBuilder(original.length());
-	    String delimiters = "+-*/(), ;{}=";
+	   /* StringBuilder result = new StringBuilder(original.length());
+	    String delimiters = "+-*()/, ;{}=";
 	    StringTokenizer st = new StringTokenizer(original, delimiters, true);
 	    while (st.hasMoreTokens()) {
 	        String w = st.nextToken();
@@ -377,17 +390,36 @@ public String getClosingOperation() {
 	            result.append(w);
 	        }
 	    }
-	    return result.toString();
+	    return result.toString();*/
+	    
+	    return CellParsers.replaceVariableInExpression(original,find,replacement);
 	}
 	
 	
 
 		
 	
-	private void updateCurrentText(JCheckBox jCheckBox) {
+	void updateCurrentText(JCheckBox jCheckBox, int index) {
+		if(from.trim().length() > 0) {
+			updateCurrentText_singleFromTo(jCheckBox);
+		} else {
+			if(jCheckBox.isSelected()) {
+				jCheckBox.setText(from_to.get(index).right);
+			} else {
+				jCheckBox.setText(from_to.get(index).left);
+			}
+		}
+		
+	}
+	
+	
+		
+	
+	private void updateCurrentText_singleFromTo(JCheckBox jCheckBox) {
 		if(jCheckBox.isSelected()) {
 			String old = jCheckBox.getText();
 			String newS =replaceAllWords(old,from,to);
+			if(newS == null) newS="TOBEFIXED";
 			jCheckBox.setText(newS);
 		} else {
 			String old = jCheckBox.getText();
@@ -457,8 +489,25 @@ public String getClosingOperation() {
 	}
 
 	
+	
 
 
 
 
 } 
+
+class MyItemListener implements ItemListener{
+	int indx = -1;
+	RenamingFrame renamingFrame = null;
+	
+	 MyItemListener (int index, RenamingFrame renamingFrame) {
+		indx = index;
+		this.renamingFrame = renamingFrame;
+	}
+	
+	@Override
+		public void itemStateChanged(ItemEvent e) {
+			renamingFrame.updateCurrentText(((JCheckBox)(e.getSource())), indx);
+	    }
+	}
+

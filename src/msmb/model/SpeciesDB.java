@@ -1,5 +1,7 @@
 package msmb.model;
 
+import msmb.commonUtilities.MSMB_InterfaceChange;
+import msmb.commonUtilities.Species_Interface;
 import msmb.gui.MainGui;
 
 import java.io.ByteArrayInputStream;
@@ -158,6 +160,11 @@ public class SpeciesDB {
 					multiModel.addNamedElement(s.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
 					speciesVector.put(speciesVector.size(),s);
 				} else {
+					MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(Species_Interface.class);
+					changeToReport_IntfSpecies.setElementBefore(null);
+					changeToReport_IntfSpecies.setElementAfter(new Species(name));
+					MainGui.setChangeToReport(changeToReport_IntfSpecies);
+					
 					Species s = new Species(name);
 					s.setCompartment(multiModel,compartment);
 					s.setType(type);
@@ -194,8 +201,14 @@ public class SpeciesDB {
 						}
 					}
 					
-					Species s = speciesVector.get(ind); //QUIIIIIII C'ERA INDEX
+					Species s = speciesVector.get(index); //QUIIIIIII con ind mi aggiunge una specie nuova quando rinomino una esistente
 					String oldName = s.getDisplayedName();
+					if(oldName.compareTo(name)!=0) {
+						MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(Species_Interface.class);
+						changeToReport_IntfSpecies.setElementBefore(new Species(oldName));
+						changeToReport_IntfSpecies.setElementAfter(new Species(name));
+						MainGui.setChangeToReport(changeToReport_IntfSpecies);
+					}
 					s.setName(name);
 					s.setCompartment(multiModel,compartment);
 					s.setType(type);
@@ -252,10 +265,9 @@ public class SpeciesDB {
 			
 			
 	}
-		
+	
 	
 	public Vector<Species> getAllSpecies() {
-		//return this.speciesVector;
 		return new Vector(this.speciesVector.values());
 	}
 	

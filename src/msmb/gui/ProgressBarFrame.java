@@ -107,7 +107,6 @@ public class ProgressBarFrame extends JFrame implements Runnable {
 
 		} catch (InterruptedException e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-			System.out.println("interrupted");
 		}
     }
 

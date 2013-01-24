@@ -1,19 +1,25 @@
 package msmb.model;
 
+import java.awt.Font;
 import java.io.UnsupportedEncodingException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import javax.swing.event.ChangeEvent;
+
+import msmb.commonUtilities.MSMB_InterfaceChange;
+import msmb.commonUtilities.Species_Interface;
+import msmb.gui.MainGui;
 import msmb.utility.*;
 
 
-public class Species {
+public class Species implements Species_Interface {
 	String name = new String();
 	Vector<String> initialQuantity = new Vector<String>(); 
 	Vector<String> compartment = new Vector<String>(); 
-	private String editableInitialQuantity = new String();
 	int type = Constants.SpeciesType.REACTIONS.copasiType;
 	String expression = new String();
+	private String editableInitialQuantity = new String();
 	private String editableExpression = expression;
 	public String getExpression() { 	return expression.trim();	}
 	
@@ -28,9 +34,9 @@ public class Species {
 			CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
 		} catch (Exception ex) {
 			throw ex;
-		}
+		} finally {
 			editableExpression = expr;
-
+		}
 	}
 
 	
@@ -62,9 +68,12 @@ public class Species {
 	}
 	
 	public String getSpeciesName() { return name; }
-	public String getDisplayedName() { 	return getSpeciesName();	}
-	public void setName(String name) {	try {
-		this.name = new String(name.getBytes("UTF-8"),"UTF-8");
+	public String getDisplayedName() { 	return getSpeciesName();	} //multistate species override this method
+	public String getName() { return getDisplayedName(); }
+	
+	public void setName(String newName) {
+		try {
+		this.name = new String(newName.getBytes("UTF-8"),"UTF-8");
 	} catch (UnsupportedEncodingException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
@@ -224,6 +233,17 @@ public class Species {
 
 	public void setExpression_withoutParsing(String expression) {
 		this.expression = expression;
+	}
+
+
+
+
+	public boolean alreadyInComp(String cmpName) {
+	   for(int i = 0; i < compartment.size(); i++) {
+		   String current = compartment.get(i);
+		   if(current.compareTo(cmpName)==0) return true;
+	   }
+		return false;
 	}
 
 

@@ -23,6 +23,7 @@ import org.nfunk.jep.function.*;*/
 import  msmb.parsers.chemicalReaction.MR_ChemicalReaction_Parser;
 import  msmb.parsers.chemicalReaction.syntaxtree.CompleteReaction;
 import  msmb.parsers.chemicalReaction.visitor.ExtractSubProdModVisitor;
+import msmb.parsers.chemicalReaction.visitor.SubstitutionVisitorReaction;
 import  msmb.parsers.mathExpression.MR_Expression_Parser;
 import  msmb.parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import  msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
@@ -50,52 +51,8 @@ public class CellParsers {
 	private static HashMap<String, String> cleanedNames = new HashMap<String,String>();
 	
 	
-	public CellParsers() { 
-		
-		/*parser.addStandardFunctions(); 
-		parser.setAllowUndeclared(true);
-		parser.addFunction("SUM",  new MyFunctionClass_DELETE_oldParser(-1));
-		parser.addFunction("if", new If());
-		parser.addFunction("floor", new MyFunctionClass_DELETE_oldParser(1));
-		 */
-		
-		
-		/*if(parser2 == null) parser2 = new MR_grammar(new StringReader("a+b->c"));
+	public CellParsers() { 	}
 	
-		 try
-	      {
-	          MR_grammar.one_line();
-	          System.out.println("oooooooooooooooooOK.");
-	      }
-	      catch (Exception e)
-	      {
-	      if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-	        System.out.println("NOK.");
-	        System.out.println(e.getMessage());
-	      }
-	      catch (Error e)
-	      {
-	      if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-	        System.out.println("Oops.");
-	        System.out.println(e.getMessage());
-	      }*/
-	}
-	
-	
-	/*public void addSpecies(MultistateSpecies sp) { parser.addFunction(sp.getSpeciesName(), new MyFunctionClass_DELETE_oldParser(sp.getSitesNames().size()));}
-	public void addFunction(Function f) { parser.addFunction(f.getName(), new MyFunctionClass_DELETE_oldParser(f.getParametersNames().size()));	}
-	public void addVariable(String name) { parser.addVariable(name, 0.0); }
-	public void addConstant(String name) { parser.addConstant(name, 0.0); }
-	public Node parse(String expression) throws ParseException { 
-		//System.out.println("CellParsers.parse TO ELIMINATE:"+expression);
-		return parser.parse(expression);
-	}
-	public String toString(Node parsedExpression) { return 	parser.toString(parsedExpression); }
-	public SymbolTable getSymbolTable() { return parser.getSymbolTable();	}
-	public OperatorSet getOperatorSet() { return parser.getOperatorSet();	}
-	public Node substitute(Node parsedExpression, String[] names,	Node[] substitutions) throws ParseException {
-		return parser.substitute(parsedExpression, names, substitutions);
-	}*/
 	
 	
 	public static boolean isValidCharacterBetweenQuotes(char s) {
@@ -145,18 +102,30 @@ public class CellParsers {
 	
 	
 	
+	public static boolean isNaN(String name) {
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN1)) == 0) return true;
+		else if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN2)) == 0) return true;
+		//else if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN3)) == 0) return true;
+		else return false;
+	}
+	
 	public static boolean isKeyword(String name) {
 		
-		
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) == 0) return true;
+		if(isNaN(name)) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CONST_AVOGADRO)) == 0) return true;
 		
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.PI)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXPONENTIALE)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.DELAY)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CEIL)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.FACTORIAL)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COS)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ABS)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ACOS)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ASIN)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ATAN)) == 0) return true;
+			if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ABS)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG10)) == 0) return true;
-			if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COSH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COSH)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TAN)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TANH)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SIN)) == 0) return true;
@@ -167,12 +136,30 @@ public class CellParsers {
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_SUB)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_VAR)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TYPE_VOL)) == 0) return true;
-			
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.FLOOR)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SQRT)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXP)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG)) == 0) return true;
+		
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SEC)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CSC)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COT)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SINH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCSEC)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCCSC)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCCOT)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCSINH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCCOSH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCTANH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCSECH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCCSCH)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCCOTH)) == 0) return true;
+		
+		
+		
+		
+
 		return false;
 	}
 	
@@ -233,7 +220,7 @@ public class CellParsers {
 				}
 			  return ret;
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			return null;
 		}
 	}
@@ -246,6 +233,7 @@ public class CellParsers {
 		
 		try {
 			//System.out.println(".................................");
+			if(find.compareTo(replacement)==0) return original;
 			InputStream is = new ByteArrayInputStream(original.getBytes("UTF-8"));
 			MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
 			CompleteExpression root = parser.CompleteExpression();
@@ -267,10 +255,20 @@ public class CellParsers {
 			
 			return newExprParsed;
 			
-		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
-				e.printStackTrace();
+		} catch (Throwable e) {
+			try{
+			InputStream is = new ByteArrayInputStream(original.getBytes("UTF-8"));
+			MR_ChemicalReaction_Parser parser = new MR_ChemicalReaction_Parser(is,"UTF-8");
+			 CompleteReaction root = parser.CompleteReaction();
+			 SubstitutionVisitorReaction mySV= new SubstitutionVisitorReaction(find, replacement);
+			root.accept(mySV);
+			String newExpr = mySV.getNewExpression();
+			
+			return newExpr;
+			}catch (Throwable e2) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e2.printStackTrace();
 			}
+		}
 			
 		return null;
 	 }
@@ -319,7 +317,8 @@ public class CellParsers {
 				column_tab = Constants.GlobalQColumns.getIndex(column_descr);
 			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)== 0) {
 				column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
-			}
+			} 
+		
 		 try{
 			
 		  if(expression.length() >0) {
@@ -330,10 +329,8 @@ public class CellParsers {
 				  root.accept(elementsVisitor);
 				  ret = elementsVisitor.getElements();
 			  }
-		 } catch (Exception e) {
-			 
-			 
-			 //e.printStackTrace();
+		 } catch (Throwable e) {
+			 if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
 		}
 		return ret;
@@ -583,15 +580,28 @@ public class CellParsers {
 			if(isKeyword(objectName) && objectName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) != 0) {
 				return new String("\""+objectName+"\"");
 			}
-			if(!CellParsers.isMultistateSpeciesName(objectName) && 
-					(objectName.indexOf('(')!=-1 
-					|| objectName.indexOf(':')!=-1 
-					|| objectName.indexOf(',')!=-1
-					|| objectName.indexOf(';')!=-1
-					|| objectName.indexOf('{')!=-1
-					|| objectName.indexOf('}')!=-1)) {
-				return new String("\""+objectName+"\"");
+			if(species) {
+				if(!CellParsers.isMultistateSpeciesName(objectName) && 
+						(objectName.indexOf('(')!=-1 
+						|| objectName.indexOf(':')!=-1 
+						|| objectName.indexOf(',')!=-1
+						|| objectName.indexOf(';')!=-1
+						|| objectName.indexOf('{')!=-1
+						|| objectName.indexOf('}')!=-1)) {
+					return new String("\""+objectName+"\"");
+				} 	else return objectName;
 			}
+			else {
+				if((objectName.indexOf('(')!=-1 
+						|| objectName.indexOf(':')!=-1 
+						|| objectName.indexOf(',')!=-1
+						|| objectName.indexOf(';')!=-1
+						|| objectName.indexOf('{')!=-1
+						|| objectName.indexOf('}')!=-1)) {
+					return new String("\""+objectName+"\"");
+				}
+			}
+			
 			
 			if(objectName.indexOf('.') != -1) {
 				//TO CHECK IF IT'S OK WITH NAME WITH EXTENSIONS IN EXPRESSIONS
@@ -931,11 +941,12 @@ public class CellParsers {
 	}*/
 
 	public static String cleanMathematicalExpression(String mathematicalExpression) {
-		String ret = new String(mathematicalExpression);
+			String ret = new String(mathematicalExpression);
 		
 		ret = replaceIfNotBetweenQuotes(ret, " eq ", "==");
 		ret = replaceIfNotBetweenQuotes(ret, " ge ", ">=");
 		ret = replaceIfNotBetweenQuotes(ret, " le ", "<=");
+		ret = replaceIfNotBetweenQuotes(ret, " ne ", "!=");
 		ret = replaceIfNotBetweenQuotes(ret, " gt", ">");
 		ret = replaceIfNotBetweenQuotes(ret, " lt", "<");
 		ret = replaceIfNotBetweenQuotes(ret, " and ", "&&");
@@ -950,7 +961,7 @@ public class CellParsers {
 		ret = ret.replace(" or ", "||");*/
 		
 		try {
-			InputStream is = new ByteArrayInputStream(mathematicalExpression.getBytes("UTF-8"));
+			InputStream is = new ByteArrayInputStream(ret.getBytes("UTF-8"));
 			MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
 			CompleteExpression root = parser.CompleteExpression();
 			QuoteKeywordInExpressionVisitor quoted = new QuoteKeywordInExpressionVisitor();
@@ -1035,7 +1046,7 @@ public class CellParsers {
 			String subString = new String(string.substring(from,to).getBytes("UTF-8"),"UTF-8");
 			String subString_ret_tmp = ret + subString;
 			int numOfPrevQuotes = subString_ret_tmp.split("\"").length-1; //if this is odd it means that the element is between quotes so no replacement
-			if(numOfPrevQuotes%2!=0) {
+			if(numOfPrevQuotes%2!=0 || numOfPrevQuotes==0) {
 				subString = subString.replace(elementToSearch, replacement);
 			}
 			ret += subString;

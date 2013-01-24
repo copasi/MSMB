@@ -127,16 +127,33 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG10))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.CEIL))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.COS))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ACOS))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ASIN))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ATAN))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.COSH))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.TAN))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.FACTORIAL))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.TANH))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SIN))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.DELAY))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SQRT))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXP))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SEC))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.CSC))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.COT))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SINH))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ARCSEC))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ARCCSC))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ARCCOT))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ARCSINH))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ARCCOSH))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ARCTANH))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ARCSECH))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ARCCSCH))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ARCCOTH))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG))==0) {
 							copasiExpression += funName+"(";
-						}
+						} 
 						else {
 							if(!isMultistateSpeciesDefined(ToStringVisitor.toString(n.speciesReferenceOrFunctionCall_prefix))) {
 								throw ex;
@@ -282,11 +299,20 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 		String element_copasiTerm = new String();
 		if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0 
 			|| element.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) ==0) {
-			element_copasiTerm = model.getObject(new CCopasiObjectName(Constants.COPASI_STRING_TIME)).getCN().getString();
+			if(!isInitialExpression)	element_copasiTerm = model.getObject(new CCopasiObjectName(Constants.COPASI_STRING_TIME)).getCN().getString();
+			else element_copasiTerm = model.getObject(new CCopasiObjectName(Constants.COPASI_STRING_INITIAL_TIME)).getCN().getString();
 		} 
 		else if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.PI]) ==0 
 				|| element.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.PI)) ==0) {
 				element_copasiTerm = Constants.COPASI_STRING_PI;
+			} 
+		else if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.EXPONENTIALE]) ==0 
+				|| element.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXPONENTIALE)) ==0) {
+				element_copasiTerm = Constants.COPASI_STRING_EXPONENTIALE;
+			} 
+		else if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.CONST_AVOGADRO]) ==0 
+				|| element.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CONST_AVOGADRO)) ==0) {
+			element_copasiTerm = model.getObject(new CCopasiObjectName(Constants.COPASI_STRING_AVOGADRO)).getCN().getString();
 			} 
 		else  if(!isMultistateSpeciesDefined(element)) {
 			
@@ -304,6 +330,8 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				return;
 				
 			}
+			
+			
 				String element_substring = name.getElementName();
 				String cmp = CellParsers.extractCompartmentLabel(element_substring);
 				Vector<String> extensions = name.getExtensions();
@@ -487,7 +515,8 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 		if(element_copasiTerm == null) exceptions.add(new ParseException("Non compatible qualifiers"));
 		if(element_copasiTerm.length() == 0) 
 			exceptions.add(new ParseException("Model yet not complete. Element "+element+" not found"));
-		if(element_copasiTerm.compareTo(Constants.COPASI_STRING_PI)==0) copasiExpression+=element_copasiTerm;
+		if(element_copasiTerm.compareTo(Constants.COPASI_STRING_PI)==0
+				||element_copasiTerm.compareTo(Constants.COPASI_STRING_EXPONENTIALE)==0) copasiExpression+=element_copasiTerm;
 		else copasiExpression+="<"+element_copasiTerm+">";
 	}
 

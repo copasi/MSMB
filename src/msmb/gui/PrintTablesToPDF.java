@@ -57,8 +57,8 @@ public class PrintTablesToPDF {
         for(; i < tablesAndLastTabInfo.size(); i++) {
         	Object element = tablesAndLastTabInfo.get(i);
         	
-        	if(element instanceof CustomTableModel) {
-        		CustomTableModel tablemodel = (CustomTableModel) element;
+        	if(element instanceof CustomTableModel_MSMB) {
+        		CustomTableModel_MSMB tablemodel = (CustomTableModel_MSMB) element;
         		int col = tablemodel.getColumnCount();
 
         		Paragraph title = new Paragraph(tablemodel.getTableName());

@@ -57,12 +57,14 @@ public class MR_SubstitutionVisitor extends DepthFirstVoidVisitor {
 				NodeOptional nodeOptional = (NodeOptional) ((NodeSequence) n.nodeOptional.node).nodes.get(1);
 				if(nodeOptional.node==null){
 					//System.out.println("FUNCTION CALL (0): "+name);
+					if(name.compareTo(originalName)==0) printToken(replacementExpr);
 					super.visit(n);
 				}
 				else {
 					if(!isMultistateSitesList(nodeOptional.node)) {
 						//System.out.println("FUNCTION CALL ("+getNumberArguments((ArgumentList)nodeOptional.node)+"): " +name);
-						super.visit(n);
+						if(name.compareTo(originalName)==0) printToken(replacementExpr);
+						super.visit(n.nodeOptional);
 					} else {
 						//System.out.println("SPECIES: "+ToStringVisitor.toString(n)); // to print complete "multistate" definition
 						if(name.compareTo(originalName)==0) printToken("("+replacementExpr+")");

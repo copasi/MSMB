@@ -1,3 +1,8 @@
+//IN ORDER FOR THIS PART TO WORK, THE RUniversal package need to be installed from R.
+//from an R console type install.packages("Runiversal") and the package should be installed for you
+//more instruction at http://www.mhsatman.com/rcaller.php
+//
+
 package msmb.testing;
 
 import msmb.gui.MainGui;
@@ -11,6 +16,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import org.COPASI.*;
 
@@ -29,39 +35,42 @@ public class RunSimulation {
 	
 	public static void setRScriptPath(String s) {RSCRIPT_PATH = s; }
 	
-	public static void RunSimulations_CPSfromMSMB_OriginalSBML(String filename_CPS, String filename_SBML, long nsteps, int time, String nameFileLogReport) throws Exception {
+	public static void RunSimulations_CPSfromMSMB_OriginalSBML(String filename_CPS, String filename_SBML, long nsteps, double time, String nameFileLogReport) throws Exception {
 		 steps  = nsteps;
 		 maxTime = time;
-		 CCopasiRootContainer.removeDatamodelWithIndex(0);
-		 dataModel = CCopasiRootContainer.addDatamodel();
-		 dataModel.importSBML(filename_SBML);
-		 
-		 createTimeSeriesReport(filename_SBML);
-
-		 MainGui.clearCopasiFunctions();
-		 dataModel.getModel().cleanup();
-		 dataModel.getModel().clearRefresh();
-		 
+		
 		 
 		 CCopasiRootContainer.removeDatamodelWithIndex(0);
 		 dataModel = CCopasiRootContainer.addDatamodel();
 		 dataModel.loadModel(filename_CPS);
 		 createTimeSeriesReport(filename_CPS);
-		 
+		
 		 MainGui.clearCopasiFunctions();
-		 dataModel.getModel().cleanup();
-		 dataModel.getModel().clearRefresh();
 		 
 		
+		 CCopasiRootContainer.removeDatamodelWithIndex(0);
+		 dataModel = CCopasiRootContainer.addDatamodel();
+		 dataModel.importSBML(filename_SBML);
 		 
+		 createTimeSeriesReport(filename_SBML);
+ 
 		 replaceCharactersWithNaN(filename_CPS,filename_SBML);
 		 
 		 compareGeneratedTXTWithCorrectTXT(filename_CPS, filename_SBML, nameFileLogReport);
 	 }
 	 
+	
 	static String MYCOMPSEPARATOR = ":MYCOMPSEPARATOR:";
 	static String MYELEMENTS_SEPARATOR = "@";
+	static boolean MYADDCOMPNAME = true;
 	
+	static boolean customFileOutputLocation = false;
+	 static String SBML_simOutputFile;
+	 static String CPS_simOutputFile;
+	 static String PNG_simOutputFile;
+	 static Vector<String> columnsToPrint = new Vector<String>();
+	 static String additionalRCode = new String();
+	 
 	 private static void replaceCharactersWithNaN(String filename_CPS,	String filename_SBML) {
 		 
 		 try{
@@ -76,12 +85,11 @@ public class RunSimulation {
 	         reader.close();
 	        
 	         String newtext = oldtext.replaceAll("-1.#IND", "NaN");
-	       
+	         newtext = newtext.replaceAll("1.#INF", "Inf");
+	         newtext = newtext.replaceAll("1.#QNAN", "NaN");
 	         
-	    //     firstLine=firstLine.replaceAll(",", "_");
-	         /*firstLine = firstLine.replaceAll(", ", "MYCOMMA ");
-	         firstLine=firstLine.replaceAll("MYCOMMA", ",");*/
-	         StringTokenizer st = new StringTokenizer(firstLine,MYELEMENTS_SEPARATOR);
+	         
+		         StringTokenizer st = new StringTokenizer(firstLine,MYELEMENTS_SEPARATOR);
 	         String finalFirstLine = new String();
 	         while(st.hasMoreElements()){
 	        	 String tok = st.nextToken();
@@ -98,7 +106,7 @@ public class RunSimulation {
 	        	 String comp=new String();
 	        	 if(ind_underscore != -1) comp=tok.substring(ind_underscore+MYCOMPSEPARATOR.length());
 			      if(comp.startsWith("\"") && comp.endsWith("\"")) comp = comp.substring(1,comp.length()-1);
-				   if(ind_underscore != -1)  finalFirstLine += "_"+ comp;
+				  if( MYADDCOMPNAME && ind_underscore != -1)  finalFirstLine += "_"+ comp;
 		       
 	        	 finalFirstLine += MYELEMENTS_SEPARATOR+" ";
 	         }
@@ -106,19 +114,26 @@ public class RunSimulation {
 	         finalFirstLine=finalFirstLine.replace("\"", "''");
 	         finalFirstLine=finalFirstLine.replaceAll(MYCOMPSEPARATOR, "_");
 			       
-	         /*    newtext=newtext.replace("\"", "");
-	         newtext=newtext.replaceAll(", ", "MYCOMMA ");
-	         newtext=newtext.replaceAll(",", "_");
-	         newtext=newtext.replaceAll("MYCOMMA", ",");*/
-	         
+	 
 	         newtext = finalFirstLine+"\n"+newtext;
-	         //newtext=newtext.replaceAll("@", ",");
-		       
-	         FileWriter writer = new FileWriter(filename_CPS.substring(0,filename_CPS.lastIndexOf("."))+".txt");
+	         
+	         
+	         if(!customFileOutputLocation) {
+		  	    	CPS_simOutputFile = filename_CPS.substring(0,filename_CPS.lastIndexOf("."))+".txt";
+		  	    }
+	         
+	         FileWriter writer = new FileWriter(CPS_simOutputFile);
 	         writer.write(newtext);
 	         writer.close();
 	         
-	     	File file2 = new File(filename_SBML.substring(0,filename_SBML.lastIndexOf("."))+".txt");
+	         
+	         if(!customFileOutputLocation) {
+		  	    	SBML_simOutputFile = filename_SBML.substring(0,filename_SBML.lastIndexOf("."))+".txt";
+		  	    }
+		       
+	         
+	     	//File file2 = new File(filename_SBML.substring(0,filename_SBML.lastIndexOf("."))+".txt");
+	         File file2 = new File(SBML_simOutputFile);
 	         BufferedReader reader2 = new BufferedReader(new FileReader(file2));
 	         String line2 = "", oldtext2 = "", firstLine2 ="";
 	         firstLine2 = reader2.readLine();
@@ -130,11 +145,10 @@ public class RunSimulation {
 	         reader2.close();
 	        
 	         String newtext2 = oldtext2.replaceAll("-1.#IND", "NaN");
-	      
-	     //    firstLine2=firstLine2.replaceAll(",", "_");
-		        /*  firstLine2 = firstLine2.replaceAll(", ", "MYCOMMA ");
-		     firstLine2=firstLine2.replaceAll("MYCOMMA", ",");*/
-	         StringTokenizer st2 = new StringTokenizer(firstLine2,MYELEMENTS_SEPARATOR);
+	         newtext2 = newtext2.replaceAll("1.#INF", "Inf");
+	         newtext2 = newtext2.replaceAll("1.#QNAN", "NaN");
+	         
+	          StringTokenizer st2 = new StringTokenizer(firstLine2,MYELEMENTS_SEPARATOR);
 	         String finalFirstLine2 = new String();
 	         while(st2.hasMoreElements()){
 	        	 String tok = st2.nextToken();
@@ -152,22 +166,19 @@ public class RunSimulation {
 		          String comp=new String();
 		          if(ind_underscore != -1) comp=tok.substring(ind_underscore+MYCOMPSEPARATOR.length());
 		          if(comp.startsWith("\"") && comp.endsWith("\"")) comp = comp.substring(1,comp.length()-1);
-		          if(ind_underscore != -1)  finalFirstLine2 += "_"+ comp;
+		          if(MYADDCOMPNAME && ind_underscore != -1)  finalFirstLine2 += "_"+ comp;
 	        	 finalFirstLine2 += MYELEMENTS_SEPARATOR+" ";
 	         }
 	         finalFirstLine2 = finalFirstLine2.substring(0,finalFirstLine2.length()-2);
 	         finalFirstLine2=finalFirstLine2.replace("\"", "''");
 	         finalFirstLine2=finalFirstLine2.replaceAll(MYCOMPSEPARATOR, "_");
-		      
-	         /*   newtext2=newtext2.replace("\"", "");
-	         newtext2=newtext2.replaceAll(", ", "MYCOMMA ");
-	         newtext2=newtext2.replaceAll(",", "_");
-	         newtext2=newtext2.replaceAll("MYCOMMA", ",");*/
+		   
 	         
 	         newtext2 = finalFirstLine2+"\n"+newtext2;
-	      //   newtext2=newtext2.replaceAll("@", ",");
-			   
-	         FileWriter writer2 = new FileWriter(filename_SBML.substring(0,filename_SBML.lastIndexOf("."))+".txt");
+	  	    if(!customFileOutputLocation) {
+	  	    	SBML_simOutputFile = filename_SBML.substring(0,filename_SBML.lastIndexOf("."))+".txt";
+	  	    }
+	         FileWriter writer2 = new FileWriter(SBML_simOutputFile);
 	         writer2.write(newtext2);
 	         writer2.close();
 
@@ -190,22 +201,33 @@ public class RunSimulation {
 	    	fileName2 = fileName2.substring(0,fileName2.lastIndexOf("."))+".txt";
 	    	fileName1 = fileName1.replace('\\','/');
 	    	fileName2 = fileName2.replace('\\','/');
-	    	nameFileLogReport = nameFileLogReport.replace('\\','/');
+	    	if(nameFileLogReport!= null) nameFileLogReport = nameFileLogReport.replace('\\','/');
 	    	String baseName = fileName2.substring(fileName2.lastIndexOf("/")+1,fileName2.lastIndexOf("."));
 	    	caller.addRCode("file1 = \""+fileName1+"\"");
 	    	caller.addRCode("file2 = \""+fileName2+"\"");
 	    	caller.addRCode("baseName = \""+baseName+"\"");
-	    	caller.addRCode("logFileName = \""+nameFileLogReport+"\"");
+	    	if(nameFileLogReport!= null)caller.addRCode("logFileName = \""+nameFileLogReport+"\"");
 	    	
 	    	File file = caller.startPlot();  
-	       	caller.addRCode(RCode_generatePlotsFromTXTs);
+	       	caller.addRCode(get_RCode_generatePlotsFromTXTs());
+	       	
+	       	/*System.out.println(fileName1);
+	       	System.out.println(get_RCode_generatePlotsFromTXTs());
+	       	*/
+	    
 	    	caller.endPlot();
 	        try{
 	        	caller.runOnly();
+	        	
 	        }catch(Exception ex) {
 	        	ex.printStackTrace();
 	        }
-	        copyFile(file, new File((new File(fileName1).getParent())+System.getProperty("file.separator")+baseName+".png")); 
+	        
+	        if(!customFileOutputLocation) {
+	  	    	PNG_simOutputFile = new File(fileName1).getParent()+System.getProperty("file.separator")+baseName+".png";
+	  	    }
+	        
+	        copyFile(file, new File(PNG_simOutputFile)); 
 	   }
 		
 	  public static void copyFile(File sourceFile, File destFile) throws IOException {
@@ -260,46 +282,54 @@ public class RunSimulation {
 		 ReportItemVector body = report.getBodyAddr();
 
 		 body.add(new CRegisteredObjectName(model.getObject(new CCopasiObjectName("Reference=Time")).getCN().getString()));
-		 body.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
 		 header.add(new CRegisteredObjectName(new CCopasiStaticString("time").getCN().getString()));
-		 header.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
-
+		
 		 int i, iMax =(int) model.getMetabolites().size();
-		 for (i = 0;i < iMax;++i)
-		 {
-			 CMetab metab = model.getMetabolite(i);
-			 assert metab != null;
-			 body.add(new CRegisteredObjectName(metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString()));
-			 
-			 String name = metab.getObjectName()+"_"+metab.getCompartment().getObjectName();
-			 String separator = report.getSeparator().getObjectName().toString().trim();
-			 if(name.contains(separator)) {
-				 header.add(new CRegisteredObjectName(new CCopasiStaticString("\""+metab.getObjectName()+MYCOMPSEPARATOR+metab.getCompartment().getObjectName()+"\"").getCN().getString()));
-			 } else {
-				 String metabName = metab.getObjectName();
-				 if(metabName.startsWith("\"") && metabName.endsWith("\"")) metabName = metabName.replace("\"", "");
-				 metabName = metabName.replace("\"", "''");
-				 
-				 String metabComp = metab.getCompartment().getObjectName();
-				 if(metabComp.startsWith("\"") && metabComp.endsWith("\"")) metabComp = metabComp.replace("\"", "");
-				 metabComp = metabComp.replace("\"", "''");
-				 header.add(new CRegisteredObjectName(new CCopasiStaticString(metabName+MYCOMPSEPARATOR+metabComp).getCN().getString()));
-			 }
-			 
-			 // after each entry, we need a separator
-			 if(i!=iMax-1)
-			 {
-				 body.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
-				 header.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
-			 }
-
-			 
-		 }
-		 body.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
-		 header.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+		
 		 
+		 if(iMax>0) {
+			 header.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+			 body.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+			  for (i = 0;i < iMax;++i)
+			 {
+				 CMetab metab = model.getMetabolite(i);
+				 assert metab != null;
+				 body.add(new CRegisteredObjectName(metab.getObject(new CCopasiObjectName("Reference=Concentration")).getCN().getString()));
+				 
+				 String name = metab.getObjectName()+"_"+metab.getCompartment().getObjectName();
+				 String separator = report.getSeparator().getObjectName().toString().trim();
+				 if(name.contains(separator)) {
+					 header.add(new CRegisteredObjectName(new CCopasiStaticString("\""+metab.getObjectName()+MYCOMPSEPARATOR+metab.getCompartment().getObjectName()+"\"").getCN().getString()));
+				 } else {
+					 String metabName = metab.getObjectName();
+					 if(metabName.startsWith("\"") && metabName.endsWith("\"")) metabName = metabName.replace("\"", "");
+					 metabName = metabName.replace("\"", "''");
+					 
+					 String metabComp = metab.getCompartment().getObjectName();
+					 if(metabComp.startsWith("\"") && metabComp.endsWith("\"")) metabComp = metabComp.replace("\"", "");
+					 metabComp = metabComp.replace("\"", "''");
+					 header.add(new CRegisteredObjectName(new CCopasiStaticString(metabName+MYCOMPSEPARATOR+metabComp).getCN().getString()));
+				 }
+				 
+				 // after each entry, we need a separator
+				 if(i!=iMax-1)
+				 {
+					 body.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+					 header.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+				 }
+	
+				 
+			 }
+		 }
+		 
+		
 		 iMax =(int) model.getModelValues().size();
-		 for (i = 0;i < iMax;++i)
+		 if(iMax>0) {
+			 body.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+			 header.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+			 
+			 for (i = 0;i < iMax;++i)
+		 
 		 {
 			 CModelValue modelValue = model.getModelValue(i);
 			 assert modelValue != null;
@@ -314,7 +344,31 @@ public class RunSimulation {
 					 header.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
 				 }
 		 }
-
+		 }
+		 
+		 iMax =(int) model.getCompartments().size();
+	
+		 if(iMax>0) {
+			 body.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+			 header.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+		 
+		
+		 for (i = 0;i < iMax;++i)
+		 {
+			 CCompartment modelValue = model.getCompartment(i);
+			 assert modelValue != null;
+			 
+				 body.add(new CRegisteredObjectName(modelValue.getObject(new CCopasiObjectName("Reference=Volume")).getCN().getString()));
+				 // add the corresponding id to the header
+				 header.add(new CRegisteredObjectName(new CCopasiStaticString(modelValue.getObjectName()).getCN().getString()));
+				 // after each entry, we need a separator
+				 if(i!=iMax-1)
+				 {
+					 body.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+					 header.add(new CRegisteredObjectName(report.getSeparator().getCN().getString()));
+				 }
+		 }
+		 }
 		 // get the trajectory task object
 		 CTrajectoryTask trajectoryTask = (CTrajectoryTask)dataModel.getTask("Time-Course");
 		 
@@ -387,9 +441,11 @@ public class RunSimulation {
 			 if (CCopasiMessage.size() > 0)
 			 {
 				 // print the messages in chronological order
-				// System.err.println(CCopasiMessage.getAllMessageText(true));
+				System.err.println(CCopasiMessage.getAllMessageText(true));
 			 }
+			 ex.printStackTrace();
 			 throw ex;
+			
 		 }
 		 if(result==false)
 		 {
@@ -407,22 +463,41 @@ public class RunSimulation {
 	 }
 	 
 	 
-	 
-	 
-	 static String RCode_generatePlotsFromTXTs = new String(
+	//static String RCode2 = new String("plot(1:10,4:13)"+System.getProperty("line.separator"));
+	 public static String get_RCode_generatePlotsFromTXTs() {
+		 String ret  = new String(
 			    "table1 = read.csv(file1, header = TRUE, sep = \""+MYELEMENTS_SEPARATOR+"\", quote=\"\\\"\", dec=\".\",fill = FALSE)"+System.getProperty("line.separator")+
 			    "\n"+System.getProperty("line.separator")+
 				"table2 = read.csv(file2, header = TRUE, sep = \""+MYELEMENTS_SEPARATOR+"\", quote=\"\\\"\", dec=\".\",fill = FALSE)"+System.getProperty("line.separator")+
 				"time1 = table1[,1]"+System.getProperty("line.separator")+
 	"time2 = table2[,1]"+System.getProperty("line.separator")+
 	"\n"+System.getProperty("line.separator")+
+	"if(ncol(table1)<=2) {" +System.getProperty("line.separator")+
+	"savedNames = names(table1)[2:ncol(table1)];" +System.getProperty("line.separator")+
+	"savedNames2 = names(table2)[2:ncol(table2)];" +System.getProperty("line.separator")+
+	"table1 = as.matrix(table1[,2:ncol(table1)]);"+System.getProperty("line.separator")+
+	"table2 = as.matrix(table2[,2:ncol(table2)]);"+System.getProperty("line.separator")+
+	"colnames(table1) = savedNames;"+System.getProperty("line.separator")+
+	"colnames(table2) = savedNames2;"+System.getProperty("line.separator")+
+	 "} else {"+System.getProperty("line.separator")+
 	"table1 = table1[,2:ncol(table1)]"+System.getProperty("line.separator")+
 	"table2 = table2[,2:ncol(table2)]"+System.getProperty("line.separator")+
 	"\n"+System.getProperty("line.separator")+
 	"table1 = table1[ , sort(names(table1)) ]"+System.getProperty("line.separator")+
 	"table2 = table2[ , sort(names(table2)) ]"+System.getProperty("line.separator")+
-	"\n"+System.getProperty("line.separator")+
-  "table1 = cbind(time1,table1)"+System.getProperty("line.separator")+
+	 "}"+System.getProperty("line.separator")+
+	"\n"+System.getProperty("line.separator"));
+		 
+		 if(columnsToPrint != null && columnsToPrint.size() > 0) {
+			 ret+="columnsToPrint = c()"+System.getProperty("line.separator");
+			 for(int i = 0; i < columnsToPrint.size(); i++) {
+				 ret+="columnsToPrint = cbind(columnsToPrint, \""+columnsToPrint.get(i)+"\")"+System.getProperty("line.separator");
+			 }
+			 ret+="table1 = table1[ , columnsToPrint ]"+System.getProperty("line.separator");
+			 ret+="table2 = table2[ , columnsToPrint ]"+System.getProperty("line.separator");
+		 }
+		 
+		 ret+="table1 = cbind(time1,table1)"+System.getProperty("line.separator")+
 	"table2 = cbind(time2,table2)"+System.getProperty("line.separator")+
 	"\n"+System.getProperty("line.separator")+
 				"\n"+	System.getProperty("line.separator")+			
@@ -432,7 +507,6 @@ public class RunSimulation {
 				"col1=both[2]"+System.getProperty("line.separator")+
 				"max_percentage_error = 100*abs( abs(table1[row1,col1])- abs(table2[row1,col1]))/(max(abs(table1[row1,col1]),abs(table2[row1,col1])))"+System.getProperty("line.separator")+
 				"max_abs_error = abs( abs(table1[row1,col1])- abs(table2[row1,col1]))"+System.getProperty("line.separator")+
-
 				//	"max_percentage_error = 100*abs(table1[row1,col1]-table2[row1,col1])/(max(abs(table1[row1,col1]),abs(table2[row1,col1])))"+System.getProperty("line.separator")+
 				//	"max_abs_error = abs(table1[row1,col1]-table2[row1,col1])"+System.getProperty("line.separator")+
 				"if(length(which((table1 == table2)==FALSE))>0) {"+System.getProperty("line.separator")+
@@ -440,15 +514,22 @@ public class RunSimulation {
 				"} else {"+System.getProperty("line.separator")+
 				"	subtitle =\".\"	"+System.getProperty("line.separator")+
 				"}"+System.getProperty("line.separator")+
+				"myMin = min(0,min(table1[,2:ncol(table1)],na.rm = TRUE));"+System.getProperty("line.separator")+
+				"if(!is.infinite(myMin)) {"+System.getProperty("line.separator")+
 				"title1=baseName"+System.getProperty("line.separator")+
 				"plot(table1[,1],table1[,2], type=\"l\",xlab=\"\",ylab=\"\", ylim=c(min(0,min(table1[,2:ncol(table1)],na.rm = TRUE)),max(table1[,2:ncol(table1)],na.rm = TRUE)))"+System.getProperty("line.separator")+
 				"title(main=title1, col.main=\"red\",  sub=subtitle, col.sub=\"blue\") "+System.getProperty("line.separator")+
+				"if(ncol(table1)>=3){"+System.getProperty("line.separator")+
 				"for(i in 3:ncol(table1)) {"+System.getProperty("line.separator")+
 				"	lines(table1[,1], table1[,i])"+System.getProperty("line.separator")+
 				"}"+System.getProperty("line.separator")+
+				"}"+System.getProperty("line.separator")+
+				"if(ncol(table2)>=2){"+System.getProperty("line.separator")+
 				"for(i in 2:ncol(table2)) {"+System.getProperty("line.separator")+
 					"lines(table2[,1], table2[,i],col=2)"+System.getProperty("line.separator")+
 				"}"+System.getProperty("line.separator")+
+				"}"+System.getProperty("line.separator")+
+				
 				"nameSpeciesWithError = colnames(table1)[col1]"+System.getProperty("line.separator")+
 				"if(is.na(max_percentage_error)) {" +System.getProperty("line.separator")+
 				"	max_percentage_error = 0"+System.getProperty("line.separator")+
@@ -461,7 +542,12 @@ public class RunSimulation {
 				"		table1[nrow(table1),1],"+System.getProperty("line.separator")+
 				"		nrow(table1), "+System.getProperty("line.separator")+
 				"		nameSpeciesWithError)"+System.getProperty("line.separator")+
-				"write.table(sep = \",\", append=TRUE, t(logData), quote = FALSE, file=logFileName, row.names=FALSE, col.names=FALSE)"+System.getProperty("line.separator")+
-				"\n"
-			);
+				"if(exists(\"logFileName\"))write.table(sep = \",\", append=TRUE, t(logData), quote = FALSE, file=logFileName, row.names=FALSE, col.names=FALSE)"+System.getProperty("line.separator")+
+				"\n"	+System.getProperty("line.separator") +
+				"}"+System.getProperty("line.separator");
+		 if(additionalRCode != null && additionalRCode.length() > 0) {
+			 ret += additionalRCode;
+		 }
+		 return ret;
+	 }
 }

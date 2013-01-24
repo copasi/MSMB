@@ -20,6 +20,11 @@ public class GlobalQ {
 	String expression = new String();
 	String notes = new String();
 	
+	private String editableValue = new String();
+	private String editableExpression = expression;
+	public String getEditableValue() {	return editableValue; }
+	public String getEditableExpression() {	return editableExpression; }
+	
 	public String getName() {		return name;	}
 	public void setName(String name) {		this.name = name;	}
 	
@@ -27,7 +32,6 @@ public class GlobalQ {
 
 	public void setType(String type_string) {
 		this.type = Constants.GlobalQType.getCopasiTypeFromDescription(type_string);
-	
 	}
 	
 	public String getNotes() {		return notes;	}
@@ -49,6 +53,10 @@ public class GlobalQ {
 				throw ex;
 			}
 		}
+		 finally {
+			 editableValue = getInitialValue();
+		}
+			
 	}
 	
 	
@@ -62,6 +70,9 @@ public class GlobalQ {
 			CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.EXPRESSION.description);
 		} catch (Exception ex) {
 			throw ex;
+		}
+		finally {
+			editableExpression = expression;
 		}
 	}
 	

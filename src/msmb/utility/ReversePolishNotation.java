@@ -207,7 +207,9 @@ public class ReversePolishNotation {
 	            	 if(leftPrec < operatorPrec || (FULL_BRACKETS
 	            			 //&& token.compareTo("&&")!=0&& token.compareTo("||")!=0
 	            			 ) )  { left = "(" + left + ")";     	 }
-	          		 if(token.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0) token = " " + token + " ";
+	          		 if(token.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0
+	          				 ||
+	          				token.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.BANG))==0 ) token = " " + token + " ";
 	            	 stack.push(left + token + right);
 		             stackPrecedence.push(operatorPrec);
 	             }

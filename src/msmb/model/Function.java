@@ -26,6 +26,23 @@ public class Function implements Comparable<Function> {
 	HashMap<String, Integer> parametesRoles = new HashMap<String, Integer>();
 	TreeMap<String, Integer> parametesOrder = new TreeMap<String, Integer>();
 	String equation = new String();
+	public String getEquation() {
+		return equation;
+	}
+
+	public Integer getParameterRole(String parName) {
+		return parametesRoles.get(parName);
+	}
+
+	
+	public Function(Function f) {
+		this.name = (f.name);
+		this.parametesRoles.putAll(f.parametesRoles);
+		this.parametesOrder.putAll(f.parametesOrder);
+		this.equation = f.equation;
+	}
+	
+	
 	String compactedEquation = new String();
 	String notes = new String();
 	boolean show = true;
@@ -186,7 +203,7 @@ public class Function implements Comparable<Function> {
 		if(this.type != CFunction.MassAction) {
 			
 			mathematicalExpression = CellParsers.cleanMathematicalExpression(mathematicalExpression);
-			  
+			
 			InputStream is = new ByteArrayInputStream(mathematicalExpression.getBytes("UTF-8"));
 			  MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
 			  CompleteExpression root = parser.CompleteExpression();
@@ -194,11 +211,8 @@ public class Function implements Comparable<Function> {
   			  root.accept(v);
   					  
 			  this.equation =  ToStringVisitor.toString(root);
-			
-		
-		
 			  
-		Iterator it = entriesSortedByValues(v.getNames()).iterator();
+			  Iterator it = entriesSortedByValues(v.getNames()).iterator();
 			
 			if(!this.completeFunSignatureInTable) {
 				int order = 0;
@@ -223,6 +237,7 @@ public class Function implements Comparable<Function> {
 				
 			}
 			
+		
 			
 			
 		} else { //massAction
@@ -510,6 +525,7 @@ public class Function implements Comparable<Function> {
 
 	public void setParameterIndex(String string, long variableIndex) {
 		this.parametesOrder.put(string, (int)variableIndex);
+		
 	}
 
 
@@ -547,5 +563,9 @@ public class Function implements Comparable<Function> {
 	public String toString() {
 		String name = this.getName();
 		return name;
+	}
+
+	public int getParameterIndex(String paramName) {
+		return this.parametesOrder.get(paramName);
 	}
 }

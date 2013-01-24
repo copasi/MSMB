@@ -37,13 +37,10 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 	boolean isInitialExpression = false;
 	boolean manuallyTriggered = false;
 	MultiModel multiModel = null;
-	Timer timer = null;
+	//Timer timer = null;
 	private JTextField source;
 	
-	public void stopTimerAutocompletion() {
-		timer.stop();
-		
-	}
+	//public void stopTimerAutocompletion() {	timer.stop();}
 	
 	public AutoCompleteKeyLister(AutoCompletion ac, MultiModel mm, boolean isInitialExpr) { 
 		this.autoCompletion = ac; 
@@ -52,8 +49,8 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 		isInitialExpression = isInitialExpr;
 		int mask = InputEvent.CTRL_MASK;
 		
-		timer = new Timer(200, this);
-		timer.setRepeats(false);
+	//	timer = new Timer(200, this);
+		//timer.setRepeats(false);
 		
 		//ac.setTriggerKey(KeyStroke.getKeyStroke(KeyEvent.VK_H, mask));
 		
@@ -193,17 +190,15 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 				
 			}*/
 			manuallyTriggered = true;
-			System.out.println("CTRLH BEFORE " +source.getText());
 			
 			applyAutocompletion();
-			System.out.println("CTRLH after " +source.getText());
 			return;
 		}	
 		
 	  
-		timer.stop();
-		timer.setInitialDelay(MainGui.delayAutocompletion);
-		timer.start();
+	//	timer.stop();
+	//	timer.setInitialDelay(MainGui.delayAutocompletion);
+	//	timer.start();
 		
 		source = (JTextField)e.getSource();
 		
@@ -242,7 +237,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 	
 	@Override
 	public void keyPressed(KeyEvent e) {
-		timer.stop();
+		//timer.stop();
 	}
 	@Override
 	public void keyTyped(KeyEvent e) {}

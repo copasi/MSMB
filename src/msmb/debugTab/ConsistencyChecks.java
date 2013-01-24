@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Vector;
 
-import msmb.gui.CustomTableModel;
+import msmb.gui.CustomTableModel_MSMB;
 import msmb.gui.MainGui;
 import msmb.model.*;
 import msmb.utility.CellParsers;
@@ -239,15 +239,14 @@ public class ConsistencyChecks {
 								checkAllRoles = false;
 								break;
 							/*case Constants.SITE_FOR_WEIGHT_IN_SUM:
-								System.out.println("TOOOOOOOO DO Constants.SITE_FOR_WEIGHT_IN_SUM");
+								System.out.println("TO DO? Constants.SITE_FOR_WEIGHT_IN_SUM");
 								break;*/
 							default: 
 								//System.out.println("missing parameter role in function, for actual value " + actualModelParameter);
 								throw new NullPointerException();
 							}
 						} catch(Exception ex) {
-							//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
-								ex.printStackTrace();
+							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 							if(checkAllRoles==false) throw ex;
 							indexRole++;
 							try {
@@ -278,7 +277,7 @@ public class ConsistencyChecks {
 	
 	//FOR NOW I'M USING THE TABLE REACTION MODEL BUT NEED TO BE CHANGED ONCE THERE WILL BE
 	//A DATA STRUCTURE FOR THE REACTIONS IN THE MULTIMODEL
-	public static boolean all_elements_in_reaction_exist(MultiModel multiModel, CustomTableModel tableReactionmodel) throws Exception{
+	public static boolean all_elements_in_reaction_exist(MultiModel multiModel, CustomTableModel_MSMB tableReactionmodel) throws Exception{
 		Vector<String> missingSpecies = new Vector<String>();
 		
 		if(tableReactionmodel!= null ) {
@@ -342,6 +341,8 @@ public class ConsistencyChecks {
 									 MainGui.addDebugMessage_ifNotPresent(dm);
 									missingSpecies.add(s);
 								}
+							} else {
+								multiModel.checkIfInMultipleCompartmentsHasProperCompLabel(s,sp,i+1);
 							}
 						}
 					}

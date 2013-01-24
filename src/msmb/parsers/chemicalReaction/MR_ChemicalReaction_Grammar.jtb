@@ -6,7 +6,7 @@
   JTB_F=true;
   JTB_PRINTER=true;
   JTB_W=false; //Do not overwrite existing files} PARSER_BEGIN(MR_ChemicalReaction_Parser)package msmb.parsers.chemicalReaction;
-import msmb.parsers.chemicalReaction.syntaxtree.*;import msmb.parsers.chemicalReaction.visitor.*;
+import msmb.parsers.chemicalReaction.syntaxtree.*;import msmb.parsers.chemicalReaction.visitor.*; 
 import java.io.*;
 import msmb.parsers.mathExpression.MR_Expression_ParserConstants;
 

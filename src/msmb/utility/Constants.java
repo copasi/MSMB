@@ -137,8 +137,11 @@ public class Constants {
 		
 		public static final int DEFAULT_START_INDEX_LIST_STATES = 1;
 		public static final String COPASI_STRING_TIME = "Reference=Time";
+		public static final String COPASI_STRING_INITIAL_TIME = "Reference=Initial Time";
 		public static final String COPASI_STRING_PI = "PI";
-				
+		public static final String COPASI_STRING_EXPONENTIALE = "EXPONENTIALE";		
+		public static final String COPASI_STRING_AVOGADRO= "Reference=Avogadro Constant";		
+		
 		public static final int RENAMING_OPTION_ALL = 100;
 		public static final int RENAMING_OPTION_CUSTOM = 101;
 		public static final int RENAMING_OPTION_NONE = 102;
@@ -1339,7 +1342,7 @@ public class Constants {
 		
 		
 		
-		public static enum BuiltInMathematicalFunctions {
+		/*public static enum BuiltInMathematicalFunctions {
 			LOG("log"),
 			EXP("exp");
 			public final String description;
@@ -1357,7 +1360,7 @@ public class Constants {
 				   return false;
 				   
 				}
-		}
+		}*/
 		
 		
 		public static enum TitlesTabs {
@@ -1516,12 +1519,13 @@ public class Constants {
 			SHOW_ALL_FUNCTIONS("ShowAllAvailableFunctions"), 
 			COLOR_DEFAULTS("BorderColorDefaults"), 
 			COLOR_MAJOR("BackgroundColorMajor"), 
+			COLOR_MINOR("BackgroundColorMinor"), 
 			COLOR_HIGHLIGHT("BackgroundColorHighlight"), 
 			FONT_SIZE("FontSize"), 
 			AUTOSAVE_PATH("AutosavePath"), 
 			AUTOSAVE_TIME("AutosaveTimeMin"), 
-			AUTOSAVE_ACTIVE("AutosaveActive"), 
-			AUTOCOMPLETION_DELAY("AutocompletionDelay");
+			//AUTOCOMPLETION_DELAY("AutocompletionDelay"),
+			AUTOSAVE_ACTIVE("AutosaveActive");
 			
 			public final String description;
 			   
