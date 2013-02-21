@@ -171,7 +171,7 @@ public class FunctionsDB {
 					
 				}
 				mappings.put(row_reaction, new_mapping_vector);
-				if(!mapping_vector.equals(new_mapping_vector)) {
+			/*	if(!mapping_vector.equals(new_mapping_vector)) {
 					DebugMessage dm = new DebugMessage();
 					dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
 					dm.setProblem("The signature of function " + f.getName() + " has been modified. \nThe new mapping of reaction at row " + row+ " is " + new_mapping_vector.subList(1, new_mapping_vector.size()));
@@ -186,7 +186,7 @@ public class FunctionsDB {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-				}
+				}*/
 			}
 		} else {
 			try {
@@ -231,6 +231,7 @@ public class FunctionsDB {
 
 	public static String extractJustName(String functionNamePlusPossibleParameters) throws Exception {
 		String ret = new String();
+		if(functionNamePlusPossibleParameters.trim().length() == 0) return ret;
 		InputStream is;
 		try {
 			is = new ByteArrayInputStream(functionNamePlusPossibleParameters.getBytes("UTF-8"));
@@ -241,9 +242,10 @@ public class FunctionsDB {
 		  root.accept(name);
 		  ret = name.getFunctionName();
 		  
-		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-			throw e;
+		} catch (Throwable e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
+			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, e.getMessage(),Constants.TitlesTabs.FUNCTIONS.description);
+			//throw e;
 		}
 		return ret;
 	}
@@ -281,8 +283,8 @@ public class FunctionsDB {
 	
 	
 	
-	public Vector<String> addMapping(int row, String equation, String type) throws Exception {
-		Vector<String> ret = new Vector<String>();
+	public Vector<Object> addMapping(int row, String equation, String type)  {
+		Vector<Object> ret = new Vector<Object>();
 		if(equation.length() ==0) return ret;
 		//System.out.println(equation);
 		try {
@@ -301,7 +303,8 @@ public class FunctionsDB {
 				if(misused.size() != 0) {
 					String message = new String();
 					if(misused.size() > 0) message += "The following elements are misused: " +misused.toString();
-					throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description);
+					//throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description);
+					ret.add(new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description));
 				}
 				Vector<String> PARs = new Vector();
 				if(type.compareTo(Constants.ReactionType.MASS_ACTION.description)!=0) {
@@ -316,7 +319,7 @@ public class FunctionsDB {
 					PARs.addAll(undef);// the single parameter of a mass action kinetic (added 
 				}
 
-				String message = new String("The following elements are used but never declared: " );
+				String message = new String("Missing element definition: " );
 				boolean found_non_PAR_missing = false;
 				for(int i = 0; i <undef.size();i++ ) {
 					String undef_maybePar = undef.get(i);
@@ -328,13 +331,18 @@ public class FunctionsDB {
 						message += undef_maybePar +" ";
 					}
 				}
-				if(found_non_PAR_missing) throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description);
+				if(found_non_PAR_missing) {
+					//throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description);
+					ret.add(new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description));
+					
+				}
 			/*else if(found_non_PAR_missing && MainGui.autocompleteWithDefaults) {
 				return ret;
 			}*/
 		} catch (Exception e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-			throw e;
+			ret.add(e);
+			//throw e;
 		}
 		
 		  

@@ -138,6 +138,8 @@ public class ConsistencyChecks {
 	
 	
 	
+		
+	
 	public static Vector<String>  all_parameters_in_functionCalls_exist(int whichTable, MultiModel multiModel, String functionCall, int rowIndex)throws Exception {
 		Vector<?> paramMapping = new Vector<Object>();
 		if(functionCall.trim().length() ==0) return new Vector();
@@ -252,8 +254,7 @@ public class ConsistencyChecks {
 							try {
 								role = (Integer) roleVector.get(indexRole);
 							} catch(Exception ex2) {
-								//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
-									ex2.printStackTrace();
+								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex2.printStackTrace();
 								DebugMessage dm = new DebugMessage();
 								 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
 								 dm.setProblem("Missing element definition: " + actualModelParameter);

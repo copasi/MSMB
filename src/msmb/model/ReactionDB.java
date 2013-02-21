@@ -2,22 +2,12 @@ package msmb.model;
 
 import msmb.gui.MainGui;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.TreeMap;
 import java.util.Vector;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
-import msmb.utility.CellParsers;
 import msmb.utility.Constants;
 import msmb.utility.MySyntaxException;
-
-import msmb.parsers.mathExpression.MR_Expression_Parser;
-import msmb.parsers.mathExpression.syntaxtree.CompleteExpression;
-import msmb.parsers.mathExpression.visitor.Look4UndefinedMisusedVisitor;
 
 public class ReactionDB {
 	Vector<Reaction> reactionVector = new Vector<Reaction>();
@@ -93,7 +83,7 @@ public class ReactionDB {
 								 break;
 							 }
 						 }
-						 String message = "The following elements are used but never declared: " + undef.toString();
+						 String message = "Missing element definition: " + undef.toString();
 						 ex = new MySyntaxException(message, ex);
 					 }
 					throw ex;
@@ -137,6 +127,7 @@ public class ReactionDB {
 	
 	
 	public String getEditableExpression(int row, int column) {
+		if(row >= reactionVector.size()) return new String();
 		Reaction r = this.reactionVector.get(row+1);
 		String ret = null;
 		if(	column == Constants.ReactionsColumns.KINETIC_LAW.index) {ret = r.getEditableRateLaw();}

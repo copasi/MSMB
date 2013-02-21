@@ -565,7 +565,34 @@ public class Function implements Comparable<Function> {
 		return name;
 	}
 
-	public int getParameterIndex(String paramName) {
+	public Integer getParameterIndex(String paramName) {
 		return this.parametesOrder.get(paramName);
+	}
+
+	
+	public void addUnusedVariablesInSignature(CFunctionParameters variables) {
+		
+		Vector<String> originalParams = this.getParametersNames();
+		
+		for(int i = 0; i < variables.size(); i++) {
+			CFunctionParameter current = variables.getParameter(i);
+			String name = current.getObjectName();
+			Integer index = this.getParameterIndex(name);
+			originalParams = this.getParametersNames();
+				if(index == null) {
+					for(int j = 0; j < originalParams.size(); j++) {
+						int currentIndex = this.parametesOrder.get(originalParams.get(j));
+						if(currentIndex >=i ) {
+							currentIndex++;
+							this.parametesOrder.put(originalParams.get(j), currentIndex);
+						}
+						
+					}
+					this.parametesOrder.put(name, i);
+					this.parametesRoles.put(name, CFunctionParameter.VARIABLE);
+				
+			}
+		}
+		
 	}
 }

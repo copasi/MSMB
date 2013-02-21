@@ -1,7 +1,8 @@
 package msmb.model;
 
+import msmb.commonUtilities.ChangedElement;
+import msmb.commonUtilities.MSMB_Element;
 import msmb.commonUtilities.MSMB_InterfaceChange;
-import msmb.commonUtilities.Species_Interface;
 import msmb.gui.MainGui;
 
 import java.io.ByteArrayInputStream;
@@ -14,7 +15,6 @@ import msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import msmb.parsers.mathExpression.syntaxtree.CompleteExpression;
 import msmb.parsers.mathExpression.visitor.Look4UndefinedMisusedVisitor;
 import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
-import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 
@@ -138,8 +138,7 @@ public class SpeciesDB {
 						Throwable cause = new Throwable(name);
 						throw new ClassNotFoundException("A non-multistate species already exists with that name", cause);
 					}
-					else throw new Exception("PROBLEMA addChangeSpecies");
-					 // something wrong, da vedere bene cosa................
+					else throw new Exception("problem addChangeSpecies");
 				}
 			}
 			
@@ -160,9 +159,9 @@ public class SpeciesDB {
 					multiModel.addNamedElement(s.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
 					speciesVector.put(speciesVector.size(),s);
 				} else {
-					MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(Species_Interface.class);
+					MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(MSMB_Element.SPECIES);
 					changeToReport_IntfSpecies.setElementBefore(null);
-					changeToReport_IntfSpecies.setElementAfter(new Species(name));
+					changeToReport_IntfSpecies.setElementAfter(new ChangedElement(name, MSMB_Element.SPECIES));
 					MainGui.setChangeToReport(changeToReport_IntfSpecies);
 					
 					Species s = new Species(name);
@@ -204,9 +203,9 @@ public class SpeciesDB {
 					Species s = speciesVector.get(index); //QUIIIIIII con ind mi aggiunge una specie nuova quando rinomino una esistente
 					String oldName = s.getDisplayedName();
 					if(oldName.compareTo(name)!=0) {
-						MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(Species_Interface.class);
-						changeToReport_IntfSpecies.setElementBefore(new Species(oldName));
-						changeToReport_IntfSpecies.setElementAfter(new Species(name));
+						MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(MSMB_Element.SPECIES);
+						changeToReport_IntfSpecies.setElementBefore(new ChangedElement(oldName,MSMB_Element.SPECIES));
+						changeToReport_IntfSpecies.setElementAfter(new ChangedElement(name,MSMB_Element.SPECIES));
 						MainGui.setChangeToReport(changeToReport_IntfSpecies);
 					}
 					s.setName(name);
@@ -460,6 +459,7 @@ public class SpeciesDB {
 	public String getEditableExpression(int row, int column) {
 		Species sp = this.speciesVector.get(row+1);
 		String ret = null;
+		if(sp == null) return null;
 		if(	column == Constants.SpeciesColumns.INITIAL_QUANTITY.index) {ret = sp.getEditableInitialQuantity();}
 		if (column == Constants.SpeciesColumns.EXPRESSION.index) { ret = sp.getEditableExpression();}
 		return ret;

@@ -74,16 +74,16 @@ public class RenamingDialog extends JDialog {
 	
 	public String getReturnString() {
 		return returnString;
-	}
+	} 
 
-	
-	public RenamingDialog(MultiModel m, String clashingName, String speciesRow, String speciesOldName, int actionsType) {
+	 
+	public RenamingDialog(MultiModel m, String clashingName, String elementRow, String elementOldName, int actionsType) {
 		multiModel=m;
 		this.clashingName = clashingName;
-		this.speciesRow = speciesRow;
+		this.speciesRow = elementRow;
 	//	this.speciesOldName = speciesOldName;
-		this.textIfADifferent = "If a different name is NOT provided, the current species \r"+speciesRow+"\r\nwill be DELETED and " +
-				"all the references to "+speciesOldName+" will be redirected to "+clashingName+".";
+		this.textIfADifferent = "If a different name is NOT provided, the current "+MainGui.cellTableEdited+" \r"+elementRow+"\r\nwill be DELETED and " +
+				"all the references to "+elementOldName+" will be redirected to "+clashingName+".";
 		setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		setModal(true);
 		setResizable(false);
@@ -103,7 +103,7 @@ public class RenamingDialog extends JDialog {
 			contentPanel.add(panel);
 			btnNewButton_1 = new JLabel(icon);
 			{
-				lblASpeciesWith = new JLabel("A Species with that name already exists. You can provide a");
+				lblASpeciesWith = new JLabel("A "+MainGui.cellTableEdited+" with that name already exists. You can provide a");
 				lblASpeciesWith.setHorizontalAlignment(SwingConstants.LEFT);
 			}
 			
@@ -132,52 +132,54 @@ public class RenamingDialog extends JDialog {
 		
 		JPanel panel_newName = new JPanel();
 		panel_newName.setForeground(Color.WHITE);
-		panel_newName.setBackground(Color.BLUE);
 		contentPanel.add(panel_newName, BorderLayout.SOUTH);
-		panel_newName.setLayout(new GridLayout(2, 0, 0, 0));
+		if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description) == 0){
+			panel_newName.setLayout(new GridLayout(2, 0, 0, 0));
+		} else {
+			panel_newName.setLayout(new GridLayout(1, 0, 0, 0));
+		}
 		
 		JPanel panel_1 = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panel_1.getLayout();
 		flowLayout.setAlignment(FlowLayout.LEFT);
-		panel_1.setBackground(Color.BLUE);
 		panel_newName.add(panel_1);
 		
-		rdbtnNewSpeciesName = new JRadioButton("New Species name:  ");
+		rdbtnNewSpeciesName = new JRadioButton("New "+MainGui.cellTableEdited+" name:  ");
 		panel_1.add(rdbtnNewSpeciesName);
 		rdbtnNewSpeciesName.setSelected(true);
 		
 		textField_1 = new JTextField();
 		panel_1.add(textField_1);
 		textField_1.setColumns(10);
-		
-		JPanel panel_3 = new JPanel();
-		FlowLayout flowLayout_1 = (FlowLayout) panel_3.getLayout();
-		flowLayout_1.setAlignment(FlowLayout.LEFT);
-		panel_3.setBackground(Color.MAGENTA);
-		panel_newName.add(panel_3);
-		
-		rdbtnNewCompartmentName = new JRadioButton("New Compartment name:");
-		
-		panel_3.add(rdbtnNewCompartmentName);
-		
 		ButtonGroup names = new ButtonGroup();
 		names.add(rdbtnNewSpeciesName);
-		names.add(rdbtnNewCompartmentName);
 		
-		textField_2 = new JTextField();
-		panel_3.add(textField_2);
-		textField_2.setColumns(10);
-		textField_2.setEditable(false);
-		
-		rdbtnNewCompartmentName.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				if(rdbtnNewCompartmentName.isSelected()) {
-					textField_1.setEditable(false);
-					textField_1.setText("");
-					textField_2.setEditable(true);
+		if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description) == 0){
+			JPanel panel_3 = new JPanel();
+			FlowLayout flowLayout_1 = (FlowLayout) panel_3.getLayout();
+			flowLayout_1.setAlignment(FlowLayout.LEFT);
+			panel_newName.add(panel_3);
+			
+			rdbtnNewCompartmentName = new JRadioButton("New Compartment name:");
+			
+			panel_3.add(rdbtnNewCompartmentName);
+			names.add(rdbtnNewCompartmentName);
+			textField_2 = new JTextField();
+			panel_3.add(textField_2);
+			textField_2.setColumns(10);
+			textField_2.setEditable(false);
+			rdbtnNewCompartmentName.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
+					if(rdbtnNewCompartmentName.isSelected()) {
+						textField_1.setEditable(false);
+						textField_1.setText("");
+						textField_2.setEditable(true);
+					}
 				}
-			}
-		});
+			});
+		}
+		
+	
 		rdbtnNewSpeciesName.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				if(rdbtnNewSpeciesName.isSelected()) {
@@ -198,7 +200,7 @@ public class RenamingDialog extends JDialog {
 			{
 				
 				{
-					JButton btnNewButton = new JButton("Merge species\n");
+					JButton btnNewButton = new JButton("Merge "+MainGui.cellTableEdited+"\n");
 					btnNewButton.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
 							deleteSpeciesAndRedirect();
@@ -210,7 +212,7 @@ public class RenamingDialog extends JDialog {
 			else if(actionsType == Constants.MERGE_SPECIES)
 			{
 				
-				JButton btnNewButton = new JButton("Merge species\n");
+				JButton btnNewButton = new JButton("Merge "+MainGui.cellTableEdited+"\n");
 				btnNewButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						mergeSpecies();
@@ -317,14 +319,38 @@ public class RenamingDialog extends JDialog {
 	}
 	
 	protected void useNewName() {
-		if(rdbtnNewCompartmentName.isSelected()) {
+		if(rdbtnNewCompartmentName!= null && rdbtnNewCompartmentName.isSelected()) {
 			newCompartmentName = textField_2.getText();
 			newSpeciesName = null;
+			returnString = "NEW_NAME";
+		
 		} else {
 			newCompartmentName = null;
 			newSpeciesName = textField_1.getText();
+			if(newSpeciesName.trim().length() == 0) 	returnString = null;
+			else {
+				if(MainGui.cellValueBeforeChange.compareTo(newSpeciesName)==0)  {
+					returnString = null;
+					setVisible(false);
+					return;
+				}
+				if(multiModel.getWhereNameIsUsed(newSpeciesName)!= null && multiModel.getWhereNameIsUsed(newSpeciesName).contains(Constants.TitlesTabs.getIndexFromDescription(MainGui.cellTableEdited))) {
+					JOptionPane.showMessageDialog(this, "A "+MainGui.cellTableEdited+" with the new name already exists\n Provide a different name!", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				returnString = "NEW_NAME";
+			}
+			
 		}
-		returnString = "NEW_NAME";
+		
+		if(returnString==null || returnString.trim().length() ==0) {
+			JOptionPane.showMessageDialog(this, "The new name cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+	
+		
+		
 		setVisible(false);
 	}
 	

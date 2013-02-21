@@ -15,6 +15,9 @@ import msmb.parsers.mathExpression.visitor.Look4UndefinedMisusedVisitor;
 
 
 import msmb.parsers.mathExpression.MR_Expression_Parser;
+import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
+import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 
 
 public class GlobalQDB {
@@ -130,7 +133,7 @@ public class GlobalQDB {
 								 break;
 							 }
 						 }
-						 String message = "The following elements are used but never declared: " + undef.toString();
+						 String message = "Missing element definition: " + undef.toString();
 						 ex = new MySyntaxException(message, ex);
 					 }
 					throw ex;
@@ -182,19 +185,18 @@ public class GlobalQDB {
 	
 	public boolean removeGlobalQ(int toBeRemoved) {
 			int size = globalQVector.keySet().size();
+			if(toBeRemoved+1>=size) return true;
 			globalQIndexes.remove(globalQVector.get(toBeRemoved+1).getName());
 			multiModel.removeNamedElement(globalQVector.get(toBeRemoved+1).getName(),new Integer(Constants.TitlesTabs.GLOBALQ.index));
-			boolean moved = false;
 			for(int i = toBeRemoved+1; i < size; i++) {
 				GlobalQ succ = globalQVector.get(i+1);
 				if(succ==null) {
-					if(moved) { 
-						globalQVector.remove(globalQVector.size()-1);
-					}
+					globalQVector.remove(globalQVector.size()-1);
+					break;
 				}
+				
 				globalQVector.put(i, succ);
-				if(succ!= null)globalQIndexes.put(succ.getName(), i);
-				moved = true;
+				globalQIndexes.put(succ.getName(), i);
 			}
 			return true;
 	}
@@ -211,5 +213,9 @@ public class GlobalQDB {
 			if (column == Constants.GlobalQColumns.EXPRESSION.index) { ret = element.getEditableExpression();}
 			return ret;
 		
+	}
+
+	public Integer getGlobalQIndex(String name) {
+		return globalQIndexes.get(name);
 	}
 }

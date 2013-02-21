@@ -85,11 +85,15 @@ public class CustomTableModel extends DefaultTableModel {
 		disabledCell.clear();
 	}
 	
-	public CustomTableModel(String name) {
+	public CustomTableModel(String name, boolean alwaysEmptyRow) {
 		this.columnNames.clear();
 		this.tableName = new String(name);
+		this.alwaysEmptyRow = alwaysEmptyRow;
 	}
 	
+	public CustomTableModel(String name) {
+		this(name,true);
+	}
 		
 	
 	
@@ -186,7 +190,7 @@ public class CustomTableModel extends DefaultTableModel {
         if (col < 1) {
             return false;
         } else {
-        	if(disabledCell.contains(row+"_"+col)) {
+        	if(disabledCell.contains(row+"_"+col) ) {
         		return false;
         	}
         	return true;
@@ -277,9 +281,7 @@ public class CustomTableModel extends DefaultTableModel {
     
 
 	public void removeRow(int nrow) {
-     	//SE RIMUOVO MULTISPECIES, AGGIORNARE GLI INDICI NELL'ALTRA HASHMAP DI MAINGUI
-    	//TOOOOOOOOOOOO BEEEEEEEEEEEEE FIXED
-    	data.removeElementAt(nrow);
+     	data.removeElementAt(nrow);
      	
      	for(int i = 0; i < data.size(); i++) {
     		Vector row = new Vector();
@@ -312,7 +314,8 @@ public class CustomTableModel extends DefaultTableModel {
     public void disableCell(int row, int col) {
 		this.disabledCell.add(row+"_"+col);
 	}
-	
+    
+    
 	public void enableCell(int row, int col) {
 		this.disabledCell.remove(row+"_"+col);
 	}

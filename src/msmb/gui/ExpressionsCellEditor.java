@@ -57,7 +57,8 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 		
 		KeyListener keyListener = new KeyListener() {
 		      public void keyPressed(final KeyEvent keyEvent) { 
-		    	  if(keyEvent.getKeyCode() ==KeyEvent.VK_LEFT || keyEvent.getKeyCode() ==KeyEvent.VK_RIGHT) { 
+		    	//  if(keyEvent.getKeyCode() ==KeyEvent.VK_LEFT || keyEvent.getKeyCode() ==KeyEvent.VK_RIGHT) { 
+		    	  if(keyEvent.getKeyCode() !=KeyEvent.CTRL_DOWN_MASK) { 
 		    		  SwingUtilities.invokeLater(new Runnable() {
 						@Override
 						public void run() {
@@ -120,7 +121,6 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 	private void pasteText() {
 		  String result = "";
 		    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		    //odd: the Object param of getContents is not currently used
 		    Transferable contents = clipboard.getContents(null);
 		    boolean hasTransferableText =
 		      (contents != null) &&
@@ -149,15 +149,15 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 	  private void checkPositionAndSelect(InputEvent event) {
 		  final JTextField source = ((JTextField)event.getSource());
 		  
-			
-		  String current = source.getText();
+		String current = source.getText();
 		  int cursor  = source.getCaretPosition();
-		  if(current.length()==0 || cursor==current.length()) return;
+		  MainGui.updateAutocompletionContext(current, cursor);
+		 if(current.length()==0 || cursor==current.length()) return;
 		  int startToken = 0;
 		  int endToken = 0;
-		  MainGui.updateAutocompletionContext(current, cursor);
 		  
-		  if(current.charAt(cursor)=='(') {
+		  
+		  if(current.charAt(cursor)=='(' || current.charAt(cursor)==',') {
 				 if(current.charAt(cursor-1)!='\\'){
 					 if(event instanceof KeyEvent && ((KeyEvent)event).getKeyCode()==KeyEvent.VK_LEFT){
 						 startToken = -1;
@@ -167,7 +167,7 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 				 } 
 		  }
 		  
-		  if(current.charAt(cursor)==')') {
+		  if(current.charAt(cursor)==')' ) {
 				 if(current.charAt(cursor-1)!='\\'){
 					 if(event instanceof KeyEvent && ((KeyEvent)event).getKeyCode()==KeyEvent.VK_RIGHT){
 						 endToken = -1;
@@ -213,7 +213,7 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 				 }
 			 }
 		 }
-		/* System.out.println("-----------------------------------");
+		 /*System.out.println("-----------------------------------");
 		 System.out.println("start:"+startToken);
 		 System.out.println("endToken:"+endToken);
 		 System.out.println("cursor:"+cursor);
@@ -221,8 +221,10 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 			 System.out.println(i+":"+current.charAt(i));
 		 }
 		 System.out.println("-----------------------------------");*/
-		 if(startToken != -1 && endToken != -1 && startToken<endToken) {
-			String substring =  current.substring(startToken,endToken);
+		 if(startToken != -1 && endToken != -1 ) {
+			 String substring = new String();
+			if( startToken<endToken)   substring = current.substring(startToken,endToken);
+			else   substring = current.substring(endToken,startToken);
 			//substring = substring.replace("\\ ", "\\_");
 			if(substring.length() > 0 && 
 					(	substring.contains(Constants.FunctionParamType.MODIFIER.signatureType+" ") ||
@@ -315,33 +317,5 @@ class MyRunnable implements Runnable
 		});*/
 	}
 }
-/*
- class CaretListenerTextField implements CaretListener
-{
-	 
-	 //Might not be invoked from the event dispatching thread.
-	 public void caretUpdate(CaretEvent e) {
-		 displaySelectionInfo(e.getDot(), e.getMark(),e.getSource());
-	 }
 
-	 //This method can be invoked from any thread.  It 
-	 //invokes the setText and modelToView methods, which 
-	 //must run in the event dispatching thread. We use
-	 //invokeLater to schedule the code for execution
-	 //in the event dispatching thread.
-	 protected void displaySelectionInfo(final int dot,final int mark, final Object source) {
-		 SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-					 if (dot == mark) {  // no selection
-						c
-					 } 
-				 
-			}
-			
-		 });
-	 }
-}
-*/
 

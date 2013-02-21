@@ -8,6 +8,7 @@ public class DebugConstants {
 		   //SIMILARITY(1.2,"Similarity between names"),
 		   MINOR_IMPORT_ISSUES(1.1, "Issues at import"),
 		   MINOR_EMPTY(1.2, "Important missing definitions"),
+		   SAMENAME(1.3,"Different entities with same name"),
 		   MAJOR(2.0,"Major issues"),
 		   PARSING(2.1,"Parsing errors"),
 		   INCONSISTENCIES(2.2,"Inconsistencies"),

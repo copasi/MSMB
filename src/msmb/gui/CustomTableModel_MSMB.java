@@ -256,31 +256,35 @@ class CustomJTable_MSMB extends CustomJTable  {
 	public void initializeCustomTable(CustomTableModel m) {
 		super.initializeCustomTable(m);
 		
-	    if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0)this.setAutoCreateRowSorter(true); 
+	    if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0) this.setAutoCreateRowSorter(true); 
 	  
 	    addMouseListener(new MouseAdapter()   {
+	    
 	    	private JMenuItem ackMenuItem;
 	    	private JMenuItem copySignature;
-			public void mousePressed(MouseEvent e) {   showPopup(e);  }
-	    	public void mouseReleased(MouseEvent e) {   showPopup(e); }
+			private JMenuItem errorMenuItem;
+			public void mousePressed(MouseEvent e) {   mouseClicked(e);  }
+	    	public void mouseReleased(MouseEvent e) {   mouseClicked(e); }
 	    	 
 	        public void mouseClicked(MouseEvent e)      {
-	        
 	        	
-	        	  if (e.getButton() == MouseEvent.BUTTON1)   {
+            	  if (e.getButton() == MouseEvent.BUTTON1 || e.getModifiers() == MouseEvent.BUTTON1_MASK )   {
 	        		revalidate(); // to recolor cell not highlighted any more
 			        repaint(); // to display the cleared cells
 			        
 	                Point p = e.getPoint();
 	                int row = rowAtPoint(p); 
 	                int col = columnAtPoint(p); 
-	                
+	                    
 	            	if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description) == 0) {
 		        		MultistateBuilderFrame.row_to_highlight = row;
 		        		return;
 		        	}
 	            	
-	                if(row == -1 || col == -1) return;
+	                if(row == -1 || col == -1) {
+	                	System.err.println("row at point "+row + ", col at point "+ col);
+	                	return;
+	                }
 	        
 	               if(MainGui.cellTableEdited.compareTo(model.getTableName()) !=0) MainGui.resetViewsInExpressions();
 	                
@@ -290,7 +294,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 	             	MainGui.cellSelectedCol=col;
 	             	MainGui.cellTableEdited = model.getTableName();
 	             	highlightCellSelectedRow();
-	             
+		             
 	             	try {
 						if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(MainGui.cellTableEdited, MainGui.cellSelectedRow+1);
 					} catch (Exception e1) {
@@ -299,6 +303,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 		
 					}
 	             } else {
+	     		       
 	            	showPopup(e);
 	            }
 	        }
@@ -318,6 +323,8 @@ class CustomJTable_MSMB extends CustomJTable  {
 	             	MainGui.cellSelectedCol=col;
 	             	MainGui.cellTableEdited = model.getTableName();
 	             	highlightCellSelectedRow();
+	             	
+	             	
 	             	
 		             if(MainGui.isCellWithDefaultValue(model.getTableName(), row, col)) {
 		            	 showPopup = true;
@@ -342,7 +349,22 @@ class CustomJTable_MSMB extends CustomJTable  {
 		    		 } else {
 		    			 if(ackMenuItem!= null) popupMenu.remove(ackMenuItem);
 		    		 }
-		             if(MainGui.isCellWithMultipleView(model.getTableName(), row, col)) {
+		            
+		             if(MainGui.isCellWithErrors(model.getTableName(), row, col)) {
+		            	 	 showPopup = true;
+		               	    errorMenuItem = new JMenuItem("Go to error");
+		               	    errorMenuItem.addActionListener(new ActionListener() {
+		         			  @Override
+		         			  public void actionPerformed(ActionEvent e) {
+		         				  			MainGui.goToError(model.getTableName(), row, col);
+		         			  }
+		         				});
+		    		    popupMenu.insert(errorMenuItem,0);
+		    		 } else {
+		    			 if(errorMenuItem!= null) popupMenu.remove(errorMenuItem);
+		    		 }
+		             
+		             if(MainGui.isCellWithMultipleView(model.getTableName(), row, col) && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
 		                
 		            	 MainGui.cellTableEdited = model.getTableName();
 		            	 
@@ -378,7 +400,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 		         	    // popupMenu.addSeparator();
 			         	//popupMenu.add(customView);
 		         		
-		         	   if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+		         	   if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
 		         		  JMenuItem goToDefinition = new JMenuItem("Go to Function Definition");
 		         		  goToDefinition.addActionListener(new ActionListener() {
 		         			  @Override
@@ -450,7 +472,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 			             showPopup = true;
 			         }
 		             
-		             if(model.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {
+		             if(model.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
 		            	 copySignature = new JMenuItem("Copy signature to Clipboard");
 		            	 copySignature.addActionListener(new ActionListener() {
 		    				  public void actionPerformed(ActionEvent e) {
@@ -483,6 +505,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 	
    
 	 protected void highlightCellSelectedRow() {
+		 
 		 int row = MainGui.cellSelectedRow;
 		 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description)==0) { 
      		MainGui.row_to_highlight.set(Constants.TitlesTabs.SPECIES.index, row);	
@@ -590,14 +613,11 @@ class CustomJTable_MSMB extends CustomJTable  {
 			
 			if(this.model.disabledCell.contains(rowIndex+"_"+vColIndex)) {
 				c.setBackground(Color.LIGHT_GRAY);
+				
 				if(this.model.getTableName().compareTo(Constants.TitlesTabs.BUILTINFUNCTIONS.description)==0) c.setForeground(Color.GRAY);
 				else if(this.model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0) c.setForeground(Color.BLACK);
-				/*else if(this.model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0 && vColIndex==Constants.SpeciesColumns.EXPRESSION.index) c.setForeground(Color.BLACK);
-				else if(this.model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0 && vColIndex==Constants.SpeciesColumns.INITIAL_QUANTITY.index) {
-					if(this.model.getValueAt(rowIndex, Constants.SpeciesColumns.TYPE.index).toString().compareTo(Constants.SpeciesType.MULTISTATE.description)==0)
-					c.setForeground(Color.LIGHT_GRAY);
-					else c.setForeground(Color.BLACK);
-				}*/
+				else if(this.model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0) c.setForeground(Color.DARK_GRAY);
+				else if(this.model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0 && vColIndex==Constants.SpeciesColumns.INITIAL_QUANTITY.index) c.setForeground(c.getBackground());
 				else {
 					if(this.isRowSelected(rowIndex)) {
 						c.setForeground(GraphicalProperties.color_cell_to_highlight);
@@ -609,7 +629,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 			}
 			
 			
-			if(isCellWithDefaults(rowIndex,vColIndex) && !this.model.disabledCell.contains(rowIndex+"_"+vColIndex)){
+			if(isCellWithDefaults(rowIndex,vColIndex) && !(this.model.disabledCell.contains(rowIndex+"_"+vColIndex))){
 				Border compound = null;
 				Border redline = BorderFactory.createLineBorder(GraphicalProperties.color_border_defaults,3);
 				compound = BorderFactory.createCompoundBorder(redline, compound);
@@ -633,7 +653,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 				else if(c instanceof ScientificFormatCellRenderer) ((ScientificFormatCellRenderer)c).setBorder(compound);
 			} 
 		
-			if(this.model.disabledCell.contains(rowIndex+"_"+vColIndex)&&isRowSelected(rowIndex)){
+			if((this.model.disabledCell.contains(rowIndex+"_"+vColIndex))&&isRowSelected(rowIndex)){
 				c.setBackground(GraphicalProperties.color_cell_to_highlight);
 				Border compound = null;
 				Border redline = BorderFactory.createLineBorder(Color.LIGHT_GRAY,3);
@@ -660,8 +680,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 		int selRow = -1;
 		if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0) {
      		selRow=MultistateBuilderFrame.row_to_highlight;
-    // 		System.out.println("MultistateBuilderFrame.row_to_highlight "+MultistateBuilderFrame.row_to_highlight);
-     	} else	 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description)==0) { 
+     	} else	/* if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description)==0) { 
 	     		selRow=MainGui.row_to_highlight.get(Constants.TitlesTabs.SPECIES.index);	
 	     	}
 	     	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) { 
@@ -681,7 +700,9 @@ class CustomJTable_MSMB extends CustomJTable  {
 	     	}
 	     	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) { 
 	     		selRow=MainGui.row_to_highlight.get(Constants.TitlesTabs.COMPARTMENTS.index);	
-	     	}  
+	     	}  */
+     		
+     		selRow = MainGui.row_to_highlight.get(MainGui.jTabGeneral.getSelectedIndex());
 	     	 
 			return row==selRow;
 	}

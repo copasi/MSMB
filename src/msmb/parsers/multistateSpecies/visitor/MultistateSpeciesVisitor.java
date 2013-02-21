@@ -6,6 +6,7 @@ import java.util.*;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import msmb.gui.MainGui;
 import msmb.model.MultiModel;
 import msmb.model.MultistateSpecies;
 import msmb.model.Species;
@@ -24,7 +25,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	 private String speciesName;
  	 private HashMap<String,Vector<String>> site_states;
 	 private HashMap<String, MutablePair<Integer, Integer>> pureRange_sites;
-	 private HashMap<String, MutablePair<String, String>> pureRangeString_sites;
+//	 private HashMap<String, MutablePair<String, String>> pureRangeString_sites;
 	 private HashSet<String> circular_sites;
     Vector<Exception> exceptions = new Vector<>();
 	public Vector<Exception> getExceptions() { return exceptions; }
@@ -48,7 +49,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	MultiModel multiModel = null;
 	private boolean enforceRangesNumeric;
 	
-	Vector <Species> singleStateMultiStateSpecies = new Vector(); //for the expansion
+	Vector <Species> singleStateMultiStateSpecies = new Vector<Species>(); //for the expansion
 	
 	public String getProductExpansion() {			return expandedForm;	}
 	
@@ -105,8 +106,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 							break;
 						}
 						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e.printStackTrace();
 						}
 						
 					}
@@ -145,7 +145,8 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 		 }
 	 }
 	 
-	 private String buildExpandedForm() {
+	 @SuppressWarnings("unchecked")
+	private String buildExpandedForm() {
 		 if(speciesName.compareTo(reactant.getSpeciesName())!= 0) {
 			 return speciesName;
 		 }
@@ -231,7 +232,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	  }
 	
 	   public void visit(MultistateSpecies_SiteSingleElement n) {
-		  if(current_states == null) current_states = new Vector();
+		  if(current_states == null) current_states = new Vector<String>();
 		  
 		  if(n.nodeOptional.present() && current_lowString == null) {
 			  current_lowString = ToStringVisitor.toString(n.nodeChoice.choice);

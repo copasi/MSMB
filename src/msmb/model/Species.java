@@ -1,19 +1,12 @@
 package msmb.model;
 
-import java.awt.Font;
 import java.io.UnsupportedEncodingException;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
-import javax.swing.event.ChangeEvent;
-
-import msmb.commonUtilities.MSMB_InterfaceChange;
-import msmb.commonUtilities.Species_Interface;
-import msmb.gui.MainGui;
 import msmb.utility.*;
 
 
-public class Species implements Species_Interface {
+public class Species  {
 	String name = new String();
 	Vector<String> initialQuantity = new Vector<String>(); 
 	Vector<String> compartment = new Vector<String>(); 

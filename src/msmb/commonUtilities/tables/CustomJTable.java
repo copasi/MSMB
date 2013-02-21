@@ -18,6 +18,7 @@ import javax.swing.border.Border;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 import msmb.utility.Constants;
 import msmb.utility.GraphicalProperties;
@@ -41,11 +42,13 @@ public class CustomJTable extends JTable  {
 		if(customFont!= null) {
 			FontMetrics metrics = this.getFontMetrics(customFont);
 			int fontHeight = metrics.getHeight();
-		    this.setRowHeight(fontHeight+5);
+		    this.setRowHeight(fontHeight+5);	
 		} else {
 			this.setRowHeight(20);
 		}
 	}
+	
+	
 	
 	public void initializeCustomTable(CustomTableModel m) {
 		if(customFont!= null) {
@@ -57,6 +60,8 @@ public class CustomJTable extends JTable  {
 		}
 	    
 	    model = m;    
+	    this.setModel(m);
+		
 	    setBackground(UIManager.getColor("Button.background"));
 	  
 		TableColumnModel colModel = this.getColumnModel();

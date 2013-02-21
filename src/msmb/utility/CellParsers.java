@@ -205,6 +205,11 @@ public class CellParsers {
 	
 	
 	public static String reprintExpression_brackets(String expression, boolean full_brackets) {
+	
+	//	System.out.println("...........reprintExpression_brackets..............");
+	//	System.out.println(expression);
+	//	System.out.println(".................................");
+	
 		if(expression.trim().length()==0) return expression;
 		try {
 		  String ret = new String();
@@ -240,7 +245,10 @@ public class CellParsers {
 			MR_SubstitutionVisitor mySV= new MR_SubstitutionVisitor(find, replacement);
 			root.accept(mySV);
 			String newExpr = mySV.getNewExpression();
+			
 			//System.out.println(newExpr);
+			//System.out.println(".................................");
+		
 			InputStream is2 = new ByteArrayInputStream(newExpr.getBytes("UTF-8"));
 			parser = new MR_Expression_Parser_ReducedParserException(is2,"UTF-8");
 			root = parser.CompleteExpression();
@@ -267,10 +275,11 @@ public class CellParsers {
 			return newExpr;
 			}catch (Throwable e2) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e2.printStackTrace();
+				return null;
 			}
 		}
 			
-		return null;
+		
 	 }
 
 	
@@ -365,7 +374,7 @@ public class CellParsers {
 				  if(undef.size() != 0 || misused.size() != 0) {
 					    String message = new String();
 						if(undef.size() >0) {
-							 message += "The following elements are used but never declared: " + undef.toString();
+							 message += "Missing element definition: " + undef.toString();
 						}
 						if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
 						throw new MySyntaxException(column_tab, message,table_descr);
@@ -416,7 +425,7 @@ public class CellParsers {
 				  if(undef.size() != 0 || misused.size() != 0) {
 					    String message = new String();
 						if(undef.size() >0) {
-							 message += "The following elements are used but never declared: " + undef.toString();
+							 message += "Missing element definition: " + undef.toString();
 						}
 						if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
 						throw new MySyntaxException(column_tab, message,table_descr);
@@ -462,7 +471,7 @@ public class CellParsers {
 			
 			if(undef.size() != 0 || misused.size() != 0) {
 				String message = new String();
-				if(undef.size() >0) message += "The following elements are used but never declared: " + undef.toString();
+				if(undef.size() >0) message += "Missing element definition: " + undef.toString();
 				if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
 				int column_tab = -1;
 				if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.description)== 0) {
@@ -589,7 +598,7 @@ public class CellParsers {
 						|| objectName.indexOf('{')!=-1
 						|| objectName.indexOf('}')!=-1)) {
 					return new String("\""+objectName+"\"");
-				} 	else return objectName;
+				} 
 			}
 			else {
 				if((objectName.indexOf('(')!=-1 
@@ -606,9 +615,17 @@ public class CellParsers {
 			if(objectName.indexOf('.') != -1) {
 				//TO CHECK IF IT'S OK WITH NAME WITH EXTENSIONS IN EXPRESSIONS
 				return new String("\""+objectName+"\"");
-			}
+			} 
 			
-			else return objectName;
+			try {
+				Double d = new Double(objectName);
+				return new String("\""+objectName+"\""); // if the name successfully convert into a number, it should be quoted
+			} catch (Exception ex) {
+				//if it does not convert into a number, it should be fine
+			}
+	
+			 return objectName;
+			
 		}
 		else return objectName;
 	}
@@ -747,8 +764,8 @@ public class CellParsers {
 			
 			 DebugMessage dm = new DebugMessage();
 			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-			 dm.setProblem("Reaction not following the correct syntax. Common causes: missing blank separator or quotes."+ex.getMessage());
-			 dm.setOrigin_row(row+1);
+			 dm.setProblem("Reaction not following the correct syntax. Common causes: missing blank separator or quotes. "+ex.getMessage());
+			 dm.setOrigin_row(row);
 			 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
 			 dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
 			 MainGui.addDebugMessage_ifNotPresent(dm);

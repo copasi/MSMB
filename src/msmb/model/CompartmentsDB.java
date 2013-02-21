@@ -171,7 +171,7 @@ public class CompartmentsDB {
 								 break;
 							 }
 						 }
-						 String message = "The following elements are used but never declared: " + undef.toString();
+						 String message = "Missing element definition: " + undef.toString();
 						 ex = new MySyntaxException(message, ex);
 					 }
 					throw ex;

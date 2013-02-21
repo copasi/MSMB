@@ -3,6 +3,11 @@ package msmb.utility;
 import java.awt.Color;
 import java.util.Vector;
 
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.Element;
+import javax.swing.text.JTextComponent;
+
 
 import org.COPASI.CCompartment;
 import org.COPASI.CFunction;
@@ -1015,11 +1020,11 @@ public class Constants {
 			   MODIFIER(3,"Modifier", CFunctionParameter.MODIFIER,"MOD"), 
 			   VARIABLE(4,"Variable", CFunctionParameter.VARIABLE,"VAR"),
 			   VOLUME(5,"Volume", CFunctionParameter.VOLUME,"VOL"),
-			//   FUNCTION(6,"Function", Constants.PARAM_TYPE_FUN,"FUN"),
 			   SITE(6,"Site", Constants.SITE_FOR_WEIGHT_IN_SUM,"SITE"),
 			   TIME(7,"Time", CFunctionParameter.TIME,"TIME"),
-			   MISSING(-1,"Missing", -1,"MISSING");
-				   
+			   MISSING(-1,"Missing", -1,"MISSING"),
+			    FUNCTION(-2,"Function", Constants.PARAM_TYPE_FUN,"FUN");
+						   
 						          
 			   final int arrayIndex;
 			   public final String description;
@@ -1202,6 +1207,7 @@ public class Constants {
 		public static final Color DEFAULT_COLOR_ERRORS = Constants.vt_orange;
 		public static final String PREFIX_FUN_4_REACTION_NAME = "function_4_reaction_";
 		public static final String PREFIX_GLQ_4_REACTION_NAME = "globalQ_4_reaction_";
+		public static final String NO_AUTOCOMPLETION_AVAILABLE = "No autocompletion available";
 		
 
 		
@@ -1395,6 +1401,15 @@ public class Constants {
 				   return -1;
 			   }
 
+			   
+			   public static String getDescriptionFromIndex(int index){
+				        for (TitlesTabs b : TitlesTabs.values()) {
+					        if (index == b.index) {
+					          return new String(b.description);
+					      }
+					} 
+				   return new String();
+			   }
 			public static int getNumTabs() {
 				return numTabMSMB;
 			}
@@ -1544,6 +1559,8 @@ public class Constants {
 				protected boolean isValidChar(char arg0) {
 					return super.isValidChar(arg0)|| arg0==' ';
 				}
+			
+				
 			};
 		public static String MULTISTATE_TITLE_TABLE_PDF = new String("Multistate species");
 		

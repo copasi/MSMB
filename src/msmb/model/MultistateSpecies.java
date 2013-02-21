@@ -24,7 +24,6 @@ import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
 import msmb.parsers.multistateSpecies.MR_MultistateSpecies_ParserConstants;
 import msmb.parsers.multistateSpecies.ParseException;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
-import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Range;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_RangeString;
 import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 

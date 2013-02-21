@@ -21,6 +21,7 @@ import javax.swing.text.JTextComponent;
 import msmb.model.MultiModel;
 import msmb.utility.AutocompleteDB;
 import msmb.utility.CellParsers;
+import msmb.utility.Constants;
 
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.autocomplete.BasicCompletion;
@@ -49,7 +50,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 		isInitialExpression = isInitialExpr;
 		int mask = InputEvent.CTRL_MASK;
 		
-	//	timer = new Timer(200, this);
+		//timer = new Timer(200, this);
 		//timer.setRepeats(false);
 		
 		//ac.setTriggerKey(KeyStroke.getKeyStroke(KeyEvent.VK_H, mask));
@@ -58,20 +59,35 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 
 	
 	
-	public void getFunctionAutocompletion() {	
+	public void doGenericAutocompletion() {	
 		DefaultCompletionProvider provider = null;
 		//Vector<Vector<String>> completions = autocomDB.getAllDefinedFunctionsAutocompletion();
 		autoCompletion.hideChildWindows();
 		
 		Vector<Vector<String>> completions = autocomDB.getAutocompletionFromContext();
 		if(completions!= null) {
-			provider = new DefaultCompletionProvider();
-			for(int i = 0; i<completions.size(); i++) {
+			provider = new DefaultCompletionProvider(){
+				@Override
+				public String getAlreadyEnteredText(JTextComponent comp) {
+					if(comp.getSelectedText()!= null && AutocompleteDB.selectedTextIsSignatureType(comp.getSelectedText())) {
+						return new String();
+					}
+					else return super.getAlreadyEnteredText(comp);
+			
+				}
+			};
+			if(completions.size() == 0) {
+				String signature = Constants.NO_AUTOCOMPLETION_AVAILABLE;
+				String longDescr ="No autocompletion elements of type "+Constants.FunctionParamType.getSignatureDescriptionFromCopasiType(MainGui.autocompletionContext)+" are available";
+				provider.addCompletion(new BasicCompletion(provider, signature ,null, longDescr)); 
+			}
+			else {
+				for(int i = 0; i<completions.size(); i++) {
 					Vector<String> el = completions.get(i);
 					String signature = el.get(0);
 					String longDescr = el.get(1);
 					provider.addCompletion(new BasicCompletion(provider, signature ,null, longDescr)); 
-				
+				}
 			}
 		}
 		
@@ -85,7 +101,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 	public void applyBetweenQuotesCompletion(final int quotedStartingAt, final String prevText) {	
 		DefaultCompletionProvider provider = null;
 		
-		Vector<Vector<String>> completions = autocomDB.getAllDefinedFunctionsAutocompletion();
+		Vector<Vector<String>> completions = autocomDB.getAllDefinedFunctions();
 		
 		if(completions!= null) {
 			provider = new DefaultCompletionProvider() {
@@ -178,6 +194,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 		if(keyCode == KeyEvent.VK_ESCAPE) {
 			return;
 		}
+		source = (JTextField)e.getSource();
 		
 		if ((e.getModifiers() & InputEvent.CTRL_MASK) != 0 && (keyCode == KeyEvent.VK_H) ) {
 			/*source = (JTextField)e.getSource();
@@ -200,7 +217,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 	//	timer.setInitialDelay(MainGui.delayAutocompletion);
 	//	timer.start();
 		
-		source = (JTextField)e.getSource();
+		
 		
 		
 	/*	else if ((e.getModifiers() & InputEvent.CTRL_MASK) != 0 && (keyCode == KeyEvent.VK_O) ) {*/
@@ -279,8 +296,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 					} catch (Exception ex) {
 						//ex.printStackTrace();
 						provider = null;
-						//all possible autocompletion: TOOOOOOOOOOOOOOOO DO
-						getFunctionAutocompletion();
+						doGenericAutocompletion();
 					} finally {
 						if(provider!= null) { 
 							autoCompletion.setCompletionProvider(provider);
@@ -299,7 +315,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 					
 				}
 	} else {
-		getFunctionAutocompletion();
+		doGenericAutocompletion();
 	}
 	}
 }

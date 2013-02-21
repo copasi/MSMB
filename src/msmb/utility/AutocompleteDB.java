@@ -9,9 +9,15 @@ import javax.swing.text.Element;
 import javax.swing.text.JTextComponent;
 
 import msmb.gui.MainGui;
+import msmb.model.Compartment;
 import msmb.model.Function;
+import msmb.model.GlobalQ;
 import msmb.model.MultiModel;
+import msmb.model.Reaction;
+import msmb.model.Species;
 
+import org.COPASI.CFunctionParameter;
+import org.COPASI.CReaction;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 
@@ -275,17 +281,40 @@ public class AutocompleteDB {
 	}
 
 
-
+	public static  boolean selectedTextIsSignatureType(String selectedText) {
+		if(selectedText.length() > 0 && 
+				(	selectedText.startsWith(Constants.FunctionParamType.MODIFIER.signatureType+" ") ||
+						selectedText.startsWith(Constants.FunctionParamType.PARAMETER.signatureType+" ") ||
+						selectedText.startsWith(Constants.FunctionParamType.VARIABLE.signatureType+" ") ||
+						selectedText.startsWith(Constants.FunctionParamType.PRODUCT.signatureType+" ") ||
+						selectedText.startsWith(Constants.FunctionParamType.SITE.signatureType+" ") ||
+						selectedText.startsWith(Constants.FunctionParamType.SUBSTRATE.signatureType+" ") ||
+						selectedText.startsWith(Constants.FunctionParamType.VOLUME.signatureType+" ")
+				)) {
+			return true;
+		}
+		else return false;
+	}
 	public DefaultCompletionProvider getDefaultCompletionProvider(char trigger, String element, boolean isInitialExpression) {
 		
-		System.out.println("element before " +element);
+		//System.out.println("element before " +element);
 		if(element.endsWith(".")) {
 		//	endWithDot = true;
 			element = element.substring(0,element.length()-1);
 		}
-		System.out.println("element after " +element);
+		//System.out.println("element after " +element);
 		Vector<String> completions = new Vector<String>();
-		DefaultCompletionProvider ret = new DefaultCompletionProvider();
+		DefaultCompletionProvider ret = new DefaultCompletionProvider()	{
+			@Override
+		
+			public String getAlreadyEnteredText(JTextComponent comp) {
+				if(comp.getSelectedText()!= null && selectedTextIsSignatureType(comp.getSelectedText())) {
+					return new String();
+				}
+			else return super.getAlreadyEnteredText(comp);
+	
+		}
+			};
 			
 		if(element.length() ==0) {
 			if(trigger == '%') {
@@ -403,21 +432,141 @@ public class AutocompleteDB {
 
 
 	public Vector<Vector<String>> getAutocompletionFromContext() {
+		
 		if(MainGui.autocompletionContext==Constants.FunctionParamType.VARIABLE.copasiType) {
-			return getAllDefinedFunctionsAutocompletion();
+			return getAllNamedElements();
 		}
 		else if(MainGui.autocompletionContext==Constants.FunctionParamType.SUBSTRATE.copasiType) {
-			return MainGui.getSubstratesSelectedReaction();
-			
+			 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+				 return MainGui.getSubstratesSelectedReaction();
+			} else return new Vector<Vector<String>>();
 		}
-		else return getAllDefinedFunctionsAutocompletion();
+		else if(MainGui.autocompletionContext==Constants.FunctionParamType.MODIFIER.copasiType) {
+			 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+				 return MainGui.getModifiersSelectedReaction();
+			} else return new Vector<Vector<String>>();
+		}
+		else if(MainGui.autocompletionContext==Constants.FunctionParamType.PRODUCT.copasiType) {
+			 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+				 return MainGui.getModifiersSelectedReaction();
+			} else return new Vector<Vector<String>>();
+		}
+		else if(MainGui.autocompletionContext==Constants.FunctionParamType.PARAMETER.copasiType) {
+			return getAllDefinedGlobalQuantities();
+		}
+		else if(MainGui.autocompletionContext==Constants.FunctionParamType.FUNCTION.copasiType) {
+			return getAllDefinedFunctions();
+		}
+		else return getAllNamedElements();
+		
+		
+		
+		
 	}
 
 
 
-	public Vector<Vector<String>> getAllDefinedFunctionsAutocompletion() {
+	public Vector<Vector<String>> getAllNamedElements() {
+		Vector<Vector<String>> ret = new Vector<Vector<String>>();
+		ret.addAll(getAllDefinedFunctions());
+		ret.addAll(getAllDefinedSpecies());
+		ret.addAll(getAllDefinedGlobalQuantities());
+		ret.addAll(getAllDefinedCompartments());
+		
+		return ret;
+	}
+
+	public Vector<Vector<String>> getAllDefinedSpecies() {
+		Vector<Vector<String>> ret = new Vector<Vector<String>>();
+		Vector<Species> elements = multiModel.getAllSpecies();
+		
+		for(int i = 0; i< elements.size(); i++) {
+			Vector<String> element = new Vector<String>();
+			Species current =  elements.get(i);
+			if(current==null) continue;
+			String name  = current.getSpeciesName();
+			
+			if(name.toString().trim().startsWith("\"") &&  name.toString().trim().endsWith("\"")) {
+				name = (name.toString().trim().substring(1,name.toString().trim().length()-1));
+			}
+			
+			element.add(name);
+			try {
+				element.add("Species complete definition: \n" +current.getAllFields().toString());// long description with the function equation
+			} catch (Exception e) {
+				e.printStackTrace();
+				continue;
+			} 
+			ret.add(element);
+		}
+		return ret;
+	}
+	
+	public Vector<Vector<String>> getAllDefinedGlobalQuantities() {
+		Vector<Vector<String>> ret = new Vector<Vector<String>>();
+		Vector<GlobalQ> elements = multiModel.getAllGlobalQ();
+		
+		for(int i = 0; i< elements.size(); i++) {
+			Vector<String> element = new Vector<String>();
+			GlobalQ current =  elements.get(i);
+			if(current==null) continue;
+			String name  = current.getName();
+			
+			if(name.toString().trim().startsWith("\"") &&  name.toString().trim().endsWith("\"")) {
+				name = (name.toString().trim().substring(1,name.toString().trim().length()-1));
+			}
+			
+			element.add(name);
+			try {
+				element.add("Global quantity complete definition: \n" +current.getAllFields().toString());// long description with the function equation
+			} catch (Exception e) {
+				e.printStackTrace();
+				continue;
+			} 
+			ret.add(element);
+		}
+		return ret;
+	}
+	
+	public Vector<Vector<String>> getAllDefinedCompartments() {
+		Vector<Vector<String>> ret = new Vector<Vector<String>>();
+		Vector<Compartment> elements = multiModel.getAllCompartments();
+		
+		for(int i = 0; i< elements.size(); i++) {
+			Vector<String> element = new Vector<String>();
+			Compartment current =  elements.get(i);
+			if(current==null) continue;
+			String name  = current.getName();
+			
+			if(name.toString().trim().startsWith("\"") &&  name.toString().trim().endsWith("\"")) {
+				name = (name.toString().trim().substring(1,name.toString().trim().length()-1));
+			}
+			
+			element.add(name);
+			try {
+				element.add("Compartment complete definition: \n" +current.getAllFields().toString());// long description with the function equation
+			} catch (Exception e) {
+				e.printStackTrace();
+				continue;
+			} 
+			ret.add(element);
+		}
+		return ret;
+	}
+	
+	public Vector<Vector<String>> getAllDefinedFunctions() {
+		if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+			return getAllDefinedFunctions(true);
+		} else {
+			return  getAllDefinedFunctions(false);
+		}
+	}
+	
+	public Vector<Vector<String>> getAllDefinedFunctions(boolean allowSubProdMod) {
 		Vector<Vector<String>> ret = new Vector<Vector<String>>();
 		Vector<Function> functions = multiModel.funDB.getAllUserDefinedFunctions();
+		
+		System.out.println("getAllUserDefinedFunctions size "+functions.size());
 		
 		for(int i = 0; i< functions.size(); i++) {
 			Vector<String> element = new Vector<String>();
@@ -428,14 +577,54 @@ public class AutocompleteDB {
 				name = (name.toString().trim().substring(1,name.toString().trim().length()-1));
 			}
 			
+			Vector<Integer> types = f.getParametersTypes_CFunctionParameter();
+			if(!allowSubProdMod) {
+				boolean typesOK=true;
+				for(int t = 0; t < types.size(); t++) {
+					Integer element1 = types.get(t);
+					if(element1 == CFunctionParameter.SUBSTRATE || 
+							element1 == CFunctionParameter.MODIFIER ||
+							element1 == CFunctionParameter.PRODUCT ) {
+						typesOK = false;
+						break;
+					}
+				}
+				if(!typesOK) continue;
+			} else {
+				Reaction reaction = multiModel.getReaction(MainGui.cellSelectedRow+1);
+				Vector subs = reaction.getSubstrates(multiModel);
+				Vector prod = reaction.getProducts(multiModel);
+				Vector mod = reaction.getModifiers(multiModel);
+				boolean typesOK=true;
+				for(int t = 0; t < types.size(); t++) {
+					Integer element1 = types.get(t);
+					if(element1 == CFunctionParameter.SUBSTRATE && (subs== null || subs.size() == 0) ) {
+						typesOK = false;
+						break;
+					}
+					if(element1 == CFunctionParameter.MODIFIER  && (mod== null || mod.size() == 0) ) {
+						typesOK = false;
+						break;
+					}
+					if(element1 == CFunctionParameter.PRODUCT  && (prod== null || prod.size() == 0) ) {
+						typesOK = false;
+						break;
+					}
+				}
+				if(!typesOK) continue;
+			}
+			
+			
+			
 			element.add(name);
 			try {
-				element.add(f.getExpandedEquation(new Vector()));// long description with the function equation
+				element.add(f.printCompleteSignature()+"\n\n"+f.getExpandedEquation(new Vector()));// long description with the function equation
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
 			} 
 			ret.add(element);
+			System.out.println("AUTOCOMPLETION 1"+ret);
 		}
 		
 		functions = multiModel.funDB.getAllBuiltInFunctions();
@@ -444,20 +633,59 @@ public class AutocompleteDB {
 			Function f = functions.get(i);
 			if(f==null) continue;
 			String name = f.getName();
+			System.out.println("getAllBuiltInFunctions 1 "+name);
 			if(name.toString().trim().startsWith("\"") &&  name.toString().trim().endsWith("\"")) {
 				name = (name.toString().trim().substring(1,name.toString().trim().length()-1));
+			}
+			Vector<Integer> types = f.getParametersTypes_CFunctionParameter();
+			if(!allowSubProdMod) {
+				boolean typesOK=true;
+				for(int t = 0; t < types.size(); t++) {
+					Integer element1 = types.get(t);
+					if(element1 == CFunctionParameter.SUBSTRATE || 
+							element1 == CFunctionParameter.MODIFIER ||
+							element1 == CFunctionParameter.PRODUCT ) {
+						typesOK = false;
+						break;
+					}
+				}
+				if(!typesOK) continue;
+			} else {
+				Reaction reaction = multiModel.getReaction(MainGui.cellSelectedRow+1);
+				Vector subs = reaction.getSubstrates(multiModel);
+				Vector prod = reaction.getProducts(multiModel);
+				Vector mod = reaction.getModifiers(multiModel);
+				boolean typesOK=true;
+				for(int t = 0; t < types.size(); t++) {
+					Integer element1 = types.get(t);
+					if(element1 == CFunctionParameter.SUBSTRATE && (subs== null || subs.size() == 0) ) {
+						typesOK = false;
+						break;
+					}
+					if(element1 == CFunctionParameter.MODIFIER  && (mod== null || mod.size() == 0) ) {
+						typesOK = false;
+						break;
+					}
+					if(element1 == CFunctionParameter.PRODUCT  && (prod== null || prod.size() == 0) ) {
+						typesOK = false;
+						break;
+					}
+				}
+				if(!typesOK) continue;
 			}
 			
 			element.add(name);
 			try {
-				element.add(f.getExpandedEquation(new Vector()));// long description with the function equation
+				element.add(f.printCompleteSignature()+"\n\n"+f.getExpandedEquation(new Vector()));// long description with the function equation
 			} catch (Exception e) {
 				e.printStackTrace();
 				continue;
 			} 
 			ret.add(element);
+			System.out.println("AUTOCOMPLETION 2"+ret);
 		}
 		
+		System.out.println("AUTOCOMPLETION end "+ret);
 		return ret;
 	}
 

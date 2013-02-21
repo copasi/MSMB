@@ -419,7 +419,7 @@ public String getClosingOperation() {
 		if(jCheckBox.isSelected()) {
 			String old = jCheckBox.getText();
 			String newS =replaceAllWords(old,from,to);
-			if(newS == null) newS="TOBEFIXED";
+			if(newS == null) newS=old;
 			jCheckBox.setText(newS);
 		} else {
 			String old = jCheckBox.getText();

@@ -5,6 +5,8 @@ import msmb.parsers.mathExpression.MR_Expression_ParserConstants;
 import msmb.parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import msmb.parsers.mathExpression.ParseException;
 import msmb.parsers.mathExpression.syntaxtree.*;
+import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import msmb.parsers.multistateSpecies.MR_MultistateSpecies_ParserConstantsNOQUOTES;
 import msmb.utility.CellParsers;
 import msmb.utility.Constants;
 
@@ -19,6 +21,8 @@ import java.util.Vector;
 
 import msmb.model.Function;
 import msmb.model.MultiModel;
+import msmb.model.MultistateSpecies;
+import msmb.model.Species;
 
 
 
@@ -32,7 +36,9 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	public Vector<Exception> getExceptions() { return exceptions; }
 		
 	private String expression = new String();
+	private String compressed_expression = new String();
 	public String getExpression() {return expression;}
+	public String getCompressedExpression() {return expression;}
 	MultiModel multiModel = null;
 	List listFunctionToCompact = null;
 	boolean elementsExpanded = true; // if false, I will try to compress them as much as possible
@@ -350,6 +356,32 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 		//System.out.println("in generateElement:" + element);
 		//String element = ToStringVisitor.toString(n);
 		if(CellParsers.isKeyword(element)) return element;
+		
+		if(!elementsExpanded) {
+			if(CellParsers.isMultistateSpeciesName(element)) { //if it is a multistate element just for the cmp site, it means that it can be a single simple species
+				
+				String sp_name = CellParsers.extractMultistateName(element);
+				Species sp =multiModel.getSpecies(sp_name);
+				int numberOfSites = 1;
+				if(sp == null) return element;
+ 				if(sp instanceof MultistateSpecies) {
+					numberOfSites =  ((MultistateSpecies)sp).getSitesNames().size();
+				}
+				if(sp.getCompartments().size() == 1 && numberOfSites == 1) {
+					String comp = sp.getCompartments().get(0);
+					String toReplace = sp_name 
+							+ MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.OPEN_R)
+						   + MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXTENSION_COMPARTMENT).substring(1)
+						   + MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.OPEN_C)
+						   +comp
+						   + MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.CLOSED_C)
+						   + MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.CLOSED_R);
+					element = element.replace(toReplace, sp_name);
+				}
+				
+			}
+		}
+		
 		
 		String element_newView = new String();
 		if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0 

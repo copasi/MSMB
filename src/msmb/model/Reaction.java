@@ -6,7 +6,6 @@ import java.util.Vector;
 
 import msmb.gui.MainGui;
 import msmb.parsers.chemicalReaction.MR_ChemicalReaction_Parser;
-import msmb.parsers.chemicalReaction.ParseException;
 import msmb.parsers.chemicalReaction.syntaxtree.CompleteReaction;
 import msmb.parsers.chemicalReaction.visitor.ExtractSubProdModVisitor;
 import msmb.utility.CellParsers;
