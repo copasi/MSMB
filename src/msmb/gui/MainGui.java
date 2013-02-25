@@ -1268,7 +1268,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 			TableColumnModel colModel = jTableSpecies.getColumnModel();
 			colModel.getColumn(Constants.SpeciesColumns.NAME.index).setCellRenderer(new EditableCellRenderer_MSMB());
-			colModel.getColumn(Constants.SpeciesColumns.NAME.index).setCellEditor(new UnquotingCellEditor());
+			colModel.getColumn(Constants.SpeciesColumns.NAME.index).setCellEditor(new UnquotingCellEditor_MSMB());
 			colModel.getColumn(Constants.SpeciesColumns.EXPRESSION.index).setCellRenderer(new EditableCellRenderer_MSMB());
 				
 			
@@ -1377,10 +1377,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		 MainGui.cellTableEdited = "";
 		 MainGui.cellValueBeforeChange = "";
 		 MainGui.indexToDelete.clear();
-		 
-			clearTable(tableCompartmentsmodel);
+		 MainGui.modelName=Constants.DEFAULT_MODEL_NAME;
+		textFieldModelName.setText(MainGui.modelName);
+		
+		clearTable(tableCompartmentsmodel);
 		clearTable(tableFunctionsmodel);
-		clearTable(tableBuiltInFunctionsmodel);
 		clearTable(tableGlobalQmodel);
 		clearTable(tableReactionmodel);
 		clearTable(tableSpeciesmodel);
@@ -1639,7 +1640,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	                	deleteTempAutosave();
 		            	recordAutosave.stopAutosave();
 		            	File file = fileChooser.getSelectedFile();
-	                    inputFile = file.getName().substring(0,file.getName().lastIndexOf("."));
+		            	inputFile = file.getName().substring(0,file.getName().lastIndexOf("."));
 	                    donotCleanDebugMessages = true;
 	                    importTablesMultistateFormat(file);
 	                    donotCleanDebugMessages = false;
@@ -5894,6 +5895,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 
 	private void addRecents(File f) {
 		
+		 //the file that has been moved or deleted are not going to be shown in the list
+		if(!f.exists()) {
+			return;
+		}
+		
 		int index = recentFiles.indexOf(f.getAbsolutePath());
 		if(index!= -1) {
 			recentFiles.remove(index);
@@ -5904,6 +5910,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				recentFiles.remove(0);
 				recentMenu.remove(0);
 		}
+		
+		
 		
 		recentFiles.add(f.getAbsolutePath());
 		JMenuItem item = new JMenuItem(f.getName());
@@ -6125,7 +6133,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		multiModel.compressSpecies();
 		
 		updateSpeciesTableFromMultiModel();
-			compressAllExpressions();
+		compressAllExpressions();
 		
 		jTabGeneral.setSelectedIndex(0);
 		renamingOption = oldRenamingOption;
@@ -6133,13 +6141,16 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 	
 	private void compressAllExpressions() {
-			
+		boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
+		//set to false otherwise all the isMultistateName checks will automatically return false because that should check for the annotation
+		MainGui.importFromSBMLorCPS = false;
+		
 			int numRows = tableSpeciesmodel.getRowCount();
 			jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
 			 for (int i = 1;i <= numRows;i++) {
 					try {				tableSpeciesmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableSpeciesmodel.getValueAt( i-1, Constants.SpeciesColumns.INITIAL_QUANTITY.index).toString()), i-1,  Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 					} catch (Exception e) {		e.printStackTrace();		}
-				try {	tableSpeciesmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableSpeciesmodel.getValueAt( i-1, Constants.SpeciesColumns.EXPRESSION.index).toString()), i-1,  Constants.SpeciesColumns.EXPRESSION.index);
+				try { tableSpeciesmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableSpeciesmodel.getValueAt( i-1, Constants.SpeciesColumns.EXPRESSION.index).toString()), i-1,  Constants.SpeciesColumns.EXPRESSION.index);
 				} catch (Exception e) {	e.printStackTrace();	}
 				 }
 			jTableSpecies.revalidate();
@@ -6154,7 +6165,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				try {	tableGlobalQmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableGlobalQmodel.getValueAt( i-1, Constants.GlobalQColumns.EXPRESSION.index).toString()), i-1,  Constants.GlobalQColumns.EXPRESSION.index);
 				} catch (Exception e) {	e.printStackTrace();	}
 				 }
-			jTableSpecies.revalidate();
+			jTableGlobalQ.revalidate();
 			
 			
 			numRows = tableCompartmentsmodel.getRowCount();
@@ -6165,7 +6176,21 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				try {	tableCompartmentsmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableCompartmentsmodel.getValueAt( i-1, Constants.CompartmentsColumns.EXPRESSION.index).toString()), i-1,  Constants.CompartmentsColumns.EXPRESSION.index);
 				} catch (Exception e) {	e.printStackTrace();	}
 				 }
-			jTableSpecies.revalidate();
+			jTableCompartments.revalidate();
+			
+			
+			numRows = tableEventsmodel.getRowCount();
+			jTabGeneral.setSelectedIndex(Constants.TitlesTabs.EVENTS.index);
+			 for (int i = 1;i <= numRows;i++) {
+					try {				tableEventsmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableEventsmodel.getValueAt( i-1, Constants.EventsColumns.TRIGGER.index).toString()), i-1,  Constants.EventsColumns.TRIGGER.index);
+					} catch (Exception e) {		e.printStackTrace();		}
+				try {	
+					tableEventsmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableEventsmodel.getValueAt( i-1, Constants.EventsColumns.ACTIONS.index).toString()), i-1,  Constants.EventsColumns.ACTIONS.index);
+				} catch (Exception e) {	e.printStackTrace();	}
+				 }
+			jTableEvents.revalidate();
+			
+			MainGui.importFromSBMLorCPS = oldImportFromSBMLorCPS;
 	}
 	
 	

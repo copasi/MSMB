@@ -26,7 +26,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import org.apache.commons.lang3.tuple.MutablePair;
 
-import msmb.commonUtilities.*;
 import msmb.commonUtilities.tables.CustomJTable;
 import msmb.commonUtilities.tables.CustomTableModel;
 import msmb.commonUtilities.tables.CustomTableModelListener;
@@ -283,7 +282,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 	            	
 	                if(row == -1 || col == -1) {
 	                	System.err.println("row at point "+row + ", col at point "+ col);
-	                	return;
+        				return;
 	                }
 	        
 	               if(MainGui.cellTableEdited.compareTo(model.getTableName()) !=0) MainGui.resetViewsInExpressions();
@@ -298,9 +297,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 	             	try {
 						if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(MainGui.cellTableEdited, MainGui.cellSelectedRow+1);
 					} catch (Exception e1) {
-						
 						e1.printStackTrace();
-		
 					}
 	             } else {
 	     		       
