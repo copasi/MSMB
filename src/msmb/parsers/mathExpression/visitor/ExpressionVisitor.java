@@ -382,7 +382,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			}
 		}
 		
-		
 		String element_newView = new String();
 		if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0 
 				||element.compareTo(MR_Expression_ParserConstantsNOQUOTES.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0) {
@@ -403,6 +402,9 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 
 			}
 			String element_substring = name.getElementName();
+			
+			
+			
 			Vector<String> extensions = name.getExtensions();
 			String element_kind_quantifier = getKindQuantifier(extensions);
 			String element_timing_quantifier = getTimingQuantifier(extensions);
@@ -435,7 +437,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 				if(element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES))==0){
 					isASpecies = true;
 				}
-				
 				
 				int table = where.get(0);
 
