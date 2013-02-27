@@ -4,7 +4,9 @@ package  msmb.debugTab;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Vector;
 
 import msmb.gui.CustomTableModel_MSMB;
@@ -204,7 +206,7 @@ public class ConsistencyChecks {
 									checkAllRoles = false;
 								} catch(NumberFormatException ex) { //the parameter is not a number but a globalQ
 									if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-									String value = multiModel.getGlobalQ(actualModelParameter);
+									GlobalQ value = multiModel.getGlobalQ(actualModelParameter);
 									if(value == null) {
 										throw new NullPointerException();
 									}
@@ -280,6 +282,7 @@ public class ConsistencyChecks {
 	//A DATA STRUCTURE FOR THE REACTIONS IN THE MULTIMODEL
 	public static boolean all_elements_in_reaction_exist(MultiModel multiModel, CustomTableModel_MSMB tableReactionmodel) throws Exception{
 		Vector<String> missingSpecies = new Vector<String>();
+		
 		
 		if(tableReactionmodel!= null ) {
 			for(int i = 0; i < tableReactionmodel.getRowCount()-1 ; i++ ) {
@@ -399,5 +402,56 @@ public class ConsistencyChecks {
 	public static Vector<Object> missing_nonMandatory_fields() {
 		return new Vector<Object>(Arrays.asList(emptyNonMandatoryFields.toArray()));
 	}
+	
+	
+	public static Vector<FoundElement> getDuplicateReactions() {
+		Vector<FoundElement> ret = new Vector<FoundElement>();
+		
+		 HashMap<String, Vector> colData = new HashMap<String, Vector>();
+		 HashSet<String> keyToReturn = new HashSet<String>();
+		 for (int i = 0; i < MainGui.tableReactionmodel.getRowCount(); i++) {
+		      //Vector row = (Vector) data.elementAt(i);
+		      //String element = row.get(Constants.ReactionsColumns.REACTION.index).toString().trim();
+			 String element =  MainGui.tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.REACTION.index).toString().trim();
+		      if(element.length() ==0) continue;
+		      if(!colData.containsKey(element)) {
+		    	  Vector<FoundElement> foundAt = new Vector<FoundElement>();
+		    	  FoundElement fe = new FoundElement(Constants.TitlesTabs.REACTIONS.description, i+1, Constants.ReactionsColumns.REACTION.index);
+		    	  foundAt.add(fe);
+		    	  colData.put(element, foundAt);
+		      } else {
+		    	  Vector<FoundElement> foundAt = colData.get(element);
+		     	  FoundElement fe = new FoundElement(Constants.TitlesTabs.REACTIONS.description, i+1, Constants.ReactionsColumns.REACTION.index);
+		    	  foundAt.add(fe);
+		    	  colData.put(element, foundAt);
+		    	  keyToReturn.add(element);
+		      }
+		   }
+		 
+		 Iterator<String> it = keyToReturn.iterator();
+		 while(it.hasNext()) {
+			 String reaction = it.next();
+			 ret.addAll(colData.get(reaction));
+		 }
+	
+		 return ret;
+	}
+
+	public static void warnings_for_duplicate_reactions() {
+		MainGui.clear_debugMessages_duplicatesReactions();
+		Vector<FoundElement> duplicates = getDuplicateReactions();
+		for(int i = 0; i < duplicates.size(); i++) {
+			FoundElement fe = duplicates.get(i);
+			DebugMessage dm = new DebugMessage();
+			dm.setOrigin_table(fe.getTableDescription());
+		    dm.setOrigin_col(fe.getCol());
+		    dm.setOrigin_row(fe.getRow());
+			dm.setProblem("Duplicate reactions! It may be a mistake! Please make sure that it is what you want!");
+		    dm.setPriority(DebugConstants.PriorityType.DUPLICATES.priorityCode);
+			MainGui.addDebugMessage_ifNotPresent(dm);
+		}
+		
+	}
+	
 
 }

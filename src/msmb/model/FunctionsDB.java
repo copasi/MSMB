@@ -304,7 +304,7 @@ public class FunctionsDB {
 					String message = new String();
 					if(misused.size() > 0) message += "The following elements are misused: " +misused.toString();
 					//throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description);
-					ret.add(new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description));
+					ret.add(0,new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description));
 				}
 				Vector<String> PARs = new Vector();
 				if(type.compareTo(Constants.ReactionType.MASS_ACTION.description)!=0) {
@@ -342,6 +342,7 @@ public class FunctionsDB {
 		} catch (Exception e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			ret.add(e);
+			return ret;
 			//throw e;
 		}
 		
@@ -523,6 +524,17 @@ public class FunctionsDB {
 				if(f2==null) continue;
 				if(f2.getName().compareTo(funName)==0) return index;
 			}
+		}
+		return -1;
+	}
+	
+	public Integer getFunctionIndex(String name) {
+		Iterator<Integer> it = userDefinedFun.keySet().iterator();
+		while(it.hasNext()) {
+			Integer index = it.next();
+			Function f2 = userDefinedFun.get(index);
+			if(f2==null) continue;
+			if(f2.getName().compareTo(name)==0) return index;
 		}
 		return -1;
 	}

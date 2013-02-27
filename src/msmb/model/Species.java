@@ -15,10 +15,7 @@ public class Species  {
 	private String editableInitialQuantity = new String();
 	private String editableExpression = expression;
 	public String getExpression() { 	return expression.trim();	}
-	
-	
-
-	
+		
 	public void setExpression(MultiModel m, String expr) throws MySyntaxException {	
 		if(expr.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		if(expr.length() == 0) return ;
@@ -68,7 +65,6 @@ public class Species  {
 		try {
 		this.name = new String(newName.getBytes("UTF-8"),"UTF-8");
 	} catch (UnsupportedEncodingException e) {
-		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}	}
 	

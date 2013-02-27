@@ -1,11 +1,18 @@
 package msmb.model;
 
+import msmb.debugTab.FoundElement;
 import msmb.gui.MainGui;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Vector;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
+import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 import msmb.utility.Constants;
 import msmb.utility.MySyntaxException;
 
@@ -188,4 +195,9 @@ public class ReactionDB {
 		
 		return misused;
 	}
+	
+	public Integer getReactionIndex(String name) {
+		return -1;
+	}
+		
 }

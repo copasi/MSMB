@@ -9,6 +9,15 @@ function(create_jar _TARGET_NAME)
       set(CMAKE_JAVA_TARGET_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
     endif(NOT DEFINED CMAKE_JAVA_TARGET_OUTPUT_DIR)
 
+	
+	#Copy the correct COPASI library in the directory where the jar is
+	#!! FOR NOW ONLY THIS DLL IS AVAILABLE
+	#!! When other OS/Architecture will be available, we will need to take the appropriate file according to OS/Arch
+	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/copasi35_java6_win64/CopasiJava.dll DESTINATION 
+                             ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/../libs)	
+	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/copasi35_java6_win64/copasi.jar DESTINATION 
+                             ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/../libs)	
+							 
     if (CMAKE_JAVA_JAR_ENTRY_POINT)
       set(_ENTRY_POINT_OPTION e)
       set(_ENTRY_POINT_VALUE ${CMAKE_JAVA_JAR_ENTRY_POINT})
@@ -146,11 +155,7 @@ Main-Class: msmb.gui.MainGui
       ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/${_JAVA_TARGET_OUTPUT_NAME})
 
 	  
-	#Copy the correct COPASI library in the directory where the jar is
-	#!! FOR NOW ONLY THIS DLL IS AVAILABLE
-	#!! When other OS/Architecture will be available, we will need to take the appropriate file according to OS/Arch
-	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/copasi35_java6_win64/CopasiJava.dll DESTINATION 
-                             ${CMAKE_JAVA_TARGET_OUTPUT_DIR})						 
+						 
 	 
     if (CMAKE_JNI_TARGET)
         add_custom_command(

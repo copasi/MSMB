@@ -27,6 +27,10 @@ set(SRC
 
 file(GLOB MY_JARS "${MSMB_SOURCE_DIR}/libs/*.jar") 
 
+#set(CMAKE_JAVA_INCLUDE_PATH 
+#	${MSMB_SOURCE_DIR}/libs/*.jar
+#)
+	
 set(CMAKE_JAVA_INCLUDE_PATH 
 	${MY_JARS}
 )

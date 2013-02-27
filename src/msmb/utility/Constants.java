@@ -145,7 +145,8 @@ public class Constants {
 		public static final String COPASI_STRING_INITIAL_TIME = "Reference=Initial Time";
 		public static final String COPASI_STRING_PI = "PI";
 		public static final String COPASI_STRING_EXPONENTIALE = "EXPONENTIALE";		
-		public static final String COPASI_STRING_AVOGADRO= "Reference=Avogadro Constant";		
+		public static final String COPASI_STRING_NAN = "nan";		
+			public static final String COPASI_STRING_AVOGADRO= "Reference=Avogadro Constant";		
 		
 		public static final int RENAMING_OPTION_ALL = 100;
 		public static final int RENAMING_OPTION_CUSTOM = 101;

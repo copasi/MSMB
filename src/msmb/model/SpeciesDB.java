@@ -131,7 +131,7 @@ public class SpeciesDB {
 					speciesVector.put(ind,m_old);
 					speciesIndexes.put(m_old.getSpeciesName(), ind);
 					multiModel.addNamedElement(m_old.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
-					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.description, ind+1);
+					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.description, ind);
 					return -ind;
 				} else {
 					if(old instanceof Species) {
@@ -222,7 +222,7 @@ public class SpeciesDB {
 					if(oldName.compareTo(name)!=0) {
 						speciesIndexes.remove(oldName);
 					}
-					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.description, index+1);
+					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.description, index);
 					return index;	//o 000000?
 				} 
 				

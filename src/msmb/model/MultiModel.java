@@ -60,7 +60,7 @@ public class MultiModel {
 		}
 		
 		Vector ret = allNamedElements.get(name);
-		if(ret!= null && ret.size() > 0) return ret;
+		if(ret!= null && ret.size() > 0) 	return ret;
 		return null;
 	}
 	
@@ -73,20 +73,29 @@ public class MultiModel {
 		} else {
 			where = new Vector<Integer>();
 		}
-		
-	/*	if(where.size() > 0) {
-			 DebugMessage dm = new DebugMessage();
-			 dm.setOrigin_table(Constants.TitlesTabs.getDescriptionFromIndex(tableIndex));
-			 dm.setProblem("Entites with the same name: "+name);
-			 dm.setPriority(DebugConstants.PriorityType.SAMENAME.priorityCode);
-			 dm.setOrigin_col(Constants.FunctionsColumns.NAME.index); MULTIPLE ROW/COL/TABLE
-			 dm.setOrigin_row(nrow);
-			 MainGui.addDebugMessage_ifNotPresent(dm);
-			
-		}*/
-		
 		where.add(tableIndex);
 		
+		
+		if(where.size() > 1) {
+			for(int i = 0; i < where.size(); i++) {
+				 DebugMessage dm = new DebugMessage();
+				 String descr = Constants.TitlesTabs.getDescriptionFromIndex(where.get(i));
+				 dm.setOrigin_table(descr);
+				 dm.setProblem(DebugConstants.SAMENAME_MESSAGE + name);
+				 dm.setPriority(DebugConstants.PriorityType.DUPLICATES.priorityCode);
+				 dm.setOrigin_col(MainGui.getMainElementColumn(descr)); 
+				 int nrow= -1;
+				if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) { nrow = reactionDB.getReactionIndex(name);	}
+				else if(descr.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) { nrow = speciesDB.getSpeciesIndex(name);}
+				else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) {  nrow = compDB.getCompIndex(name);	}
+				else if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) { nrow = funDB.getFunctionIndex(name);	}
+				else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) {  nrow = globalqDB.getGlobalQIndex(name);}
+				 dm.setOrigin_row(nrow);
+				 MainGui.addDebugMessage_ifNotPresent(dm,false);
+			}
+		} else {
+			MainGui.clear_debugMessages_samename_relatedWith(name);
+		}
 		
 		allNamedElements.put(name, where);
 	}
@@ -157,9 +166,10 @@ public class MultiModel {
 		this.globalqDB.addChangeGlobalQ(index,name, value, type, expression, notes);
 	}
 	
-	public String getGlobalQ(String name) {
+	public GlobalQ getGlobalQ(String name) {
 		if(this.globalqDB.getGlobalQ(name) == null) return null;
-		return this.globalqDB.getGlobalQ(name).getInitialValue();
+		//return this.globalqDB.getGlobalQ(name).getInitialValue();
+		return this.globalqDB.getGlobalQ(name);
 	}
 	
 	public MultistateSpecies getMultistateSpecies(String name) {
@@ -725,8 +735,8 @@ public class MultiModel {
 		fillCopasiDataModel_events();
 		//System.out.println("....events"); System.out.flush();
 		
-		if(MainGui.modelName.trim().length() ==0) MainGui.modelName = Constants.DEFAULT_MODEL_NAME;
-		model.setObjectName(MainGui.modelName);
+		//if(MainGui.modelName.trim().length() ==0) MainGui.modelName = Constants.DEFAULT_MODEL_NAME;
+		//model.setObjectName(MainGui.modelName);
 		
 		
 		
@@ -1634,7 +1644,7 @@ public class MultiModel {
 									species_with_expression_not_added.add(s);
 								}	
 							}
-							else m.setInitialExpression("nan");
+							else m.setInitialExpression(Constants.COPASI_STRING_NAN);
 						} else {
 							m.setInitialConcentration(initial_conc);
 						}					
@@ -1842,7 +1852,7 @@ public class MultiModel {
 			}catch(Exception ex) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 				if(CellParsers.isNaN(g.getInitialValue())) {
-					modelValue.setInitialExpression("nan");
+					modelValue.setInitialExpression(Constants.COPASI_STRING_NAN);
 				} else {
 					modelValue.setInitialExpression(g.getInitialValue());
 				}
@@ -3295,28 +3305,55 @@ public class MultiModel {
 	}
 	
 	public String reprintExpression_forceCompressionElements(String expr) throws Exception {
+		return reprintExpression_forceCompressionElements(expr, false);
+	}
+	
+	
+	public String reprintExpression_forceCompressionElements(String expressionList, boolean isListOfActions) throws Exception {
 		String ret = new String();
-		if(expr.trim().length() ==0) return ret;
-		try{
-			
-			InputStream is = new ByteArrayInputStream(expr.getBytes("UTF-8"));
-			MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
-			CompleteExpression root = parser.CompleteExpression();
-			MainGui.jListFunctionToCompact.setSelectionInterval(0, MainGui.listModel_FunctionToCompact.size()-1);
-			
-			ExpressionVisitor vis = new ExpressionVisitor(MainGui.jListFunctionToCompact.getSelectedValuesList(), this,false);
-			
-			root.accept(vis);
-			if(vis.getExceptions().size() == 0) {
-				ret  = vis.getCompressedExpression();
-				ret  = CellParsers.reprintExpression_brackets(ret, MainGui.FULL_BRACKET_EXPRESSION); 
-			} else {
-				throw vis.getExceptions().get(0);
+		if(expressionList.trim().length() ==0) return ret;
+		
+		Vector<String> actions = new Vector<String>();
+		Vector<Exception> exceptions = new Vector<Exception>();
+		if(isListOfActions) {
+			StringTokenizer st = new StringTokenizer(expressionList, ";");
+			while(st.hasMoreTokens())  {
+				actions.add(st.nextToken().trim());
 			}
-		} catch (Exception e) {
-			throw e;
+		} else {
+			//simple expressions with just a single element
+			actions.add(expressionList);
 		}
-		return ret;
+		 
+		for (String expr : actions) {
+			try{
+				String current = new String();
+				InputStream is = new ByteArrayInputStream(expr.getBytes("UTF-8"));
+				MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
+				CompleteExpression root = parser.CompleteExpression();
+				MainGui.jListFunctionToCompact.setSelectionInterval(0, MainGui.listModel_FunctionToCompact.size()-1);
+
+				ExpressionVisitor vis = new ExpressionVisitor(MainGui.jListFunctionToCompact.getSelectedValuesList(), this,false);
+
+				root.accept(vis);
+				if(vis.getExceptions().size() == 0) {
+					current  = vis.getCompressedExpression();
+					current  = CellParsers.reprintExpression_brackets(current, MainGui.FULL_BRACKET_EXPRESSION); 
+				} else {
+					exceptions.add(vis.getExceptions().get(0));
+				}
+				
+				ret += current + "; ";
+			} catch (Exception e) {
+				exceptions.add(e);
+			}
+		}
+		
+		if(exceptions.size() > 0) {
+			throw exceptions.get(0);
+		} else {
+			return ret.substring(0, ret.length()-2);
+		}
 	}
 	
 	
@@ -3791,6 +3828,7 @@ public class MultiModel {
 		Iterator it2 = defFunctions.iterator();
 		while(it2.hasNext()) {
 			Function fun = (Function)it2.next();
+			if(fun==null) continue;
 			if(listFunctionToCompact.contains(fun.getName())) {
 				String expression = fun.getExpandedEquation(new Vector());
 				if(expression.length()>0) {
@@ -4297,6 +4335,10 @@ public Integer getGlobalQIndex(String name) {
 	
 	public Vector<String> getAllCompartments_names() {
 		return compDB.getAllNames();
+	}
+
+	public String getModelName() {
+		return copasiDataModel.getModel().getObjectName();
 	}
 
 	

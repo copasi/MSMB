@@ -71,6 +71,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		fromInterface = true;	
 		MainGui.cleanUpModel();
 		loadCopasiDataModel_fromKey(copasiKey);	
+		
 	}
 	
 	public boolean saveToCopasiKey(String copasiKey)  {
@@ -89,6 +90,12 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	public Vector<String> getMSMB_listOfSpecies() { return multiModel.getAllSpecies_names();}
 	public Vector<String> getMSMB_listOfGlobalQuantities() { return multiModel.getAllGlobalQuantities_names();}
 	public Vector<String> getMSMB_listOfCompartments() { return multiModel.getAllCompartments_names();}
+	
+	
+	public Species getMSMB_getSpecies(String name) { return multiModel.getSpecies(name);}
+	public GlobalQ getMSMB_getGlobalQuantity(String name) { return multiModel.getGlobalQ(name);}
+	public Compartment getMSMB_getCompartment(String name) { return multiModel.getComp(name);}
+	
 	
 	static HashMap<MSMB_Element, ChangeListener> changeListeners = new HashMap<MSMB_Element, ChangeListener>();
 	
@@ -427,7 +434,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			    	JTabbedPane pane = (JTabbedPane)evt.getSource();
 					int sel = pane.getSelectedIndex();
 					
-					if(Constants.TitlesTabs.isMSMBtab(sel)){
+					if(!Constants.TitlesTabs.isMSMBtab(sel)){
 						MainGui.tabSelected = -1;
 						return;
 					}
@@ -440,7 +447,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 							);
 							scrollPaneTextAreaODEs.revalidate();
 						} catch (Exception e1) {
-							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
+							//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+								e1.printStackTrace();
 							jTextAreaODEs.setText("");
 							scrollPaneTextAreaODEs.revalidate();
 						}
@@ -593,7 +601,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	 		
 			jListFunctionToCompact.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 			
-			jListFunctionToCompact.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+		/*	jListFunctionToCompact.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
 				public void valueChanged(javax.swing.event.ListSelectionEvent e) {
 					try {
 						jTextAreaODEs.setText(
@@ -605,7 +613,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						
 					}
 				}
-			});
+			});*/
 			
 					
 	    	jPanelListFunctionToCompact = new JPanel();
@@ -2526,20 +2534,33 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		return cellHeader;
 	}
 
-	public static String printMainElementRow(FoundElement el) {
+	public static int getMainElementColumn(String tableDescr) {
 		int mainElementColumn = -1;
+		CustomTableModel_MSMB mod = null;
+		if(tableDescr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	mod = tableSpeciesmodel; mainElementColumn = Constants.SpeciesColumns.NAME.index;	}
+		else if(tableDescr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	mod = tableCompartmentsmodel; mainElementColumn = Constants.CompartmentsColumns.NAME.index;		}
+		else if(tableDescr.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {	mod = tableEventsmodel;	 mainElementColumn = Constants.EventsColumns.NAME.index;	}
+		else if(tableDescr.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {	mod = tableGlobalQmodel; mainElementColumn = Constants.GlobalQColumns.NAME.index;		}
+		else if(tableDescr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {	mod = tableReactionmodel; mainElementColumn = Constants.ReactionsColumns.NAME.index;		}
+		else if(tableDescr.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {	mod = tableFunctionsmodel; mainElementColumn = Constants.FunctionsColumns.NAME.index;		}
+		return mainElementColumn;
+	}
+	
+	public static String printMainElementRow(FoundElement el) {
 		String descr = el.getTableDescription();
 		String cellContent = new String();
 		CustomTableModel_MSMB mod = null;
-		if(descr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	mod = tableSpeciesmodel; mainElementColumn = Constants.SpeciesColumns.NAME.index;	}
-		else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	mod = tableCompartmentsmodel; mainElementColumn = Constants.CompartmentsColumns.NAME.index;		}
-		else if(descr.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {	mod = tableEventsmodel;	 mainElementColumn = Constants.EventsColumns.NAME.index;	}
-		else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {	mod = tableGlobalQmodel; mainElementColumn = Constants.GlobalQColumns.NAME.index;		}
-		else if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {	mod = tableReactionmodel; mainElementColumn = Constants.ReactionsColumns.NAME.index;		}
-		else if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {	mod = tableFunctionsmodel; mainElementColumn = Constants.FunctionsColumns.NAME.index;		}
+		int mainElementColumn = getMainElementColumn(descr);
+			if(descr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	mod = tableSpeciesmodel;	}
+		else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {	mod = tableCompartmentsmodel; 	}
+		else if(descr.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {	mod = tableEventsmodel;	 	}
+		else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {	mod = tableGlobalQmodel; 	}
+		else if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {	mod = tableReactionmodel; 		}
+		else if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {	mod = tableFunctionsmodel; 	}
 		cellContent = (String) mod.getValueAt(el.getRow(),mainElementColumn);
 		return cellContent;
 	}
+	
 	
 	
 	
@@ -2707,6 +2728,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 			//ConsistencyChecks.all_elements_in_speciesExpressions_exist(multiModel);
 			
+			ConsistencyChecks.warnings_for_duplicate_reactions();
 			
 			ConsistencyChecks.missing_nonMandatory_fields();
 			
@@ -2714,7 +2736,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			if(missing_fields.size() >0) throw new Exception("Error during validation: some mandatory fields are missing (" + missing_fields +")");
 				
 		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e.printStackTrace();
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	
+				e.printStackTrace();
 			if(withOptionPaneModelErrors) JOptionPane.showMessageDialog(new JButton(),e.getMessage(), "Model not valid!", JOptionPane.ERROR_MESSAGE);
 		    updateDebugTab();
 			throw e;
@@ -3176,7 +3199,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 				clear_debugMessages_relatedWith(Constants.TitlesTabs.FUNCTIONS.description, DebugConstants.PriorityType.MISSING.priorityCode, nrow, Constants.FunctionsColumns.EQUATION.index);
 				clear_debugMessages_relatedWith(Constants.TitlesTabs.FUNCTIONS.description, DebugConstants.PriorityType.PARSING.priorityCode, nrow, Constants.FunctionsColumns.EQUATION.index);
-				
+				clear_debugMessages_relatedWith(Constants.TitlesTabs.FUNCTIONS.description, DebugConstants.PriorityType.INCONSISTENCIES.priorityCode, nrow, Constants.FunctionsColumns.EQUATION.index);
+					
 				String complete_signature = null;
 			
 				complete_signature = addChangeFunction(nrow,name, equation);
@@ -4018,7 +4042,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 		if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.REACTIONS.description, nrow);
 	
-		if(reaction_string.trim().length() == 0) return;
+		if(reaction_string.trim().length() == 0) {
+			
+			return;
+		}
 		Vector metabolites = new Vector<>();
 		try{ 
 			 metabolites = CellParsers.parseReaction(this.multiModel,reaction_string,nrow-1);
@@ -5255,9 +5282,17 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				dm.setOrigin_table(Constants.TitlesTabs.GLOBALQ.description);
 				dm.setProblem("Global quantity "+ param + " has been added by default.");
 				dm.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
-				dm.setOrigin_col(1);
+				dm.setOrigin_col(Constants.GlobalQColumns.NAME.index);
 				dm.setOrigin_row(tableGlobalQmodel.getRowCount()-1);
 				MainGui.addDebugMessage_ifNotPresent(dm);
+				
+				DebugMessage dm2 = new DebugMessage();
+				dm2.setOrigin_table(Constants.TitlesTabs.GLOBALQ.description);
+				dm2.setProblem("Global quantity "+ param + " has been added with the default initial value");
+				dm2.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
+				dm2.setOrigin_col(Constants.GlobalQColumns.VALUE.index);
+				dm2.setOrigin_row(tableGlobalQmodel.getRowCount()-1);
+				MainGui.addDebugMessage_ifNotPresent(dm2);
 				
 				
 	          
@@ -5475,6 +5510,33 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		return debugMessages.containsKey(key);
 	}
 	
+	public static void clear_debugMessages_samename_relatedWith(String name) throws Exception {
+		HashMap<String, DebugMessage> remaining_messages = new HashMap<String, DebugMessage>();
+		Iterator it = debugMessages.keySet().iterator();
+		while(it.hasNext()){
+			String key = (String) it.next();
+			DebugMessage dm = (DebugMessage)(debugMessages.get(key));
+	    	int origin_row = dm.getOrigin_row();
+	    	String origin_table= dm.getOrigin_table();
+	    	if(	dm.getPriority() !=DebugConstants.PriorityType.DUPLICATES.priorityCode) {
+	    			remaining_messages.put(key,dm);
+	    	} else {
+	    		String problem = dm.getProblem();
+	    		int indexName = problem.indexOf(DebugConstants.SAMENAME_MESSAGE)+DebugConstants.SAMENAME_MESSAGE.length();
+	    		if(problem.substring(indexName).trim().compareTo(name)!=0) {
+	    			remaining_messages.put(key,dm);
+	    		} else {
+	    			recolorCell(debugMessages.get(key),false);
+	    		}
+	       	}
+		}
+		
+		debugMessages.clear();
+		debugMessages.putAll(remaining_messages);
+		//printDebugMessages();
+		updateDebugTab();
+	}
+	
 	
 	public static void clear_debugMessages_defaults_relatedWith(String table, int nrow) throws Exception {
 		if(MainGui.donotCleanDebugMessages) return;
@@ -5491,6 +5553,30 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	    			remaining_messages.put(key,dm);
 	    	} else {
 	    		
+	    		recolorCell(debugMessages.get(key),false);
+	       	}
+		}
+		
+		debugMessages.clear();
+		debugMessages.putAll(remaining_messages);
+		//printDebugMessages();
+		updateDebugTab();
+		
+	}
+	
+	public static void clear_debugMessages_duplicatesReactions() {
+		if(MainGui.donotCleanDebugMessages) return;
+		
+		HashMap<String, DebugMessage> remaining_messages = new HashMap<String, DebugMessage>();
+		Iterator it = debugMessages.keySet().iterator();
+		while(it.hasNext()){
+			String key = (String) it.next();
+			DebugMessage dm = (DebugMessage)(debugMessages.get(key));
+	    	String origin_table= dm.getOrigin_table();
+	    	if(origin_table.compareTo(Constants.TitlesTabs.REACTIONS.description)!=0 || 
+	    			dm.getPriority() !=DebugConstants.PriorityType.DUPLICATES.priorityCode) {
+	    			remaining_messages.put(key,dm);
+	    	} else {
 	    		recolorCell(debugMessages.get(key),false);
 	       	}
 		}
@@ -5985,8 +6071,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			updateGUIFromMultimodel();
 			multiModel.setTableReactionModel(tableReactionmodel);
 			validateMultiModel(false,false);
+	
 			jTabGeneral.setSelectedIndex(Constants.TitlesTabs.REACTIONS.index);
-		
+			textFieldModelName.setText(multiModel.getModelName());
 		} catch (Exception e) {
 			if(MainGui.fromMainGuiTest) throw e;
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
@@ -6113,8 +6200,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		//to revalidate lines containing temporary parsing errors in expressions
 		//-----
 		revalidateExpressions();
-		
-	
 		//-----
 
 		updateDebugTab();
@@ -6185,7 +6270,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					try {				tableEventsmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableEventsmodel.getValueAt( i-1, Constants.EventsColumns.TRIGGER.index).toString()), i-1,  Constants.EventsColumns.TRIGGER.index);
 					} catch (Exception e) {		e.printStackTrace();		}
 				try {	
-					tableEventsmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableEventsmodel.getValueAt( i-1, Constants.EventsColumns.ACTIONS.index).toString()), i-1,  Constants.EventsColumns.ACTIONS.index);
+					tableEventsmodel.setValueAt(multiModel.reprintExpression_forceCompressionElements(tableEventsmodel.getValueAt( i-1, Constants.EventsColumns.ACTIONS.index).toString(),true), i-1,  Constants.EventsColumns.ACTIONS.index);
 				} catch (Exception e) {	e.printStackTrace();	}
 				 }
 			jTableEvents.revalidate();
@@ -6422,42 +6507,16 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					f.setParameterIndex(names.get(n), cfun.getVariableIndex(quoted));
 				}
 				
-				
-			
 				f.setCompleteFunSignatureInTable(true);
 
 			   multiModel.funDB.addChangeFunction(indexFun, f);
 			   indexFun++;
 			   
-			   /*if((MainGui.showAllAvailableFunctions || f.toShow()) && !listModel_FunctionToCompact.contains(f.getName())) { 
+			   if((MainGui.showAllAvailableFunctions || f.toShow()) && !listModel_FunctionToCompact.contains(f.getName())) { 
 					listModel_FunctionToCompact.addElement(f.getName()); 
 				}
-					jListFunctionToCompact.revalidate();
-					scrollPaneListFunctionToCompact.revalidate();
-					tableFunctionsmodel.addRow(new Vector());
-					indexFun++;
-						if(!MainGui.importFromSBMLorCPS && (MainGui.showAllAvailableFunctions || f.toShow())) {
-					
-						tableFunctionsmodel.setValueAt_withoutUpdate(f.printCompleteSignature(), row, 1);
-						tableFunctionsmodel.setValueAt_withoutUpdate(f.getExpandedEquation(new Vector()), row, 2);
-						printedFunctions.add(row);
-						if(f.getType() == CFunction.PreDefined) {
-							tableFunctionsmodel.disableCell(row, Constants.FunctionsColumns.NAME.index);
-							tableFunctionsmodel.disableCell(row, Constants.FunctionsColumns.EQUATION.index);
-							tableFunctionsmodel.disableCell(row, Constants.FunctionsColumns.PARAMETER_ROLES.index);
-							//tableFunctionsmodel.disableCell(row, Constants.FunctionsColumns.SIGNATURE.index);
-						} else{
-							tableFunctionsmodel.enableCell(row, Constants.FunctionsColumns.NAME.index);
-							tableFunctionsmodel.enableCell(row, Constants.FunctionsColumns.EQUATION.index);
-							tableFunctionsmodel.enableCell(row, Constants.FunctionsColumns.PARAMETER_ROLES.index);
-							//tableFunctionsmodel.enableCell(row, Constants.FunctionsColumns.SIGNATURE.index);
-						}
-						row++;
-					}
-					else {
-						predefined_not_loaded.add(f);
-					}
-					*/
+				jListFunctionToCompact.revalidate();
+				scrollPaneListFunctionToCompact.revalidate();
 			} catch (Exception ex) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex.printStackTrace();
 				if(val.getObjectName().compareTo("Mass action (irreversible)")!=0 &&
@@ -8823,11 +8882,11 @@ class TreeDebugMessages extends JPanel {
             priority_rowIndex_hash.put(new Double(DebugConstants.PriorityType.MINOR_EMPTY.priorityCode), new Integer(9));
             
 
-             DefaultMutableTreeNode sim = new DefaultMutableTreeNode(DebugConstants.PriorityType.SAMENAME.description +" ("+ 
- 					MainGui.getDebugMessages(DebugConstants.PriorityType.SAMENAME.priorityCode).size() 
+             DefaultMutableTreeNode sim = new DefaultMutableTreeNode(DebugConstants.PriorityType.DUPLICATES.description +" ("+ 
+ 					MainGui.getDebugMessages(DebugConstants.PriorityType.DUPLICATES.priorityCode).size() 
  					+")");
              minor.add(sim);
-                  priority_rowIndex_hash.put(new Double(DebugConstants.PriorityType.SAMENAME.priorityCode), new Integer(10));
+                  priority_rowIndex_hash.put(new Double(DebugConstants.PriorityType.DUPLICATES.priorityCode), new Integer(10));
             
             
            /* DefaultMutableTreeNode sim = new DefaultMutableTreeNode(DebugConstants.PriorityType.SIMILARITY.description +" ("+ 

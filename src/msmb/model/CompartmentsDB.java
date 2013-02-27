@@ -248,6 +248,10 @@ public class CompartmentsDB {
 	
 }
 	
+	public Integer getCompIndex(String name) {
+		return compIndexes.get(name);
+	}
+	
 }
 
 /*class ValueComparator implements Comparator {
