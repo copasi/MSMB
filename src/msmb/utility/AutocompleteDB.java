@@ -566,8 +566,7 @@ public class AutocompleteDB {
 		Vector<Vector<String>> ret = new Vector<Vector<String>>();
 		Vector<Function> functions = multiModel.funDB.getAllUserDefinedFunctions();
 		
-		System.out.println("getAllUserDefinedFunctions size "+functions.size());
-		
+	
 		for(int i = 0; i< functions.size(); i++) {
 			Vector<String> element = new Vector<String>();
 			Function f = functions.get(i);
@@ -624,7 +623,6 @@ public class AutocompleteDB {
 				continue;
 			} 
 			ret.add(element);
-			System.out.println("AUTOCOMPLETION 1"+ret);
 		}
 		
 		functions = multiModel.funDB.getAllBuiltInFunctions();
@@ -633,7 +631,6 @@ public class AutocompleteDB {
 			Function f = functions.get(i);
 			if(f==null) continue;
 			String name = f.getName();
-			System.out.println("getAllBuiltInFunctions 1 "+name);
 			if(name.toString().trim().startsWith("\"") &&  name.toString().trim().endsWith("\"")) {
 				name = (name.toString().trim().substring(1,name.toString().trim().length()-1));
 			}
@@ -682,10 +679,7 @@ public class AutocompleteDB {
 				continue;
 			} 
 			ret.add(element);
-			System.out.println("AUTOCOMPLETION 2"+ret);
 		}
-		
-		System.out.println("AUTOCOMPLETION end "+ret);
 		return ret;
 	}
 

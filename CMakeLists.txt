@@ -30,6 +30,22 @@ file(GLOB MY_JARS "${MSMB_SOURCE_DIR}/libs/*.jar")
 #set(CMAKE_JAVA_INCLUDE_PATH 
 #	${MSMB_SOURCE_DIR}/libs/*.jar
 #)
+
+
+#git describe --always --> short id of last commit
+#git rev-parse HEAD --> long id of last commit
+set (git_cmd "git")
+set (git_arg1 "describe") 
+set (git_arg2 "--always")
+execute_process(COMMAND ${git_cmd} ${git_arg1} ${git_arg2}
+  WORKING_DIRECTORY ${MSMB_SOURCE_DIR}
+  RESULT_VARIABLE git_result
+  OUTPUT_VARIABLE git_ver
+)
+file(WRITE version.txt "commit=${git_ver}")
+file(APPEND version.txt "major=0\n")
+file(APPEND version.txt "minor=1\n")
+
 	
 set(CMAKE_JAVA_INCLUDE_PATH 
 	${MY_JARS}

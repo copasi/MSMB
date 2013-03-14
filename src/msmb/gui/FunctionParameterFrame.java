@@ -1,6 +1,6 @@
 package  msmb.gui;
 
-import org.apache.commons.lang3.*;
+import org.COPASI.CFunction;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import javax.swing.JDialog;
@@ -18,6 +18,7 @@ import javax.swing.JComboBox;
 
 
 import msmb.model.Function;
+import msmb.utility.CellParsers;
 import msmb.utility.Constants;
 import msmb.utility.GridLayout2;
 
@@ -26,6 +27,11 @@ import java.util.HashSet;
 import java.util.Vector;
 import javax.swing.JButton;
 import javax.swing.border.EmptyBorder;
+import java.awt.BorderLayout;
+import javax.swing.SwingConstants;
+import java.awt.FlowLayout;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.BevelBorder;
 
 public class FunctionParameterFrame extends JDialog {
 
@@ -45,6 +51,11 @@ public class FunctionParameterFrame extends JDialog {
 	private int modifiedRow = -1;
 	private MainGui parentFrame = null;
 	private String oldName;
+	private JPanel panel;
+	private JPanel panel_1;
+	private JPanel panel_2;
+	private JPanel panel_3;
+	private String jTextFieldName_alternativeName = "alternativeName";
 	
 	public FunctionParameterFrame(MainGui owner, Function f, int row) {
 		super();
@@ -54,6 +65,7 @@ public class FunctionParameterFrame extends JDialog {
 		if(f!= null)
 			try {
 				function = new Function(f);
+				function.setType(CFunction.UserDefined, 0);
 				fillFrameFields(f);
 			} catch (Exception e) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
@@ -82,36 +94,21 @@ public class FunctionParameterFrame extends JDialog {
 	
 	
 	private void initialize() {
-		this.setSize(272, 286);
+		this.setSize(372, 286);
 		this.setContentPane(getJContentPane());
 		this.setTitle("Function properties...");
-		this.setResizable(false);
+	//	this.setResizable(false);
 		this.setLocationRelativeTo(null);
 	}
 
 	
 	private JPanel getJContentPane() {
 		if (jContentPane == null) {
-			jLabelEquation = new JLabel();
-			jLabelEquation.setBounds(new Rectangle(101, 34, 153, 20));
-			jLabelEquation.setText("");
-			jLabel1 = new JLabel();
-			jLabel1.setBounds(new Rectangle(13, 34, 90, 20));
-			jLabel1.setText("Equation:");
-			jLabelFunName = new JTextField();
-			jLabelFunName.setBounds(new Rectangle(101, 9, 153, 20));
-			jLabelFunName.setText("");
-			jLabel = new JLabel();
-			jLabel.setBounds(new Rectangle(13, 9, 90, 20));
-			jLabel.setText("Function name:");
 			jContentPane = new JPanel();
-			jContentPane.setLayout(null);
-			jContentPane.add(jLabel, null);
-			jContentPane.add(jLabelFunName, null);
-			jContentPane.add(jLabel1, null);
-			jContentPane.add(jLabelEquation, null);
-			jContentPane.add(getJScrollPane(), null);
-			jContentPane.add(getJButton(), null);
+			jContentPane.setLayout(new BorderLayout(0, 0));
+			jContentPane.add(getJScrollPane());
+			jContentPane.add(getPanel_1(), BorderLayout.SOUTH);
+			jContentPane.add(getPanel(), BorderLayout.NORTH);
 			
 		}
 		return jContentPane;
@@ -121,7 +118,6 @@ public class FunctionParameterFrame extends JDialog {
 	private JScrollPane getJScrollPane() {
 		if (jScrollPane == null) {
 			jScrollPane = new JScrollPane();
-			jScrollPane.setBounds(new Rectangle(13, 62, 242, 160));
 			jScrollPane.setViewportView(getJPanel());
 		}
 		return jScrollPane;
@@ -164,8 +160,14 @@ public class FunctionParameterFrame extends JDialog {
 			JLabel nameLabel = new JLabel();
 			if(nameLabel.getPreferredSize().width < dim.width) nameLabel.setPreferredSize(dim);
 			if(nameLabel.getMinimumSize().width < dim.width) nameLabel.setMinimumSize(dim);
-			
 			nameLabel.setText(paramNames.get(i));
+	
+			JTextField newNameTextField = new JTextField();
+			if(newNameTextField.getPreferredSize().width < dim.width) newNameTextField.setPreferredSize(dim);
+			if(newNameTextField.getMinimumSize().width < dim.width) newNameTextField.setMinimumSize(dim);
+			newNameTextField.setText(paramNames.get(i));
+			newNameTextField.setName(jTextFieldName_alternativeName);
+	
 			JComboBox<String> types = new JComboBox<String>(pTypes);
 			String t = paramTypes.get(i);
 			types.setPreferredSize(new Dimension(50,20));
@@ -182,6 +184,7 @@ public class FunctionParameterFrame extends JDialog {
 			order.setPreferredSize(dim);
 			jPanel.add(order);
 			jPanel.add(nameLabel);
+			jPanel.add(newNameTextField);
 			jPanel.add(types);
 			
 		}
@@ -200,8 +203,6 @@ public class FunctionParameterFrame extends JDialog {
 	private JButton getJButton() {
 		if (jButton == null) {
 			jButton = new JButton("Update Model");
-			//jButton.setBounds(new Rectangle(this.size().width-100-17, 228, 100, 26));
-			jButton.setBounds(new Rectangle(this.getSize().width-120-17, 228, 120, 26));
 			jButton.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					
@@ -209,8 +210,7 @@ public class FunctionParameterFrame extends JDialog {
 					try {
 						alreadyExist = parentFrame.multiModel.funDB.getFunctionByName(jLabelFunName.getText());
 					} catch (Exception e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
+							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e2.printStackTrace();
 					}
 					int alreadyExIndex = parentFrame.multiModel.funDB.getFunctionIndex(alreadyExist);
 					if(alreadyExIndex!=-1 && alreadyExIndex!=modifiedRow) {
@@ -222,20 +222,24 @@ public class FunctionParameterFrame extends JDialog {
 					try {
 						function.setName(jLabelFunName.getText());
 					} catch (Exception ex) {
-						ex.printStackTrace();
+						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 					}
 					HashMap<String, MutablePair<Integer, Integer>> changedOrders = null;
+					HashMap<String, String> changedNames = null;
 					if(modifiedRow != -1) {
 						try {
-							changedOrders = updateFunctionParameter();
+							Vector changedElements = updateFunctionParameter();
+							changedOrders = (HashMap<String, MutablePair<Integer, Integer>>) changedElements.get(0);
+							changedNames = (HashMap<String, String>) changedElements.get(1);
+							
 						} catch (Exception e1) {
-							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
+							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e1.printStackTrace();
 							  JOptionPane.showMessageDialog(new JButton(),e1.getMessage(), "Invalid change!", JOptionPane.ERROR_MESSAGE);
 							  return;
 						}
 						boolean oldHidePopupWarning = MainGui.hidePopupWarning;
 						MainGui.hidePopupWarning = true;
-						parentFrame.renameFunction_fromCellOrfromFunctionParameterFrame(function, modifiedRow,oldName,changedOrders);
+						parentFrame.renameFunction_fromCellOrfromFunctionParameterFrame(function, modifiedRow,oldName,changedOrders,changedNames);
 						MainGui.hidePopupWarning = oldHidePopupWarning;
 					}
 					setVisible(false);
@@ -247,30 +251,43 @@ public class FunctionParameterFrame extends JDialog {
 		return jButton;
 	}
 	
-	private HashMap<String, MutablePair<Integer, Integer>> updateFunctionParameter() throws Exception {
+	//Vector containing as first entry HashMap<String, MutablePair<Integer, Integer>>  changedOrders
+	//	 as second entry HashMap<String, String >  changedNames
+	private Vector updateFunctionParameter() throws Exception {
 		Component[] comp = jPanel.getComponents();
 		String paramName = null;
 		String paramType = null;
+		String paramNameInTextField = null;
 		Integer cparamType = null;
 		Integer paramOrder = null;
 		HashSet<Integer> indexes = new HashSet<Integer>();
 		
-		HashMap<String, MutablePair<Integer, Integer>> ret = new HashMap<String, MutablePair<Integer, Integer>>();
+		HashMap<String, MutablePair<Integer, Integer>> ret_entry1 = new HashMap<String, MutablePair<Integer, Integer>>();
+		HashMap<String, String> ret_entry2 = new HashMap<String, String>();
+		HashSet<String> uniqueNewNames = new HashSet<String>();
 		
 		for(int i = 0; i < comp.length; i++) {
 			Component current = comp[i];
 			if(current instanceof JTextField) {
-				try{
-					paramOrder =Integer.parseInt(((JTextField)current).getText());
-					
-				} catch(Exception ex) {
-					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-					throw new Exception("\""+((JTextField)current).getText()+"\" is not a valid integer index.");
+				if(current.getName()== null || current.getName().compareTo(jTextFieldName_alternativeName)!=0) {
+					try{
+						paramOrder =Integer.parseInt(((JTextField)current).getText());
+					} catch(Exception ex) {
+						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+						throw new Exception("\""+((JTextField)current).getText()+"\" is not a valid integer index.");
+					}
+					if(indexes.contains(paramOrder)) {
+						throw new Exception(paramOrder+": duplicate index.");
+					}
+					indexes.add(paramOrder);
+				} else {
+					paramNameInTextField = CellParsers.cleanName(((JTextField)current).getText().trim());
+					if(uniqueNewNames.contains(paramNameInTextField)) {
+						throw new Exception("Duplicate names for parameters are not allowed (duplicate entry \""+paramNameInTextField+"\")");
+					} else {
+						uniqueNewNames.add(paramNameInTextField);
+					}
 				}
-				if(indexes.contains(paramOrder)) {
-					throw new Exception(paramOrder+": duplicate index.");
-				}
-				indexes.add(paramOrder);
 			}
 			if(current instanceof JLabel) {
 				paramName = ((JLabel)current).getText();
@@ -278,7 +295,7 @@ public class FunctionParameterFrame extends JDialog {
 			if(current instanceof JComboBox) {
 				paramType = ((String)((JComboBox<?>)current).getSelectedItem());
 			}
-			if(paramName!= null && paramType != null && paramOrder != null) {
+			if(paramName!= null && paramType != null && paramOrder != null && paramNameInTextField !=null) {
 				
 				if(function.getNumParam() < paramOrder){
 					throw new Exception("The index "+paramOrder+" is out of bound. The function contains "+function.getNumParam()+ " parameters.");
@@ -290,14 +307,23 @@ public class FunctionParameterFrame extends JDialog {
 				paramOrder = paramOrder-1;
 				function.setParameterIndex(paramName, paramOrder);
 				if(before != paramOrder) {
-					ret.put(paramName, new MutablePair<Integer, Integer>(before, paramOrder));
+					ret_entry1.put(paramName, new MutablePair<Integer, Integer>(before, paramOrder));
+				}
+				
+			 	if(paramName.compareTo(paramNameInTextField)!=0) {
+					ret_entry2.put(paramName, paramNameInTextField);
 				}
 				paramName = null;
 				paramType = null;
 				paramOrder = null;
+				paramNameInTextField = null;
 			}
 		}
 		
+		
+		Vector ret = new Vector<>();
+		ret.add(ret_entry1);
+		ret.add(ret_entry2);
 		return ret;
 		
 	}
@@ -307,4 +333,48 @@ public class FunctionParameterFrame extends JDialog {
 		else return null;
 	}
 
+	private JPanel getPanel() {
+		if (panel == null) {
+			panel = new JPanel();
+			panel.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null, null));
+			panel.setLayout(new BorderLayout(2, 2));
+			panel.add(getPanel_2(), BorderLayout.WEST);
+			panel.add(getPanel_3(), BorderLayout.CENTER);
+		}
+		return panel;
+	}
+	private JPanel getPanel_1() {
+		if (panel_1 == null) {
+			panel_1 = new JPanel();
+			FlowLayout flowLayout = (FlowLayout) panel_1.getLayout();
+			flowLayout.setAlignment(FlowLayout.RIGHT);
+			panel_1.add(getJButton());
+		}
+		return panel_1;
+	}
+	private JPanel getPanel_2() {
+		if (panel_2 == null) {
+			panel_2 = new JPanel();
+			panel_2.setLayout(new GridLayout(2, 1, 0, 2));
+			jLabel = new JLabel();
+			panel_2.add(jLabel);
+			jLabel.setText(" Function name:");
+			jLabel1 = new JLabel();
+			panel_2.add(jLabel1);
+			jLabel1.setText(" Equation:");
+		}
+		return panel_2;
+	}
+	private JPanel getPanel_3() {
+		if (panel_3 == null) {
+			panel_3 = new JPanel();
+			panel_3.setLayout(new GridLayout(0, 1, 0, 0));
+			jLabelFunName = new JTextField();
+			panel_3.add(jLabelFunName);
+			jLabelEquation = new JLabel();
+			panel_3.add(jLabelEquation);
+			jLabelEquation.setText("");
+		}
+		return panel_3;
+	}
 }  //  @jve:decl-index=0:visual-constraint="10,10"

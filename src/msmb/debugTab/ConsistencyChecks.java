@@ -436,7 +436,8 @@ public class ConsistencyChecks {
 	
 		 return ret;
 	}
-
+	
+	
 	public static void warnings_for_duplicate_reactions() {
 		MainGui.clear_debugMessages_duplicatesReactions();
 		Vector<FoundElement> duplicates = getDuplicateReactions();

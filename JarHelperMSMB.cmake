@@ -108,6 +108,9 @@ function(create_jar _TARGET_NAME)
 	#Copy the images directory in the OUTPUT path
 	 file(COPY ${MSMB_SOURCE_DIR}/src/msmb/gui/images/ DESTINATION 
                              ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/msmb/gui/images)
+	#Copy the version file in the OUTPUT path
+	 file(COPY ${MSMB_SOURCE_DIR}/version.txt DESTINATION 
+                             ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/msmb/gui/images)
 							 
     # create an empty java_class_filelist
     if (NOT EXISTS ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_class_filelist)

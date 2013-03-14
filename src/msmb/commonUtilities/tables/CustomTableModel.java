@@ -73,9 +73,6 @@ public class CustomTableModel extends DefaultTableModel {
 		booleanColumnIndexes.clear();
 		booleanColumnIndexes.addAll(booleanColsIndx);
 		
-		//ADD TO THE BOOLEAN COLUMNS
-		//Constants.EventsColumns.DELAYCALC.index;
-		//Constants.EventsColumns.EXPAND_ACTION_ONVOLUME_TOSPECIES_C.index; 
 	}
 	
 	public void clearData() {
@@ -295,6 +292,7 @@ public class CustomTableModel extends DefaultTableModel {
      	if(data.size() == 0) {
      		addRow(new Vector());
      	}
+     	fireTableDataChanged();
      }
     
     public void setRow(int index, Vector v) {

@@ -15,6 +15,8 @@ import msmb.utility.Constants;
 
 public class UnquotingCellEditor_MSMB extends  UnquotingCellEditor{
 	
+	private static final long serialVersionUID = 1;
+
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 	    
@@ -27,8 +29,15 @@ public class UnquotingCellEditor_MSMB extends  UnquotingCellEditor{
      	MainGui.cellSelectedCol=column;
      	MainGui.cellTableEdited = tableModelName;
      
-		return super.getTableCellEditorComponent(table,value,isSelected, row, column);
-	};
+     	super.getTableCellEditorComponent(table,value,isSelected, row, column);
+		
+     	this.setText(value.toString().trim());
+     	MainGui.validationsOn=true;
+     	MainGui.validateOnce=false;
+		
+		return this;
+		  
+	}
 
 
 }

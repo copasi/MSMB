@@ -139,8 +139,9 @@ public class GlobalQDB {
 					throw ex;
 				} 
 
-			}
-			return -1; 
+			} 
+			throw ex;
+			//return -1; 
 		}
 
 	}

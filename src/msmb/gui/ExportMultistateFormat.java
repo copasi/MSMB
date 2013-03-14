@@ -4,6 +4,9 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Vector;
 
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import msmb.debugTab.DebugMessage;
@@ -23,7 +26,7 @@ class ExportMultistateFormat {
 	
 	public static void setFile(File f) {
 		file = f;
-		if(!file.getName().endsWith(Constants.MULTISTATE_FILE_EXTENSION)) file = new File(file.getAbsoluteFile()+Constants.MULTISTATE_FILE_EXTENSION);
+		if(!file.getName().endsWith(Constants.FILE_EXTENSION_MSMB)) file = new File(file.getAbsoluteFile()+Constants.FILE_EXTENSION_MSMB);
 	}
 	
 	public static void exportMultistateFormat(boolean withProgressBar) {
@@ -50,11 +53,16 @@ class ExportMultistateFormat {
 				Vector<Vector<String>> singleTable = new Vector<Vector<String>>();
 				CustomTableModel_MSMB tablemodel = tables.get(t);
 				if(tablemodel==null) continue;
+				tablemodel.fireTableDataChanged();
 				for(int i = 0; i < tablemodel.getRowCount()-1; i++) {
 					Vector<String> row = new Vector<String>();
 		    		for(int j = 0; j < tablemodel.getColumnCount(); j++) {
 		    			if(tablemodel.getValueAt(i, j)==null) continue;
 		    			String value = tablemodel.getValueAt(i, j).toString();
+		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && j == Constants.FunctionsColumns.EQUATION.index && value.trim().length() < 1) {
+		    				System.err.println("Empty EQUATION field!"); 
+		    				JOptionPane.showMessageDialog(new JButton(),"Empty EQUATION field at export!!", "Problem at export!", JOptionPane.ERROR_MESSAGE);
+		    			}
 		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0 && j == Constants.CompartmentsColumns.NAME.index && value.trim().length() == 0) {row=null; break;}
 		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.EVENTS.description)==0 && j == Constants.EventsColumns.TRIGGER.index && value.trim().length() == 0) {row=null; break;}
 		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && j == Constants.FunctionsColumns.NAME.index && value.trim().length() == 0) {row=null; break;}

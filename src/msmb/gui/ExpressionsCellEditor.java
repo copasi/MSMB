@@ -248,17 +248,8 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 	
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		
-		Component c = super.getTableCellEditorComponent(table, value, isSelected, row, column);
-		/*if ( c instanceof JTextComponent) {
-			final JTextComponent jtc = (JTextComponent)c;
-	/*SwingUtilities.invokeLater(new Runnable()
-			{
-				public void run()
-				{jtc.requestFocus();
-				  jtc.selectAll();
-				}
-			});*
-	} */
+		Component c = super.getTableCellEditorComponent(table, value.toString().trim(), isSelected, row, column);
+		
 		if(customFont != null) c.setFont(customFont);
 		return c;
 	}

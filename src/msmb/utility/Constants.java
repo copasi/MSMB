@@ -1155,8 +1155,11 @@ public class Constants {
 		public static final String AUTOSAVE_SESSION_SUFFIX = new String("_autosaved");
 		public static final String AUTOSAVE_UNTITLED = new String("untitled");
 		
-		public final static String MULTISTATE_FILE_EXTENSION = ".msmb";
-		
+		public final static String FILE_EXTENSION_MSMB = ".msmb";
+		public final static String FILE_EXTENSION_COPASI = ".cps";
+		public final static String FILE_EXTENSION_SBML = ".sbml";
+		public final static String FILE_EXTENSION_XML = ".xml";
+			
 		
 		public static final Vector<String> volumeUnits;
 		static {
@@ -1199,18 +1202,12 @@ public class Constants {
 		public static final int MERGE_SPECIES = 670;
 		public static final int DELETE_SPECIES_AND_REDIRECT = 340;
 		public static final int DUPLICATE_SPECIES_NAME = 320;
-		public static final String MULTISTATE_ANNOTATION = 
-									"<annotation xmlns:multiState=\"http://www.sbml.org/2012/ns/multiState\">" + //System.getProperty("line.separator")+
-									"<multiState:species> </multiState:species>" +// System.getProperty("line.separator")+
-									"</annotation>"; //+ System.getProperty("line.separator");
 		public static final Color DEFAULT_COLOR_HIGHLIGHT = Color.YELLOW;
 		public static final Color DEFAULT_COLOR_DEFAULTS = Color.MAGENTA;
 		public static final Color DEFAULT_COLOR_ERRORS = Constants.vt_orange;
 		public static final String PREFIX_FUN_4_REACTION_NAME = "function_4_reaction_";
 		public static final String PREFIX_GLQ_4_REACTION_NAME = "globalQ_4_reaction_";
 		public static final String NO_AUTOCOMPLETION_AVAILABLE = "No autocompletion available";
-		
-
 		
 		static {
 			quantityUnits = new Vector<String>();

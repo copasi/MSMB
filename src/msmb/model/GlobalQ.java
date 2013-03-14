@@ -46,10 +46,11 @@ public class GlobalQ {
 		try{
 			Double.parseDouble(initialValue);
 			return;
-		} catch (Exception e) {// not a number, expression... so let's try to parse it
+		} catch (Throwable e) {// not a number, expression... so let's try to parse it
+			
 			try {
 				Vector<Vector<String>> undef_misused = CellParsers.parseExpression_getUndefMisused(m,initialValue, Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.VALUE.description);
-			} catch (Exception ex) {
+			} catch (Throwable ex) {
 				throw ex;
 			}
 		}

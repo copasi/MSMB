@@ -437,7 +437,8 @@ public class CellParsers {
 			 
 			 
 			 //e.printStackTrace();
-			 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
+			 throw e;
+			 //new MySyntaxException(column_tab, e.getMessage(),table_descr);
 		}
 		return ret;
 	}
@@ -448,16 +449,24 @@ public class CellParsers {
 		
 		try {
 			return parseExpression_getUndefMisused_2(m, expression,table_descr,column_descr);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			if(!(e instanceof MySyntaxException)){ 
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+				Vector ret = new Vector();
+				 DebugMessage dm = new DebugMessage();
+				dm.setOrigin_table(table_descr);
+				//dm.setProblem(e.getMessage()); not very easy to interpret so I will rephrase the message, but it is not general
+				dm.setProblem("Error parsing the mathematical expression. Did you maybe leave the types in any function call?");
+			    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
+				ret.add(dm);
+				return ret; 
 			}
 			else {
 				throw (MySyntaxException)e;
 			}
 		}
-		return null;
+		//return null;
 		
 	/*	if(expression.length() == 0) return new Vector();
 		Node parsedExpression = null;

@@ -60,7 +60,6 @@ public class FunctionsDB {
 			   parser = new MR_Expression_Parser(is,"UTF-8");
 			  root = parser.CompleteExpression();
 		} catch (Throwable e1) {
-			// TODO Auto-generated catch block
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
 			return ret;
 		}
@@ -77,7 +76,6 @@ public class FunctionsDB {
 			try {
 				called = multiModel.getFunctionByName(call);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
 				called = null;
 			
@@ -88,6 +86,11 @@ public class FunctionsDB {
 			}
 			Vector<String> types = called.getParametersTypes();
 			Vector names = funCalls.get(call);
+			
+			if(types.size() != names.size() ) {
+				throw new MyInconsistencyException(Constants.FunctionsColumns.EQUATION.index, 
+						"Incompatible usage of "+call+" in the expression of "+f.getName()+" function: subfunction is expecting " + types.size() +" parameters");
+			}
 			
 			for(int i = 0; i< names.size(); i++) {
 				String parName =(String) names.get(i);
@@ -107,10 +110,14 @@ public class FunctionsDB {
 				if(current_role==Constants.FunctionParamType.VARIABLE.copasiType) {
 					f.setParameterRole(parName, called_role.intValue());
 				} else {
-					if(current_role!=called_role) {
-						throw new MyInconsistencyException(Constants.FunctionsColumns.EQUATION.index, 
-								"Incompatible usage of parameter "+parName+": "+Constants.FunctionParamType.getSignatureDescriptionFromCopasiType(called_role)+ " in one subfuction, "
-										+Constants.FunctionParamType.getSignatureDescriptionFromCopasiType(current_role)+"in another subfunction."   );
+					if(called_role==Constants.FunctionParamType.VARIABLE.copasiType) { 
+						continue;//in the called function, VAR is more permissive than in the caller, so it should be ok
+					} else {
+						if(current_role!=called_role) {
+							throw new MyInconsistencyException(Constants.FunctionsColumns.EQUATION.index, 
+									"Incompatible usage of parameter "+parName+": "+Constants.FunctionParamType.getSignatureDescriptionFromCopasiType(called_role)+ " in one subfuction, "
+											+Constants.FunctionParamType.getSignatureDescriptionFromCopasiType(current_role)+" in another subfunction."   );
+						}
 					}
 				}
 				

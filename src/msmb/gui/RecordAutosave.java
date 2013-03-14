@@ -37,7 +37,7 @@ public class RecordAutosave {
 		final Runnable doUpdateCursor = new Runnable() {
 				    public void run() {
 			    	  try {
-			    		  outputFileCompleteName = path+Constants.AUTOSAVE_TMP_PREFIX +baseName+Constants.AUTOSAVE_SESSION_SUFFIX+Constants.MULTISTATE_FILE_EXTENSION;
+			    		  outputFileCompleteName = path+Constants.AUTOSAVE_TMP_PREFIX +baseName+Constants.AUTOSAVE_SESSION_SUFFIX+Constants.FILE_EXTENSION_MSMB;
 			    		  File outputfile = new File(outputFileCompleteName);
 			    		  ExportMultistateFormat.setFile(outputfile);
 				          ExportMultistateFormat.exportMultistateFormat(false);

@@ -6,6 +6,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
 
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+
 import msmb.utility.*;
 
 import org.COPASI.*;
@@ -446,6 +449,9 @@ public class Function implements Comparable<Function> {
 			}
 			
 		//	System.out.println("newExpression: "+ newExpression);
+			if(newExpression.trim().length() == 0) {
+				JOptionPane.showMessageDialog(null,"ExpandedEquation empty for a function!!! from equation="+equation, "Problem", JOptionPane.ERROR_MESSAGE);
+			}
 			return newExpression;
 		}
 	}
@@ -594,5 +600,15 @@ public class Function implements Comparable<Function> {
 			}
 		}
 		
+	}
+
+	public void renameParameter(String oldName, String newName) throws Exception {
+		Integer index = parametesOrder.get(oldName);
+		Integer role = parametesRoles.get(oldName);
+		this.parametesOrder.remove(oldName);
+		this.parametesRoles.remove(oldName);
+		this.parametesOrder.put(newName, index);
+		this.parametesRoles.put(newName, role);
+		this.equation = CellParsers.replaceVariableInExpression(getEquation(), oldName, newName);
 	}
 }

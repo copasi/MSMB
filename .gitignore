@@ -1,6 +1,7 @@
 libs/copasi.jar
 build/
 MultiStateModelBuilder_dist/
+version.txt
 
 #Temp files
 *.log

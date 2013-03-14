@@ -31,6 +31,7 @@ import msmb.commonUtilities.tables.CustomTableModel;
 import msmb.commonUtilities.tables.CustomTableModelListener;
 import msmb.commonUtilities.tables.EditableCellRenderer;
 import msmb.commonUtilities.tables.ScientificFormatCellRenderer;
+import msmb.commonUtilities.tables.UnquotingCellEditor;
 import msmb.debugTab.DebugConstants;
 import msmb.debugTab.DebugMessage;
 import msmb.model.Function;
@@ -43,7 +44,7 @@ import msmb.utility.GraphicalProperties;
 public class CustomTableModel_MSMB extends CustomTableModel{
 	protected transient MainGui gui;
    private transient  MultistateBuilderFrame multiStateDialog;
-
+		
    public CustomTableModel_MSMB(String name, Vector<String> all, Vector<Integer> booleanColsIndx, MainGui w){
 	   super(name);
 		column0_referenceIndex = true;
@@ -281,7 +282,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 		        	}
 	            	
 	                if(row == -1 || col == -1) {
-	                	System.err.println("row at point "+row + ", col at point "+ col);
+	                	//System.err.println("row at point "+row + ", col at point "+ col);
         				return;
 	                }
 	        
@@ -612,6 +613,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 				c.setBackground(Color.LIGHT_GRAY);
 				
 				if(this.model.getTableName().compareTo(Constants.TitlesTabs.BUILTINFUNCTIONS.description)==0) c.setForeground(Color.GRAY);
+				else if(this.model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && vColIndex==Constants.ReactionsColumns.KINETIC_LAW.index) c.setForeground(Color.BLACK);
 				else if(this.model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0) c.setForeground(Color.BLACK);
 				else if(this.model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0) c.setForeground(Color.DARK_GRAY);
 				else if(this.model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0 && vColIndex==Constants.SpeciesColumns.INITIAL_QUANTITY.index) c.setForeground(c.getBackground());
@@ -745,22 +747,6 @@ class CustomJTable_MSMB extends CustomJTable  {
 };
 
 
-/*class UnquotingCellEditor_MSMB extends UnquotingCellEditor{  
-	private static final long serialVersionUID = 1L;
-
-	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,  
-			int row, int column) {  
-
-		/*MainGui.cellValueBeforeChange = table.getModel().getValueAt(row,column).toString();
-     	MainGui.cellSelectedRow=row;
-     	MainGui.cellSelectedCol=column;
-     	MainGui.cellTableEdited = ((CustomTableModel) table.getModel()).getTableName();*
-     	super.getTableCellEditorComponent(table, value, isSelected, row, column);
-		return this;
-		
-	}  
-}  
-*/
 
 class EditableCellRenderer_MSMB extends EditableCellRenderer {
 	private static final long serialVersionUID = 1L;
@@ -790,10 +776,10 @@ class EditableCellRenderer_MSMB extends EditableCellRenderer {
 
 	}
 	
+	
 
 
 }
-
 
 
 class PopUpViewActionListener_2 implements ActionListener {
