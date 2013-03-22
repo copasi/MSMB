@@ -13,6 +13,7 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
+import msmb.utility.CellParsers;
 import msmb.utility.Constants;
 import msmb.utility.MySyntaxException;
 
@@ -164,6 +165,9 @@ public class ReactionDB {
 				for(int j = 0; j < subs.size(); j++){
 					String element1 = subs.get(j);
 					element1 = multiModel.extractName(element1);
+					if(CellParsers.isMultistateSpeciesName(element1)) {
+						element1 = CellParsers.extractMultistateName(element1);
+					}
 					if(element1.compareTo(name)==0) {
 						ok = true;
 						break;
@@ -174,6 +178,9 @@ public class ReactionDB {
 				for(int j = 0; j < prod.size(); j++){
 					String element1 = prod.get(j);
 					element1 = multiModel.extractName(element1);
+					if(CellParsers.isMultistateSpeciesName(element1)) {
+						element1 = CellParsers.extractMultistateName(element1);
+					}
 					if(element1.compareTo(name)==0) {
 						ok = true;
 						break;
@@ -184,6 +191,9 @@ public class ReactionDB {
 				for(int j = 0; j < mod.size(); j++){
 					String element1 = mod.get(j);
 					element1 = multiModel.extractName(element1);
+					if(CellParsers.isMultistateSpeciesName(element1)) {
+						element1 = CellParsers.extractMultistateName(element1);
+					}
 					if(element1.compareTo(name)==0) {
 						ok = true;
 						break;

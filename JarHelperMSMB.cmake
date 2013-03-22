@@ -5,19 +5,26 @@
 function(create_jar _TARGET_NAME)
     set(_JAVA_SOURCE_FILES ${ARGN})
 	
+	
+	
     if (NOT DEFINED CMAKE_JAVA_TARGET_OUTPUT_DIR)
       set(CMAKE_JAVA_TARGET_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
     endif(NOT DEFINED CMAKE_JAVA_TARGET_OUTPUT_DIR)
 
 	
+	file(COPY ${MSMB_SOURCE_DIR}/libs DESTINATION 
+                             ${CMAKE_JAVA_TARGET_OUTPUT_DIR})
 	#Copy the correct COPASI library in the directory where the jar is
 	#!! FOR NOW ONLY THIS DLL IS AVAILABLE
 	#!! When other OS/Architecture will be available, we will need to take the appropriate file according to OS/Arch
 	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/copasi35_java6_win64/CopasiJava.dll DESTINATION 
-                             ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/../libs)	
+                             ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/libs)	
 	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/copasi35_java6_win64/copasi.jar DESTINATION 
-                             ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/../libs)	
+                             ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/libs)	
 							 
+	file(GLOB MY_JARS "${CMAKE_JAVA_TARGET_OUTPUT_DIR}/libs/*.jar") 
+	set(CMAKE_JAVA_INCLUDE_PATH ${MY_JARS})
+
     if (CMAKE_JAVA_JAR_ENTRY_POINT)
       set(_ENTRY_POINT_OPTION e)
       set(_ENTRY_POINT_VALUE ${CMAKE_JAVA_JAR_ENTRY_POINT})
@@ -111,7 +118,8 @@ function(create_jar _TARGET_NAME)
 	#Copy the version file in the OUTPUT path
 	 file(COPY ${MSMB_SOURCE_DIR}/version.txt DESTINATION 
                              ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/msmb/gui/images)
-							 
+	
+	
     # create an empty java_class_filelist
     if (NOT EXISTS ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_class_filelist)
         file(WRITE ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_class_filelist "")
@@ -141,11 +149,15 @@ function(create_jar _TARGET_NAME)
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
     endif (_JAVA_COMPILE_FILES)
-
+	#Copy the version file in the LIBS path in the same path as the finaly .jar, because that is the setup for the web installation using IzPack
+	
+	
+							 
     # create the manifest file for the jar file
+	# (because the libs directory in this case is in the same folder as the jar, while in the GitHub case, is downloaded in the partent folder)
     set(ManifestInfo 
 	"Manifest-Version: 1.0
-Class-Path: . ../libs/RCaller-2.1.0-SNAPSHOT.jar ../libs/autocomplete.jar ../libs/biomodels-wslib_standalone-1.21.jar ../libs/commons-lang3-3.1.jar ../libs/copasi.jar ../libs/djep-full-latest.jar ../libs/guava-r09.jar ../libs/itextpdf-5.2.1.jar ../libs/junit.jar ../libs/lablib-checkboxtree-3.2.jar ../libs/swingx-all-1.6.3.jar
+Class-Path: . libs/RCaller-2.1.0-SNAPSHOT.jar libs/autocomplete.jar libs/biomodels-wslib_standalone-1.21.jar libs/commons-lang3-3.1.jar libs/copasi.jar libs/djep-full-latest.jar libs/guava-r09.jar libs/itextpdf-5.2.1.jar libs/junit.jar libs/lablib-checkboxtree-3.2.jar libs/swingx-all-1.6.3.jar
 Main-Class: msmb.gui.MainGui
 "
 )

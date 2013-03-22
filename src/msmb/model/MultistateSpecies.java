@@ -644,6 +644,9 @@ public class MultistateSpecies extends Species {
 		
 	}
 	public boolean containsSpecificConfiguration(String s) throws Exception {
+		if(!CellParsers.isMultistateSpeciesName(s)) {
+			return true; // because is just a name without sites, so it is the general configuration
+		}
 		MultistateSpecies single = new MultistateSpecies(multiModel,s);
 		String configuration = single.getExpandedSites().get(0);
 		Vector<String> current = this.getExpandedSites();

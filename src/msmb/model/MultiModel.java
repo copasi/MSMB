@@ -664,11 +664,15 @@ public class MultiModel {
 					
 					reaction.setReversible(false);
 					reaction.setNotes((String)tableReactionmodel2.getValueAt(i, Constants.ReactionsColumns.NOTES.index));
-				
-					String rateLaw = ((String)tableReactionmodel2.getValueAt(i, Constants.ReactionsColumns.KINETIC_LAW.index)).trim();
-					String kineticType = ((String)tableReactionmodel2.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).trim();
-					generateKineticLaw(reaction,i, expandedReaction, rateLaw, kineticType);
-					
+					try{
+						String rateLaw = ((String)tableReactionmodel2.getValueAt(i, Constants.ReactionsColumns.KINETIC_LAW.index)).trim();
+						String kineticType = ((String)tableReactionmodel2.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).trim();
+						generateKineticLaw(reaction,i, expandedReaction, rateLaw, kineticType);
+					} catch(Exception ex) {
+						problemsWithSomeExpression = true; // but I should wait to signal that because some expression can refer to species with assignments, so I will run this loop after the reactions
+						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	ex.printStackTrace();
+						
+					}					
 				}
 					
 				
@@ -1464,6 +1468,8 @@ public class MultiModel {
 			ExtractSubProdModVisitor v = new ExtractSubProdModVisitor(this);
 		    start.accept(v);
 			ret = new String(v.getExtractedName_fromSpeciesWithCoefficient().getBytes("UTF-8"),"UTF-8");
+			
+		
 		}catch (Exception e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
 			e.printStackTrace();
@@ -2848,7 +2854,9 @@ public class MultiModel {
         return ret;
 	}
 	
-	public Vector loadReactionTable() throws Exception {
+	public Vector loadReactionTable(Vector<String> reactionWithProblems) throws Exception {
+		//added parameter because the "forced" irreversible should change the build-it function reference from name (reversible) to name (irreversible) (that should be available, otherwise no import of the entire model)
+		
 		if(copasiDataModel == null) return new Vector();
 		CModel model = copasiDataModel.getModel();
 		if(model == null) return  new Vector();
@@ -2857,7 +2865,8 @@ public class MultiModel {
 		Vector row = new Vector();
         Vector<CFunction> predefined_to_be_loaded = new Vector<CFunction>();
         
-      
+    	CFunctionDB copasiFunDB = CCopasiRootContainer.getFunctionList();
+    	
 		int iMax = (int)model.getReactions().size();
         
         for (int i = 0;i < iMax;i++)
@@ -2873,6 +2882,7 @@ public class MultiModel {
             
             String reactionName = CellParsers.cleanName(reaction.getObjectName());
         
+            
             int numFuncAnnot = reaction.getNumUnsupportedAnnotations();
 			if (numFuncAnnot > 0)	{
 				for (int j = 0; j < numFuncAnnot; j++) {
@@ -2976,7 +2986,20 @@ public class MultiModel {
             }
 //------------------------------------------------------------------
            row.add(Constants.ReactionType.getDescriptionFromCopasiType(reaction.getFunction().getType()));
+           
 //------------------------------------------------------------------
+           
+           String unquoted = reactionName;
+           if(unquoted.startsWith("\"")&&unquoted.endsWith("\"")) unquoted = unquoted.substring(1, reactionName.length()-1);
+   		
+           if(reactionWithProblems.size() > 0 && reactionWithProblems.contains(unquoted)){
+        	   String irrFunName = reaction.getFunction().getObjectName();
+        	   irrFunName = irrFunName.replace(" (reversible)",  " (irreversible)");
+        	   CFunction val = (CFunction)copasiFunDB.findFunction(irrFunName);
+				reaction.setFunction(val);
+           }
+           
+           
            row.add(buildMRKineticLaw_fromCopasiFunction(reaction));
            
          
@@ -3321,27 +3344,28 @@ public class MultiModel {
 	}
 	
 	public String reprintExpression_forceCompressionElements(String expr) throws Exception {
-		return reprintExpression_forceCompressionElements(expr, false);
+		return reprintExpression_forceCompressionElements(expr, null);
 	}
 	
-	
-	public String reprintExpression_forceCompressionElements(String expressionList, boolean isListOfActions) throws Exception {
+	//if listSeparator = ; --> actions of event
+	//if listSeparator = , --> e.g. initial quantity, species with multiple compartments
+	public String reprintExpression_forceCompressionElements(String expressionList, String listSeparator) throws Exception {
 		String ret = new String();
 		if(expressionList.trim().length() ==0) return ret;
 		
-		Vector<String> actions = new Vector<String>();
+		Vector<String> elements = new Vector<String>();
 		Vector<Exception> exceptions = new Vector<Exception>();
-		if(isListOfActions) {
-			StringTokenizer st = new StringTokenizer(expressionList, ";");
+		if(listSeparator!=null) {
+			StringTokenizer st = new StringTokenizer(expressionList, listSeparator);
 			while(st.hasMoreTokens())  {
-				actions.add(st.nextToken().trim());
+				elements.add(st.nextToken().trim());
 			}
 		} else {
 			//simple expressions with just a single element
-			actions.add(expressionList);
+			elements.add(expressionList);
 		}
 		 
-		for (String expr : actions) {
+		for (String expr : elements) {
 			try{
 				String current = new String();
 				InputStream is = new ByteArrayInputStream(expr.getBytes("UTF-8"));
@@ -3359,7 +3383,8 @@ public class MultiModel {
 					exceptions.add(vis.getExceptions().get(0));
 				}
 				
-				ret += current + "; ";
+				ret += current;
+				if(listSeparator!= null) ret += listSeparator + " ";
 			} catch (Exception e) {
 				exceptions.add(e);
 			}
@@ -3368,7 +3393,8 @@ public class MultiModel {
 		if(exceptions.size() > 0) {
 			throw exceptions.get(0);
 		} else {
-			return ret.substring(0, ret.length()-2);
+			if(listSeparator!= null) ret = ret.substring(0, ret.length()-listSeparator.length()-1);
+			return ret;
 		}
 	}
 	
@@ -3395,10 +3421,10 @@ public class MultiModel {
 		    	} else { 
 						index = this.findGlobalQ(element.getTargetKey(),true);
 						if(index!= -1) { //parameter
-							ret += model.getModelValue(index).getObjectName();
+							ret += CellParsers.cleanName(model.getModelValue(index).getObjectName(),false);
 						} else { //compartment
 							index = this.findCompartment(element.getTargetKey(),true);
-							ret += model.getCompartment(index).getObjectName();
+							ret += CellParsers.cleanName(model.getCompartment(index).getObjectName(),false);
 						}
 				}
 			} catch (Exception e) {
@@ -4231,6 +4257,8 @@ public class MultiModel {
 	        				if(index != -1) {
 	        					CReaction r = model.getReaction(index);
 	        					r.setReversible(false);
+	        					//r.getFunction().geto
+	        					
 	        					//model.compile();
 	        				}
 	        				index = -1;

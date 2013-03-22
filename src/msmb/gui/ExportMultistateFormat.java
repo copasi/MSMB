@@ -29,11 +29,33 @@ class ExportMultistateFormat {
 		if(!file.getName().endsWith(Constants.FILE_EXTENSION_MSMB)) file = new File(file.getAbsoluteFile()+Constants.FILE_EXTENSION_MSMB);
 	}
 	
-	public static void exportMultistateFormat(boolean withProgressBar) {
+	
+	public static byte[] export_MSMB_format(boolean withProgressBar) {
+		if(file!= null) { //export from MSMB
+			try {
+				byte[] toSave = exportMultistateFormat(withProgressBar);
+				OutputStream out = new FileOutputStream(file);
+				out.write(toSave);
+				out.flush();
+				out.close();
+				return null;
+			} catch (IOException e) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+				return null;
+			}
+		} else {
+			return exportMultistateFormat(false);
+		}
+
+	}
+	
+	
+	private static byte[] exportMultistateFormat(boolean withProgressBar) {
 		try {
-			if(withProgressBar && file!= null && mainW!=null) mainW.createAndShowProgressBarFrame(file.getName());
+			if(withProgressBar && mainW!=null) mainW.createAndShowProgressBarFrame(file.getName());
 			
-			ObjectOutput out = new ObjectOutputStream(new FileOutputStream(file,false));
+			ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+			ObjectOutput out = new ObjectOutputStream(byteOutputStream);
 			
 			Vector<Vector<Vector<String>>> data = new Vector<Vector<Vector<String>>>();
 			
@@ -102,21 +124,54 @@ class ExportMultistateFormat {
 			modelProperties.add(new Boolean(MainGui.quantityIsConc).toString());
 			
 			out.writeObject(modelProperties);
-			
+			out.flush();
 			out.close();
 			if(mainW!=null)mainW.progress(100);
+			
+			return byteOutputStream.toByteArray();
 		} catch (Exception e) {
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
-				e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}
-		
+		return null;
 	}
-	@SuppressWarnings("unchecked")
-	public static HashMap<String, HashMap<String, String>> importMultistateFormat() {
-		ObjectInputStream in;
+	
+	public static HashMap<String, HashMap<String, String>> import_MSMB_format(byte[] byteString) {
+		if(file!= null) { //import from MSMB, byteString should be null and read from the file
+		try {
+			 InputStream in = new FileInputStream(file);
+			
+			byte[] bytes = new byte[(int) file.length()];
+			for (int n = 0, x; n < bytes.length; n += x ) {
+				x = in.read(bytes, n, bytes.length - n);
+				if (x < 0) {
+					in.close();
+					throw new EOFException("stream shorter than expected");
+				}
+			}
+			in.close();
+			
+
+			return importMultistateFormat(bytes);
+			
+		} catch (IOException e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
+			return null;
+		}
+	} else {
+		return importMultistateFormat(byteString);
+	}
+}
+
+
+	
+	private static HashMap<String, HashMap<String, String>> importMultistateFormat(byte[] byteString) {
 		HashMap<String, HashMap<String, String>> multistateInitials = null;
 		try {
-			in = new ObjectInputStream(new FileInputStream(file));
+			//in = new ObjectInputStream(new FileInputStream(file));
+			
+			ByteArrayInputStream byteInputStream = new ByteArrayInputStream(byteString);
+			ObjectInputStream in = new ObjectInputStream(byteInputStream);
+			
 			MutablePair<Vector<Vector<Vector<String>>>,HashMap<String, HashMap<String, String>>> tables_multistateInitials = (MutablePair<Vector<Vector<Vector<String>>>, HashMap<String, HashMap<String, String>>>) in.readObject();
 			Vector<Vector<Vector<String>>>  tables = tables_multistateInitials.left;
 			
@@ -154,7 +209,7 @@ class ExportMultistateFormat {
 			
 			in.close();
 		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				e.printStackTrace();
 		}
 		
@@ -252,4 +307,6 @@ class ExportMultistateFormat {
     	out.flush();
     	out.close();
 	}
+
+
 }

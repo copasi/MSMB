@@ -19,6 +19,10 @@ public interface MSMB_Interface {
 	public void loadFromCopasiKey(String copasiKey)  throws Exception;
 	public boolean saveToCopasiKey(String copasiKey) ;
 	
+	public void loadFromMSMB(byte[] msmbByteArray);
+	public byte[]  saveToMSMB();
+	
+	
 	public Vector<String> getMSMB_listOfSpecies();
 	public Vector<String> getMSMB_listOfGlobalQuantities();
 	public Vector<String> getMSMB_listOfCompartments();

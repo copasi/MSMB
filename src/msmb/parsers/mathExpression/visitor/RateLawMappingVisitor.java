@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Vector;
 
+import msmb.gui.MainGui;
 import msmb.model.Function;
 import msmb.model.MultiModel;
 
@@ -77,7 +78,8 @@ public class RateLawMappingVisitor extends DepthFirstVoidVisitor {
 			}
 			multiModel.addMapping(row, mapping_vector);
 		} catch(Exception ex) {
-			ex.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+			exceptions.add(ex);
 		}
 	  }
 			

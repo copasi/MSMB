@@ -94,12 +94,6 @@ public class Species  {
 			this.initialQuantity.clear();	
 			this.initialQuantity.add(initialQ);
 		} catch (Exception e) {// not a number, expression... so let's try to parse it
-			try {
-				CellParsers.parseExpression_getUndefMisused(m,initialQ, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.INITIAL_QUANTITY.description);
-				this.initialQuantity.clear();	
-				this.initialQuantity.add(initialQ);
-			} catch (Exception ex) {
-				//throw ex;
 				Vector<String> elements = new Vector<String>();
 				try {
 					elements = CellParsers.extractElementsInList(m,initialQ, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.INITIAL_QUANTITY.description);
@@ -109,9 +103,14 @@ public class Species  {
 				this.initialQuantity.clear();	
 				
 				for(int i = 0; i < elements.size(); i++) {
-					this.initialQuantity.add(elements.get(i));
+				//	try {
+					//	CellParsers.parseExpression_getUndefMisused(m,elements.get(i), Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.INITIAL_QUANTITY.description);
+						this.initialQuantity.add(elements.get(i));
+					//} catch (MySyntaxException e1) {
+					//	e1.printStackTrace();
+			//		}
 				}
-			}
+		
 		} finally {
 
 			editableInitialQuantity = getInitialQuantity_listString();

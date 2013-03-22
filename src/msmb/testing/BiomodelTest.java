@@ -41,10 +41,40 @@ public class BiomodelTest {
 	static {
 		models_with_known_problems = new Vector<String>();
 		models_with_known_problems.add("BIOMD0000000248");//BUG REPORTED - convert to irreversible not correct because a global quantity was referring to the flux of a reversible reaction, error not catched
-		models_with_known_problems.add("BIOMD0000000408");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
-														  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
+		models_with_known_problems.add("BIOMD0000000392");
+		models_with_known_problems.add("BIOMD0000000393");
+		models_with_known_problems.add("BIOMD0000000435");
+		
+		//non-splittable reversible reactions cannot be interpreted as irreversible (simulation results are different)
+		models_with_known_problems.add("BIOMD0000000051");
+		models_with_known_problems.add("BIOMD0000000075");
+		models_with_known_problems.add("BIOMD0000000081");
+		models_with_known_problems.add("BIOMD0000000126");
+		models_with_known_problems.add("BIOMD0000000145");
+		models_with_known_problems.add("BIOMD0000000148");
+		models_with_known_problems.add("BIOMD0000000161");
+		models_with_known_problems.add("BIOMD0000000165");
+		models_with_known_problems.add("BIOMD0000000166");
+		models_with_known_problems.add("BIOMD0000000182");
+		models_with_known_problems.add("BIOMD0000000237");
+		models_with_known_problems.add("BIOMD0000000245");
+		models_with_known_problems.add("BIOMD0000000246");
+		models_with_known_problems.add("BIOMD0000000250");
+		models_with_known_problems.add("BIOMD0000000256");
+		models_with_known_problems.add("BIOMD0000000265");
+		models_with_known_problems.add("BIOMD0000000268");
+		models_with_known_problems.add("BIOMD0000000273");
+		models_with_known_problems.add("BIOMD0000000327");
+		models_with_known_problems.add("BIOMD0000000404");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
+		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
+			models_with_known_problems.add("BIOMD0000000408");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
+		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
+		models_with_known_problems.add("BIOMD0000000409");
+		models_with_known_problems.add("BIOMD0000000426");
 		models_with_known_problems.add("BIOMD0000000428");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
-  	  													  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
+		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
+		models_with_known_problems.add("BIOMD0000000429");
+	
 	}
 		
 		
@@ -134,6 +164,7 @@ public class BiomodelTest {
 	public void runTest(){
 		try{
 			//System.setOut(new PrintStream(new File(subdirectoryTests+"SystemOutput.txt")));
+			//System.setErr(new PrintStream(new File(subdirectoryTests+"SystemErr.txt")));
 
 			if(collectStatisticsMode) initializeCollectStatistics();
 			
@@ -190,11 +221,13 @@ public class BiomodelTest {
 		//indices.add(new Integer(206));//1% should be ok
 		//indices.add(new Integer(232));//high relative, but in a single point, all the previous/following points are the same -> rounding issue
 		//indices.add(new Integer(399));//high relative, but in a single point, all the previous/following points are the same -> rounding issue
-
-
-			indices.add(new Integer(429));
-			*/	
-
+			*/
+			
+			indices.clear();
+			indices.add(new Integer(255)); 
+			
+			boolean simulate255 = true;
+			
 			for(int i = 0; i < indices.size(); i++) {
 				Integer index = indices.get(i);
 				if(index == 0) continue;
@@ -221,6 +254,15 @@ public class BiomodelTest {
 				System.out.println("... Analyzing "+sbmlID+"...");
 				System.out.flush();
 				
+				
+			/*	if(simulate255==false && sbmlID.compareTo("BIOMD0000000255")==0) {
+					System.out.println("Very big model, we will load it after all the other models");
+					System.out.flush();
+					indices.add(255);
+					simulate255 = true;
+					continue;		
+				}*/
+				
 				if(collectStatisticsMode) {
 					collectStatistics(sbmlID);
 					continue;
@@ -230,6 +272,7 @@ public class BiomodelTest {
 				MainGui.cleanUpModel();
 				MainGui.clearCopasiFunctions();
 				MainGui.fromMainGuiTest = true;
+				
 				File sbmlFile = new File(subdirectoryTests+sbmlID+".xml");
 				File cpsFile = new File(subdirectoryTests+sbmlID+"_MSMB.cps");
 				try{
@@ -255,7 +298,7 @@ public class BiomodelTest {
 
 
 				} catch(Throwable t){
-					t.printStackTrace();
+					//t.printStackTrace();
 					if(t instanceof FileNotFoundException) {
 						throw t;
 					}
