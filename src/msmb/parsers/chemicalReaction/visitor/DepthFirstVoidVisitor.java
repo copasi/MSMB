@@ -143,11 +143,11 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
    * <p>
    * nodeChoice -> . %0 #0 ( AdditiveExpression() )?<br>
    * .......... .. . .. #1 ( Blank() )*<br>
-   * .......... .. . .. #2 <ARROW><br>
-   * .......... .. . .. #3 ( $0 ( " " )<br>
-   * .......... .. . .. .. . $1 ( Blank() )*<br>
-   * .......... .. . .. .. . $2 ( AdditiveExpression() )? )*<br>
-   * .......... .. . .. #4 ( $0 ( Blank() )*<br>
+   * .......... .. . .. #2 ( $0 <ARROW><br>
+   * .......... .. . .. .. . $1 ( ?0 ( " " )<br>
+   * .......... .. . .. .. . .. . ?1 ( Blank() )*<br>
+   * .......... .. . .. .. . .. . ?2 ( AdditiveExpression() )? )* )<br>
+   * .......... .. . .. #3 ( $0 ( Blank() )*<br>
    * .......... .. . .. .. . $1 ";"<br>
    * .......... .. . .. .. . $2 ( Blank() )*<br>
    * .......... .. . .. .. . $3 ListModifiers() )?<br>
@@ -164,11 +164,11 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
   public void visit(final Reaction n) {
     // nodeChoice -> . %0 #0 ( AdditiveExpression() )?
     // .......... .. . .. #1 ( Blank() )*
-    // .......... .. . .. #2 <ARROW>
-    // .......... .. . .. #3 ( $0 ( " " )
-    // .......... .. . .. .. . $1 ( Blank() )*
-    // .......... .. . .. .. . $2 ( AdditiveExpression() )? )*
-    // .......... .. . .. #4 ( $0 ( Blank() )*
+    // .......... .. . .. #2 ( $0 <ARROW>
+    // .......... .. . .. .. . $1 ( ?0 ( " " )
+    // .......... .. . .. .. . .. . ?1 ( Blank() )*
+    // .......... .. . .. .. . .. . ?2 ( AdditiveExpression() )? )* )
+    // .......... .. . .. #3 ( $0 ( Blank() )*
     // .......... .. . .. .. . $1 ";"
     // .......... .. . .. .. . $2 ( Blank() )*
     // .......... .. . .. .. . $3 ListModifiers() )?
@@ -185,11 +185,11 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
       case 0:
         // %0 #0 ( AdditiveExpression() )?
         // .. #1 ( Blank() )*
-        // .. #2 <ARROW>
-        // .. #3 ( $0 ( " " )
-        // .. .. . $1 ( Blank() )*
-        // .. .. . $2 ( AdditiveExpression() )? )*
-        // .. #4 ( $0 ( Blank() )*
+        // .. #2 ( $0 <ARROW>
+        // .. .. . $1 ( ?0 ( " " )
+        // .. .. . .. . ?1 ( Blank() )*
+        // .. .. . .. . ?2 ( AdditiveExpression() )? )* )
+        // .. #3 ( $0 ( Blank() )*
         // .. .. . $1 ";"
         // .. .. . $2 ( Blank() )*
         // .. .. . $3 ListModifiers() )?
@@ -209,70 +209,76 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
             n0CHS0A1TMi.accept(this);
           }
         }
-        // #2 <ARROW>
+        // #2 ( $0 <ARROW>
+        // .. . $1 ( ?0 ( " " )
+        // .. . .. . ?1 ( Blank() )*
+        // .. . .. . ?2 ( AdditiveExpression() )? )* )
         final INode n0CHS0A2 = n0CHS0.elementAt(2);
-        n0CHS0A2.accept(this);
-        // #3 ( $0 ( " " )
-        // .. . $1 ( Blank() )*
-        // .. . $2 ( AdditiveExpression() )? )*
-        final INode n0CHS0A3 = n0CHS0.elementAt(3);
-        final NodeListOptional n0CHS0A3T1 = (NodeListOptional) n0CHS0A3;
-        if (n0CHS0A3T1.present()) {
-          for (int i = 0; i < n0CHS0A3T1.size(); i++) {
-            final INode n0CHS0A3T1Mi = n0CHS0A3T1.elementAt(i);
-            final NodeSequence n0CHS0A3T1MiS1 = (NodeSequence) n0CHS0A3T1Mi;
-            // $0 ( " " )
-            final INode n0CHS0A3T1MiS1A0 = n0CHS0A3T1MiS1.elementAt(0);
-            n0CHS0A3T1MiS1A0.accept(this);
-            // $1 ( Blank() )*
-            final INode n0CHS0A3T1MiS1A1 = n0CHS0A3T1MiS1.elementAt(1);
-            final NodeListOptional n0CHS0A3T1MiS1A1T2 = (NodeListOptional) n0CHS0A3T1MiS1A1;
-            if (n0CHS0A3T1MiS1A1T2.present()) {
-              for (int i1 = 0; i1 < n0CHS0A3T1MiS1A1T2.size(); i1++) {
-                final INode n0CHS0A3T1MiS1A1T2Mi = n0CHS0A3T1MiS1A1T2.elementAt(i1);
-                n0CHS0A3T1MiS1A1T2Mi.accept(this);
+        final NodeSequence n0CHS0A2S1 = (NodeSequence) n0CHS0A2;
+        // $0 <ARROW>
+        final INode n0CHS0A2S1A0 = n0CHS0A2S1.elementAt(0);
+        n0CHS0A2S1A0.accept(this);
+        // $1 ( ?0 ( " " )
+        // .. . ?1 ( Blank() )*
+        // .. . ?2 ( AdditiveExpression() )? )*
+        final INode n0CHS0A2S1A1 = n0CHS0A2S1.elementAt(1);
+        final NodeListOptional n0CHS0A2S1A1T1 = (NodeListOptional) n0CHS0A2S1A1;
+        if (n0CHS0A2S1A1T1.present()) {
+          for (int i = 0; i < n0CHS0A2S1A1T1.size(); i++) {
+            final INode n0CHS0A2S1A1T1Mi = n0CHS0A2S1A1T1.elementAt(i);
+            final NodeSequence n0CHS0A2S1A1T1MiS2 = (NodeSequence) n0CHS0A2S1A1T1Mi;
+            // ?0 ( " " )
+            final INode n0CHS0A2S1A1T1MiS2A0 = n0CHS0A2S1A1T1MiS2.elementAt(0);
+            n0CHS0A2S1A1T1MiS2A0.accept(this);
+            // ?1 ( Blank() )*
+            final INode n0CHS0A2S1A1T1MiS2A1 = n0CHS0A2S1A1T1MiS2.elementAt(1);
+            final NodeListOptional n0CHS0A2S1A1T1MiS2A1T2 = (NodeListOptional) n0CHS0A2S1A1T1MiS2A1;
+            if (n0CHS0A2S1A1T1MiS2A1T2.present()) {
+              for (int i1 = 0; i1 < n0CHS0A2S1A1T1MiS2A1T2.size(); i1++) {
+                final INode n0CHS0A2S1A1T1MiS2A1T2Mi = n0CHS0A2S1A1T1MiS2A1T2.elementAt(i1);
+                n0CHS0A2S1A1T1MiS2A1T2Mi.accept(this);
               }
             }
-            // $2 ( AdditiveExpression() )?
-            final INode n0CHS0A3T1MiS1A2 = n0CHS0A3T1MiS1.elementAt(2);
-            final NodeOptional n0CHS0A3T1MiS1A2P1 = (NodeOptional) n0CHS0A3T1MiS1A2;
-            if (n0CHS0A3T1MiS1A2P1.present()) {
-              n0CHS0A3T1MiS1A2P1.accept(this);
+            // ?2 ( AdditiveExpression() )?
+            final INode n0CHS0A2S1A1T1MiS2A2 = n0CHS0A2S1A1T1MiS2.elementAt(2);
+            final NodeOptional n0CHS0A2S1A1T1MiS2A2P1 = (NodeOptional) n0CHS0A2S1A1T1MiS2A2;
+            if (n0CHS0A2S1A1T1MiS2A2P1.present()) {
+              n0CHS0A2S1A1T1MiS2A2P1.accept(this);
             }
           }
         }
-        // #4 ( $0 ( Blank() )*
+        // #3 ( $0 ( Blank() )*
         // .. . $1 ";"
         // .. . $2 ( Blank() )*
         // .. . $3 ListModifiers() )?
-        final INode n0CHS0A4 = n0CHS0.elementAt(4);
-        final NodeOptional n0CHS0A4P2 = (NodeOptional) n0CHS0A4;
-        if (n0CHS0A4P2.present()) {
-          final NodeSequence n0CHS0A4P2S1 = (NodeSequence) n0CHS0A4P2.node;
+        final INode n0CHS0A3 = n0CHS0.elementAt(3);
+        final NodeOptional n0CHS0A3P2 = (NodeOptional) n0CHS0A3;
+        if (n0CHS0A3P2.present()) {
+          final NodeSequence n0CHS0A3P2S1 = (NodeSequence) n0CHS0A3P2.node;
           // $0 ( Blank() )*
-          final INode n0CHS0A4P2S1A0 = n0CHS0A4P2S1.elementAt(0);
-          final NodeListOptional n0CHS0A4P2S1A0T3 = (NodeListOptional) n0CHS0A4P2S1A0;
-          if (n0CHS0A4P2S1A0T3.present()) {
-            for (int i = 0; i < n0CHS0A4P2S1A0T3.size(); i++) {
-              final INode n0CHS0A4P2S1A0T3Mi = n0CHS0A4P2S1A0T3.elementAt(i);
-              n0CHS0A4P2S1A0T3Mi.accept(this);
+          final INode n0CHS0A3P2S1A0 = n0CHS0A3P2S1.elementAt(0);
+          final NodeListOptional n0CHS0A3P2S1A0T3 = (NodeListOptional) n0CHS0A3P2S1A0;
+          if (n0CHS0A3P2S1A0T3.present()) {
+            for (int i = 0; i < n0CHS0A3P2S1A0T3.size(); i++) {
+              final INode n0CHS0A3P2S1A0T3Mi = n0CHS0A3P2S1A0T3.elementAt(i);
+              n0CHS0A3P2S1A0T3Mi.accept(this);
             }
           }
           // $1 ";"
-          final INode n0CHS0A4P2S1A1 = n0CHS0A4P2S1.elementAt(1);
-          n0CHS0A4P2S1A1.accept(this);
+          final INode n0CHS0A3P2S1A1 = n0CHS0A3P2S1.elementAt(1);
+          n0CHS0A3P2S1A1.accept(this);
           // $2 ( Blank() )*
-          final INode n0CHS0A4P2S1A2 = n0CHS0A4P2S1.elementAt(2);
-          final NodeListOptional n0CHS0A4P2S1A2T4 = (NodeListOptional) n0CHS0A4P2S1A2;
-          if (n0CHS0A4P2S1A2T4.present()) {
-            for (int i = 0; i < n0CHS0A4P2S1A2T4.size(); i++) {
-              final INode n0CHS0A4P2S1A2T4Mi = n0CHS0A4P2S1A2T4.elementAt(i);
-              n0CHS0A4P2S1A2T4Mi.accept(this);
+          final INode n0CHS0A3P2S1A2 = n0CHS0A3P2S1.elementAt(2);
+          final NodeListOptional n0CHS0A3P2S1A2T4 = (NodeListOptional) n0CHS0A3P2S1A2;
+          if (n0CHS0A3P2S1A2T4.present()) {
+            for (int i = 0; i < n0CHS0A3P2S1A2T4.size(); i++) {
+              final INode n0CHS0A3P2S1A2T4Mi = n0CHS0A3P2S1A2T4.elementAt(i);
+              n0CHS0A3P2S1A2T4Mi.accept(this);
             }
           }
           // $3 ListModifiers()
-          final INode n0CHS0A4P2S1A3 = n0CHS0A4P2S1.elementAt(3);
-          n0CHS0A4P2S1A3.accept(this);
+          final INode n0CHS0A3P2S1A3 = n0CHS0A3P2S1.elementAt(3);
+          n0CHS0A3P2S1A3.accept(this);
         }
         break;
       case 1:

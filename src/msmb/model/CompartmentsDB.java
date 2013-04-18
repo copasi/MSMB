@@ -80,7 +80,7 @@ public class CompartmentsDB {
 	}
 
 	
-	public int addChangeComp(String name) throws Exception {
+	public int addChangeComp(String name) throws Throwable {
 		if(name.length() == 0) name = MainGui.compartment_default_for_dialog_window;
 		if(!compIndexes.containsKey(name)) { //it is a new comp
 			Compartment c = new Compartment(name);
@@ -95,7 +95,7 @@ public class CompartmentsDB {
 	}
 	
 	public int addChangeComp(int index, String name, String type,
-			String initial, String expression, String notes) throws Exception {
+			String initial, String expression, String notes) throws Throwable {
 		
 		if(name.trim().length() == 0) return -1;
 		Integer ind = compIndexes.get(name);
@@ -187,7 +187,7 @@ public class CompartmentsDB {
 	}
 	
 	public int addChangeComp_withoutParsing(String name, String type,
-			String initial, String expression, String notes) throws Exception {
+			String initial, String expression, String notes) throws Throwable {
 		if(!compIndexes.containsKey(name)) { //it is a new comp
 				Compartment c = new Compartment(name);
 				c.setExpression_withoutParsing(expression);

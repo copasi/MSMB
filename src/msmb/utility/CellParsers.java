@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
 
 import javax.swing.JTextField;
 
+import com.google.common.base.Throwables;
+
 /*import org.lsmp.djep.xjep.XJep;
 import org.nfunk.jep.Node;
 import org.nfunk.jep.OperatorSet;
@@ -113,7 +115,6 @@ public class CellParsers {
 		
 		if(isNaN(name)) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CONST_AVOGADRO)) == 0) return true;
-		
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.PI)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXPONENTIALE)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.DELAY)) == 0) return true;
@@ -123,7 +124,7 @@ public class CellParsers {
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ACOS)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ASIN)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ATAN)) == 0) return true;
-			if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ABS)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ABS)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG10)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COSH)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TAN)) == 0) return true;
@@ -139,9 +140,12 @@ public class CellParsers {
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.FLOOR)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SQRT)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MAX)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MIN)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXP)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG)) == 0) return true;
-		
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MIN)) == 0) return true;
+		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MAX)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SEC)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CSC)) == 0) return true;
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COT)) == 0) return true;
@@ -190,7 +194,7 @@ public class CellParsers {
 			 start.accept(v);
 			 return v.isRealMultiStateSpecies(); 
 			 
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				//e.printStackTrace();
 				return false;
 			}
@@ -328,21 +332,38 @@ public class CellParsers {
 				column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
 			} 
 		
-		 try{
-			
-		  if(expression.length() >0) {
-				  InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
-				  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
-				  CompleteListOfExpression root = parser.CompleteListOfExpression();
-				  ExtractElementsVisitor elementsVisitor = new ExtractElementsVisitor(m);
-				  root.accept(elementsVisitor);
-				  ret = elementsVisitor.getElements();
-			  }
-		 } catch (Throwable e) {
-			 if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-			 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
-		}
-		return ret;
+			if(table_descr.compareTo(Constants.TitlesTabs.EVENTS.description)!=0) {
+					 try{
+						
+					  if(expression.length() >0) {
+							  InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+							  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
+							  CompleteListOfExpression root = parser.CompleteListOfExpression();
+							  ExtractElementsVisitor elementsVisitor = new ExtractElementsVisitor(m);
+							  root.accept(elementsVisitor);
+							  ret = elementsVisitor.getElements();
+						  }
+					 } catch (Throwable e) {
+						 if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+						 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
+					}
+					return ret;
+			} else {
+				 try{
+					  if(expression.length() >0) {
+							  InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+							  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
+							  CompleteListOfExpression_Events root = parser.CompleteListOfExpression_Events();
+							  ExtractElementsVisitor elementsVisitor = new ExtractElementsVisitor(m);
+							  root.accept(elementsVisitor);
+							  ret = elementsVisitor.getElements();
+						  }
+					 } catch (Throwable e) {
+						 if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+						 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
+					}
+					return ret;
+			}
 	}
 	
 	public static Vector<Vector<String>> parseListExpression_getUndefMisused(MultiModel m, String expression, String table_descr, String column_descr) throws MySyntaxException {
@@ -445,22 +466,26 @@ public class CellParsers {
 		    
 		    
 		    
-	public static Vector<Vector<String>> parseExpression_getUndefMisused(MultiModel m, String expression, String table_descr, String column_descr) throws MySyntaxException {
+	public static Vector<Vector<String>> parseExpression_getUndefMisused(MultiModel m, String expression, String table_descr, String column_descr) throws Throwable {
 		
 		try {
 			return parseExpression_getUndefMisused_2(m, expression,table_descr,column_descr);
 		} catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-			if(!(e instanceof MySyntaxException)){ 
-				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-				Vector ret = new Vector();
-				 DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(table_descr);
-				//dm.setProblem(e.getMessage()); not very easy to interpret so I will rephrase the message, but it is not general
-				dm.setProblem("Error parsing the mathematical expression. Did you maybe leave the types in any function call?");
-			    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
-				ret.add(dm);
-				return ret; 
+			if(!(e instanceof MySyntaxException) ){
+				if(table_descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+					Vector ret = new Vector();
+					 DebugMessage dm = new DebugMessage();
+					dm.setOrigin_table(table_descr);
+					//dm.setProblem(e.getMessage()); not very easy to interpret so I will rephrase the message, but it is not general
+					dm.setProblem("Error parsing the mathematical expression.");
+				    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
+					ret.add(dm);
+					return ret; 
+				} else {
+					throw e;
+				}
 			}
 			else {
 				throw (MySyntaxException)e;
@@ -633,6 +658,11 @@ public class CellParsers {
 				//if it does not convert into a number, it should be fine
 			}
 	
+			if(CellParsers.isKeyword(objectName)) {
+				// if the name is a keyword, it should be quoted
+				return "\""+objectName+"\"";
+			}
+			
 			 return objectName;
 			
 		}
@@ -681,7 +711,7 @@ public class CellParsers {
 		boolean foundTrue = false;
 		boolean foundFalse = false;
 		while(st_states.hasMoreTokens()) {
-				String s = (String)st_states.nextToken();
+				String s = (String)st_states.nextToken().trim();
 				if(BooleanType.isTrue(s)
 						//s.compareTo(Constants.BooleanType.TRUE.description) ==0 
 						//|| s.compareTo(Constants.BooleanType.TRUE_lower.description) ==0
@@ -769,7 +799,7 @@ public class CellParsers {
 		    subs_prod_mod.addAll(v.getAll_asString());
 		      
 		} catch(Throwable ex) {
-			ex.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 			
 			 DebugMessage dm = new DebugMessage();
 			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
@@ -1132,7 +1162,8 @@ public class CellParsers {
 		String ret = new String();
 
 		if(isMultistateSpeciesName(cleanName)) {
-			ret = "ADD_COMPARTMENT_TO_MULTISTATE_SPECIEEEEEEEEEEEEEEEES";
+			//ret = "ADD_COMPARTMENT_TO_MULTISTATE_SPECIEEEEEEEEEEEEEEEES";
+			ret = cleanName;
 		} else {
 			ret = cleanName + 
 				 MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_Parser.OPEN_R) +
@@ -1178,6 +1209,21 @@ public class CellParsers {
 		}
 		
 		return ret;
+	}
+
+
+
+	public static boolean compareMultistateSpecies(MultiModel m, String element1, String name) {
+		MultistateSpecies sp;
+		try {
+			sp = new MultistateSpecies(m, element1);
+			return sp.containsSpecificConfiguration(name);
+		
+		} catch (Exception e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+		}
+		return false;
+		
 	}
 
 

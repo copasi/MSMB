@@ -90,7 +90,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					Function f = null;
 					try {
 						f = multiModel.getFunctionByName(ToStringVisitor.toString(n.name.nodeChoice.choice));
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
@@ -111,7 +111,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 						Function f = null;
 						try {
 							f = multiModel.getFunctionByName(name);
-						} catch (Exception e) {
+						} catch (Throwable e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
@@ -145,26 +145,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 	}
 	  
 	 
-	/*private boolean isKeyword(String name) {
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.PI)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.DELAY)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.CEIL)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COS)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ABS)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG10)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TAN)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TANH)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.COSH)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SIN)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.FLOOR)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.SQRT)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXP)) == 0) return true;
-		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.LOG)) == 0) return true;
-		return false;
-	}*/
-
+	
 	private boolean isMultistateSpeciesDefined(SpeciesReferenceOrFunctionCall_prefix n) {
 		String element = ToStringVisitor.toString(n);
 		 InputStream is = new ByteArrayInputStream(element.getBytes());
@@ -357,10 +338,12 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			boolean range = false;
 			NodeChoice sequenceOrRange = (NodeChoice)siteSel.nodeOptional.node;
 			if(sequenceOrRange.which == 0) {//sequence
-				
-				int quanti = ((NodeSequence)(sequenceOrRange.choice)).nodes.size();
-			//	System.out.println("ce ne sono altri   "+quanti);
-				//I HAVE TO EXTACT ALL THE ELEMENTS
+				Iterator it = ((NodeList)(sequenceOrRange.choice)).nodes.iterator();
+				while (it.hasNext()) {
+					NodeSequence current = (NodeSequence) it.next();
+					listedStates.add(ToStringVisitor.toString(current.nodes.get(1)));
+					range = false;
+				}
 			} else { // range
 				String stateSecond = ToStringVisitor.toString(((NodeSequence)(sequenceOrRange.choice)).nodes.get(1));
 				listedStates.add(stateSecond);
@@ -470,7 +453,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 				if(modify)sumExpansion.set(indexSum,se);
 				else sumExpansion.add(se);
 				
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				misused.add("\nFunction \"SUM\" is misformed. Problems parsing the weight function "+functionCall+".");
 				return false;
 			}
@@ -618,7 +601,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					try {
 						multiModel.addNamedElement(element, -1); //temporary add the name as defined so that following visit will find it existing
 						tempSiteName.add(element);
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						
 						e.printStackTrace();
 					}
@@ -816,7 +799,7 @@ class SumExpansion {
 
 			}
 
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}
 		return ret;
@@ -833,10 +816,8 @@ class SumExpansion {
 			}
 			
 			elementsSum = ms.getExpandedSpecies(null);
-		} catch (Exception e) {
-			
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
-				e.printStackTrace();
+		} catch (Throwable e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)				e.printStackTrace();
 		}
 		
 		return elementsSum;

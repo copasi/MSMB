@@ -8,11 +8,11 @@ import msmb.parsers.chemicalReaction.visitor.*;
  * Corresponding grammar:<br>
  * nodeChoice -> . %0 #0 ( AdditiveExpression() )?<br>
  * .......... .. . .. #1 ( Blank() )*<br>
- * .......... .. . .. #2 <ARROW><br>
- * .......... .. . .. #3 ( $0 ( " " )<br>
- * .......... .. . .. .. . $1 ( Blank() )*<br>
- * .......... .. . .. .. . $2 ( AdditiveExpression() )? )*<br>
- * .......... .. . .. #4 ( $0 ( Blank() )*<br>
+ * .......... .. . .. #2 ( $0 <ARROW><br>
+ * .......... .. . .. .. . $1 ( ?0 ( " " )<br>
+ * .......... .. . .. .. . .. . ?1 ( Blank() )*<br>
+ * .......... .. . .. .. . .. . ?2 ( AdditiveExpression() )? )* )<br>
+ * .......... .. . .. #3 ( $0 ( Blank() )*<br>
  * .......... .. . .. .. . $1 ";"<br>
  * .......... .. . .. .. . $2 ( Blank() )*<br>
  * .......... .. . .. .. . $3 ListModifiers() )?<br>

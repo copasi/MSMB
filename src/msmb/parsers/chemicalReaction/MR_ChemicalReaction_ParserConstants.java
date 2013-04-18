@@ -11,39 +11,35 @@ public interface MR_ChemicalReaction_ParserConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int TIME = 6;
+  int SINGLE_SPECIES = 6;
   /** RegularExpression Id. */
-  int SUM = 7;
+  int INTEGER_LITERAL = 7;
   /** RegularExpression Id. */
-  int FLOOR = 8;
+  int FLOATING_POINT_LITERAL = 8;
   /** RegularExpression Id. */
-  int SQRT = 9;
+  int EXPONENT = 9;
   /** RegularExpression Id. */
-  int LOG = 10;
+  int DECIMAL_LITERAL = 10;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 11;
+  int HEX_LITERAL = 11;
   /** RegularExpression Id. */
-  int FLOATING_POINT_LITERAL = 12;
+  int OCTAL_LITERAL = 12;
   /** RegularExpression Id. */
-  int EXPONENT = 13;
+  int IDENTIFIER = 13;
   /** RegularExpression Id. */
-  int DECIMAL_LITERAL = 14;
+  int DIGIT = 14;
   /** RegularExpression Id. */
-  int HEX_LITERAL = 15;
+  int STRING_LITERAL = 15;
   /** RegularExpression Id. */
-  int OCTAL_LITERAL = 16;
+  int LETTER = 16;
   /** RegularExpression Id. */
-  int IDENTIFIER = 17;
+  int ARROW = 17;
   /** RegularExpression Id. */
-  int DIGIT = 18;
+  int ARROW2 = 18;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 19;
+  int COMPLEXATION_ARROW = 19;
   /** RegularExpression Id. */
-  int LETTER = 20;
-  /** RegularExpression Id. */
-  int ARROW = 21;
-  /** RegularExpression Id. */
-  int ARROW2 = 22;
+  int DECOMPLEXATION_ARROW = 20;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -56,11 +52,7 @@ public interface MR_ChemicalReaction_ParserConstants {
     "\"\\r\"",
     "<token of kind 4>",
     "<token of kind 5>",
-    "\"Time\"",
-    "\"SUM\"",
-    "\"floor\"",
-    "\"sqrt\"",
-    "\"log\"",
+    "\"SINGLE_SPECIES\"",
     "<INTEGER_LITERAL>",
     "<FLOATING_POINT_LITERAL>",
     "<EXPONENT>",
@@ -73,6 +65,8 @@ public interface MR_ChemicalReaction_ParserConstants {
     "<LETTER>",
     "\" ->\"",
     "\"-> \"",
+    "<COMPLEXATION_ARROW>",
+    "<DECOMPLEXATION_ARROW>",
     "\" \"",
     "\";\"",
     "\" + \"",

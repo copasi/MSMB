@@ -26,7 +26,7 @@ class ExportMultistateFormat {
 	
 	public static void setFile(File f) {
 		file = f;
-		if(!file.getName().endsWith(Constants.FILE_EXTENSION_MSMB)) file = new File(file.getAbsoluteFile()+Constants.FILE_EXTENSION_MSMB);
+		if(file!=null && !file.getName().endsWith(Constants.FILE_EXTENSION_MSMB)) file = new File(file.getAbsoluteFile()+Constants.FILE_EXTENSION_MSMB);
 	}
 	
 	
@@ -226,12 +226,12 @@ class ExportMultistateFormat {
          	writeTable(tableGlobalQmodel, file.getAbsoluteFile()+".globalQ.txt");
          	writeTable(tableEventsmodel, file.getAbsoluteFile()+".events.txt");
          	writeTable(tableCompartmentsmodel, file.getAbsoluteFile()+".compartments.txt");
-         } catch (Exception e) {
+         } catch (Throwable e) {
         	 if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}
 	}
 	
-	private static void writeTableSpecies(CustomTableModel_MSMB tableSpeciesmodel, String file) throws Exception{
+	private static void writeTableSpecies(CustomTableModel_MSMB tableSpeciesmodel, String file) throws Throwable{
 		BufferedWriter buffout= new BufferedWriter(new FileWriter(file));
 		PrintWriter out = new PrintWriter(buffout);
 		int realRowCount = 1;

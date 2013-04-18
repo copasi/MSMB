@@ -11,7 +11,7 @@ import msmb.parsers.chemicalReaction.syntaxtree.*;
 public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserConstants {
 
   public static void main(String args[]) {
-    System.out.println("Nothing MR_ChemicalReaction_Parser...");
+    System.out.println("MR_ChemicalReaction_Parser...");
     try {
       String expression = new String("A + B -> C; MOD  ldsdfa;sf");
       InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
@@ -96,6 +96,20 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
+      expression = new String("A + B ->c COMPLEX(A, B)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("COMPLEX(A, B) ->d SINGLE_SPECIES");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
     }
     catch (Exception e) {
       System.out.println("Oops.");
@@ -142,49 +156,50 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   AdditiveExpression n3 = null;
   NodeListOptional n4 = new NodeListOptional();
   Blank n5 = null;
-  NodeToken n6 = null;
-  Token n7 = null;
-  NodeListOptional n8 = new NodeListOptional();
-  NodeSequence n9 = null;
+  NodeSequence n6 = null;
+  NodeToken n7 = null;
+  Token n8 = null;
+  NodeListOptional n9 = new NodeListOptional();
   NodeSequence n10 = null;
-  NodeToken n11 = null;
-  Token n12 = null;
-  NodeListOptional n13 = null;
-  Blank n14 = null;
-  NodeOptional n15 = null;
-  AdditiveExpression n16 = null;
-  NodeOptional n17 = new NodeOptional();
-  NodeSequence n18 = null;
-  NodeListOptional n19 = null;
-  Blank n20 = null;
-  NodeToken n21 = null;
-  Token n22 = null;
-  NodeListOptional n23 = null;
-  Blank n24 = null;
-  ListModifiers n25 = null;
-  NodeSequence n26 = null;
-  NodeToken n27 = null;
-  Token n28 = null;
-  NodeListOptional n29 = new NodeListOptional();
-  Blank n30 = null;
-  NodeOptional n31 = new NodeOptional();
-  AdditiveExpression n32 = null;
-  NodeOptional n33 = new NodeOptional();
-  NodeSequence n34 = null;
-  NodeListOptional n35 = null;
-  Blank n36 = null;
-  NodeToken n37 = null;
-  Token n38 = null;
-  NodeListOptional n39 = null;
-  Blank n40 = null;
-  ListModifiers n41 = null;
+  NodeSequence n11 = null;
+  NodeToken n12 = null;
+  Token n13 = null;
+  NodeListOptional n14 = null;
+  Blank n15 = null;
+  NodeOptional n16 = null;
+  AdditiveExpression n17 = null;
+  NodeOptional n18 = new NodeOptional();
+  NodeSequence n19 = null;
+  NodeListOptional n20 = null;
+  Blank n21 = null;
+  NodeToken n22 = null;
+  Token n23 = null;
+  NodeListOptional n24 = null;
+  Blank n25 = null;
+  ListModifiers n26 = null;
+  NodeSequence n27 = null;
+  NodeToken n28 = null;
+  Token n29 = null;
+  NodeListOptional n30 = new NodeListOptional();
+  Blank n31 = null;
+  NodeOptional n32 = new NodeOptional();
+  AdditiveExpression n33 = null;
+  NodeOptional n34 = new NodeOptional();
+  NodeSequence n35 = null;
+  NodeListOptional n36 = null;
+  Blank n37 = null;
+  NodeToken n38 = null;
+  Token n39 = null;
+  NodeListOptional n40 = null;
+  Blank n41 = null;
+  ListModifiers n42 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case INTEGER_LITERAL:
     case FLOATING_POINT_LITERAL:
     case IDENTIFIER:
     case ARROW:
-    case 23:
-      n1 = new NodeSequence(5);
+    case 21:
+      n1 = new NodeSequence(4);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case INTEGER_LITERAL:
       case FLOATING_POINT_LITERAL:
@@ -200,7 +215,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       label_1:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 23:
+        case 21:
           ;
           break;
         default:
@@ -212,9 +227,10 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       }
       n4.nodes.trimToSize();
       n1.addNode(n4);
-      n7 = jj_consume_token(ARROW);
-      n6 = JTBToolkit.makeNodeToken(n7);
-      n1.addNode(n6);
+        n6 = new NodeSequence(2);
+      n8 = jj_consume_token(ARROW);
+        n7 = JTBToolkit.makeNodeToken(n8);
+        n6.addNode(n7);
       label_2:
       while (true) {
         if (jj_2_1(2)) {
@@ -222,176 +238,177 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         } else {
           break label_2;
         }
-        n13 = new NodeListOptional();
-        n15 = new NodeOptional();
-        n9 = new NodeSequence(3);
-          n10 = new NodeSequence(1);
-        n12 = jj_consume_token(23);
-          n11 = JTBToolkit.makeNodeToken(n12);
+          n14 = new NodeListOptional();
+          n16 = new NodeOptional();
+          n10 = new NodeSequence(3);
+            n11 = new NodeSequence(1);
+        n13 = jj_consume_token(21);
+            n12 = JTBToolkit.makeNodeToken(n13);
+            n11.addNode(n12);
           n10.addNode(n11);
-        n9.addNode(n10);
         label_3:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 23:
+          case 21:
             ;
             break;
           default:
             jj_la1[2] = jj_gen;
             break label_3;
           }
-          n14 = Blank();
-          n13.addNode(n14);
+          n15 = Blank();
+            n14.addNode(n15);
         }
-        n13.nodes.trimToSize();
-        n9.addNode(n13);
+          n14.nodes.trimToSize();
+          n10.addNode(n14);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case INTEGER_LITERAL:
         case FLOATING_POINT_LITERAL:
         case IDENTIFIER:
-          n16 = AdditiveExpression();
-          n15.addNode(n16);
+          n17 = AdditiveExpression();
+            n16.addNode(n17);
           break;
         default:
           jj_la1[3] = jj_gen;
           ;
         }
-        n9.addNode(n15);
-        n8.addNode(n9);
+          n10.addNode(n16);
+          n9.addNode(n10);
       }
-      n8.nodes.trimToSize();
-      n1.addNode(n8);
+        n9.nodes.trimToSize();
+        n6.addNode(n9);
+      n1.addNode(n6);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 23:
-      case 24:
-        n19 = new NodeListOptional();
-        n23 = new NodeListOptional();
-        n18 = new NodeSequence(4);
+      case 21:
+      case 22:
+        n20 = new NodeListOptional();
+        n24 = new NodeListOptional();
+        n19 = new NodeSequence(4);
         label_4:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 23:
+          case 21:
             ;
             break;
           default:
             jj_la1[4] = jj_gen;
             break label_4;
           }
-          n20 = Blank();
-          n19.addNode(n20);
+          n21 = Blank();
+          n20.addNode(n21);
         }
-        n19.nodes.trimToSize();
-        n18.addNode(n19);
-        n22 = jj_consume_token(24);
-        n21 = JTBToolkit.makeNodeToken(n22);
-        n18.addNode(n21);
+        n20.nodes.trimToSize();
+        n19.addNode(n20);
+        n23 = jj_consume_token(22);
+        n22 = JTBToolkit.makeNodeToken(n23);
+        n19.addNode(n22);
         label_5:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 23:
+          case 21:
             ;
             break;
           default:
             jj_la1[5] = jj_gen;
             break label_5;
           }
-          n24 = Blank();
-          n23.addNode(n24);
+          n25 = Blank();
+          n24.addNode(n25);
         }
-        n23.nodes.trimToSize();
-        n18.addNode(n23);
-        n25 = ListModifiers();
-        n18.addNode(n25);
-        n17.addNode(n18);
+        n24.nodes.trimToSize();
+        n19.addNode(n24);
+        n26 = ListModifiers();
+        n19.addNode(n26);
+        n18.addNode(n19);
         break;
       default:
         jj_la1[6] = jj_gen;
         ;
       }
-      n1.addNode(n17);
+      n1.addNode(n18);
       n0 = new NodeChoice(n1, 0, 2);
       break;
     case ARROW2:
-      n26 = new NodeSequence(4);
-      n28 = jj_consume_token(ARROW2);
-      n27 = JTBToolkit.makeNodeToken(n28);
-      n26.addNode(n27);
+      n27 = new NodeSequence(4);
+      n29 = jj_consume_token(ARROW2);
+      n28 = JTBToolkit.makeNodeToken(n29);
+      n27.addNode(n28);
       label_6:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 23:
+        case 21:
           ;
           break;
         default:
           jj_la1[7] = jj_gen;
           break label_6;
         }
-        n30 = Blank();
-        n29.addNode(n30);
+        n31 = Blank();
+        n30.addNode(n31);
       }
-      n29.nodes.trimToSize();
-      n26.addNode(n29);
+      n30.nodes.trimToSize();
+      n27.addNode(n30);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case INTEGER_LITERAL:
       case FLOATING_POINT_LITERAL:
       case IDENTIFIER:
-        n32 = AdditiveExpression();
-        n31.addNode(n32);
+        n33 = AdditiveExpression();
+        n32.addNode(n33);
         break;
       default:
         jj_la1[8] = jj_gen;
         ;
       }
-      n26.addNode(n31);
+      n27.addNode(n32);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 23:
-      case 24:
-        n35 = new NodeListOptional();
-        n39 = new NodeListOptional();
-        n34 = new NodeSequence(4);
+      case 21:
+      case 22:
+        n36 = new NodeListOptional();
+        n40 = new NodeListOptional();
+        n35 = new NodeSequence(4);
         label_7:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 23:
+          case 21:
             ;
             break;
           default:
             jj_la1[9] = jj_gen;
             break label_7;
           }
-          n36 = Blank();
-          n35.addNode(n36);
+          n37 = Blank();
+          n36.addNode(n37);
         }
-        n35.nodes.trimToSize();
-        n34.addNode(n35);
-        n38 = jj_consume_token(24);
-        n37 = JTBToolkit.makeNodeToken(n38);
-        n34.addNode(n37);
+        n36.nodes.trimToSize();
+        n35.addNode(n36);
+        n39 = jj_consume_token(22);
+        n38 = JTBToolkit.makeNodeToken(n39);
+        n35.addNode(n38);
         label_8:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 23:
+          case 21:
             ;
             break;
           default:
             jj_la1[10] = jj_gen;
             break label_8;
           }
-          n40 = Blank();
-          n39.addNode(n40);
+          n41 = Blank();
+          n40.addNode(n41);
         }
-        n39.nodes.trimToSize();
-        n34.addNode(n39);
-        n41 = ListModifiers();
-        n34.addNode(n41);
-        n33.addNode(n34);
+        n40.nodes.trimToSize();
+        n35.addNode(n40);
+        n42 = ListModifiers();
+        n35.addNode(n42);
+        n34.addNode(n35);
         break;
       default:
         jj_la1[11] = jj_gen;
         ;
       }
-      n26.addNode(n33);
-      n0 = new NodeChoice(n26, 1, 2);
+      n27.addNode(n34);
+      n0 = new NodeChoice(n27, 1, 2);
       break;
     default:
       jj_la1[12] = jj_gen;
@@ -428,7 +445,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       label_10:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 23:
+        case 21:
           ;
           break;
         default:
@@ -440,13 +457,13 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       }
       n3.nodes.trimToSize();
       n2.addNode(n3);
-      n6 = jj_consume_token(25);
+      n6 = jj_consume_token(23);
       n5 = JTBToolkit.makeNodeToken(n6);
       n2.addNode(n5);
       label_11:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 23:
+        case 21:
           ;
           break;
         default:
@@ -499,13 +516,13 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       }
       n3.nodes.trimToSize();
       n1.addNode(n3);
-      n6 = jj_consume_token(26);
+      n6 = jj_consume_token(24);
       n5 = JTBToolkit.makeNodeToken(n6);
       n1.addNode(n5);
       label_13:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 23:
+        case 21:
           ;
           break;
         default:
@@ -532,7 +549,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   // --- JTB generated node declarations ---
   NodeToken n0 = null;
   Token n1 = null;
-    n1 = jj_consume_token(23);
+    n1 = jj_consume_token(21);
     n0 = JTBToolkit.makeNodeToken(n1);
     {if (true) return new Blank(n0);}
     throw new Error("Missing return statement in function");
@@ -550,7 +567,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     label_14:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 23:
+      case 21:
         ;
         break;
       default:
@@ -564,7 +581,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         n4 = Blank();
         n3.addNode(n4);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 23:
+        case 21:
           ;
           break;
         default:
@@ -659,11 +676,6 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     finally { jj_save(2, xla); }
   }
 
-  private boolean jj_3R_28() {
-    if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
-    return false;
-  }
-
   private boolean jj_3R_19() {
     if (jj_3R_22()) return true;
     return false;
@@ -675,7 +687,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   }
 
   private boolean jj_3R_22() {
-    if (jj_scan_token(23)) return true;
+    if (jj_scan_token(21)) return true;
     return false;
   }
 
@@ -699,8 +711,23 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     return false;
   }
 
-  private boolean jj_3_1() {
+  private boolean jj_3_2() {
+    Token xsp;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_19()) { jj_scanpos = xsp; break; }
+    }
     if (jj_scan_token(23)) return true;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_20()) { jj_scanpos = xsp; break; }
+    }
+    if (jj_3R_21()) return true;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_scan_token(21)) return true;
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
@@ -716,21 +743,6 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     return false;
   }
 
-  private boolean jj_3_2() {
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_19()) { jj_scanpos = xsp; break; }
-    }
-    if (jj_scan_token(25)) return true;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_20()) { jj_scanpos = xsp; break; }
-    }
-    if (jj_3R_21()) return true;
-    return false;
-  }
-
   private boolean jj_3R_24() {
     if (jj_3R_26()) return true;
     return false;
@@ -738,11 +750,6 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
 
   private boolean jj_3R_23() {
     if (jj_3R_21()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_17() {
-    if (jj_3R_22()) return true;
     return false;
   }
 
@@ -756,6 +763,16 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
 
   private boolean jj_3R_20() {
     if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_17() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_28() {
+    if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
     return false;
   }
 
@@ -776,7 +793,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x21800,0x800000,0x800000,0x21800,0x800000,0x800000,0x1800000,0x800000,0x21800,0x800000,0x800000,0x1800000,0xe21800,0x800000,0x800000,0x800000,0x1800,0x800000,0x800000,0x20000,0x1800,};
+      jj_la1_0 = new int[] {0x2180,0x200000,0x200000,0x2180,0x200000,0x200000,0x600000,0x200000,0x2180,0x200000,0x200000,0x600000,0x262180,0x200000,0x200000,0x200000,0x180,0x200000,0x200000,0x2000,0x180,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[3];
   private boolean jj_rescan = false;
@@ -962,7 +979,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[27];
+    boolean[] la1tokens = new boolean[25];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -976,7 +993,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         }
       }
     }
-    for (int i = 0; i < 27; i++) {
+    for (int i = 0; i < 25; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
@@ -1048,22 +1065,21 @@ class MyVisitor extends DepthFirstVoidVisitor {
   }
 
   @Override public void visit(Species n) {
-    System.out.println("visit Species");
+    //System.out.println("visit Species");
     String noQuotes = new String(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstants.EXTENSION_CONC]);
     noQuotes = noQuotes.substring(1, noQuotes.length() - 1);
-    if (n.nodeToken.tokenImage.toString().endsWith(noQuotes)) {
-      System.out.println("sbagliaaaaaaaaaaato");
+    if (n.nodeToken.tokenImage.toString().endsWith(noQuotes)) {//System.out.println("something wrong");
     }
     super.visit(n);
   }
 
   @Override public void visit(AdditiveExpression n) {
-    System.out.println("visit AdditiveExpression");
+    //System.out.println("visit AdditiveExpression");
     super.visit(n);
   }
 
   public void visit(SpeciesWithCoeff n) {
-    System.out.println("visit SpeciesWithCoeff");
+    //	System.out.println("visit SpeciesWithCoeff");
     super.visit(n);
   }
 }

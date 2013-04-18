@@ -1,12 +1,15 @@
 package msmb.parsers.mathExpression.visitor;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Vector;
 
 import msmb.parsers.mathExpression.MR_Expression_Parser;
+import msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import msmb.parsers.mathExpression.ParseException;
 import msmb.parsers.mathExpression.syntaxtree.*;
+import msmb.utility.CellParsers;
 import msmb. utility.ReversePolishNotation;
 
 import msmb.model.MultiModel;
@@ -52,6 +55,12 @@ public class ExpressionBracketsVisitor extends DepthFirstVoidVisitor
 		else super.visit(n);
 	}
 	
+	@Override
+	public void visit(MultistateSum n) {
+		String full = ToStringVisitor.toString(n);
+		splittedExpression.add(full);
+	}
+	
 	
 	@Override
 	public void visit(SpeciesReferenceOrFunctionCall_prefix n) {
@@ -66,6 +75,7 @@ public class ExpressionBracketsVisitor extends DepthFirstVoidVisitor
 			else {
 				if(!isMultistateSitesList(nodeOptional.node)) {
 					//System.out.println("FUNCTION CALL ("+getNumberArguments((ArgumentList)nodeOptional.node)+"): " +name);
+			
 					String name = ToStringVisitor.toString(n.name.nodeChoice.choice);
 					splittedExpression.add(name);
 					splittedExpression.add("(");
@@ -130,6 +140,10 @@ public class ExpressionBracketsVisitor extends DepthFirstVoidVisitor
 				 return false;
 			 }
 		 }
+		
+		
+		
+		
 		
 		
 		private int getNumberArguments(ArgumentList node) {

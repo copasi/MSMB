@@ -12,6 +12,7 @@ import msmb.commonUtilities.tables.CustomTableModel;
 import msmb.commonUtilities.tables.UnquotingCellEditor;
 import msmb.model.MultiModel;
 import msmb.utility.Constants;
+import msmb.utility.MySyntaxException;
 
 public class UnquotingCellEditor_MSMB extends  UnquotingCellEditor{
 	
@@ -22,7 +23,14 @@ public class UnquotingCellEditor_MSMB extends  UnquotingCellEditor{
 	    
 	  String tableModelName = ((CustomTableModel)(table.getModel())).getTableName();
        if(MainGui.cellTableEdited.compareTo(tableModelName) !=0) MainGui.resetViewsInExpressions();
-        
+       if(tableModelName.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0 && table.getRowCount() > row+1) {
+			try {
+				MainGui.setView(Constants.Views.EDITABLE.index,tableModelName,row,Constants.ReactionsColumns.KINETIC_LAW.index);
+			} catch (Throwable e) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			}
+		}
+       
         MainGui.cellValueBeforeChange = value.toString();
      	
      	MainGui.cellSelectedRow=row;
@@ -31,7 +39,7 @@ public class UnquotingCellEditor_MSMB extends  UnquotingCellEditor{
      
      	super.getTableCellEditorComponent(table,value,isSelected, row, column);
 		
-     	this.setText(value.toString().trim());
+     	this.setText(super.getText().toString().trim());
      	MainGui.validationsOn=true;
      	MainGui.validateOnce=false;
 		

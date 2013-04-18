@@ -190,6 +190,7 @@ public class ConsistencyChecks {
 			roleVector.add(Constants.ROLE_EXPRESSION);
 			
 			for(int iii = 1, jjj = 0; iii < paramMapping.size(); iii=iii+2,jjj++) {
+					boolean errorAlreadyAdded = false;
 					//String parameterNameInFunction = (String)paramMapping.get(iii);
 					String actualModelParameter = (String)paramMapping.get(iii+1);
 					int role = paramRoles.get(jjj);
@@ -242,10 +243,25 @@ public class ConsistencyChecks {
 							case CFunctionParameter.TIME:    
 								checkAllRoles = false;
 								break;
-							/*case Constants.SITE_FOR_WEIGHT_IN_SUM:
-								System.out.println("TO DO? Constants.SITE_FOR_WEIGHT_IN_SUM");
-								break;*/
+							case Constants.SITE_FOR_WEIGHT_IN_SUM:
+								if(multiModel.checkUsageOfSiteType(rowIndex, actualModelParameter)) {
+									checkAllRoles = false; 
+								} else {
+									DebugMessage dm = new DebugMessage();
+									 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+									 dm.setProblem("Missing site definition or non-numeric site value: " + actualModelParameter);
+									 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+									 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
+									 dm.setOrigin_row(rowIndex+1);
+									 MainGui.addDebugMessage_ifNotPresent(dm);
+									 missingParameters.add(actualModelParameter);
+										MainGui.updateDebugTab();
+									 errorAlreadyAdded = true;
+									throw new NullPointerException();
+								}
+								break;
 							default: 
+								
 								//System.out.println("missing parameter role in function, for actual value " + actualModelParameter);
 								throw new NullPointerException();
 							}
@@ -257,16 +273,18 @@ public class ConsistencyChecks {
 								role = (Integer) roleVector.get(indexRole);
 							} catch(Exception ex2) {
 								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex2.printStackTrace();
-								DebugMessage dm = new DebugMessage();
-								 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-								 dm.setProblem("Missing element definition: " + actualModelParameter);
-								 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
-								 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
-								 dm.setOrigin_row(rowIndex+1);
-								 MainGui.addDebugMessage_ifNotPresent(dm);
-								//System.out.println("Missing parameter definition: "+actualModelParameter);
-								MainGui.updateDebugTab();
-								missingParameters.add(actualModelParameter);
+								if(!errorAlreadyAdded) {
+									DebugMessage dm = new DebugMessage();
+									 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+									 dm.setProblem("Missing element definition: " + actualModelParameter);
+									 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+									 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
+									 dm.setOrigin_row(rowIndex+1);
+									 MainGui.addDebugMessage_ifNotPresent(dm);
+									//System.out.println("Missing parameter definition: "+actualModelParameter);
+									MainGui.updateDebugTab();
+									missingParameters.add(actualModelParameter);
+								}
 								break;
 							}
 						}
@@ -298,7 +316,7 @@ public class ConsistencyChecks {
 				try{ 
 					metabolites = CellParsers.parseReaction(multiModel,string_reaction,i+1);
 					singleConfigurations = multiModel.expandReaction(metabolites,i);
-				} catch(Exception ex) {
+				} catch(Throwable ex) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex.printStackTrace();
 					 DebugMessage dm = new DebugMessage();
 					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);

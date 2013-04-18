@@ -39,7 +39,7 @@ public class ReactionDB {
 	
 	
 	
-	public int addChangeReaction(int index, String name,  String reaction, int type, String rateLaw, String notes) throws Exception {
+	public int addChangeReaction(int index, String name,  String reaction, int type, String rateLaw, String notes) throws Throwable {
 		if(reaction.trim().length() == 0) return -1;
 		
 		Reaction oldR = null;
@@ -103,7 +103,7 @@ public class ReactionDB {
 
 	}
 	
-	public int addChangeReaction_withoutParsing(int index, String name,  String reaction, int type, String rateLaw, String notes) throws Exception {
+	public int addChangeReaction_withoutParsing(int index, String name,  String reaction, int type, String rateLaw, String notes) throws Throwable {
 		if(reaction.trim().length() == 0) return -1;
 		
 		Reaction oldR = reactionVector.get(index);
@@ -165,10 +165,11 @@ public class ReactionDB {
 				for(int j = 0; j < subs.size(); j++){
 					String element1 = subs.get(j);
 					element1 = multiModel.extractName(element1);
+					String element1_justName_ifMultistate = element1;
 					if(CellParsers.isMultistateSpeciesName(element1)) {
-						element1 = CellParsers.extractMultistateName(element1);
+						element1_justName_ifMultistate = CellParsers.extractMultistateName(element1);
 					}
-					if(element1.compareTo(name)==0) {
+					if(element1_justName_ifMultistate.compareTo(name)==0 || CellParsers.compareMultistateSpecies(multiModel,element1,name)) {
 						ok = true;
 						break;
 					}
@@ -178,10 +179,11 @@ public class ReactionDB {
 				for(int j = 0; j < prod.size(); j++){
 					String element1 = prod.get(j);
 					element1 = multiModel.extractName(element1);
+					String element1_justName_ifMultistate = element1;
 					if(CellParsers.isMultistateSpeciesName(element1)) {
-						element1 = CellParsers.extractMultistateName(element1);
+						element1_justName_ifMultistate = CellParsers.extractMultistateName(element1);
 					}
-					if(element1.compareTo(name)==0) {
+					if(element1_justName_ifMultistate.compareTo(name)==0 || CellParsers.compareMultistateSpecies(multiModel,element1,name)) {
 						ok = true;
 						break;
 					}
@@ -191,10 +193,26 @@ public class ReactionDB {
 				for(int j = 0; j < mod.size(); j++){
 					String element1 = mod.get(j);
 					element1 = multiModel.extractName(element1);
+					String element1_justName_ifMultistate = element1;
 					if(CellParsers.isMultistateSpeciesName(element1)) {
-						element1 = CellParsers.extractMultistateName(element1);
+						element1_justName_ifMultistate = CellParsers.extractMultistateName(element1);
 					}
-					if(element1.compareTo(name)==0) {
+					if(element1_justName_ifMultistate.compareTo(name)==0 || CellParsers.compareMultistateSpecies(multiModel,element1,name)) {
+						ok = true;
+						break;
+					}
+				}
+				if(!ok) misused.add(name);
+			}else if(type.compareTo(Constants.FunctionParamType.SITE.signatureType)==0) {
+				for(int j = 0; j < subs.size(); j++){
+					String element1 = subs.get(j);
+					element1 = multiModel.extractName(element1);
+					String element1_justName_ifMultistate = element1;
+					if(CellParsers.isMultistateSpeciesName(element1)) {
+						element1_justName_ifMultistate = CellParsers.extractMultistateName(element1);
+					}
+					MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(element1_justName_ifMultistate);
+					if(sp.getSitesNames().contains(name)) {
 						ok = true;
 						break;
 					}

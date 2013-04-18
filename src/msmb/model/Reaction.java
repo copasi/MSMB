@@ -2,12 +2,19 @@ package msmb.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Set;
 import java.util.Vector;
 
+import msmb.debugTab.DebugConstants;
+import msmb.debugTab.DebugMessage;
 import msmb.gui.MainGui;
 import msmb.parsers.chemicalReaction.MR_ChemicalReaction_Parser;
 import msmb.parsers.chemicalReaction.syntaxtree.CompleteReaction;
 import msmb.parsers.chemicalReaction.visitor.ExtractSubProdModVisitor;
+import msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
+import msmb.parsers.mathExpression.ParseException;
+import msmb.parsers.mathExpression.syntaxtree.CompleteExpression;
+import msmb.parsers.mathExpression.visitor.Look4UndefinedMisusedVisitor;
 import msmb.utility.CellParsers;
 import msmb.utility.Constants;
 import msmb.utility.MySyntaxException;
@@ -90,14 +97,77 @@ public class Reaction {
 
 	public String getRateLaw() { 	return rateLaw.trim();	}
 		
-	public void setRateLaw(MultiModel m, String expr) throws MySyntaxException {	
+	public void setRateLaw(MultiModel m, String expr) throws Throwable {	
 		if(expr.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		this.rateLaw = expr;	
 		if(expr.length() == 0) return ;
 		try {
 			CellParsers.parseExpression_getUndefMisused(m,rateLaw, Constants.TitlesTabs.REACTIONS.description,Constants.ReactionsColumns.KINETIC_LAW.description);
 		} catch (Exception ex) {
-			throw ex;
+			if(ex instanceof MySyntaxException){ 
+				Vector metabolites;
+				
+					metabolites = CellParsers.parseReaction(m,reactionString,-1);
+					Vector singleConfigurations = m.expandReaction(metabolites,-1);
+				
+					  InputStream is = new ByteArrayInputStream(rateLaw.getBytes("UTF-8"));
+					  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
+					  CompleteExpression root = parser.CompleteExpression();
+					  Look4UndefinedMisusedVisitor undefVisitor = new Look4UndefinedMisusedVisitor(m);
+					  root.accept(undefVisitor);
+					  Vector<String> undef = undefVisitor.getUndefinedElements();
+					  Vector<String> misused = undefVisitor.getMisusedElements();
+					  
+					  Vector<String> real_undef = new Vector();
+					  
+					for(int j = 0; j < singleConfigurations.size(); j++) {
+						Vector<?> expandedReaction = (Vector<?>) singleConfigurations.get(j);
+
+						Vector<?> subs = (Vector<?>)expandedReaction.get(0);
+						Vector<?> prod =(Vector<?>)expandedReaction.get(1);
+						Vector<?> mod = (Vector<?>)expandedReaction.get(2);
+
+						for(int i1 = 0; i1 < subs.size(); i1++) {
+							String s = (String)subs.get(i1);
+							s = m.extractName(s);
+							if(!m.containsSpecies(s))  {
+								throw ex;
+							} else {
+								Species sp = m.getSpecies(s);
+								if(sp instanceof MultistateSpecies) {
+									MultistateSpecies m1 = (MultistateSpecies)sp;
+									
+									Set sites = m1.getSitesNames();
+									for(int i = 0; i < undef.size(); i++) {
+										String current = undef.get(0);
+										if(sites.contains(current)) {
+											continue;
+										} else {
+											real_undef.add(current);
+										}
+									}
+									
+									if(real_undef.size() != 0 || misused.size() != 0) {
+									    String message = new String();
+										if(real_undef.size() >0) {
+											 message += "Missing element definition: " + real_undef.toString();
+										}
+										if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
+										throw new MySyntaxException(((MySyntaxException) ex).getColumn(), message,((MySyntaxException) ex).getTable());
+								  } 
+									
+									
+								} else {
+									throw ex;
+								}
+							}
+						}
+					}
+						
+					
+					
+			
+			} else throw ex;
 		}
 		editableRateLaw = expr;
 	}
@@ -139,7 +209,7 @@ public class Reaction {
 	
 	
 
-	public void setEditableRateLaw(MultiModel m,String editableString) throws MySyntaxException {
+	public void setEditableRateLaw(MultiModel m,String editableString) throws Throwable {
 		setRateLaw(m,editableString);		
 	}
 

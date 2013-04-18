@@ -137,89 +137,93 @@ public interface MR_Expression_ParserConstants {
   /** RegularExpression Id. */
   int ABS = 69;
   /** RegularExpression Id. */
-  int PI = 70;
+  int MIN = 70;
   /** RegularExpression Id. */
-  int EXPONENTIALE = 71;
+  int MAX = 71;
   /** RegularExpression Id. */
-  int NAN1 = 72;
+  int PI = 72;
   /** RegularExpression Id. */
-  int NAN2 = 73;
+  int EXPONENTIALE = 73;
   /** RegularExpression Id. */
-  int CONST_AVOGADRO = 74;
+  int NAN1 = 74;
   /** RegularExpression Id. */
-  int CONST_QUANTITY_CONV_FACTOR = 75;
+  int NAN2 = 75;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME = 76;
+  int CONST_AVOGADRO = 76;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME_INITIAL = 77;
+  int CONST_QUANTITY_CONV_FACTOR = 77;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 78;
+  int CONST_MODEL_TIME = 78;
   /** RegularExpression Id. */
-  int FLOATING_POINT_LITERAL = 79;
+  int CONST_MODEL_TIME_INITIAL = 79;
   /** RegularExpression Id. */
-  int EXPONENT = 80;
+  int INTEGER_LITERAL = 80;
   /** RegularExpression Id. */
-  int LPAREN = 81;
+  int FLOATING_POINT_LITERAL = 81;
   /** RegularExpression Id. */
-  int RPAREN = 82;
+  int EXPONENT = 82;
   /** RegularExpression Id. */
-  int LBRACE = 83;
+  int LPAREN = 83;
   /** RegularExpression Id. */
-  int RBRACE = 84;
+  int RPAREN = 84;
   /** RegularExpression Id. */
-  int LBRACKET = 85;
+  int LBRACE = 85;
   /** RegularExpression Id. */
-  int RBRACKET = 86;
+  int RBRACE = 86;
   /** RegularExpression Id. */
-  int SEMICOLON = 87;
+  int LBRACKET = 87;
   /** RegularExpression Id. */
-  int COMMA = 88;
+  int RBRACKET = 88;
   /** RegularExpression Id. */
-  int COLON = 89;
+  int SEMICOLON = 89;
   /** RegularExpression Id. */
-  int DOT = 90;
+  int COMMA = 90;
   /** RegularExpression Id. */
-  int PLUS = 91;
+  int COLON = 91;
   /** RegularExpression Id. */
-  int MINUS = 92;
+  int DOT = 92;
   /** RegularExpression Id. */
-  int TIMES = 93;
+  int PLUS = 93;
   /** RegularExpression Id. */
-  int DIV = 94;
+  int MINUS = 94;
   /** RegularExpression Id. */
-  int ASSIGN = 95;
+  int TIMES = 95;
   /** RegularExpression Id. */
-  int GT = 96;
+  int DIV = 96;
   /** RegularExpression Id. */
-  int LT = 97;
+  int ASSIGN = 97;
   /** RegularExpression Id. */
-  int BANG = 98;
+  int GT = 98;
   /** RegularExpression Id. */
-  int CARET = 99;
+  int LT = 99;
   /** RegularExpression Id. */
-  int PERC = 100;
+  int BANG = 100;
   /** RegularExpression Id. */
-  int EQ = 101;
+  int CARET = 101;
   /** RegularExpression Id. */
-  int LEQ = 102;
+  int PERC = 102;
   /** RegularExpression Id. */
-  int GEQ = 103;
+  int EQ = 103;
   /** RegularExpression Id. */
-  int NE = 104;
+  int LEQ = 104;
   /** RegularExpression Id. */
-  int OR = 105;
+  int GEQ = 105;
   /** RegularExpression Id. */
-  int XOR = 106;
+  int NE = 106;
   /** RegularExpression Id. */
-  int AND = 107;
+  int OR = 107;
   /** RegularExpression Id. */
-  int IDENTIFIER = 108;
+  int XOR = 108;
   /** RegularExpression Id. */
-  int LETTER = 109;
+  int AND = 109;
   /** RegularExpression Id. */
-  int DIGIT = 110;
+  int IDENTIFIER = 110;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 111;
+  int LETTER = 111;
+  /** RegularExpression Id. */
+  int DIGIT = 112;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 113;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -296,6 +300,8 @@ public interface MR_Expression_ParserConstants {
     "\"log\"",
     "\"log10\"",
     "\"abs\"",
+    "\"min\"",
+    "\"max\"",
     "\"PI\"",
     "\"EXPONENTIALE\"",
     "\"NaN\"",

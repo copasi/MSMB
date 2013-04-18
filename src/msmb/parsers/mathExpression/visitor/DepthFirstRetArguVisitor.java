@@ -193,6 +193,42 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
   }
 
   /**
+   * Visits a {@link CompleteListOfExpression_Events} node, whose children are the following :
+   * <p>
+   * expression -> Expression()<br>
+   * nodeListOptional -> ( #0 <SEMICOLON> #1 Expression() )*<br>
+   * nodeToken -> <EOF><br>
+   *
+   * @param n - the node to visit
+   * @param argu - the user argument
+   * @return the user return information
+   */
+  public R visit(final CompleteListOfExpression_Events n, final A argu) {
+    R nRes = null;
+    // expression -> Expression()
+    final Expression n0 = n.expression;
+    nRes = n0.accept(this, argu);
+    // nodeListOptional -> ( #0 <SEMICOLON> #1 Expression() )*
+    final NodeListOptional n1 = n.nodeListOptional;
+    if (n1.present()) {
+      for (int i = 0; i < n1.size(); i++) {
+        final INode n1Mi = n1.elementAt(i);
+        final NodeSequence n1MiS0 = (NodeSequence) n1Mi;
+        // #0 <SEMICOLON>
+        final INode n1MiS0A0 = n1MiS0.elementAt(0);
+        nRes = n1MiS0A0.accept(this, argu);
+        // #1 Expression()
+        final INode n1MiS0A1 = n1MiS0.elementAt(1);
+        nRes = n1MiS0A1.accept(this, argu);
+      }
+    }
+    // nodeToken -> <EOF>
+    final NodeToken n2 = n.nodeToken;
+    nRes = n2.accept(this, argu);
+    return nRes;
+  }
+
+  /**
    * Visits a {@link SingleFunctionCall} node, whose children are the following :
    * <p>
    * name -> Name()<br>
@@ -1037,10 +1073,12 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * .......... .. | %30 <ARCSECH><br>
    * .......... .. | %31 <ARCCSCH><br>
    * .......... .. | %32 <ARCCOTH><br>
-   * .......... .. | %33 <LOG><br>
-   * .......... .. | %34 <EXP><br>
-   * .......... .. | %35 <NAN1><br>
-   * .......... .. | %36 <NAN2><br>
+   * .......... .. | %33 <MIN><br>
+   * .......... .. | %34 <MAX><br>
+   * .......... .. | %35 <LOG><br>
+   * .......... .. | %36 <EXP><br>
+   * .......... .. | %37 <NAN1><br>
+   * .......... .. | %38 <NAN2><br>
    *
    * @param n - the node to visit
    * @param argu - the user argument
@@ -1081,10 +1119,12 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     // .......... .. | %30 <ARCSECH>
     // .......... .. | %31 <ARCCSCH>
     // .......... .. | %32 <ARCCOTH>
-    // .......... .. | %33 <LOG>
-    // .......... .. | %34 <EXP>
-    // .......... .. | %35 <NAN1>
-    // .......... .. | %36 <NAN2>
+    // .......... .. | %33 <MIN>
+    // .......... .. | %34 <MAX>
+    // .......... .. | %35 <LOG>
+    // .......... .. | %36 <EXP>
+    // .......... .. | %37 <NAN1>
+    // .......... .. | %38 <NAN2>
     final NodeChoice n0C = n.nodeChoice;
     final INode n0CH = n0C.choice;
     switch (n0C.which) {
@@ -1221,19 +1261,27 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
         nRes = n0CH.accept(this, argu);
         break;
       case 33:
-        // %33 <LOG>
+        // %33 <MIN>
         nRes = n0CH.accept(this, argu);
         break;
       case 34:
-        // %34 <EXP>
+        // %34 <MAX>
         nRes = n0CH.accept(this, argu);
         break;
       case 35:
-        // %35 <NAN1>
+        // %35 <LOG>
         nRes = n0CH.accept(this, argu);
         break;
       case 36:
-        // %36 <NAN2>
+        // %36 <EXP>
+        nRes = n0CH.accept(this, argu);
+        break;
+      case 37:
+        // %37 <NAN1>
+        nRes = n0CH.accept(this, argu);
+        break;
+      case 38:
+        // %38 <NAN2>
         nRes = n0CH.accept(this, argu);
         break;
       default:

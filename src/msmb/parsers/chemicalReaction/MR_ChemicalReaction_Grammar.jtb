@@ -10,7 +10,7 @@
 import java.io.*;
 import msmb.parsers.mathExpression.MR_Expression_ParserConstants;
 
-public class MR_ChemicalReaction_Parser{  public static void main(String args [])  {      System.out.println("Nothing MR_ChemicalReaction_Parser...");
+public class MR_ChemicalReaction_Parser{  public static void main(String args [])  {      System.out.println("MR_ChemicalReaction_Parser...");
 
     
     try
@@ -108,6 +108,26 @@ public class MR_ChemicalReaction_Parser{  public static void main(String args 
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
+
+
+
+      expression = new String("A + B ->c COMPLEX(A, B)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+
+         expression = new String("COMPLEX(A, B) ->d SINGLE_SPECIES");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      
     }
     catch (Exception e)
     {
@@ -125,10 +145,10 @@ class MyVisitor extends DepthFirstVoidVisitor
 
   	@Override
 	public void visit(Species n) {
-	  System.out.println("visit Species");
+	  //System.out.println("visit Species");
 	 String noQuotes= new String(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstants.EXTENSION_CONC]);
       noQuotes = noQuotes.substring(1,noQuotes.length()-1);
-	  if(n.nodeToken.tokenImage.toString().endsWith(noQuotes))  {			System.out.println("sbagliaaaaaaaaaaato");
+	  if(n.nodeToken.tokenImage.toString().endsWith(noQuotes))  {			//System.out.println("something wrong");
 	  }
 	 super.visit(n); 
     
@@ -136,26 +156,29 @@ class MyVisitor extends DepthFirstVoidVisitor
 
 	@Override
 	public void visit(AdditiveExpression n) {
-	System.out.println("visit AdditiveExpression");
+		//System.out.println("visit AdditiveExpression");
 	 	super.visit(n); 
     }
 
 public void visit(SpeciesWithCoeff n) {
-	System.out.println("visit SpeciesWithCoeff");
+	//	System.out.println("visit SpeciesWithCoeff");
 	 	super.visit(n); 
     }
 		  
 }PARSER_END(MR_ChemicalReaction_Parser)SKIP :{ "\t"| "\n"| "\r"| < "//" (~[ "\n", "\r" ])*    (      "\n"    | "\r"    | "\r\n"    ) >| < "/*" (~[ "*" ])* "*"    (      ~[ "/" ] (~[ "*" ])* "*"    )*    "/" >}
 
 
-TOKEN :
+/*TOKEN :
 {
   < TIME: "Time">
 | < SUM: "SUM">
 | < FLOOR: "floor">
 | < SQRT: "sqrt">
 | < LOG: "log">
-}
+}*/
+
+TOKEN:{
+  < SINGLE_SPECIES : "SINGLE_SPECIES">}
 TOKEN : /* LITERALS */{
     < INTEGER_LITERAL :    < DECIMAL_LITERAL > ([ "l", "L" ])?  | < HEX_LITERAL > ([ "l", "L" ])?  | < OCTAL_LITERAL > ([ "l", "L" ])?     >
 |
@@ -202,11 +225,15 @@ TOKEN :
 
 TOKEN:
 {
-  	< ARROW : " ->" >
-|   < ARROW2 : "-> " >}
+ 
+  	< ARROW : " ->" > |   < ARROW2 : "-> " >
+| 	< COMPLEXATION_ARROW : < ARROW> "c" >
+|  	< DECOMPLEXATION_ARROW : < ARROW> "d" >
+
+}
 
 
-
+ 
 /*****************************************
  * THE MULTIREMI CHEMICAL REACTION GRAMMAR STARTS HERE *
  *****************************************/
@@ -221,12 +248,18 @@ void CompleteSpeciesWithCoefficient() :{}
 
 void Reaction() :{}
 {
-    (AdditiveExpression())? (Blank())*< ARROW >
-   			(LOOKAHEAD(2)(" ")(Blank())* (AdditiveExpression())?)* ((Blank())*";"(Blank())* ListModifiers())?
 
+(AdditiveExpression())? (Blank())*
+	( < ARROW > (LOOKAHEAD(2)(" ")(Blank())* (AdditiveExpression())?)* 
+		//| < COMPLEXATION_ARROW  > 	(LOOKAHEAD(2)(" ")(Blank())* (AdditiveExpression())?)+ 
+		//| < DECOMPLEXATION_ARROW  > 	(Blank())* < SINGLE_SPECIES > 
+	) ((Blank())*";"(Blank())* ListModifiers())?
+   		
  | < ARROW2 > (Blank())* (AdditiveExpression())? ((Blank())*";"(Blank())* ListModifiers())?
-
+  
 }
+
+
 void AdditiveExpression() :{}{  SpeciesWithCoeff() (LOOKAHEAD(2)(Blank())*" + "(Blank())* SpeciesWithCoeff() )*}void SpeciesWithCoeff() :{}{  (Stoichiometry() (LOOKAHEAD(2)Blank())*" * "(Blank())*)? Species()}
 void Blank():
 {}{ 	 " " }

@@ -31,7 +31,7 @@ public class SpeciesDB {
 		multiModel = mm;
 	}
 	
-	public int addChangeSpecies(int index, String sbmlID, String name, HashMap<String, String> initialQuant, int type, String compartment, String expression, boolean fromMultistateBuilder, String notes, boolean autoMergeSpecies,boolean parseExpression) throws Exception {
+	public int addChangeSpecies(int index, String sbmlID, String name, HashMap<String, String> initialQuant, int type, String compartment, String expression, boolean fromMultistateBuilder, String notes, boolean autoMergeSpecies,boolean parseExpression) throws Throwable {
 	
 		Integer ind;
 		if(CellParsers.isMultistateSpeciesName(name)) {
@@ -281,7 +281,7 @@ public class SpeciesDB {
 	
 	
 
-	public int getNumSpeciesExpanded() throws Exception {
+	public int getNumSpeciesExpanded() throws Throwable {
 		Vector n = new Vector();
 		int counter = 0;
 		for(int i = 0; i < speciesVector.size(); i++) {
@@ -363,7 +363,7 @@ public class SpeciesDB {
 			this.speciesVector.putAll(newSpeciesVector);
 	}
 
-	public void compressSpecies() throws Exception {
+	public void compressSpecies() throws Throwable {
 		Vector<Species> original = new Vector(this.getAllSpecies());
 		multiModel.removeAllNamedElement(speciesIndexes.keySet());
 		this.speciesIndexes.clear();
@@ -381,6 +381,7 @@ public class SpeciesDB {
 				
 				if(current instanceof MultistateSpecies) {
 					MultistateSpecies multiCurrent = (MultistateSpecies) current;
+				
 					//this.addChangeSpecies(multiCurrent.getDisplayedName(),multiCurrent.getInitialConcentration_multi(),multiCurrent.getInitialAmount_multi(), multiCurrent.getType(), multiCurrent.getCompartment(), multiCurrent.getExpression(), false);
 					this.addChangeSpecies(-1,new String(),multiCurrent.getDisplayedName(),multiCurrent.getInitialQuantity_multi(), multiCurrent.getType(), multiCurrent.getCompartment_listString(), multiCurrent.getExpression(), false, multiCurrent.getNotes(),true,false);
 				} else {
@@ -408,7 +409,7 @@ public class SpeciesDB {
 			MultistateSpecies m = new MultistateSpecies(multiModel,speciesName,isFromReaction);
 			justName = m.getSpeciesName();
 		} catch (Exception e) {
-			e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			//this function can be used also to check if Cdh1(++(p)) exist... so I have to analyze name with operators too.
 			 InputStream is;
 			try {
@@ -419,7 +420,7 @@ public class SpeciesDB {
 				 start.accept(v);
 				 justName = v.getSpeciesName();
 			} catch (Exception e1) {
-				//e1.printStackTrace();
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
 			}
 			
 		} 
@@ -466,14 +467,14 @@ public class SpeciesDB {
 	}
 
 
-	public void setEditableExpression(String editableString, int row, int column) throws MySyntaxException {
+	public void setEditableExpression(String editableString, int row, int column) throws Throwable {
 		Species sp = this.speciesVector.get(row+1);
 		if(column == Constants.SpeciesColumns.INITIAL_QUANTITY.index) { sp.setEditableInitialQuantity(multiModel,editableString);}
 		if (column == Constants.SpeciesColumns.EXPRESSION.index) { sp.setEditableExpression(multiModel,editableString);}
 	}
 
 
-	public Vector getAllMultistateSpeciesExpanded() throws Exception {
+	public Vector getAllMultistateSpeciesExpanded() throws Throwable {
 		Vector n = new Vector();
 		for(int i = 0; i < speciesVector.size(); i++) {
 			Species s = speciesVector.get(i);
@@ -483,7 +484,7 @@ public class SpeciesDB {
 					try {
 						Vector<Species> exp = m.getExpandedSpecies(multiModel);
 						for(int j = 0; j < exp.size(); j++) {
-							n.add(((Species)exp.get(j)).getDisplayedName());
+							n.add(((Species)exp.get(j)).getDisplayedName() + m.getInitial_singleConfiguration(exp.get(j)));
 						}
 					} catch (MySyntaxException e) {
 						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
@@ -514,13 +515,13 @@ public class SpeciesDB {
 
 
 	public void setMultistateInitials(HashMap<String, HashMap<String, String>> multistateInitials) {
-		
-		for(int i = 0; i < speciesVector.size(); i++) {
+	   for(int i = 0; i < speciesVector.size(); i++) {
 			Species s = speciesVector.get(i);
 			if(s!=null) {
 				if(s instanceof MultistateSpecies) {
 					MultistateSpecies m = (MultistateSpecies) s;
-					m.setInitialQuantity(multistateInitials.get(m.getSpeciesName()));
+					String spName= m.getSpeciesName();
+					m.setInitialQuantity(multistateInitials.get(spName));
 				}
 			}
 		}
@@ -529,16 +530,9 @@ public class SpeciesDB {
 
 	public Integer getSpeciesIndex(String name) {
 		String speciesName = new String();
-		 InputStream is;
-		try {
-			is = new ByteArrayInputStream(name.getBytes("UTF-8"));
-			 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
-			 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
-			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
-			 start.accept(v);
-			 speciesName = v.getSpeciesName();
-		} catch (Exception e1) {
 		
+		if(CellParsers.isMultistateSpeciesName(name)) {
+			speciesName = CellParsers.extractMultistateName(name);
 		}
 
 		return speciesIndexes.get(speciesName);
@@ -570,8 +564,7 @@ public class SpeciesDB {
 		try {
 			s.setCompartment(multiModel, cmpName);
 		} catch (MySyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}
 		this.speciesVector.put(ind, s);		
 	}

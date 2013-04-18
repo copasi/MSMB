@@ -3,6 +3,7 @@ package msmb.parsers.mathExpression.visitor;
 import msmb.parsers.mathExpression.MR_Expression_Parser;
 import msmb.parsers.mathExpression.MR_Expression_ParserConstants;
 import msmb.parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
+import msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import msmb.parsers.mathExpression.ParseException;
 import msmb.parsers.mathExpression.syntaxtree.*;
 import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
@@ -32,8 +33,8 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	private PrintWriter out;
 	private boolean conc = false;
 	private boolean isInitialExpression = false;
-	Vector<Exception> exceptions = new Vector<>();
-	public Vector<Exception> getExceptions() { return exceptions; }
+	Vector<Throwable> exceptions = new Vector<>();
+	public Vector<Throwable> getExceptions() { return exceptions; }
 		
 	private String expression = new String();
 	private String compressed_expression = new String();
@@ -97,7 +98,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 		
 	}*/
 	
-	public void generateFunctionCall(String element) throws Exception {
+	public void generateFunctionCall(String element) throws Throwable {
 		try {
 			InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
 			MR_Expression_Parser parser = new MR_Expression_Parser(is);
@@ -129,6 +130,29 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 		//System.out.println("after: "+expression);
 	}
 	  
+	
+	public void visit(MultistateSum n) {
+		Vector<SumExpansion> expansion = getSumMultistateVector(ToStringVisitor.toString(n));
+		for(int i = 0; i < expansion.size(); i++) {
+			expression += expansion.get(i).toString();
+		}
+	}
+	
+	private Vector<SumExpansion> getSumMultistateVector(String element) {
+		 try {
+			  InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
+			  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is);
+			  CompleteExpression root = parser.CompleteExpression();
+			  Look4UndefinedMisusedVisitor multistateSum = new Look4UndefinedMisusedVisitor(multiModel);
+			  root.accept(multistateSum);
+			  Vector<SumExpansion> sum = multistateSum.getSumExpansions();
+			  return sum;
+		  }catch (Exception e) {
+			 return new Vector();
+		}
+	}
+	
+	
 	@Override
 	public void visit(SpeciesReferenceOrFunctionCall n) {
 		try {
@@ -152,9 +176,11 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 						 generateFunctionCall(element);
 						 return;
 					}
-				} catch(Exception ex) {
+				} catch(Throwable ex) {
 					if(		funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.FLOOR))==0 ||
 							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SQRT))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.MIN))==0 ||
+							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.MAX))==0 ||
 							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.CEIL))==0 ||
 							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.FACTORIAL))==0 ||
 							funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ABS))==0 ||
@@ -218,7 +244,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			}
 			//super.visit(n);
 			
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			exceptions.add(e);
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}

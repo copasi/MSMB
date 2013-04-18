@@ -43,7 +43,9 @@ public class MultistateSpecies extends Species {
 	private HashMap<String, String> initialQuantities = new HashMap<String, String>();
 	public HashMap<String, String> getInitialQuantity_multi() {	return this.initialQuantities; }
 	public void setInitialQuantity(HashMap<String,String> initials) { 	this.initialQuantities.putAll(initials);	}
-		
+	
+	
+	
 	@Override public String getDisplayedName() { return printCompleteDefinition(); }
 	
 	public String getInitial_singleConfiguration(Vector<Vector> sites_value) {
@@ -142,30 +144,24 @@ public class MultistateSpecies extends Species {
 		}
 		
 		sites.put(name, states);
-		if(foundFalse||foundTrue)
-		{
-			//sites_boolean.add(name);
+		if(foundFalse||foundTrue) {
 			sites_type.put(name, new SiteType(SiteType.BOOLEAN));
 		}
 		else sites_type.put(name, new SiteType(SiteType.LIST));
-		//sites_fromRanges.remove(name);
-		//sites_start_indexes.put(name, new Integer(1));
 	}
 	
 	public void addSite_string(String name, String states) throws Exception {
 		Vector parsedStates = CellParsers.parseMultistateSpecies_states(states);
 		sites.put(name, parsedStates);
 		if(parsedStates.size()==2 && 
-			//	( (BooleanType.isTrue(((String)parsedStates.get(0))) || ((String)parsedStates.get(0)).compareTo(BooleanType.TRUE_lower.description)==0)
 				( BooleanType.isTrue((String)parsedStates.get(0))
 				&& BooleanType.isFalse((String)parsedStates.get(1)) )
 						)
 				
 		{
-			//sites_boolean.add(name);
 			sites_type.put(name, new SiteType(SiteType.BOOLEAN));
 		} else {
-			//sites_boolean.remove(name);
+			sites_type.put(name,new SiteType(SiteType.LIST));
 		}
 		//sites_fromRanges.remove(name);
 		//sites_start_indexes.put(name, new Integer(1));
@@ -203,6 +199,7 @@ public class MultistateSpecies extends Species {
 		if(this.sites_type.get(site_name).getType()== SiteType.RANGE) {
 			start = (String)states.get(0);
 			end = (String)states.get(states.size()-1);
+		
 		} else {
 			String separator = MR_MultistateSpecies_ParserConstants.tokenImage[MR_MultistateSpecies_Parser.SITE_STATES_SEPARATOR];
 			separator = separator.substring(1,separator.length()-1);
@@ -378,7 +375,7 @@ public class MultistateSpecies extends Species {
 	}*/
 	
 	
-	public Vector<Species> getExpandedSpecies(MultiModel m) throws Exception {
+	public Vector<Species> getExpandedSpecies(MultiModel m) throws Throwable {
 		Vector<Species> ret = new Vector<Species>();
 		
 		Set keySet = this.sites.keySet();
@@ -412,7 +409,7 @@ public class MultistateSpecies extends Species {
 		return ret;
 	}
 
-	private Species createSingleConfigurationState(MultiModel m,Vector<String> site_value) throws Exception {
+	private Species createSingleConfigurationState(MultiModel m,Vector<String> site_value) throws Throwable {
 		String name = new String(this.getSpeciesName());
 		name += "(";
 		for(int i = 0; i < site_value.size(); i=i+2) {
@@ -656,6 +653,24 @@ public class MultistateSpecies extends Species {
 		}
 		return false;
 	}
+	
+	public String getValueOfSite(String siteName) {
+	
+		String completeName = this.getDisplayedName();
+		int index_site = completeName.indexOf(siteName+"{");
+		String sub = completeName.substring(index_site+siteName.length()+1);
+		
+		int index_end_species = sub.indexOf(")");
+		int index_semicolon = sub.indexOf(";");
+		String value = new String();
+		if(index_semicolon != -1) {
+			value = sub.substring(0,index_semicolon);
+		} else {
+			value = sub.substring(0, index_end_species);
+		}
+		return value;
+	}
+
 	
 	public String printCompleteDefinition(boolean b) {
 		String r = this.name; 

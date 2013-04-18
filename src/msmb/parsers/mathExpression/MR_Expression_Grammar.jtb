@@ -181,6 +181,14 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
       System.out.println("...................................");
 
 
+   /*    expression2 = new String("SUM(Cdh1;p,1,2)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");*/
+
 
        expression2 = new String("kmisfoldSUB*SUB*(ROS*cytosol)");
        is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
@@ -311,6 +319,49 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
       start2.accept(v2);
       System.out.println("...................................");
 
+        expression2 = new String("\"max\"(ATP,atot,k4,3PG)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start33 = react2.SingleFunctionCall();
+      v2 = new MyVisitor();
+      start33.accept(v2);
+      System.out.println("...................................");
+
+
+
+
+         expression2 = new String("gamm*(H(Tot,sig,Wterm)-Active)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor(); 
+      start2.accept(v2);
+      System.out.println("...................................");
+
+         expression2 = new String("A1/(1+exp((-A2)*A3))");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor(); 
+      start2.accept(v2);
+      System.out.println("...................................");
+
+         expression2 = new String("synt_withTF(ks_b2,ks_b2_m1,MCM1)*MASS");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor(); 
+      start2.accept(v2);
+      System.out.println("...................................");
+
+         expression2 = new String("ks_spn*heav(CLB2-Jspn)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor(); 
+      start2.accept(v2);
+      System.out.println("...................................");
+
 		   } catch(Exception ex)  {
     ex.printStackTrace();  }   	  }}
 
@@ -374,7 +425,6 @@ TOKEN :
 | < ATAN: "atan">
 |  < TANH: "tanh">
 | < COSH: "cosh">
-
 | < SEC : "sec">
 | < CSC : "csc">
 | < COT: "cot" >
@@ -388,14 +438,14 @@ TOKEN :
 | < ARCSECH: "arcsech">
 | < ARCCSCH: "arccsch">
 | < ARCCOTH: "arccoth">
-
-
 | < SQRT: "sqrt">
 | < FACTORIAL: "factorial">
 | < EXP: "exp">
 | < LOG: "log">
 | < LOG10: "log10">
 | < ABS: "abs">
+| < MIN: "min">
+| < MAX: "max">
 | < PI: "PI">
 |  < EXPONENTIALE : "EXPONENTIALE">
 | < NAN1: "NaN" >
@@ -481,7 +531,8 @@ TOKEN :
             | ["0"-"3"] ["0"-"7"] ["0"-"7"]
             )
           )
-      )*
+      
+      )* 
       "\""
   >
 }
@@ -498,6 +549,9 @@ void CompleteListOfExpression() : {} {
   Expression() (< COMMA > Expression())* <EOF>
 }
 
+void CompleteListOfExpression_Events() : {} { 
+  Expression() (< SEMICOLON > Expression())* <EOF>
+}
 
 void SingleFunctionCall() : {} { 
  Name() < LPAREN > ( ArgumentList() )?  <  RPAREN > <EOF>
@@ -629,7 +683,7 @@ void Name() : {}
 	| < ASIN > | < ACOS > | < ATAN > | < TAN > | < TANH > | < COSH > | < LOG10 >|< ABS> | < COS > | < SIN >
 	|  < SEC>| < CSC >| < COT >| < SINH>| < ARCSEC  >| < ARCCSC>
 	| < ARCCOT>| < ARCSINH>| < ARCCOSH>| < ARCTANH>| < ARCSECH>
-|	 < ARCCSCH>| < ARCCOTH>
+|	 < ARCCSCH>| < ARCCOTH> | < MIN > | < MAX >
 	| < LOG > | < EXP > | < NAN1 > | < NAN2 >// | < NAN3 >
 }
 

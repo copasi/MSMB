@@ -21,11 +21,13 @@ public class MySyntaxException extends IOException {
     	return this.column;
     }
     
+    
+    
     public String getTable() {
     	return this.table;
     }
 
-	
+   	
     public MySyntaxException(String newMessage, MySyntaxException oldEx) {
     	super(newMessage);
       

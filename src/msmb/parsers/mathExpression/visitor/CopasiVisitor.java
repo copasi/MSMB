@@ -43,6 +43,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	  private String copasiExpression = new String();
 	  public String getCopasiExpression() {return copasiExpression;}
 	  MultiModel multiModel = null;
+	private boolean expressionWithSumMultistate;
 	  
 	public CopasiVisitor(CModel model, MultiModel mm, boolean conc, boolean isInitialExpression2)  { 
 		  this.model = model;
@@ -68,6 +69,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	public void visit(MultistateSum n) {
 		if(isSumMultistate(ToStringVisitor.toString(n))) {
 			printSumMultistate(ToStringVisitor.toString(n));
+			expressionWithSumMultistate = true;
 		}
 	}
 	
@@ -121,7 +123,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 						Function f = multiModel.getFunctionByName(funName);
 						if(f==null) throw new Exception("FunName not defined");
 						copasiExpression += funName+"(";
-					} catch(Exception ex) {
+					} catch(Throwable ex) {
 						if(funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.FLOOR))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.ABS))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.LOG10))==0 ||
@@ -137,6 +139,8 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SIN))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.DELAY))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SQRT))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.MAX))==0 ||
+								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.MIN))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXP))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.SEC))==0 ||
 								funName.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.CSC))==0 ||
@@ -191,7 +195,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 			}
 			
 			
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
 				e.printStackTrace();
 		}
@@ -630,6 +634,10 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 			 return false;
 		 }
 	 }
+
+	public boolean containsSUM() {
+		return expressionWithSumMultistate;
+	}
 	
 	/*public MultistateSpecies extract_object_of_SUM(String element) throws Exception {
 		*String weightFunctionString = extract_weightFunction_in_SUM(element);

@@ -164,7 +164,7 @@ public class ExpandedReactionsDialog extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					showMore();
-				} catch (Exception e1) {
+				} catch (Throwable e1) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
 				}
 			}
@@ -177,7 +177,7 @@ public class ExpandedReactionsDialog extends JDialog {
 		setLocationRelativeTo(null);
 	}
 
-	protected void showMore() throws Exception {
+	protected void showMore() throws Throwable {
 		MutablePair<String, String> pair = new MutablePair<String, String>();
 		String reactions = new String();
 		String missing = new String();

@@ -1,5 +1,7 @@
 package msmb.model;
 
+import msmb.debugTab.DebugConstants;
+import msmb.debugTab.DebugMessage;
 import msmb.gui.MainGui;
 
 import java.io.ByteArrayInputStream;
@@ -62,7 +64,7 @@ public class GlobalQDB {
 		return ret;
 	}
 	
-	public int addChangeGlobalQ(int index, String name,  String initialValue, String type, String expression, String notes) throws Exception {
+	public int addChangeGlobalQ(int index, String name,  String initialValue, String type, String expression, String notes) throws Throwable {
 		if(name.trim().length() == 0) return -1;
 		Integer ind = globalQIndexes.get(name);
 		
@@ -82,6 +84,7 @@ public class GlobalQDB {
 		}
 		
 		
+		int columnToAnalyze = -1;;
 		try{
 			if(ind == null) {//it is a new globalq
 				GlobalQ c = new GlobalQ(name);
@@ -92,7 +95,9 @@ public class GlobalQDB {
 				globalQIndexes.put(c.getName(), ind);
 				globalQVector.put(ind,c); //take the place even if expressions contains error
 				multiModel.addNamedElement(c.getName(), Constants.TitlesTabs.GLOBALQ.index);
+				columnToAnalyze  = Constants.GlobalQColumns.EXPRESSION.index;
 				c.setExpression(multiModel,expression);
+				columnToAnalyze  = Constants.GlobalQColumns.VALUE.index;
 				c.setInitialValue(multiModel,initialValue);
 				globalQVector.put(ind,c);
 				return globalQVector.size()-1;
@@ -100,7 +105,10 @@ public class GlobalQDB {
 				GlobalQ c = globalQVector.get(ind);
 				globalQIndexes.put(name, ind);
 				multiModel.addNamedElement(name, Constants.TitlesTabs.GLOBALQ.index);
+				columnToAnalyze  = Constants.GlobalQColumns.EXPRESSION.index;
 				c.setExpression(multiModel,expression);
+				columnToAnalyze  = Constants.GlobalQColumns.VALUE.index;
+					
 				c.setInitialValue(multiModel,initialValue);
 				c.setNotes(notes);
 				c.setType(type);
@@ -142,12 +150,15 @@ public class GlobalQDB {
 			} 
 			throw ex;
 			//return -1; 
+		} catch (Throwable e) {
+			MySyntaxException ex = new MySyntaxException(columnToAnalyze, "Problem parsing the expression.", Constants.TitlesTabs.GLOBALQ.description);
+			throw ex;
 		}
 
 	}
 	
 	
-	public int addChangeGlobalQ_withoutParsing(String name,  String initialValue, String type, String expression, String notes) throws Exception {
+	public int addChangeGlobalQ_withoutParsing(String name,  String initialValue, String type, String expression, String notes) throws Throwable {
 		if(name.trim().length() == 0) return -1;
 		if(name.length() == 0) name = "default";
 		if(!globalQIndexes.containsKey(name)) { //it is a new comp

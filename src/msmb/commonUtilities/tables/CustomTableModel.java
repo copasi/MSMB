@@ -336,6 +336,8 @@ public class CustomTableModel extends DefaultTableModel {
 		   fireTableDataChanged();
 		   fireTableCellUpdated(row, col);
 	}
+
+
    
 }
 

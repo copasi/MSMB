@@ -19,6 +19,8 @@ import msmb.utility.MyInconsistencyException;
 import msmb.utility.MySyntaxException;
 
 import org.COPASI.CFunction;
+import org.omg.CORBA.Current;
+
 import msmb.parsers.mathExpression.MR_Expression_Parser;
 import msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 
@@ -75,7 +77,7 @@ public class FunctionsDB {
 			Function called = null;
 			try {
 				called = multiModel.getFunctionByName(call);
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
 				called = null;
 			
@@ -175,7 +177,6 @@ public class FunctionsDB {
 				for(int i = 1; i < mapping_vector.size(); i=i+2, j++) {
 					new_mapping_vector.add(param_names.get(j));
 					new_mapping_vector.add(mapping_vector.get(i+1));
-					
 				}
 				mappings.put(row_reaction, new_mapping_vector);
 			/*	if(!mapping_vector.equals(new_mapping_vector)) {
@@ -199,9 +200,8 @@ public class FunctionsDB {
 			try {
 				MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.REACTIONS.description, 
 						Constants.ReactionsColumns.KINETIC_LAW.index,DebugConstants.PriorityType.MINOR.priorityCode);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (Throwable e) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			}
 		}
 	}
@@ -244,7 +244,8 @@ public class FunctionsDB {
 			is = new ByteArrayInputStream(functionNamePlusPossibleParameters.getBytes("UTF-8"));
 	
 		  MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
-		  CompleteFunctionDeclaration root = parser.CompleteFunctionDeclaration();
+		  
+	 	  CompleteFunctionDeclaration root = parser.CompleteFunctionDeclaration();
 		  GetFunctionNameVisitor name = new GetFunctionNameVisitor();
 		  root.accept(name);
 		  ret = name.getFunctionName();
@@ -632,6 +633,22 @@ public class FunctionsDB {
 		mappings_weight_globalQ_withSUM.clear();
 		mappings_speciesExpression.clear();
 		mappings_weight_subFunctions_Functions.clear();
+	}
+
+
+	public void removeRateLawMappingForRow(int row) {
+		Iterator<String> it = whereFuncIsUsed.keySet().iterator();
+		while(it.hasNext()) {
+			String key =  it.next();
+			HashSet<Integer> current = whereFuncIsUsed.get(key);
+			if(current.contains(new Integer(row))) {
+					current.remove(new Integer(row));
+					whereFuncIsUsed.put(key, current);
+			}
+			
+			
+		}
+		
 	}
 
 	

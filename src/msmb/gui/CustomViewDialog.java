@@ -183,7 +183,7 @@ public class CustomViewDialog extends JDialog {
 				throw vis.getExceptions().get(0);
 			}
 
-		}catch (Exception e) {
+		}catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}
 		return tmp;

@@ -16,7 +16,7 @@ public class Species  {
 	private String editableExpression = expression;
 	public String getExpression() { 	return expression.trim();	}
 		
-	public void setExpression(MultiModel m, String expr) throws MySyntaxException {	
+	public void setExpression(MultiModel m, String expr) throws Throwable {	
 		if(expr.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		if(expr.length() == 0) return ;
 		try {
@@ -25,6 +25,7 @@ public class Species  {
 		} catch (Exception ex) {
 			throw ex;
 		} finally {
+			
 			editableExpression = expr;
 		}
 	}
@@ -84,7 +85,7 @@ public class Species  {
 	}
 	
 	
-	public void setInitialQuantity(MultiModel m, String initialQ) throws MySyntaxException {	
+	public void setInitialQuantity(MultiModel m, String initialQ) throws Throwable {	
 		if(m==null) return;
 		if(initialQ.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		if(initialQ.length()==0) return;
@@ -102,13 +103,24 @@ public class Species  {
 				}
 				this.initialQuantity.clear();	
 				
+				Vector<MySyntaxException> exToThrow = new Vector();
+				
 				for(int i = 0; i < elements.size(); i++) {
-				//	try {
-					//	CellParsers.parseExpression_getUndefMisused(m,elements.get(i), Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.INITIAL_QUANTITY.description);
+					try {
+						CellParsers.parseExpression_getUndefMisused(m,elements.get(i), Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.INITIAL_QUANTITY.description);
 						this.initialQuantity.add(elements.get(i));
-					//} catch (MySyntaxException e1) {
-					//	e1.printStackTrace();
-			//		}
+					} catch (MySyntaxException e1) {
+						exToThrow.add(e1);
+						continue;
+					}
+				}
+				
+				if(exToThrow.size() > 0) {
+					MySyntaxException ex = exToThrow.get(0);
+					for(int i = 1; i < exToThrow.size(); i++) {
+						ex = new MySyntaxException(ex.getMessage(), exToThrow.get(i));
+					}
+					throw ex;
 				}
 		
 		} finally {
@@ -186,34 +198,15 @@ public class Species  {
 	
 	
 	
-	public String getValueOfSite(String siteName) {
-		if(!CellParsers.isMultistateSpeciesName(this.getDisplayedName())) {
-			return new String();
-		} 
-		
-		String completeName = this.getDisplayedName();
-		int index_site = completeName.indexOf(siteName+"{");
-		String sub = completeName.substring(index_site+siteName.length()+1);
-		
-		int index_end_species = sub.indexOf(")");
-		int index_semicolon = sub.indexOf(";");
-		String value = new String();
-		if(index_semicolon != -1) {
-			value = sub.substring(0,index_semicolon);
-		} else {
-			value = sub.substring(0, index_end_species);
-		}
-		return value;
-	}
+	
 
 
 
-
-	public void setEditableInitialQuantity(MultiModel m, String editableString) throws MySyntaxException {
+	public void setEditableInitialQuantity(MultiModel m, String editableString) throws Throwable {
 		setInitialQuantity(m,editableString);
 	}
 
-	public void setEditableExpression(MultiModel m,String editableString) throws MySyntaxException {
+	public void setEditableExpression(MultiModel m,String editableString) throws Throwable {
 		setExpression(m,editableString);		
 	}
 

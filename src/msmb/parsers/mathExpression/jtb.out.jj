@@ -166,6 +166,13 @@ public class MR_Expression_Parser {
       v2 = new MyVisitor();
       start2.accept(v2);
       System.out.println("...................................");
+      /*    expression2 = new String("SUM(Cdh1;p,1,2)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2);
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");*/
       expression2 = new String("kmisfoldSUB*SUB*(ROS*cytosol)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2);
@@ -272,6 +279,41 @@ public class MR_Expression_Parser {
       expression2 = new String("not FALSE");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2, "UTF-8");
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("\"max\"(ATP,atot,k4,3PG)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start33 = react2.SingleFunctionCall();
+      v2 = new MyVisitor();
+      start33.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("gamm*(H(Tot,sig,Wterm)-Active)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("A1/(1+exp((-A2)*A3))");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("synt_withTF(ks_b2,ks_b2_m1,MCM1)*MASS");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("ks_spn*heav(CLB2-Jspn)");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2);
       start2 = react2.CompleteExpression();
       v2 = new MyVisitor();
       start2.accept(v2);
@@ -394,6 +436,8 @@ TOKEN :
 | < LOG : "log" >
 | < LOG10 : "log10" >
 | < ABS : "abs" >
+| < MIN : "min" >
+| < MAX : "max" >
 | < PI : "PI" >
 | < EXPONENTIALE : "EXPONENTIALE" >
 | < NAN1 : "NaN" >
@@ -511,6 +555,39 @@ CompleteListOfExpression CompleteListOfExpression() :
     { n6 = JTBToolkit.makeNodeToken(n7); }
   }
   { return new CompleteListOfExpression(n0, n1, n6); }
+}
+
+CompleteListOfExpression_Events CompleteListOfExpression_Events() :
+{
+  // --- JTB generated node declarations ---
+  Expression n0 = null;
+  NodeListOptional n1 = new NodeListOptional();
+  NodeSequence n2 = null;
+  NodeToken n3 = null;
+  Token n4 = null;
+  Expression n5 = null;
+  NodeToken n6 = null;
+  Token n7 = null;
+}
+{
+  n0 = Expression()
+  (
+    { n2 = new NodeSequence(2); }
+    n4 = < SEMICOLON >
+    { n3 = JTBToolkit.makeNodeToken(n4); }
+    { n2.addNode(n3); }
+    n5 = Expression()
+    { n2.addNode(n5); }
+    { n1.addNode(n2); }
+  )*
+  { n1.nodes.trimToSize(); }
+  n7 = < EOF >
+  {
+    n7.beginColumn++;
+    n7.endColumn++;
+    { n6 = JTBToolkit.makeNodeToken(n7); }
+  }
+  { return new CompleteListOfExpression_Events(n0, n1, n6); }
 }
 
 SingleFunctionCall SingleFunctionCall() :
@@ -1223,156 +1300,168 @@ Name Name() :
   Token n71 = null;
   NodeToken n72 = null;
   Token n73 = null;
+  NodeToken n74 = null;
+  Token n75 = null;
+  NodeToken n76 = null;
+  Token n77 = null;
 }
 {
   (
     n2 = < IDENTIFIER >
     { n1 = JTBToolkit.makeNodeToken(n2); }
-    { n0 = new NodeChoice(n1, 0, 37); }
+    { n0 = new NodeChoice(n1, 0, 39); }
   /*(LOOKAHEAD(2)PossibleExtensions())?*/
   |
     n3 = PrimitiveType()
-    { n0 = new NodeChoice(n3, 1, 37); }
+    { n0 = new NodeChoice(n3, 1, 39); }
   |
     n5 = < PI >
     { n4 = JTBToolkit.makeNodeToken(n5); }
-    { n0 = new NodeChoice(n4, 2, 37); }
+    { n0 = new NodeChoice(n4, 2, 39); }
   |
     n7 = < EXPONENTIALE >
     { n6 = JTBToolkit.makeNodeToken(n7); }
-    { n0 = new NodeChoice(n6, 3, 37); }
+    { n0 = new NodeChoice(n6, 3, 39); }
   |
     n9 = < CONST_AVOGADRO >
     { n8 = JTBToolkit.makeNodeToken(n9); }
-    { n0 = new NodeChoice(n8, 4, 37); }
+    { n0 = new NodeChoice(n8, 4, 39); }
   |
     n11 = < TIME >
     { n10 = JTBToolkit.makeNodeToken(n11); }
-    { n0 = new NodeChoice(n10, 5, 37); }
+    { n0 = new NodeChoice(n10, 5, 39); }
   |
     n13 = < FLOOR >
     { n12 = JTBToolkit.makeNodeToken(n13); }
-    { n0 = new NodeChoice(n12, 6, 37); }
+    { n0 = new NodeChoice(n12, 6, 39); }
   |
     n15 = < DELAY >
     { n14 = JTBToolkit.makeNodeToken(n15); }
-    { n0 = new NodeChoice(n14, 7, 37); }
+    { n0 = new NodeChoice(n14, 7, 39); }
   |
     n17 = < CEIL >
     { n16 = JTBToolkit.makeNodeToken(n17); }
-    { n0 = new NodeChoice(n16, 8, 37); }
+    { n0 = new NodeChoice(n16, 8, 39); }
   |
     n19 = < FACTORIAL >
     { n18 = JTBToolkit.makeNodeToken(n19); }
-    { n0 = new NodeChoice(n18, 9, 37); }
+    { n0 = new NodeChoice(n18, 9, 39); }
   |
     n21 = < ASIN >
     { n20 = JTBToolkit.makeNodeToken(n21); }
-    { n0 = new NodeChoice(n20, 10, 37); }
+    { n0 = new NodeChoice(n20, 10, 39); }
   |
     n23 = < ACOS >
     { n22 = JTBToolkit.makeNodeToken(n23); }
-    { n0 = new NodeChoice(n22, 11, 37); }
+    { n0 = new NodeChoice(n22, 11, 39); }
   |
     n25 = < ATAN >
     { n24 = JTBToolkit.makeNodeToken(n25); }
-    { n0 = new NodeChoice(n24, 12, 37); }
+    { n0 = new NodeChoice(n24, 12, 39); }
   |
     n27 = < TAN >
     { n26 = JTBToolkit.makeNodeToken(n27); }
-    { n0 = new NodeChoice(n26, 13, 37); }
+    { n0 = new NodeChoice(n26, 13, 39); }
   |
     n29 = < TANH >
     { n28 = JTBToolkit.makeNodeToken(n29); }
-    { n0 = new NodeChoice(n28, 14, 37); }
+    { n0 = new NodeChoice(n28, 14, 39); }
   |
     n31 = < COSH >
     { n30 = JTBToolkit.makeNodeToken(n31); }
-    { n0 = new NodeChoice(n30, 15, 37); }
+    { n0 = new NodeChoice(n30, 15, 39); }
   |
     n33 = < LOG10 >
     { n32 = JTBToolkit.makeNodeToken(n33); }
-    { n0 = new NodeChoice(n32, 16, 37); }
+    { n0 = new NodeChoice(n32, 16, 39); }
   |
     n35 = < ABS >
     { n34 = JTBToolkit.makeNodeToken(n35); }
-    { n0 = new NodeChoice(n34, 17, 37); }
+    { n0 = new NodeChoice(n34, 17, 39); }
   |
     n37 = < COS >
     { n36 = JTBToolkit.makeNodeToken(n37); }
-    { n0 = new NodeChoice(n36, 18, 37); }
+    { n0 = new NodeChoice(n36, 18, 39); }
   |
     n39 = < SIN >
     { n38 = JTBToolkit.makeNodeToken(n39); }
-    { n0 = new NodeChoice(n38, 19, 37); }
+    { n0 = new NodeChoice(n38, 19, 39); }
   |
     n41 = < SEC >
     { n40 = JTBToolkit.makeNodeToken(n41); }
-    { n0 = new NodeChoice(n40, 20, 37); }
+    { n0 = new NodeChoice(n40, 20, 39); }
   |
     n43 = < CSC >
     { n42 = JTBToolkit.makeNodeToken(n43); }
-    { n0 = new NodeChoice(n42, 21, 37); }
+    { n0 = new NodeChoice(n42, 21, 39); }
   |
     n45 = < COT >
     { n44 = JTBToolkit.makeNodeToken(n45); }
-    { n0 = new NodeChoice(n44, 22, 37); }
+    { n0 = new NodeChoice(n44, 22, 39); }
   |
     n47 = < SINH >
     { n46 = JTBToolkit.makeNodeToken(n47); }
-    { n0 = new NodeChoice(n46, 23, 37); }
+    { n0 = new NodeChoice(n46, 23, 39); }
   |
     n49 = < ARCSEC >
     { n48 = JTBToolkit.makeNodeToken(n49); }
-    { n0 = new NodeChoice(n48, 24, 37); }
+    { n0 = new NodeChoice(n48, 24, 39); }
   |
     n51 = < ARCCSC >
     { n50 = JTBToolkit.makeNodeToken(n51); }
-    { n0 = new NodeChoice(n50, 25, 37); }
+    { n0 = new NodeChoice(n50, 25, 39); }
   |
     n53 = < ARCCOT >
     { n52 = JTBToolkit.makeNodeToken(n53); }
-    { n0 = new NodeChoice(n52, 26, 37); }
+    { n0 = new NodeChoice(n52, 26, 39); }
   |
     n55 = < ARCSINH >
     { n54 = JTBToolkit.makeNodeToken(n55); }
-    { n0 = new NodeChoice(n54, 27, 37); }
+    { n0 = new NodeChoice(n54, 27, 39); }
   |
     n57 = < ARCCOSH >
     { n56 = JTBToolkit.makeNodeToken(n57); }
-    { n0 = new NodeChoice(n56, 28, 37); }
+    { n0 = new NodeChoice(n56, 28, 39); }
   |
     n59 = < ARCTANH >
     { n58 = JTBToolkit.makeNodeToken(n59); }
-    { n0 = new NodeChoice(n58, 29, 37); }
+    { n0 = new NodeChoice(n58, 29, 39); }
   |
     n61 = < ARCSECH >
     { n60 = JTBToolkit.makeNodeToken(n61); }
-    { n0 = new NodeChoice(n60, 30, 37); }
+    { n0 = new NodeChoice(n60, 30, 39); }
   |
     n63 = < ARCCSCH >
     { n62 = JTBToolkit.makeNodeToken(n63); }
-    { n0 = new NodeChoice(n62, 31, 37); }
+    { n0 = new NodeChoice(n62, 31, 39); }
   |
     n65 = < ARCCOTH >
     { n64 = JTBToolkit.makeNodeToken(n65); }
-    { n0 = new NodeChoice(n64, 32, 37); }
+    { n0 = new NodeChoice(n64, 32, 39); }
   |
-    n67 = < LOG >
+    n67 = < MIN >
     { n66 = JTBToolkit.makeNodeToken(n67); }
-    { n0 = new NodeChoice(n66, 33, 37); }
+    { n0 = new NodeChoice(n66, 33, 39); }
   |
-    n69 = < EXP >
+    n69 = < MAX >
     { n68 = JTBToolkit.makeNodeToken(n69); }
-    { n0 = new NodeChoice(n68, 34, 37); }
+    { n0 = new NodeChoice(n68, 34, 39); }
   |
-    n71 = < NAN1 >
+    n71 = < LOG >
     { n70 = JTBToolkit.makeNodeToken(n71); }
-    { n0 = new NodeChoice(n70, 35, 37); }
+    { n0 = new NodeChoice(n70, 35, 39); }
   |
-    n73 = < NAN2 >
+    n73 = < EXP >
     { n72 = JTBToolkit.makeNodeToken(n73); }
-    { n0 = new NodeChoice(n72, 36, 37); }
+    { n0 = new NodeChoice(n72, 36, 39); }
+  |
+    n75 = < NAN1 >
+    { n74 = JTBToolkit.makeNodeToken(n75); }
+    { n0 = new NodeChoice(n74, 37, 39); }
+  |
+    n77 = < NAN2 >
+    { n76 = JTBToolkit.makeNodeToken(n77); }
+    { n0 = new NodeChoice(n76, 38, 39); }
   )
   { return new Name(n0); }
 // | < NAN3 >

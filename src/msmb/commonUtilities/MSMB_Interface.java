@@ -31,9 +31,14 @@ public interface MSMB_Interface {
 	public Species getMSMB_getSpecies(String name);
 	public GlobalQ getMSMB_getGlobalQuantity(String name);
 	public Compartment getMSMB_getCompartment(String name);
+
+	public void addSpecies(String name, String initialQuantity, String compartment) throws Exception;
+	
+	public String getDefault_CompartmentName();
+	public String getDefault_SpeciesInitialQuantity();
+	public String getDefault_GlobalQInitialQuantity();
 	
 
 	public Font getCustomFont();
-//	public void addChangeListener(ChangeListener c, Class cl);
 	public void addChangeListener(ChangeListener c, MSMB_Element element);	
 }

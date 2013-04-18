@@ -80,7 +80,7 @@ public class BiomodelTest {
 		
 	
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Throwable {
 		try {
 			String rscriptPath = new String("C:\\Program Files\\R\\R-2.15.2\\bin\\x64\\RScript");
 			RunSimulation.setRScriptPath(rscriptPath);
@@ -161,7 +161,7 @@ public class BiomodelTest {
 
 	
 	
-	public void runTest(){
+	public void runTest() throws Throwable{
 		try{
 			//System.setOut(new PrintStream(new File(subdirectoryTests+"SystemOutput.txt")));
 			//System.setErr(new PrintStream(new File(subdirectoryTests+"SystemErr.txt")));
@@ -223,10 +223,10 @@ public class BiomodelTest {
 		//indices.add(new Integer(399));//high relative, but in a single point, all the previous/following points are the same -> rounding issue
 			*/
 			
-			indices.clear();
-			indices.add(new Integer(255)); 
+			/*indices.clear();
+			indices.add(new Integer(255)); */
 			
-			boolean simulate255 = true;
+			boolean simulate255 = false;
 			
 			for(int i = 0; i < indices.size(); i++) {
 				Integer index = indices.get(i);
@@ -255,13 +255,13 @@ public class BiomodelTest {
 				System.out.flush();
 				
 				
-			/*	if(simulate255==false && sbmlID.compareTo("BIOMD0000000255")==0) {
+				if(simulate255==false && sbmlID.compareTo("BIOMD0000000255")==0) {
 					System.out.println("Very big model, we will load it after all the other models");
 					System.out.flush();
-					indices.add(255);
-					simulate255 = true;
+					//indices.add(255);
+					//simulate255 = true;
 					continue;		
-				}*/
+				}
 				
 				if(collectStatisticsMode) {
 					collectStatistics(sbmlID);

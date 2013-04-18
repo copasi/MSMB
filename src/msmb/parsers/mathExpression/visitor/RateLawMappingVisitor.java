@@ -26,8 +26,8 @@ public class RateLawMappingVisitor extends DepthFirstVoidVisitor {
 
 	  protected int row = -1;
 	  protected String equation = new String();
-	  Vector<Exception> exceptions = new Vector<>();
-	 public Vector<Exception> getExceptions() { return exceptions; }
+	  Vector<Throwable> exceptions = new Vector<>();
+	 public Vector<Throwable> getExceptions() { return exceptions; }
 	   MultiModel multiModel = null;
 	  Vector<String> actualsGlobalQ_PARtype = new Vector<String>();
 	   
@@ -46,13 +46,20 @@ public class RateLawMappingVisitor extends DepthFirstVoidVisitor {
 			if(funName.length()==0) return;
 			Function f = multiModel.getFunctionByName(funName);
 			HashSet<Integer> h = null;
+			
+			multiModel.removeRateLawMappingForRow(row);
+			
 			if(multiModel.getWhereFuncIsUsed(funName)==null) {
 				h = new HashSet<Integer>();
 			} else {
 				h = multiModel.getWhereFuncIsUsed(funName);
 			}
 			h.add(new Integer(row));
+			
+			
 			multiModel.setWhereFuncIsUsed(funName, h);
+			
+			
 
 
 			InputStream is2 = new ByteArrayInputStream(equation.getBytes("UTF-8"));
@@ -77,7 +84,7 @@ public class RateLawMappingVisitor extends DepthFirstVoidVisitor {
 				}
 			}
 			multiModel.addMapping(row, mapping_vector);
-		} catch(Exception ex) {
+		} catch(Throwable ex) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 			exceptions.add(ex);
 		}
@@ -112,7 +119,7 @@ public class RateLawMappingVisitor extends DepthFirstVoidVisitor {
 				Function f = null;
 				try {
 					f = multiModel.getFunctionByName(fun);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}

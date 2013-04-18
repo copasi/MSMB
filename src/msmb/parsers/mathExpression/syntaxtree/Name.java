@@ -39,10 +39,12 @@ import msmb.parsers.mathExpression.visitor.*;
  * .......... .. | %30 <ARCSECH><br>
  * .......... .. | %31 <ARCCSCH><br>
  * .......... .. | %32 <ARCCOTH><br>
- * .......... .. | %33 <LOG><br>
- * .......... .. | %34 <EXP><br>
- * .......... .. | %35 <NAN1><br>
- * .......... .. | %36 <NAN2><br>
+ * .......... .. | %33 <MIN><br>
+ * .......... .. | %34 <MAX><br>
+ * .......... .. | %35 <LOG><br>
+ * .......... .. | %36 <EXP><br>
+ * .......... .. | %37 <NAN1><br>
+ * .......... .. | %38 <NAN2><br>
  */
 public class Name implements INode {
 

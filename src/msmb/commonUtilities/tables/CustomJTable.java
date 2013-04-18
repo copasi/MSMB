@@ -8,29 +8,31 @@ import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashSet;
-
-import javax.swing.BorderFactory;
 import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
-import javax.swing.border.Border;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
 
 import msmb.utility.Constants;
 import msmb.utility.GraphicalProperties;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
+
 public class CustomJTable extends JTable  {
 	private static final long serialVersionUID = 1L;
 	
 	MutablePair<Integer, Integer> cell_to_highlight = null;
 	public MutablePair<Integer, Integer> getCell_to_highlight() {return cell_to_highlight;}
-	public void setCell_to_highlight(MutablePair<Integer, Integer> cell_to_highlight) {this.cell_to_highlight = cell_to_highlight;}
+	public void setCell_to_highlight(MutablePair<Integer, Integer> cell_to_highlight) {
+		//int modelRow = getRowSorter().convertRowIndexToModel(cell_to_highlight.left-1);
+		//int modelColumn = convertColumnIndexToModel(cell_to_highlight.right);
+		//this.cell_to_highlight = new MutablePair<>(modelRow+1, modelColumn);
+		this.cell_to_highlight = cell_to_highlight;
+	}
 
 
 	protected CustomTableModel model ;
@@ -61,6 +63,26 @@ public class CustomJTable extends JTable  {
 	    
 	    model = m;    
 	    this.setModel(m);
+	    this.setColumnSelectionAllowed(false);
+	
+	    this.getTableHeader().setReorderingAllowed(false);
+		//this.setRowSorter(new CustomTableRowSorter(model));
+	    
+	
+	    
+	    
+	/*	this.getTableHeader().addMouseListener(new MouseAdapter() {
+		      @Override
+		      public void mousePressed(MouseEvent mouseEvent) {
+		        int index = convertColumnIndexToModel(columnAtPoint(mouseEvent.getPoint()));
+		        if (index >= 0) {
+		        	System.out.println("model.getRowCount() in mouse Clicked " + model.getRowCount());
+		          System.out.println("Clicked on column " + index);
+		          model.addRow(new Vector());
+		          model.fireTableDataChanged();
+		        }
+		      };
+		    });*/
 		
 	    setBackground(UIManager.getColor("Button.background"));
 	  
@@ -83,10 +105,8 @@ public class CustomJTable extends JTable  {
 	    
 		this.setSelectionMode(ListSelectionModel.SINGLE_SELECTION );
 		
-		this.setColumnSelectionAllowed(false);
-		//this.setSortable(false);
-
-		this.getTableHeader().setReorderingAllowed(false);
+		
+		
 		
 		addMouseListener(new MouseAdapter() {
 		    	public void mousePressed(MouseEvent e) { }
@@ -139,6 +159,7 @@ public class CustomJTable extends JTable  {
 		public void clearCellsWithErrors() { cells_with_errors.clear();	}
 		public void clearCellsWithDefaults() { cells_with_defaults.clear();	}
 
+		
 		
 	public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int vColIndex) {
 		Component c = null;

@@ -17,6 +17,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -33,7 +35,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
@@ -57,6 +61,7 @@ import javax.swing.GroupLayout;
 
 import msmb.utility.Constants;
 import msmb.utility.GraphicalProperties;
+import msmb.utility.SwingUtils;
 
 public class PreferencesFrame extends JDialog {
 
@@ -83,9 +88,7 @@ public class PreferencesFrame extends JDialog {
 	private JTextField defaultCompartmentInitialValue;
 	private JButton jButtonOK;
 	private JButton jButtonRestoreDefaults;
-	private JPanel panelColors;
-	private JPanel panelButtons;
-	private JPanel contentPanel;
+	
 	private JScrollPane scrollPaneColorPalette;
 	private JScrollPane scrollPaneBehavior;
 	private JPanel colorchooserPreview;
@@ -97,10 +100,16 @@ public class PreferencesFrame extends JDialog {
 	private JRadioButton radioButton_labelDefaults;
 	private JRadioButton radioButton_labelMajorIssues;
 	private JRadioButton radioButton_labelHighlight;
+	private JPanel panelColors;
+	private JPanel panelButtons;
+	private JPanel contentPanel;
 	private JPanel panelMain;
 	private JPanel panelButtonLeft;
 	private JPanel panelRight;
 	private JPanel panelDefaults;
+	private JPanel panelDirectories;
+	private JPanel panelAutosave;
+
 	private JLabel lblDefault;
 	private JPanel panel_6;
 	//private JTextField txtCell;
@@ -114,16 +123,14 @@ public class PreferencesFrame extends JDialog {
 	private JPanel panel_7;
 	private JButton btnNewButton_2;
 	private JButton btnNewButton_3;
-	private JScrollPane scrollPaneDefaults;
 	private JPanel panel_2;
 	private JPanel panelFontSize;
+	private JScrollPane scrollPaneDefaults;
 	private JSlider slider;
 	private JLabel lblNewLabel_2;
 	
 	private MainGui gui;
 	private JScrollPane scrollPaneDirectories;
-	private JPanel panelDirectories;
-	private JPanel panelAutosave;
 	private JPanel panel_4;
 	private JLabel lblDirectoryPath;
 	private JTextField textFieldDirectoryAutosave;
@@ -172,6 +179,16 @@ public class PreferencesFrame extends JDialog {
 	
 	@Override
 	public void setVisible(boolean b) {
+		if(b) {
+			GraphicalProperties.resetFonts(this);
+			GraphicalProperties.resetFonts(panelColors);
+			GraphicalProperties.resetFonts(panelButtons);
+			GraphicalProperties.resetFonts(panelDefaults);
+			GraphicalProperties.resetFonts(panelDirectories);
+			GraphicalProperties.resetFonts(panelAutosave);
+			GraphicalProperties.resetFonts(panelFontSize);
+			GraphicalProperties.resetFonts(panel_1);
+		}
 		super.setVisible(b);
 		if(btnNewButton!=null){
 			btnNewButton.doClick();
@@ -180,6 +197,7 @@ public class PreferencesFrame extends JDialog {
 			btnNewButton_2.setSelected(false);
 			btnNewButton_3.setSelected(false);
 		}
+		
 	}
 	
 	public PreferencesFrame(MainGui gui) {
@@ -196,9 +214,10 @@ public class PreferencesFrame extends JDialog {
 		initComponents();
 
 		btnNewButton.doClick();
-
+		GraphicalProperties.resetFonts(this);
 	}
-
+	
+	
 
 
 	private void initComponents() {
@@ -449,7 +468,7 @@ public class PreferencesFrame extends JDialog {
 					GraphicalProperties.color_border_defaults = ((LineBorder)(labelDefaults.getBorder())).getLineColor();
 					GraphicalProperties.color_cell_to_highlight = labelHightlight.getBackground();
 					GraphicalProperties.color_cell_with_errors = labelMajourIssues.getBackground();
-				} catch (Exception e1) {
+				} catch (Throwable e1) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
 				} finally {
 					setCursor(null);

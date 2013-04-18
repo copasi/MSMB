@@ -25,7 +25,7 @@ public class Compartment {
 	
 	public String getExpression() {	return expression;}
 	
-	public void setExpression(MultiModel m, String expr) throws MySyntaxException {
+	public void setExpression(MultiModel m, String expr) throws Throwable {
 		if(expr.length()==0) return;
 		this.expression = expr;
 		try {
@@ -62,7 +62,7 @@ public class Compartment {
 	}
 	
 	
-	public void setInitialVolume(MultiModel m, String initialVolume) throws Exception {
+	public void setInitialVolume(MultiModel m, String initialVolume) throws Throwable {
 		if(initialVolume.length()==0) return;
 		this.initialVolume = initialVolume;
 		try{

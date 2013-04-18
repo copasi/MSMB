@@ -60,4 +60,16 @@ public class Event {
 			this.actions.add(st.nextToken().trim());
 		}
 	}
+	
+	public String getActionsAsString() {
+		Iterator it = actions.iterator();
+		String ret = new String();
+		while(it.hasNext())  {
+			ret += it.next();
+			ret += ";";
+		}
+		ret = ret.substring(0, ret.length()-1);
+		return ret;
+	}
+	
 }

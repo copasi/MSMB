@@ -3,6 +3,7 @@ package  msmb.gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -22,6 +23,8 @@ import javax.swing.UIManager;
 
 import msmb.model.MultiModel;
 import msmb.utility.Constants;
+import msmb.utility.GraphicalProperties;
+import msmb.utility.SwingUtils;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
@@ -29,6 +32,8 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JScrollPane;
@@ -116,15 +121,51 @@ public class FunctionFromExpressionDialog extends JDialog {
 					}
 				});
 				okButton.setActionCommand("OK");
+	
 				buttonPane.add(okButton);
 				getRootPane().setDefaultButton(okButton);
 			}
 		}
 		
 		
+		GraphicalProperties.resetFonts(this);
+		
 	}
 
 	
+	/*private void resetFonts() {
+		 List<JButton> buttons = SwingUtils.getDescendantsOfClass(JButton.class, this);
+		 Iterator<JButton> it = buttons.iterator();
+		 while(it.hasNext()) {
+			 JButton current = it.next();
+			 current.setFont(MainGui.customFont);
+		 }
+		 
+		 List<JTextPane> textPanes = SwingUtils.getDescendantsOfClass(JTextPane.class, this);
+		 Iterator<JTextPane> it2 = textPanes.iterator();
+		 while(it2.hasNext()) {
+			 JTextPane current = it2.next();
+			 current.setFont(MainGui.customFont);
+		 }
+		 
+		 List<JLabel> labels = SwingUtils.getDescendantsOfClass(JLabel.class, this);
+		 Iterator<JLabel> it3 = labels.iterator();
+		 while(it3.hasNext()) {
+			 JLabel current = it3.next();
+			 current.setFont(MainGui.customFont);
+		 }
+		 
+		 List<JTextField> textFields = SwingUtils.getDescendantsOfClass(JTextField.class, this);
+		 Iterator<JTextField> it4 = textFields.iterator();
+		 while(it4.hasNext()) {
+			 JTextField current = it4.next();
+			 current.setFont(MainGui.customFont);
+		 }
+		
+		this.revalidate();
+		
+	}*/
+
 	protected void fillReturnValue() {
 		
 		for(int i = 0; i < panel_listElement.getComponentCount(); i++) {
@@ -170,8 +211,10 @@ public class FunctionFromExpressionDialog extends JDialog {
 					JLabel lblNewLabel = null;
 					if(element.get(0).compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {
 						lblNewLabel = new JLabel("Function name: ");
+					
 					} else {
 						lblNewLabel = new JLabel("Global Quantity name: ");
+						
 						
 					}
 					panel_singleElement_labels.add(lblNewLabel);
@@ -186,6 +229,7 @@ public class FunctionFromExpressionDialog extends JDialog {
 				panel_singleElement.add(panel_2, BorderLayout.CENTER);
 				panel_2.setLayout(new GridLayout(0, 1, 0, 0));
 				JTextField txtFunctionreaction = new JTextField();
+				
 				JLabel lblNewLabel_2 = new JLabel(element.get(2));
 				txtFunctionreaction.setText(element.get(1));
 				panel_2.add(txtFunctionreaction);

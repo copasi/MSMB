@@ -13,6 +13,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -108,7 +109,7 @@ public class CustomTableModel_MSMB extends CustomTableModel{
 	 			   gui.updateModelFromTable(row, col);
 			   }
 			   else if(this.multiStateDialog != null) multiStateDialog.updateMultisiteSpeciesConcentrationFromTable(row);
-		   } catch(Exception ex) {
+		   } catch(Throwable ex) {
 			   if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 			   r.set(col, old);
 			   data.set(row, r);
@@ -219,6 +220,23 @@ public class CustomTableModel_MSMB extends CustomTableModel{
 					return null;
 				}
 			}
+
+			public HashSet<String> cells_with_expanded_view = new HashSet<String>();
+
+
+			public void setViewExpanded(int row, int column) {
+				disableCell(row, column);
+				cells_with_expanded_view.add(row+"_"+column);
+			}
+			
+			public void setViewEditable(int row, int column) {
+				enableCell(row, column);
+				cells_with_expanded_view.remove(row+"_"+column);
+			}
+
+			public boolean isViewEditable(int row, int column) {
+				return !cells_with_expanded_view.contains(row+"_"+column);
+			}
 }
 
 
@@ -253,11 +271,13 @@ class CustomJTable_MSMB extends CustomJTable  {
 	
 	
     
-	public void initializeCustomTable(CustomTableModel m) {
+	public void initializeCustomTable(CustomTableModel_MSMB m) {
 		super.initializeCustomTable(m);
 		
-	    if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0) this.setAutoCreateRowSorter(true); 
-	  
+	    if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0) 
+	    	this.setAutoCreateRowSorter(true); 
+
+		 
 	    addMouseListener(new MouseAdapter()   {
 	    
 	    	private JMenuItem ackMenuItem;
@@ -290,14 +310,16 @@ class CustomJTable_MSMB extends CustomJTable  {
 	                
 	                MainGui.cellValueBeforeChange = model.getValueAt(row,col).toString();
 	             	
-	             	MainGui.cellSelectedRow=row;
+	                
+	               
+	             	MainGui.cellSelectedRow= row;
 	             	MainGui.cellSelectedCol=col;
 	             	MainGui.cellTableEdited = model.getTableName();
 	             	highlightCellSelectedRow();
 		             
 	             	try {
 						if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(MainGui.cellTableEdited, MainGui.cellSelectedRow+1);
-					} catch (Exception e1) {
+					} catch (Throwable e1) {
 						e1.printStackTrace();
 					}
 	             } else {
@@ -338,7 +360,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 		    				  public void actionPerformed(ActionEvent e) {
 		    					  try {
 		    						MainGui.ackSelectedDebugMessage();
-		    					} catch (Exception e1) {
+		    					} catch (Throwable e1) {
 		    						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
 		    					}
 		    				  }
@@ -379,13 +401,13 @@ class CustomJTable_MSMB extends CustomJTable  {
 		         		popupMenu.addSeparator();
 		         		
 		         		
-		         		if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)!=0) {
+		         	/*	if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)!=0) {
 		         			JMenuItem expandedAllView = new JMenuItem(Constants.Views.EXPANDED_ALL.description);
 		         			expandedAllListener = new PopUpViewActionListener_2(Constants.Views.EXPANDED_ALL.index);
 			         		expandedAllView.addActionListener(expandedAllListener);
 			         		expandedAllView.setEnabled(false);
 			         		popupMenu.add(expandedAllView);
-		         		}
+		         		}*/
 		         		
 		         		/*JMenuItem compressedView = new JMenuItem(Constants.Views.COMPRESSED.description);
 		         	    //compressedListener = new PopUpViewActionListener(Constants.Views.COMPRESSED.index);
@@ -501,13 +523,14 @@ class CustomJTable_MSMB extends CustomJTable  {
 	    
 	}
 	
-   
+
 	 protected void highlightCellSelectedRow() {
 		 
 		 int row = MainGui.cellSelectedRow;
+		 
 		 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description)==0) { 
      		MainGui.row_to_highlight.set(Constants.TitlesTabs.SPECIES.index, row);	
-     		MainGui.jTableSpecies.setRowSelectionInterval(row, row);
+     	MainGui.jTableSpecies.setRowSelectionInterval(row, row);
      		MainGui.jTableSpecies.revalidate();
      	}
      	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) { 
@@ -617,6 +640,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 				else if(this.model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0) c.setForeground(Color.BLACK);
 				else if(this.model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0) c.setForeground(Color.DARK_GRAY);
 				else if(this.model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0 && vColIndex==Constants.SpeciesColumns.INITIAL_QUANTITY.index) c.setForeground(c.getBackground());
+				else if(!((CustomTableModel_MSMB)model).isViewEditable(rowIndex, vColIndex)) c.setForeground(Color.BLACK);
 				else {
 					if(this.isRowSelected(rowIndex)) {
 						c.setForeground(GraphicalProperties.color_cell_to_highlight);
@@ -705,15 +729,21 @@ class CustomJTable_MSMB extends CustomJTable  {
 	     	 
 			return row==selRow;
 	}
+	
+	
 
 	private void updateDisabledCell_MSMB(int row, int col) {
+		CustomTableModel_MSMB model = (CustomTableModel_MSMB) this.model;
 		if(model.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
-			if(model.getValueAt(row, Constants.GlobalQColumns.TYPE.index).toString().compareTo(Constants.GlobalQType.ASSIGNMENT.description)==0) {
-				model.enableCell(row, Constants.GlobalQColumns.EXPRESSION.index);
+				if(model.getValueAt(row, Constants.GlobalQColumns.TYPE.index).toString().compareTo(Constants.GlobalQType.ASSIGNMENT.description)==0) {
+				if(model.isViewEditable(row,Constants.GlobalQColumns.EXPRESSION.index)) 
+					model.enableCell(row, Constants.GlobalQColumns.EXPRESSION.index);
 				model.disableCell(row, Constants.GlobalQColumns.VALUE.index);	
 			} else {
-				model.enableCell(row, Constants.GlobalQColumns.VALUE.index);
-				model.enableCell(row, Constants.GlobalQColumns.EXPRESSION.index); //because ode needs it
+				if(model.isViewEditable(row,Constants.GlobalQColumns.VALUE.index)) 
+								model.enableCell(row, Constants.GlobalQColumns.VALUE.index);
+				if(model.isViewEditable(row,Constants.GlobalQColumns.EXPRESSION.index)) 
+					model.enableCell(row, Constants.GlobalQColumns.EXPRESSION.index); //because ode needs it
 		 		if(model.getValueAt(row, Constants.GlobalQColumns.TYPE.index).toString().compareTo(Constants.GlobalQType.FIXED.description)==0) {
 		 			model.disableCell(row, Constants.GlobalQColumns.EXPRESSION.index);
 		 		}
@@ -723,21 +753,27 @@ class CustomJTable_MSMB extends CustomJTable  {
 		else	if(model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
 			String typeS = model.getValueAt(row, Constants.SpeciesColumns.TYPE.index).toString();
 			if(typeS.compareTo(Constants.SpeciesType.ASSIGNMENT.description)==0) {
-				model.enableCell(row, Constants.SpeciesColumns.EXPRESSION.index);
+				if(model.isViewEditable(row,Constants.SpeciesColumns.EXPRESSION.index)) 
+					model.enableCell(row, Constants.SpeciesColumns.EXPRESSION.index);
 				model.disableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			} else 	if(typeS.compareTo(Constants.SpeciesType.MULTISTATE.description)==0) {
 				model.disableCell(row, Constants.SpeciesColumns.EXPRESSION.index);
 				model.disableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			}else if(typeS.compareTo(Constants.SpeciesType.ODE.description)==0) {
-				model.enableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
-				model.enableCell(row, Constants.SpeciesColumns.EXPRESSION.index); //because ode needs it
+				if(model.isViewEditable(row,Constants.SpeciesColumns.INITIAL_QUANTITY.index)) 
+					model.enableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+				
+				if(model.isViewEditable(row,Constants.SpeciesColumns.EXPRESSION.index)) 
+						model.enableCell(row, Constants.SpeciesColumns.EXPRESSION.index); //because ode needs it
 			}	else if(typeS.compareTo(Constants.SpeciesType.FIXED.description)==0) {
 				model.disableCell(row, Constants.SpeciesColumns.EXPRESSION.index);
-				model.enableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+				if(model.isViewEditable(row,Constants.SpeciesColumns.INITIAL_QUANTITY.index)) 
+						model.enableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 	 		}
 			else if(typeS.compareTo(Constants.SpeciesType.REACTIONS.description)==0) {
 				model.disableCell(row, Constants.SpeciesColumns.EXPRESSION.index);
-				model.enableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+				if(model.isViewEditable(row,Constants.SpeciesColumns.INITIAL_QUANTITY.index)) 
+					model.enableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 		}
 		
 		}
@@ -806,7 +842,7 @@ class PopUpViewActionListener_2 implements ActionListener {
 			 try {
 				 MainGui.setView(whichView,table,row,column);
 				 
-			} catch (Exception e1) {
+			} catch (Throwable e1) {
 				e1.printStackTrace();
 			}
 		  }

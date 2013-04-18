@@ -51,6 +51,20 @@ public class ExtractElementsVisitor extends DepthFirstVoidVisitor {
 		}
 		
 	}
+	
+	@Override
+	public void visit(CompleteListOfExpression_Events n) {
+		elements.add(ToStringVisitor.toString(n.expression));
+		if(n.nodeListOptional.present()) {
+			 ArrayList<INode> list = (n.nodeListOptional.nodes);
+			 for(int i = 0; i < list.size(); i++) {
+				 NodeSequence element = (NodeSequence)list.get(i);
+				 elements.add(ToStringVisitor.toString(element.nodes.get(1)));
+			 }
+			
+		}
+		
+	}
 
 	
 }

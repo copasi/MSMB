@@ -1,5 +1,6 @@
 package msmb.model;
 
+import msmb.debugTab.DebugMessage;
 import msmb.gui.MainGui;
 
 import java.util.Vector;
@@ -39,7 +40,7 @@ public class GlobalQ {
 
 	public String getInitialValue() {		return initialValue;	}
 	
-	public void setInitialValue(MultiModel m, String initialValue) throws MySyntaxException {	
+	public void setInitialValue(MultiModel m, String initialValue) throws Throwable {	
 
 		if(initialValue.length()==0) return;
 		this.initialValue = initialValue;	
@@ -62,18 +63,20 @@ public class GlobalQ {
 	
 	
 	public String getExpression() {		return expression;	}
+	
 	//public void setExpression(String expression) {		this.expression = expression;	}
 	
-	public void setExpression(MultiModel m, String expression) throws MySyntaxException {	
-		if(expression.trim().length() == 0) return ;
+	public void setExpression(MultiModel m, String expr) throws Throwable {	
+		if(expr.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
+		if(expr.trim().length() == 0) return ;
 		try {
-			this.expression = expression;	
-			CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.EXPRESSION.description);
-		} catch (Exception ex) {
+			this.expression = expr;	
+			 CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.EXPRESSION.description);
+		} catch (Throwable ex) {
 			throw ex;
 		}
 		finally {
-			editableExpression = expression;
+			editableExpression = expr;
 		}
 	}
 	

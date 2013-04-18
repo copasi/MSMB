@@ -77,8 +77,7 @@ public class MultistateBuilderFrame extends JDialog	 {
                 
          this.setTabbedPane_enable(false);
         
-    		
-	}
+  }
 
 	
 	private JPanel getJContentPane() {
@@ -604,9 +603,8 @@ public class MultistateBuilderFrame extends JDialog	 {
 					try{
 						updateModel();
 						
-					} catch(Exception ex) {
-						//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
-							ex.printStackTrace();
+					} catch(Throwable ex) {
+						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 					}
 				}
 			});
@@ -614,10 +612,12 @@ public class MultistateBuilderFrame extends JDialog	 {
 		return jButton3;
 	}
 	
-	private void updateModel() throws Exception{
+	private void updateModel() throws Throwable{
 		this.species.setName(new String(this.jTextField_species.getText()));
 		Vector<String> reactions = new Vector<String>();
 		this.species.setType(Constants.SpeciesType.MULTISTATE.copasiType);
+		
+	
 		
 		this.parentFrame.updateModel_fromMultiBuilder(this.species, reactions);
 		
@@ -634,6 +634,16 @@ public class MultistateBuilderFrame extends JDialog	 {
 		
 		updateJTableConcentrationSpecies();
 		refreshListSites();
+		
+		if(sp.getCompartments().size() == 0) {
+			try {
+				sp.setCompartment(MainGui.multiModel, MainGui.compartment_default_for_dialog_window);
+			} catch (MySyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 		
 	}
 	

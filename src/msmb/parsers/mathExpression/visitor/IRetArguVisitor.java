@@ -107,6 +107,19 @@ public interface IRetArguVisitor<R, A> {
   public R visit(final CompleteListOfExpression n, final A argu);
 
   /**
+   * Visits a {@link CompleteListOfExpression_Events} node, whose children are the following :
+   * <p>
+   * expression -> Expression()<br>
+   * nodeListOptional -> ( #0 <SEMICOLON> #1 Expression() )*<br>
+   * nodeToken -> <EOF><br>
+   *
+   * @param n - the node to visit
+   * @param argu - the user argument
+   * @return the user return information
+   */
+  public R visit(final CompleteListOfExpression_Events n, final A argu);
+
+  /**
    * Visits a {@link SingleFunctionCall} node, whose children are the following :
    * <p>
    * name -> Name()<br>
@@ -417,10 +430,12 @@ public interface IRetArguVisitor<R, A> {
    * .......... .. | %30 <ARCSECH><br>
    * .......... .. | %31 <ARCCSCH><br>
    * .......... .. | %32 <ARCCOTH><br>
-   * .......... .. | %33 <LOG><br>
-   * .......... .. | %34 <EXP><br>
-   * .......... .. | %35 <NAN1><br>
-   * .......... .. | %36 <NAN2><br>
+   * .......... .. | %33 <MIN><br>
+   * .......... .. | %34 <MAX><br>
+   * .......... .. | %35 <LOG><br>
+   * .......... .. | %36 <EXP><br>
+   * .......... .. | %37 <NAN1><br>
+   * .......... .. | %38 <NAN2><br>
    *
    * @param n - the node to visit
    * @param argu - the user argument
