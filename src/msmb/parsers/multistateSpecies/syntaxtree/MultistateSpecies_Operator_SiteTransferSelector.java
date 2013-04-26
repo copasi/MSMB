@@ -4,16 +4,14 @@ package msmb.parsers.multistateSpecies.syntaxtree;
 import msmb.parsers.multistateSpecies.visitor.*;
 
 /**
- * JTB node class for the production MultistateSpecies_Operator_SingleSite:<br>
+ * JTB node class for the production MultistateSpecies_Operator_SiteTransferSelector:<br>
  * Corresponding grammar:<br>
  * nodeChoice -> . %0 #0 ( &0 <SUCC><br>
  * .......... .. . .. .. | &1 <PREC> )<br>
- * .......... .. . .. #1 <OPEN_R> #2 MultistateSpecies_Operator_SiteName() #3 <CLOSED_R><br>
- * .......... .. | %1 #0 MultistateSpecies_Operator_SiteName()<br>
- * .......... .. . .. #1 ( &0 $0 "=" $1 MultistateSpecies_Operator_SiteTransferSelector()<br>
- * .......... .. . .. .. | &1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> ) )?<br>
+ * .......... .. . .. #1 <OPEN_R> #2 MultistateSpecies_Name() #3 "." #4 MultistateSpecies_Operator_SiteName() #5 <CLOSED_R><br>
+ * .......... .. | %1 #0 MultistateSpecies_Name() #1 "." #2 MultistateSpecies_Operator_SiteName()<br>
  */
-public class MultistateSpecies_Operator_SingleSite implements INode {
+public class MultistateSpecies_Operator_SiteTransferSelector implements INode {
 
   /** Child node 1 */
   public NodeChoice nodeChoice;
@@ -26,7 +24,7 @@ public class MultistateSpecies_Operator_SingleSite implements INode {
    *
    * @param n0 - the child node
    */
-  public MultistateSpecies_Operator_SingleSite(final NodeChoice n0) {
+  public MultistateSpecies_Operator_SiteTransferSelector(final NodeChoice n0) {
     nodeChoice = n0;
   }
 

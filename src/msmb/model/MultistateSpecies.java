@@ -24,6 +24,7 @@ import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
 import msmb.parsers.multistateSpecies.MR_MultistateSpecies_ParserConstants;
 import msmb.parsers.multistateSpecies.ParseException;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
+import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_RangeString;
 import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 
@@ -102,8 +103,8 @@ public class MultistateSpecies extends Species {
 			throw new MySyntaxException(ex.getColumn(),"Problem parsing species:"+ex.getMessage(), Constants.TitlesTabs.SPECIES.description);
 
 		 } catch (Throwable e) {
-			// e.printStackTrace();
-			throw new MySyntaxException(Constants.SpeciesColumns.NAME.index,"Problem parsing species: "+e.getMessage(), Constants.TitlesTabs.SPECIES.description);
+					// e.printStackTrace();
+					throw new MySyntaxException(Constants.SpeciesColumns.NAME.index,"Problem parsing species: "+e.getMessage(), Constants.TitlesTabs.SPECIES.description);
 
 		}
 
@@ -550,10 +551,11 @@ public class MultistateSpecies extends Species {
 		       String key = site_it2.next().toString();  
 		       if(this.sites.containsKey(key)) { continue;}
 		       Vector states = (Vector)existing.sites.get(key);
-		       HashSet statesWithoutDuplicates = new HashSet();
-		       statesWithoutDuplicates.addAll(states);
-		       Vector ordered = new Vector(Arrays.asList(statesWithoutDuplicates.toArray()));
-		       this.sites.put(key, ordered);
+		       //HashSet statesWithoutDuplicates = new HashSet();
+		      // statesWithoutDuplicates.addAll(states);
+		     //  Vector ordered = new Vector(Arrays.asList(statesWithoutDuplicates.toArray()));
+		     // this.sites.put(key, ordered);
+		       this.sites.put(key, states);
 		 }  
 		
 		
@@ -580,6 +582,8 @@ public class MultistateSpecies extends Species {
 			     if((endRange-startRange)==states.size()-1) { //the range is complete
 			    	 //this.sites_fromRanges.add(key);
 			    	 this.sites_type.put(key, new SiteType(SiteType.RANGE));
+			     } else {
+			    	 this.sites_type.put(key, new SiteType(SiteType.LIST));
 			     }
 		     } else {
 		    	 this.sites_type.put(key, new SiteType(SiteType.LIST));

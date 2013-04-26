@@ -328,10 +328,16 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 				String element_kind_quantifier = getKindQuantifier(extensions);
 				String element_timing_quantifier = getTimingQuantifier(extensions);
 				String element_quantity_quantifier = getQuantityQuantifier(extensions);
-				String element_newView = element_substring;
-
 				
-					
+				String comp = CellParsers.extractCompartmentLabel(element_substring);
+				if(comp!= null && comp.length() > 0) {
+					String speciesName = CellParsers.extractMultistateName(element_substring);
+					if(multiModel.getSpecies(speciesName).getCompartments().size()==1) {
+						element_substring = speciesName;
+					}
+				}
+				
+				String element_newView = element_substring;
 				
 				Vector<Integer> where = multiModel.getWhereNameIsUsed(element_substring);
 				

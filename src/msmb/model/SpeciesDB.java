@@ -200,7 +200,7 @@ public class SpeciesDB {
 						}
 					}
 					
-					Species s = speciesVector.get(index); //QUIIIIIII con ind mi aggiunge una specie nuova quando rinomino una esistente
+					Species s = speciesVector.get(index);
 					String oldName = s.getDisplayedName();
 					if(oldName.compareTo(name)!=0) {
 						MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(MSMB_Element.SPECIES);

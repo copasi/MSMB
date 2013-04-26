@@ -254,12 +254,26 @@ public interface IVoidArguVisitor<A> {
    * .......... .. . .. .. | &1 <PREC> )<br>
    * .......... .. . .. #1 <OPEN_R> #2 MultistateSpecies_Operator_SiteName() #3 <CLOSED_R><br>
    * .......... .. | %1 #0 MultistateSpecies_Operator_SiteName()<br>
-   * .......... .. . .. #1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> )?<br>
+   * .......... .. . .. #1 ( &0 $0 "=" $1 MultistateSpecies_Operator_SiteTransferSelector()<br>
+   * .......... .. . .. .. | &1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> ) )?<br>
    *
    * @param n - the node to visit
    * @param argu - the user argument
    */
   public void visit(final MultistateSpecies_Operator_SingleSite n, final A argu);
+
+  /**
+   * Visits a {@link MultistateSpecies_Operator_SiteTransferSelector} node, whose children are the following :
+   * <p>
+   * nodeChoice -> . %0 #0 ( &0 <SUCC><br>
+   * .......... .. . .. .. | &1 <PREC> )<br>
+   * .......... .. . .. #1 <OPEN_R> #2 MultistateSpecies_Name() #3 "." #4 MultistateSpecies_Operator_SiteName() #5 <CLOSED_R><br>
+   * .......... .. | %1 #0 MultistateSpecies_Name() #1 "." #2 MultistateSpecies_Operator_SiteName()<br>
+   *
+   * @param n - the node to visit
+   * @param argu - the user argument
+   */
+  public void visit(final MultistateSpecies_Operator_SiteTransferSelector n, final A argu);
 
   /**
    * Visits a {@link MultistateSpecies_Operator_SiteName} node, whose children are the following :

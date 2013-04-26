@@ -779,7 +779,8 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
    * .......... .. . .. .. | &1 <PREC> )<br>
    * .......... .. . .. #1 <OPEN_R> #2 MultistateSpecies_Operator_SiteName() #3 <CLOSED_R><br>
    * .......... .. | %1 #0 MultistateSpecies_Operator_SiteName()<br>
-   * .......... .. . .. #1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> )?<br>
+   * .......... .. . .. #1 ( &0 $0 "=" $1 MultistateSpecies_Operator_SiteTransferSelector()<br>
+   * .......... .. . .. .. | &1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> ) )?<br>
    *
    * @param n - the node to visit
    * @param argu - the user argument
@@ -789,7 +790,8 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
     // .......... .. . .. .. | &1 <PREC> )
     // .......... .. . .. #1 <OPEN_R> #2 MultistateSpecies_Operator_SiteName() #3 <CLOSED_R>
     // .......... .. | %1 #0 MultistateSpecies_Operator_SiteName()
-    // .......... .. . .. #1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> )?
+    // .......... .. . .. #1 ( &0 $0 "=" $1 MultistateSpecies_Operator_SiteTransferSelector()
+    // .......... .. . .. .. | &1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> ) )?
     final NodeChoice n0C = n.nodeChoice;
     final INode n0CH = n0C.choice;
     switch (n0C.which) {
@@ -828,26 +830,125 @@ public class DepthFirstVoidArguVisitor<A> implements IVoidArguVisitor<A> {
         break;
       case 1:
         // %1 #0 MultistateSpecies_Operator_SiteName()
-        // .. #1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> )?
+        // .. #1 ( &0 $0 "=" $1 MultistateSpecies_Operator_SiteTransferSelector()
+        // .. .. | &1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> ) )?
         final NodeSequence n0CHS1 = (NodeSequence) n0CH;
         // #0 MultistateSpecies_Operator_SiteName()
         final INode n0CHS11A0 = n0CHS1.elementAt(0);
         n0CHS11A0.accept(this, argu);
-        // #1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> )?
+        // #1 ( &0 $0 "=" $1 MultistateSpecies_Operator_SiteTransferSelector()
+        // .. | &1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> ) )?
         final INode n0CHS11A1 = n0CHS1.elementAt(1);
         final NodeOptional n0CHS11A1P = (NodeOptional) n0CHS11A1;
         if (n0CHS11A1P.present()) {
-          final NodeSequence n0CHS11A1PS2 = (NodeSequence) n0CHS11A1P.node;
-          // $0 <OPEN_C>
-          final INode n0CHS11A1PS2A0 = n0CHS11A1PS2.elementAt(0);
-          n0CHS11A1PS2A0.accept(this, argu);
-          // $1 MultistateSpecies_Operator_SiteSingleState()
-          final INode n0CHS11A1PS2A1 = n0CHS11A1PS2.elementAt(1);
-          n0CHS11A1PS2A1.accept(this, argu);
-          // $2 <CLOSED_C>
-          final INode n0CHS11A1PS2A2 = n0CHS11A1PS2.elementAt(2);
-          n0CHS11A1PS2A2.accept(this, argu);
+          final NodeChoice n0CHS11A1PC = (NodeChoice) n0CHS11A1P.node;
+          final INode n0CHS11A1PCH = n0CHS11A1PC.choice;
+          switch (n0CHS11A1PC.which) {
+            case 0:
+              // &0 $0 "=" $1 MultistateSpecies_Operator_SiteTransferSelector()
+              final NodeSequence n0CHS11A1PCHS2 = (NodeSequence) n0CHS11A1PCH;
+              // $0 "="
+              final INode n0CHS11A1PCHS20A0 = n0CHS11A1PCHS2.elementAt(0);
+              n0CHS11A1PCHS20A0.accept(this, argu);
+              // $1 MultistateSpecies_Operator_SiteTransferSelector()
+              final INode n0CHS11A1PCHS20A1 = n0CHS11A1PCHS2.elementAt(1);
+              n0CHS11A1PCHS20A1.accept(this, argu);
+              break;
+            case 1:
+              // &1 ( $0 <OPEN_C> $1 MultistateSpecies_Operator_SiteSingleState() $2 <CLOSED_C> )
+              final NodeSequence n0CHS11A1PCHS3 = (NodeSequence) n0CHS11A1PCH;
+              // $0 <OPEN_C>
+              final INode n0CHS11A1PCHS3A0 = n0CHS11A1PCHS3.elementAt(0);
+              n0CHS11A1PCHS3A0.accept(this, argu);
+              // $1 MultistateSpecies_Operator_SiteSingleState()
+              final INode n0CHS11A1PCHS3A1 = n0CHS11A1PCHS3.elementAt(1);
+              n0CHS11A1PCHS3A1.accept(this, argu);
+              // $2 <CLOSED_C>
+              final INode n0CHS11A1PCHS3A2 = n0CHS11A1PCHS3.elementAt(2);
+              n0CHS11A1PCHS3A2.accept(this, argu);
+              break;
+            default:
+              // should not occur !!!
+              break;
+          }
         }
+        break;
+      default:
+        // should not occur !!!
+        break;
+    }
+  }
+
+  /**
+   * Visits a {@link MultistateSpecies_Operator_SiteTransferSelector} node, whose children are the following :
+   * <p>
+   * nodeChoice -> . %0 #0 ( &0 <SUCC><br>
+   * .......... .. . .. .. | &1 <PREC> )<br>
+   * .......... .. . .. #1 <OPEN_R> #2 MultistateSpecies_Name() #3 "." #4 MultistateSpecies_Operator_SiteName() #5 <CLOSED_R><br>
+   * .......... .. | %1 #0 MultistateSpecies_Name() #1 "." #2 MultistateSpecies_Operator_SiteName()<br>
+   *
+   * @param n - the node to visit
+   * @param argu - the user argument
+   */
+  public void visit(final MultistateSpecies_Operator_SiteTransferSelector n, final A argu) {
+    // nodeChoice -> . %0 #0 ( &0 <SUCC>
+    // .......... .. . .. .. | &1 <PREC> )
+    // .......... .. . .. #1 <OPEN_R> #2 MultistateSpecies_Name() #3 "." #4 MultistateSpecies_Operator_SiteName() #5 <CLOSED_R>
+    // .......... .. | %1 #0 MultistateSpecies_Name() #1 "." #2 MultistateSpecies_Operator_SiteName()
+    final NodeChoice n0C = n.nodeChoice;
+    final INode n0CH = n0C.choice;
+    switch (n0C.which) {
+      case 0:
+        // %0 #0 ( &0 <SUCC>
+        // .. .. | &1 <PREC> )
+        // .. #1 <OPEN_R> #2 MultistateSpecies_Name() #3 "." #4 MultistateSpecies_Operator_SiteName() #5 <CLOSED_R>
+        final NodeSequence n0CHS0 = (NodeSequence) n0CH;
+        // #0 ( &0 <SUCC>
+        // .. | &1 <PREC> )
+        final INode n0CHS00A0 = n0CHS0.elementAt(0);
+        final NodeChoice n0CHS00A0C = (NodeChoice) n0CHS00A0;
+        final INode n0CHS00A0CH = n0CHS00A0C.choice;
+        switch (n0CHS00A0C.which) {
+          case 0:
+            // &0 <SUCC>
+            n0CHS00A0CH.accept(this, argu);
+            break;
+          case 1:
+            // &1 <PREC>
+            n0CHS00A0CH.accept(this, argu);
+            break;
+          default:
+            // should not occur !!!
+            break;
+        }
+        // #1 <OPEN_R>
+        final INode n0CHS01A1 = n0CHS0.elementAt(1);
+        n0CHS01A1.accept(this, argu);
+        // #2 MultistateSpecies_Name()
+        final INode n0CHS01A2 = n0CHS0.elementAt(2);
+        n0CHS01A2.accept(this, argu);
+        // #3 "."
+        final INode n0CHS01A3 = n0CHS0.elementAt(3);
+        n0CHS01A3.accept(this, argu);
+        // #4 MultistateSpecies_Operator_SiteName()
+        final INode n0CHS01A4 = n0CHS0.elementAt(4);
+        n0CHS01A4.accept(this, argu);
+        // #5 <CLOSED_R>
+        final INode n0CHS01A5 = n0CHS0.elementAt(5);
+        n0CHS01A5.accept(this, argu);
+        break;
+      case 1:
+        // %1 #0 MultistateSpecies_Name() #1 "." #2 MultistateSpecies_Operator_SiteName()
+        final NodeSequence n0CHS1 = (NodeSequence) n0CH;
+        // #0 MultistateSpecies_Name()
+        final INode n0CHS11A0 = n0CHS1.elementAt(0);
+        n0CHS11A0.accept(this, argu);
+        // #1 "."
+        final INode n0CHS11A1 = n0CHS1.elementAt(1);
+        n0CHS11A1.accept(this, argu);
+        // #2 MultistateSpecies_Operator_SiteName()
+        final INode n0CHS11A2 = n0CHS1.elementAt(2);
+        n0CHS11A2.accept(this, argu);
         break;
       default:
         // should not occur !!!

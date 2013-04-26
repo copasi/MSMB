@@ -24,6 +24,9 @@ import msmb.utility.*;
 
 import org.COPASI.*;
 import org.apache.commons.lang3.tuple.MutablePair;
+
+import com.google.common.collect.Sets;
+
 import msmb.parsers.chemicalReaction.MR_ChemicalReaction_Parser;
 import msmb.parsers.chemicalReaction.syntaxtree.CompleteSpeciesWithCoefficient;
 import msmb.parsers.chemicalReaction.visitor.ExtractSubProdModVisitor;
@@ -2450,9 +2453,175 @@ public class MultiModel {
 		return parseExpressionAssignment(expression, expansionActionWithVolume);
 	}
 
-	
-	
+
 	public Vector expandReaction(Vector metabolites, int row) throws Throwable {
+		Vector ret = new Vector();
+		Vector subs = (Vector)metabolites.get(0);
+	    Vector prod =(Vector)metabolites.get(1);
+		Vector mod = (Vector)metabolites.get(2);
+	
+		
+		Vector non_multistate_react = new Vector();
+		Vector non_multistate_mod = new Vector();
+		Vector non_multistate_prod = new Vector();
+		HashMap<String, Vector<Species>> multistate_name_expansion_react = new HashMap<String, Vector<Species>>();
+		HashMap<String, Vector<Species>> multistate_name_expansion_mod = new HashMap<String, Vector<Species>>();
+		
+		
+		String sub_prefix = "SUB_";
+		String mod_prefix = "MOD_";
+		
+		for(int i = 0; i < subs.size(); i++) {
+			String species = (String) subs.get(i);
+			Species sp = this.getSpecies(species);
+			if(!(sp instanceof MultistateSpecies)) {
+				non_multistate_react.add(species);
+			} else {
+				//merge the possibly missing sites/states
+				//vv
+				MultistateSpecies msp = new MultistateSpecies(this, sp.getDisplayedName());
+				MultistateSpecies current = new MultistateSpecies(this, species);
+				current.mergeStatesWith_Minimum(msp);
+				//^^
+				MultistateSpecies multi = new MultistateSpecies(this,  sub_prefix+current);
+				multistate_name_expansion_react.put(multi.getSpeciesName(), multi.getExpandedSpecies(this));
+			}
+		}
+		for(int i = 0; i < mod.size(); i++) {
+			String species = (String) mod.get(i);
+			Species sp = this.getSpecies(species);
+			if(!(sp instanceof MultistateSpecies)) {
+				non_multistate_mod.add(species);
+			} else {
+				//merge the possibly missing sites/states
+				//vv
+				MultistateSpecies msp = new MultistateSpecies(this, sp.getDisplayedName());
+				MultistateSpecies current = new MultistateSpecies(this, species);
+				current.mergeStatesWith_Minimum(msp);
+				//^^
+				MultistateSpecies multi = new MultistateSpecies(this, mod_prefix+current);
+				multistate_name_expansion_mod.put(multi.getSpeciesName(), multi.getExpandedSpecies(this));
+			}
+		}
+		
+		 List<String> keys = new ArrayList<String>(multistate_name_expansion_react.keySet());
+		 List<Set<Species>> values = new Vector<Set<Species>>();
+		 Iterator react_iterator = multistate_name_expansion_react.keySet().iterator();
+		while (react_iterator.hasNext()) {  
+			String name = react_iterator.next().toString();  
+		    Vector expandedConf = multistate_name_expansion_react.get(name);
+		 	Set<Species> values_configurations = Sets.newLinkedHashSet(expandedConf);
+		    values.add(values_configurations);
+		}
+		
+		
+		keys = new ArrayList<String>(multistate_name_expansion_mod.keySet());
+		Iterator mod_iterator = multistate_name_expansion_mod.keySet().iterator();
+		while (mod_iterator.hasNext()) {  
+			String name = mod_iterator.next().toString();  
+		    Vector expandedConf = multistate_name_expansion_mod.get(name);
+		 	Set<Species> values_configurations = Sets.newLinkedHashSet(expandedConf);
+		    values.add(values_configurations);
+		}
+		   		    
+	    Set<List<Species>> combination = Sets.cartesianProduct(values);
+	
+	   for (List<Species> single : combination) {
+			  
+			//System.out.println("the combination is "+single);
+			Vector single_reaction_prod_toCombine = new Vector();
+			non_multistate_prod = new Vector();
+			for(int i = 0; i < prod.size(); i++) {
+				String species = (String) prod.get(i);
+				Species sp = this.getSpecies(species);
+				if(!(sp instanceof MultistateSpecies)) {
+					non_multistate_prod.add(species);
+				} else {
+					try {
+						InputStream is = new ByteArrayInputStream(species.getBytes("UTF-8"));
+						MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+						CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+						MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,single, sub_prefix);
+						start.accept(v);
+						Vector<Species> expansion = v.getProductExpansion();
+						single_reaction_prod_toCombine.add(expansion);
+					} catch(Throwable e) {
+						e.printStackTrace();
+						single_reaction_prod_toCombine.add(species);
+						continue;
+					}
+					
+				}
+			}
+			
+			values.clear();
+			
+			for (int i = 0; i< single_reaction_prod_toCombine.size(); ++i) {  
+			 	Set<Species> values_configurations = Sets.newLinkedHashSet((Vector)single_reaction_prod_toCombine.get(i));
+			    values.add(values_configurations);
+			}
+			   		    
+		    Set<List<Species>> combination2 = Sets.cartesianProduct(values);
+		    
+			 if(combination2.size() ==0) { //reaction with no reactants but I can have products (normal species or single states multistate)
+			    	non_multistate_prod = new Vector();
+					for(int i = 0; i < prod.size(); i++) {
+						String species = (String) prod.get(i);
+						non_multistate_prod.add(species);
+					}
+					Vector single_reaction = new Vector();
+					single_reaction.add(non_multistate_react);
+					single_reaction.add(non_multistate_prod);
+					single_reaction.add(non_multistate_mod);
+					ret.add(single_reaction);
+					
+			    }
+			 
+			for (List<Species> single2 : combination2) {
+				Vector single_reaction = new Vector();
+				Vector single_reaction_subs = new Vector();
+				Vector single_reaction_prod = new Vector();
+				Vector single_reaction_mod = new Vector();
+					
+				//System.out.println("the combination of product is "+single2);
+				single_reaction_subs.addAll(non_multistate_react);
+				single_reaction_prod.addAll(non_multistate_prod);
+				single_reaction_mod.addAll(non_multistate_mod);
+			
+				Iterator combination_element = single.iterator();
+				while(combination_element.hasNext()) {
+					Species element = (Species) combination_element.next();
+					String which = element.getSpeciesName().substring(0, sub_prefix.length());
+					String realName =  element.getSpeciesName().substring(sub_prefix.length());
+					if(which.compareTo(sub_prefix)==0) {
+						single_reaction_subs.add(realName);
+					} else {
+						single_reaction_mod.add(realName);
+					}
+				}
+				for(Species prodSp : single2) {
+					single_reaction_prod.add(prodSp.getSpeciesName());
+				}
+				
+				
+		
+				
+				single_reaction.add(single_reaction_subs);
+				single_reaction.add(single_reaction_prod);
+				single_reaction.add(single_reaction_mod);
+				ret.add(single_reaction);
+				
+			}
+			
+		 	
+		}
+		
+		return ret;
+	}
+	
+	
+	
+	/*public Vector expandReaction_old(Vector metabolites, int row) throws Throwable {
 		Vector ret = new Vector();
 		Vector subs = (Vector)metabolites.get(0);
 	    Vector prod =(Vector)metabolites.get(1);
@@ -2499,8 +2668,15 @@ public class MultiModel {
 				 InputStream is = new ByteArrayInputStream(pr.getBytes("UTF-8"));
 				 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
 				 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
-				 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,sp,multistate_reactants_single_states);
-				 start.accept(v);
+				 MultistateSpeciesVisitor v = null;
+				if(CellParsers.isSpeciesWithTransferSiteState(pr)) {
+					v = null;
+				 } else {
+					 Vector species = new Vector<Species>();
+					 species.add(sp);
+					 v = new MultistateSpeciesVisitor(this,species,multistate_reactants_single_states);
+				} 
+			start.accept(v);
 				 String exp = v.getProductExpansion();
 				 if(exp != null && v.getExceptions().size() == 0) { prod_expanded.add(exp);}
 				 else {
@@ -2538,7 +2714,7 @@ public class MultiModel {
 		
 		return ret;
 	}
-	
+	*/
 
 	private Vector getExpandedStatesReactant(String species) throws Throwable {
 	/*	Vector<Species> ret = new Vector<Species>();
@@ -3408,9 +3584,7 @@ public class MultiModel {
 		
 		String ret = new String();
 		if(expression.trim().length() ==0) return ret;
-		
-		
-		
+	
 		expression = CellParsers.replaceIfNotBetweenQuotes(expression, " < ", " lt ");
 		expression = CellParsers.replaceIfNotBetweenQuotes(expression, " > ", " gt ");
 		expression = CellParsers.replaceIfNotBetweenQuotes(expression, " <= ", " le ");
@@ -3464,8 +3638,7 @@ public class MultiModel {
 				            		real_elem2 = CellParsers.cleanName(real_elem2,true);
 				            	}
 							} catch (Exception e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)			e.printStackTrace();
 							}
 						
 						}
@@ -3521,7 +3694,6 @@ public class MultiModel {
 								real_elem += MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXTENSION_REACTION);
 								if(ref.compareTo("Flux")==0) real_elem +=  MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXTENSION_FLUX);
 								else real_elem += "SUFFIX_NOT_SUPPORTED";
-							
 							}
 					}		
 				}

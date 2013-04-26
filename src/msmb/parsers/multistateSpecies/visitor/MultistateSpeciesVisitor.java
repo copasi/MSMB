@@ -43,29 +43,59 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	 public MutablePair<Integer, Integer> getPureRangeLimits(String site) { return pureRange_sites.get(site);	}
 	 public MutablePair<String, String> getStringRangeLimits() { return new MutablePair<String, String>(current_lowString, current_highString) ;	}
 		
-	 private MultistateSpecies reactant = null;
-	private String expandedForm = null;
-	 private HashMap<String,String> current_site_nextState;
+	// Vector <Species> singleStateMultiStateSpecies = new Vector<Species>(); //for the expansion
+	
+	 private Vector<Species> expandedForm = null;
+	 private HashMap<String,String> current_site_nextState = new HashMap<String,String>();;
 	MultiModel multiModel = null;
 	private boolean enforceRangesNumeric;
 	
-	Vector <Species> singleStateMultiStateSpecies = new Vector<Species>(); //for the expansion
 	
-	public String getProductExpansion() {			return expandedForm;	}
+	public Vector<Species> getProductExpansion() {		
+		//if the product expansion is more than one, it means that there were some sites not specified between the reactant for transfer sites species
+		//I am not sure that we want to allow that, but I think that is the most general case
+		return expandedForm;	
+	}
 	
 	 public MultistateSpeciesVisitor(MultiModel mm) { multiModel = mm;	}
 	 
-	public MultistateSpeciesVisitor(MultiModel mm, Species multistate_reactant, Vector <Species> singleStateMultiStateSpecies) { //constructor used in the expansion
+	/*public MultistateSpeciesVisitor(MultiModel mm, Vector<Species> multistate_reactants, Vector <Species> singleStateMultiStateSpecies) { //constructor used in the expansion
 		 try {
 			 multiModel = mm;	
-			reactant = new MultistateSpecies(multiModel,multistate_reactant.getDisplayedName());
+			 for(int i = 0; i < multistate_reactants.size(); ++i) {
+				 MultistateSpecies reactant =  new MultistateSpecies(multiModel,multistate_reactants.get(i).getDisplayedName());
+				 reactants.add(reactant);
+			 }
 			this.singleStateMultiStateSpecies.addAll(singleStateMultiStateSpecies);
 			} catch (Exception e) {
 				e.printStackTrace();
 		}
-	}
+	}*/
 		
 	
+	 private Vector<MultistateSpecies> reactants = new Vector<MultistateSpecies>();
+		 
+	 public MultistateSpeciesVisitor(MultiModel mm, List<Species> reactants_combination, String sub_prefix) {
+		 multiModel = mm;
+		 Iterator it = reactants_combination.iterator();
+		 while(it.hasNext()) {
+			 Species sp = (Species) it.next();
+			 String speciesName = sp.getDisplayedName();
+			 String realName = null;
+			 if(speciesName.startsWith(sub_prefix)) {
+				 realName = speciesName.substring(sub_prefix.length());
+			 } else {
+				 continue;
+			 }
+			 try {
+				reactants.add(new MultistateSpecies(multiModel, realName));
+			} catch (Exception e) {
+					e.printStackTrace();
+			}
+		 }
+	 }
+	 
+	 
 	public MultistateSpeciesVisitor(MultiModel mm,	boolean isReactantReactionWithPossibleRanges) {
 		 multiModel = mm;	
 		 enforceRangesNumeric = !isReactantReactionWithPossibleRanges;
@@ -74,20 +104,90 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	boolean isRealMultiStateSpecies = false;
 	
 	public boolean isRealMultiStateSpecies() {
-		return isRealMultiStateSpecies;
+		return isRealMultiStateSpecies || isRealMultiStateSpecies_WithTransferSiteState;
 	}
+	
 	@Override
 	public void visit(CompleteMultistateSpecies_Operator n) {
+		expandedForm = new Vector<Species>();
 		isRealMultiStateSpecies = n.multistateSpecies_Operator.nodeOptional.present();
 		speciesName = ToStringVisitor.toString(n.multistateSpecies_Operator.multistateSpecies_Name.nodeChoice.choice);
-		if(reactant!= null) {
+		if(reactants.size()> 0) {
+						
 			current_site_nextState = new HashMap<String,String>();
 			super.visit(n);
 			
-			if(speciesName.compareTo(reactant.getSpeciesName())==0) {
-				expandedForm  = buildExpandedForm();
+			Iterator it_react = reactants.iterator();
+			boolean okExpanded = false;
+			while(it_react.hasNext()) {
+				MultistateSpecies react = (MultistateSpecies) it_react.next();
+				if(speciesName.compareTo(react.getSpeciesName())==0) { //normal succ/prec of a reactant
+					expandedForm.add(new Species(buildExpandedForm(react)));
+					okExpanded = true;
+					break;
+				}
+			}
+			
+			if(!okExpanded) {//complex or transfer site species
+				Species transferSite = multiModel.getSpecies(speciesName);
+				if(!(transferSite instanceof MultistateSpecies)) {
+					expandedForm.add(new Species(speciesName));
+					okExpanded = true;
+				} else {
+					Vector<String> currentTransferPieces = new Vector<String>();
+					
+					MultistateSpecies transferSiteSpecies = (MultistateSpecies)transferSite;
+					it_react = reactants.iterator();
+					while(it_react.hasNext()) {
+						MultistateSpecies react = (MultistateSpecies) it_react.next();
+						Iterator it_sites = current_site_nextState.keySet().iterator();
+						while(it_sites.hasNext()) {
+							String siteAssigned = (String) it_sites.next();
+							String transferFrom = current_site_nextState.get(siteAssigned);
+							//EXTRACT SUCC/PRED FROM TRANSFERFROM
+							if(transferFrom_extractSpeciesName(transferFrom).compareTo(react.getSpeciesName()) ==0 ) {
+								String siteFrom = transferFrom_extractSiteName(transferFrom);
+								Vector states = react.getSiteStates_complete(siteFrom);
+								if(states != null && states.size() == 1) {
+									currentTransferPieces.add(siteAssigned+"{"+states.get(0)+"}");
+								} else {
+									System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
+								}
+							}
+						}
+					}
+					
+					String currentTransferSpeciesPieced = new String(speciesName+"(");
+					for(int i = 0; i < currentTransferPieces.size(); ++i) {
+						String element = currentTransferPieces.get(i);
+						currentTransferSpeciesPieced += element+";";
+					}
+					currentTransferSpeciesPieced = currentTransferSpeciesPieced.substring(0,currentTransferSpeciesPieced.length()-1);
+					currentTransferSpeciesPieced += ")";
+				
+					try {
+						//merge the possibly missing sites/states
+						//vv
+						MultistateSpecies current = new MultistateSpecies(multiModel, currentTransferSpeciesPieced);
+						current.mergeStatesWith_Minimum(transferSiteSpecies);
+						//^^
+						expandedForm = current.getExpandedSpecies(multiModel);
+					} catch (Throwable e) {
+						e.printStackTrace();
+					}
+			
+				
+				}
+				
+				
+			}
+		
+			
+			
+		/*	if(reactants.size() == 1 && speciesName.compareTo(reactants.get(0).getSpeciesName())==0) {
+				expandedForm  = buildExpandedForm(reactants.get(0));
 				if(expandedForm == null) {
-						exceptions.add(new Exception("SOMEEEEEEEEEEEETHING WRONG"));
+						exceptions.add(new Exception("SOMETHING WRONG"));
 				}
 			} else {
 				boolean okExpanded = false;
@@ -98,7 +198,6 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 						try {
 							msp = new MultistateSpecies(multiModel, sp.getDisplayedName());
 						if(speciesName.compareTo(msp.getSpeciesName())==0) {
-							//THE PROBLEM IS HERE... FIGURE IT OUT HOW TO MERGE THE CURRENT SPECIFICATION WITH THE ONE IN THE REACTANTS
 							MultistateSpecies current = new MultistateSpecies(multiModel, ToStringVisitor.toString(n));
 							current.mergeStatesWith_Minimum(msp);
 							expandedForm = current.getDisplayedName();
@@ -111,11 +210,74 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 						
 					}
 				}
+				if(!okExpanded) {
+					okExpanded = buildExpandedFormFromTransferSiteState();
+				}
+				
+				
 				if(!okExpanded) expandedForm = speciesName;
-			}
+			}*/
+		} else {
+			super.visit(n);
 		}
 	}
 	
+	/*@Override
+	public void visit(CompleteMultistateSpecies_Operator n) {
+		isRealMultiStateSpecies = n.multistateSpecies_Operator.nodeOptional.present();
+		speciesName = ToStringVisitor.toString(n.multistateSpecies_Operator.multistateSpecies_Name.nodeChoice.choice);
+		if(reactants.size()> 0) {
+						
+			current_site_nextState = new HashMap<String,String>();
+			super.visit(n);
+			
+			if(reactants.size() == 1 && speciesName.compareTo(reactants.get(0).getSpeciesName())==0) {
+				expandedForm  = buildExpandedForm(reactants.get(0));
+				if(expandedForm == null) {
+						exceptions.add(new Exception("SOMETHING WRONG"));
+				}
+			} else {
+				boolean okExpanded = false;
+				for(int i = 0; i < singleStateMultiStateSpecies.size(); i++) {
+					Species sp = singleStateMultiStateSpecies.get(i);
+					if(CellParsers.isMultistateSpeciesName(sp.getDisplayedName())) {
+						MultistateSpecies msp = null;
+						try {
+							msp = new MultistateSpecies(multiModel, sp.getDisplayedName());
+						if(speciesName.compareTo(msp.getSpeciesName())==0) {
+							MultistateSpecies current = new MultistateSpecies(multiModel, ToStringVisitor.toString(n));
+							current.mergeStatesWith_Minimum(msp);
+							expandedForm = current.getDisplayedName();
+							okExpanded = true;
+							break;
+						}
+						} catch (Exception e) {
+							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e.printStackTrace();
+						}
+						
+					}
+				}
+				if(!okExpanded) {
+					okExpanded = buildExpandedFormFromTransferSiteState();
+				}
+				
+				
+				if(!okExpanded) expandedForm = speciesName;
+			}
+		} else {
+			super.visit(n);
+		}
+	}*/
+
+	
+	private String transferFrom_extractSpeciesName(String transferFrom) {
+		//TO CHANGE to account for the fact that . can exists in names, if between quotes
+			return transferFrom.substring(0, transferFrom.lastIndexOf("."));
+	}
+	private String transferFrom_extractSiteName(String transferFrom) {
+		//TO CHANGE to account for the fact that . can exists in names, if between quotes
+			return transferFrom.substring(transferFrom.lastIndexOf(".")+1);
+	}
 	@Override
 	public void visit(CompleteMultistateSpecies n) {
 		isRealMultiStateSpecies = n.multistateSpecies.nodeOptional.present();
@@ -123,6 +285,9 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 		super.visit(n);
 	}
 	 
+	
+	private boolean isRealMultiStateSpecies_WithTransferSiteState = false;
+	
 	@Override
 	 public void visit(MultistateSpecies_Operator_SingleSite n) {
 		 if(n.nodeChoice.which==0) {
@@ -136,54 +301,72 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 			 
 			 if(seq.nodes.size()>1) {
 				 NodeOptional opt = (NodeOptional)(seq.nodes.get(1));
-				 NodeSequence seq2 = (NodeSequence) (opt.node);
-				 if(seq2!=null) {	
-					 	String state = ToStringVisitor.toString(seq2.nodes.get(1));
-				 		current_site_nextState.put(siteName, state);
+				 NodeChoice nchoice = (NodeChoice) (opt.node);
+				 if(nchoice.which == 0) {
+					 NodeSequence seq2 = (NodeSequence) (nchoice.choice);
+					 if(seq2!=null) {	
+						 	isRealMultiStateSpecies_WithTransferSiteState = true;
+						 	String state = ToStringVisitor.toString(seq2.nodes.get(1));
+						 	 if(state.startsWith("{") &&state.endsWith("}"))
+						 		state = state.substring(1, state.length()-1);
+					 		current_site_nextState.put(siteName, state);
+					 }
+				 } else {
+					 NodeSequence seq2 = (NodeSequence) (nchoice.choice);
+					 if(seq2!=null) {	
+						 	String state = ToStringVisitor.toString(seq2);
+							 if(state.startsWith("{") &&state.endsWith("}"))
+							 		state = state.substring(1, state.length()-1);
+					 		current_site_nextState.put(siteName, state);
+					 }
+					 
 				 }
+				 
 			 }
 		 }
 	 }
 	 
 	 @SuppressWarnings("unchecked")
-	private String buildExpandedForm() {
-		 if(speciesName.compareTo(reactant.getSpeciesName())!= 0) {
-			 return speciesName;
-		 }
+	private String buildExpandedForm(MultistateSpecies reactant) {
 		 String ret = new String();
-		 MultistateSpecies multi = (MultistateSpecies) multiModel.getSpecies(speciesName);
-		 ret+= speciesName + "(";
-		// HashMap product_sites = new HashMap();
-			
-		//  current_site_operator.keySet().iterator();
-		 Iterator<String> it = reactant.getSitesNames().iterator();
-		 while(it.hasNext()) {
-				String site = it.next();
-				String state=(String) reactant.getSiteStates_complete(site).get(0);
-				if(!current_site_nextState.containsKey(site)) {
-					ret += site + "{" + state + "};";
-				} else {
-					String nextState = null;
-					String val = current_site_nextState.get(site);
-					if(val.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.SUCC))==0) {
-						nextState = multi.getSucc(site,state);//,false);
-					} else if(val.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.PREC))==0) {
-						nextState = multi.getPrec(site,state);//,false);
-					}/* else if(val.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.CIRC_R_SHIFT))==0) {
-						nextState = multi.getSucc(site,state,true);
-					} else if(val.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.CIRC_L_SHIFT))==0) {
-						nextState = multi.getPrec(site,state,true);
-					}*/ else {
-						nextState = val;
+		if(speciesName.compareTo(reactant.getSpeciesName())!= 0) {
+			return speciesName;
+		}
+			 MultistateSpecies multi = (MultistateSpecies) multiModel.getSpecies(speciesName);
+			 ret+= speciesName + "(";
+			// HashMap product_sites = new HashMap();
+				
+			//  current_site_operator.keySet().iterator();
+			 Iterator<String> it = reactant.getSitesNames().iterator();
+			 while(it.hasNext()) {
+					String site = it.next();
+					String state=(String) reactant.getSiteStates_complete(site).get(0);
+					if(!current_site_nextState.containsKey(site)) {
+						ret += site + "{" + state + "};";
+					} else {
+						String nextState = null;
+						String val = current_site_nextState.get(site);
+						if(val.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.SUCC))==0) {
+							nextState = multi.getSucc(site,state);//,false);
+						} else if(val.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.PREC))==0) {
+							nextState = multi.getPrec(site,state);//,false);
+						}/* else if(val.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.CIRC_R_SHIFT))==0) {
+							nextState = multi.getSucc(site,state,true);
+						} else if(val.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.CIRC_L_SHIFT))==0) {
+							nextState = multi.getPrec(site,state,true);
+						}*/ else {
+							nextState = val;
+						}
+						if(nextState==null) return null;
+						ret += site + "{" + nextState + "};";
+						
 					}
-					if(nextState==null) return null;
-					ret += site + "{" + nextState + "};";
 					
 				}
-				
-			}
-		ret = ret.substring(0, ret.length()-1);
-		ret += ")";	
+			ret = ret.substring(0, ret.length()-1);
+			ret += ")";	
+		
+		 
 		return ret;
 	}
 	 
@@ -295,7 +478,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 					  		range.accept(this);
 					  		pureRange_sites.put(site, new MutablePair<Integer,Integer>(current_low,current_high));
 					  } catch (Exception e) {
-						  e.printStackTrace();
+						  //e.printStackTrace();
 						  exceptions.add(new ParseException("Range for site "+site+" used with non-integer values ("+states+")"));
 					}
 				  	}
@@ -309,6 +492,12 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	public HashSet<String> getCircularSites() {
 		//System.out.println("getCircularSites: " +circular_sites);
 		return circular_sites;
+	}
+	
+	
+
+	public boolean isRealMultiStateSpecies_WithTransferSiteState() {
+		return isRealMultiStateSpecies_WithTransferSiteState;
 	}
 	
 			  

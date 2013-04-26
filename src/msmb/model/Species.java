@@ -228,6 +228,10 @@ public class Species  {
 	}
 
 
+	@Override
+	public String toString() {
+		return this.getDisplayedName();
+	}
 
 
 

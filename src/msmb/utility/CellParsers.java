@@ -169,9 +169,6 @@ public class CellParsers {
 	
 	public static boolean isMultistateSpeciesName(String name) {
 		if( MainGui.importFromSBMLorCPS) {
-			//TO FIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIX
-			//I WILL NEED TO CHECK THE ANNOTATION
-			//AND IF THERE IS NO ANNOTATION, EVEN IF IT FOLLOWS OUR SYNTAX I SHOULD SAY IS NOT A MULTIASTATE SPECIES
 			return false;
 		}
 		if(name.startsWith("\"")&&name.endsWith("\"")) return false;
@@ -1201,8 +1198,17 @@ public class CellParsers {
 			try {
 				ms = new MultistateSpecies(null, name);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
+				 try {
+					 InputStream is = new ByteArrayInputStream(name.getBytes("UTF-8"));
+					 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+					 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+					 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(null);
+					 start.accept(v);
+					 return v.getSpeciesName(); 
+				 } catch (Throwable ex ){
+					 ex.printStackTrace();
+				 }
 			}
 			ret = ms.getSpeciesName();
 			
@@ -1224,6 +1230,25 @@ public class CellParsers {
 		}
 		return false;
 		
+	}
+
+
+
+	public static boolean isSpeciesWithTransferSiteState(String pr) {
+		
+	
+		InputStream is;
+		try {
+			is = new ByteArrayInputStream(pr.getBytes("UTF-8"));
+			 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+			 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(null);
+			 start.accept(v);
+			 return v.isRealMultiStateSpecies_WithTransferSiteState(); 
+		} catch (Throwable e1) {
+			e1.printStackTrace();
+			return false;
+		}
 	}
 
 

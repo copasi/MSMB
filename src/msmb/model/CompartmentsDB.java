@@ -126,7 +126,7 @@ public class CompartmentsDB {
 				compIndexes.put(c.getName(), ind);
 				compVector.put(ind,c); //take the place even if expressions contains error
 				multiModel.addNamedElement(c.getName(), Constants.TitlesTabs.COMPARTMENTS.index);
-				c.setExpression(multiModel,expression);
+				c.setExpression(multiModel,expression.trim());
 				c.setInitialVolume(multiModel,initial);
 				compVector.put(ind,c);
 				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind+1);

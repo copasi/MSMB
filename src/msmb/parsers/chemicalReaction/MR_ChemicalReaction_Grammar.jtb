@@ -111,7 +111,30 @@ public class MR_ChemicalReaction_Parser{  public static void main(String args 
 
 
 
-      expression = new String("A + B ->c COMPLEX(A, B)");
+      expression = new String("SBF(p{0}) + Whi5(p{0:2}) -> CmplxSBFWhi5(sbf_p=SBF.p;whi5_p=Whi5.p)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+       expression = new String("CmplxSBFWhi5 -> SBF(p=CmplxSBFWhi5.sbf_p) + Whi5(p=CmplxSBFWhi5.whi5_p)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+       expression = new String("CmplxSBFWhi5 -> SBF(p=CmplxSBFWhi5.sbf_p)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("CmplxSBFWhi5 -> SBF(p=succ(CmplxSBFWhi5.sbf_p))");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  react = new MR_ChemicalReaction_Parser(is);
   	  start = react.CompleteReaction();
@@ -120,13 +143,9 @@ public class MR_ChemicalReaction_Parser{  public static void main(String args 
       System.out.println("...................................");
 
 
-         expression = new String("COMPLEX(A, B) ->d SINGLE_SPECIES");
-      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
-	  react = new MR_ChemicalReaction_Parser(is);
-  	  start = react.CompleteReaction();
-      v = new MyVisitor();
-      start.accept(v);
-      System.out.println("...................................");
+
+
+       
       
     }
     catch (Exception e)
@@ -176,9 +195,6 @@ public void visit(SpeciesWithCoeff n) {
 | < SQRT: "sqrt">
 | < LOG: "log">
 }*/
-
-TOKEN:{
-  < SINGLE_SPECIES : "SINGLE_SPECIES">}
 TOKEN : /* LITERALS */{
     < INTEGER_LITERAL :    < DECIMAL_LITERAL > ([ "l", "L" ])?  | < HEX_LITERAL > ([ "l", "L" ])?  | < OCTAL_LITERAL > ([ "l", "L" ])?     >
 |
@@ -195,7 +211,7 @@ TOKEN:{
 TOKEN :
 {
   < IDENTIFIER : < STRING_LITERAL > |
-   				 (< LETTER >|<DIGIT>|";"|","|", "|" , "|" ,"|< STRING_LITERAL >)* (<LETTER>|<DIGIT>|< STRING_LITERAL >)>
+   				 (< LETTER >|<DIGIT>|";"|"="|"= "|" = "|","|", "|" , "|" ,"|< STRING_LITERAL >)* (<LETTER>|<DIGIT>|< STRING_LITERAL >)>
 |  < #DIGIT:   ["0"-"9"]  >
 |  < #STRING_LITERAL:
       "\""
@@ -225,11 +241,7 @@ TOKEN :
 
 TOKEN:
 {
- 
   	< ARROW : " ->" > |   < ARROW2 : "-> " >
-| 	< COMPLEXATION_ARROW : < ARROW> "c" >
-|  	< DECOMPLEXATION_ARROW : < ARROW> "d" >
-
 }
 
 
@@ -250,11 +262,8 @@ void Reaction() :{}
 {
 
 (AdditiveExpression())? (Blank())*
-	( < ARROW > (LOOKAHEAD(2)(" ")(Blank())* (AdditiveExpression())?)* 
-		//| < COMPLEXATION_ARROW  > 	(LOOKAHEAD(2)(" ")(Blank())* (AdditiveExpression())?)+ 
-		//| < DECOMPLEXATION_ARROW  > 	(Blank())* < SINGLE_SPECIES > 
-	) ((Blank())*";"(Blank())* ListModifiers())?
-   		
+	 < ARROW > (LOOKAHEAD(2)(" ")(Blank())* (AdditiveExpression())?)* 
+	 ((Blank())*";"(Blank())* ListModifiers())?
  | < ARROW2 > (Blank())* (AdditiveExpression())? ((Blank())*";"(Blank())* ListModifiers())?
   
 }

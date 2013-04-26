@@ -1,5 +1,8 @@
 package msmb.model;
 
+import msmb.commonUtilities.ChangedElement;
+import msmb.commonUtilities.MSMB_Element;
+import msmb.commonUtilities.MSMB_InterfaceChange;
 import msmb.debugTab.DebugConstants;
 import msmb.debugTab.DebugMessage;
 import msmb.gui.MainGui;
@@ -87,6 +90,12 @@ public class GlobalQDB {
 		int columnToAnalyze = -1;;
 		try{
 			if(ind == null) {//it is a new globalq
+				MSMB_InterfaceChange changeToReport_IntfGlq = new MSMB_InterfaceChange(MSMB_Element.GLOBAL_QUANTITY);
+				changeToReport_IntfGlq.setElementBefore(null);
+				changeToReport_IntfGlq.setElementAfter(new ChangedElement(name,MSMB_Element.GLOBAL_QUANTITY));
+				MainGui.setChangeToReport(changeToReport_IntfGlq);
+				
+				
 				GlobalQ c = new GlobalQ(name);
 				c.setNotes(notes);
 				c.setType(type);
@@ -103,6 +112,16 @@ public class GlobalQDB {
 				return globalQVector.size()-1;
 			} else { //globalQ already defined
 				GlobalQ c = globalQVector.get(ind);
+				
+				String oldName = c.getName();
+				if(oldName.compareTo(name)!=0) {
+					MSMB_InterfaceChange changeToReport_IntfGlq = new MSMB_InterfaceChange(MSMB_Element.GLOBAL_QUANTITY);
+					changeToReport_IntfGlq.setElementBefore(new ChangedElement(oldName,MSMB_Element.GLOBAL_QUANTITY));
+					changeToReport_IntfGlq.setElementAfter(new ChangedElement(name,MSMB_Element.GLOBAL_QUANTITY));
+					MainGui.setChangeToReport(changeToReport_IntfGlq);
+				}
+				c.setName(name);
+				
 				globalQIndexes.put(name, ind);
 				multiModel.addNamedElement(name, Constants.TitlesTabs.GLOBALQ.index);
 				columnToAnalyze  = Constants.GlobalQColumns.EXPRESSION.index;
