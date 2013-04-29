@@ -89,7 +89,10 @@ public class GlobalQDB {
 		
 		int columnToAnalyze = -1;;
 		try{
-			if(ind == null) {//it is a new globalq
+		//	if(ind == null) {//it is a new globalq
+			
+			if(!globalQIndexes.containsKey(name) && 
+					(index >= globalQIndexes.size() || index == -1)) { //it is a new globalq
 				MSMB_InterfaceChange changeToReport_IntfGlq = new MSMB_InterfaceChange(MSMB_Element.GLOBAL_QUANTITY);
 				changeToReport_IntfGlq.setElementBefore(null);
 				changeToReport_IntfGlq.setElementAfter(new ChangedElement(name,MSMB_Element.GLOBAL_QUANTITY));
@@ -111,7 +114,7 @@ public class GlobalQDB {
 				globalQVector.put(ind,c);
 				return globalQVector.size()-1;
 			} else { //globalQ already defined
-				GlobalQ c = globalQVector.get(ind);
+				GlobalQ c = globalQVector.get(index);
 				
 				String oldName = c.getName();
 				if(oldName.compareTo(name)!=0) {
@@ -122,7 +125,7 @@ public class GlobalQDB {
 				}
 				c.setName(name);
 				
-				globalQIndexes.put(name, ind);
+				globalQIndexes.put(name, index);
 				multiModel.addNamedElement(name, Constants.TitlesTabs.GLOBALQ.index);
 				columnToAnalyze  = Constants.GlobalQColumns.EXPRESSION.index;
 				c.setExpression(multiModel,expression);
@@ -131,10 +134,10 @@ public class GlobalQDB {
 				c.setInitialValue(multiModel,initialValue);
 				c.setNotes(notes);
 				c.setType(type);
-				globalQVector.put(ind,c);
+				globalQVector.put(index,c);
 				
 				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.GLOBALQ.description, ind);
-				return ind;
+				return index;
 			}
 		} catch (MySyntaxException ex) {
 			if(ex.getColumn()==Constants.GlobalQColumns.EXPRESSION.index && expression.trim().length() >0) {
