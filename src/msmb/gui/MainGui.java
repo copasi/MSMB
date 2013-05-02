@@ -71,6 +71,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		fromInterface = true;	
 		MainGui.cleanUpModel();
 		try {
+		
 			loadCopasiDataModel_fromKey(copasiKey);
 		} catch (Throwable e) {
 				e.printStackTrace();
@@ -82,8 +83,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		try {
 			fromInterface = true;	
 			System.out.println("parameter : " +copasiKey);
+			multiModel.setCopasiKey(copasiKey);
 			String savedIn = saveCPS(null, true);
-				System.out.println("savedIn : " +savedIn);
+			System.out.println("savedIn : " +savedIn);
 			return true;
 		} catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
@@ -122,6 +124,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	public void addSpecies(String name, String initialQuantity, String compartment) throws Exception {
 		boolean oldAutocompleteWithDefaults = autocompleteWithDefaults;
 		boolean oldShowDefaultDialogWindow = show_defaults_dialog_window;
+		autocompleteWithDefaults = true;
+		show_defaults_dialog_window = false;
+		addDefaultCompartment_ifNecessary(compartment);
 		multiModel.addSpecies_fromInterface(name, initialQuantity, compartment);
 		updateSpeciesTableFromMultiModel();
 		autocompleteWithDefaults = oldAutocompleteWithDefaults;

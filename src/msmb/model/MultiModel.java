@@ -4828,7 +4828,7 @@ public class MultiModel {
 	}
 	
 	public void removeReaction(int atIndex) throws Throwable {
-		
+		this.reactionDB.removeReaction(atIndex);
 		tableReactionmodel.removeRow(atIndex);
 		tableReactionmodel.fireTableDataChanged();
 	}
@@ -5001,13 +5001,19 @@ public Integer getGlobalQIndex(String name) {
 		HashMap<String, String> entry_q = new HashMap<String, String>();
 		entry_q.put(name,initialQuantity);
 		try {
+			
+			
 			this.speciesDB.addChangeSpecies(-1,new String(),name,entry_q,Constants.SpeciesType.REACTIONS.copasiType,compartment,"",false,"",false,true);
 		} catch (Throwable e) {
-				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-				throw new Exception("Error adding the new Species");
+				//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+				throw new Exception("Error adding the new Species: "+e.getMessage());
 		}
 
 		return;
+	}
+
+	public void setCopasiKey(String copasiKey) {
+		this.copasiDataModel_key = copasiKey;
 	}
 
 	

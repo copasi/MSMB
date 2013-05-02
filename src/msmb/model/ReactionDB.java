@@ -227,5 +227,14 @@ public class ReactionDB {
 	public Integer getReactionIndex(String name) {
 		return -1;
 	}
+
+
+	public boolean removeReaction(int toBeRemoved) {
+			int size = reactionVector.size();
+			if(toBeRemoved+1>=size) return true;
+			reactionVector.remove(toBeRemoved);
+			
+			return true;
+	}
 		
 }
