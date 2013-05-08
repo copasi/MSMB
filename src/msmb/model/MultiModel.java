@@ -4738,6 +4738,10 @@ public class MultiModel {
 		}
 	}
 	
+	public void removeInvisibleSpecies(String name) {
+			this.speciesDB.removeInvisibleSpecies(name);
+	}
+	
 	public void removeGlobalQ(int[] selected) {
 		for(int i = 0; i < selected.length; i++) {
 			this.globalqDB.removeGlobalQ(selected[i]-i);
@@ -4979,6 +4983,14 @@ public Integer getGlobalQIndex(String name) {
 	public Vector<String> getAllSpecies_names() {
 		return speciesDB.getAllNames();
 	}
+	
+	public Vector<String> getAllInvisibleSpecies_names() {
+		return speciesDB.getAllInvisibleNames();
+	}
+	
+	public Vector<Species> getAllInvisibleSpecies() {
+		return speciesDB.getAllInvisibleSpecies();
+	}
 
 	public Vector<String> getAllGlobalQuantities_names() {
 		return globalqDB.getAllNames();
@@ -5014,6 +5026,12 @@ public Integer getGlobalQIndex(String name) {
 
 	public void setCopasiKey(String copasiKey) {
 		this.copasiDataModel_key = copasiKey;
+	}
+
+	public void addInvisibleSpecies(String name, String initialQuantity,
+			String compartment) throws Exception {
+		this.speciesDB.addInvisibleSpecies(name, initialQuantity, compartment);
+		
 	}
 
 	

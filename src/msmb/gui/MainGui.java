@@ -94,6 +94,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 	
 	public Vector<String> getMSMB_listOfSpecies() { return multiModel.getAllSpecies_names();}
+	public Vector<String> getMSMB_listOfInvisibleSpecies() { return multiModel.getAllInvisibleSpecies_names();}
 	public Vector<String> getMSMB_listOfGlobalQuantities() { return multiModel.getAllGlobalQuantities_names();}
 	public Vector<String> getMSMB_listOfCompartments() { return multiModel.getAllCompartments_names();}
 	
@@ -105,7 +106,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	static HashMap<MSMB_Element, ChangeListener> changeListeners = new HashMap<MSMB_Element, ChangeListener>();
 	
-	//public void addChangeListener(ChangeListener c, Class cl) {	changeListeners.put(cl, c); 	}
 	public void addChangeListener(ChangeListener c, MSMB_Element el) {	changeListeners.put(el, c); 	}
 	
 	public static void setChangeToReport(MSMB_InterfaceChange changeToReport) {
@@ -116,6 +116,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	public void loadFromMSMB(byte[] msmbByteArray) {
 		importTablesMultistateFormat_fromInterface(msmbByteArray);
 	}
+	
 	public byte[] saveToMSMB() {
 		  ExportMultistateFormat.setFile(null);
           return  ExportMultistateFormat.export_MSMB_format(true);
@@ -129,6 +130,22 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		addDefaultCompartment_ifNecessary(compartment);
 		multiModel.addSpecies_fromInterface(name, initialQuantity, compartment);
 		updateSpeciesTableFromMultiModel();
+		autocompleteWithDefaults = oldAutocompleteWithDefaults;
+		show_defaults_dialog_window = oldShowDefaultDialogWindow;
+		return;
+	}
+	
+	public void removeInvisibleSpecies(String name) {
+		multiModel.removeInvisibleSpecies(name); 
+	}
+	
+	public void addInvisibleSpecies(String name, String initialQuantity, String compartment) throws Exception {
+		boolean oldAutocompleteWithDefaults = autocompleteWithDefaults;
+		boolean oldShowDefaultDialogWindow = show_defaults_dialog_window;
+		autocompleteWithDefaults = true;
+		show_defaults_dialog_window = false;
+		addDefaultCompartment_ifNecessary(compartment);
+		multiModel.addInvisibleSpecies(name, initialQuantity, compartment);
 		autocompleteWithDefaults = oldAutocompleteWithDefaults;
 		show_defaults_dialog_window = oldShowDefaultDialogWindow;
 		return;

@@ -8,6 +8,7 @@ import msmb.utility.*;
 
 public class Species  {
 	String name = new String();
+	boolean invisibleSpecies = false;
 	Vector<String> initialQuantity = new Vector<String>(); 
 	Vector<String> compartment = new Vector<String>(); 
 	int type = Constants.SpeciesType.REACTIONS.copasiType;
@@ -231,6 +232,10 @@ public class Species  {
 	@Override
 	public String toString() {
 		return this.getDisplayedName();
+	}
+
+	public void setInvisible(boolean b) {
+		invisibleSpecies = b;		
 	}
 
 

@@ -9,6 +9,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
 
+import javax.mail.internet.NewsAddress;
+
 import msmb.utility.*;
 
 import msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
@@ -20,6 +22,7 @@ import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 
 
 public class SpeciesDB {
+	Vector< Species> invisibleSpeciesVector = new Vector<Species>();
 	TreeMap<Integer, Species> speciesVector = new TreeMap<Integer, Species>();
 	HashMap<String, Integer> speciesIndexes = new HashMap<String, Integer>();
 	MultiModel multiModel = null;
@@ -279,6 +282,21 @@ public class SpeciesDB {
 		return n;
 	}
 	
+	public Vector<String> getAllInvisibleNames() {
+		Vector n = new Vector();
+		for(int i = 0; i < invisibleSpeciesVector.size(); i++) {
+			Species s = invisibleSpeciesVector.get(i);
+			if(s!=null)n.add(s.getSpeciesName());
+		}
+		return n;
+	}
+	
+	public Vector<Species> getAllInvisibleSpecies() {
+		Vector n = new Vector();
+		n.addAll(this.invisibleSpeciesVector);
+		return n;
+	}
+	
 	
 
 	public int getNumSpeciesExpanded() throws Throwable {
@@ -333,6 +351,10 @@ public class SpeciesDB {
 			speciesIndexes.put(succ.getSpeciesName(), i);
 		}
 		return true;
+	}
+	
+	public boolean removeInvisibleSpecies(String name){
+		return invisibleSpeciesVector.remove(name);
 	}
 	
 	public void removeSpecies(Vector species_default_for_dialog_window) throws Exception {
@@ -575,5 +597,27 @@ public class SpeciesDB {
 		Vector<String> c = sp.getCompartments();
 		if(c== null || c.size()<=1) return false;
 		else return true;
+	}
+
+	public void addInvisibleSpecies(String name, String initialQuantity,
+			String compartment) throws Exception {
+		
+		if(this.speciesIndexes.get(name)!=null) throw new Exception("Problem adding invisible Species: name conflicting with a visible species");
+		
+		Species invisible = new Species(name);
+		
+		try {
+			invisible.setCompartment(multiModel, compartment);
+			invisible.setInitialQuantity(multiModel, initialQuantity);
+		} catch (Throwable e) {
+			throw new Exception("Problem adding invisible Species: problem parsing compartment or initialQuantity");
+		}
+		
+		invisible.setInvisible(true);
+		
+		this.invisibleSpeciesVector.add(invisible);
+
+		return;
+		
 	}
 }

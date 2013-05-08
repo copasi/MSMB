@@ -9,6 +9,8 @@ import javax.swing.JOptionPane;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import com.sun.mail.handlers.multipart_mixed;
+
 import msmb.debugTab.DebugMessage;
 
 import msmb.model.Function;
@@ -124,6 +126,10 @@ class ExportMultistateFormat {
 			modelProperties.add(new Boolean(MainGui.quantityIsConc).toString());
 			
 			out.writeObject(modelProperties);
+			
+			Vector invisibleSpecies = MainGui.multiModel.getAllInvisibleSpecies();
+			out.writeObject(invisibleSpecies);
+			
 			out.flush();
 			out.close();
 			if(mainW!=null)mainW.progress(100);
@@ -206,6 +212,19 @@ class ExportMultistateFormat {
 			MainGui.quantityUnit = Integer.parseInt(modelProperties.get(3));
 			MainGui.exportConcentration = Boolean.parseBoolean(modelProperties.get(4));
 			MainGui.quantityIsConc = Boolean.parseBoolean(modelProperties.get(5));
+			
+			try{
+					Vector<Species> invisibleSpecies = (Vector<Species>)in.readObject();
+					if(invisibleSpecies!=null) {
+						for(Species sp : invisibleSpecies) {
+							mainW.addInvisibleSpecies(sp.getSpeciesName(), sp.getInitialQuantity_listString(), sp.getCompartment_listString());
+						}
+					}	
+			} catch(Exception e) {
+				//problems reading the invisibleSpecies, it's ok for old msmb files
+				//e.printStackTrace();
+			}
+			
 			
 			in.close();
 		} catch (Exception e) {

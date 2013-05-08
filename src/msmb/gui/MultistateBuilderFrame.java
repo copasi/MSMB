@@ -36,6 +36,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 	private MultistateSpecies species; 
 	private MainGui parentFrame;
 	private JButton jButton1 = null;
+	private JButton jButton2 = null;
 	private JButton jButton3 = null;
 	private CustomFocusTraversalPolicy newPolicy;
 	private JPanel upper = null;
@@ -136,6 +137,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 		this.jListSite.setEnabled(b);
 		this.jButton.setEnabled(b);
 		this.jButton1.setEnabled(b);
+		this.jButton2.setEnabled(b);
 		if(!b) jButton.setForeground(Color.lightGray);
 		else jButton.setForeground(jButton1.getForeground());
 	}
@@ -215,6 +217,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 			jPanelsites.add(jLabel2, null);
 			jPanelsites.add(jLabel3, null);
 			jPanelsites.add(getJButton1(), null);
+			jPanelsites.add(getJButton2(), null);
 			jPanel.add(jPanelsites, gridBagConstraints);
 			
 			lblWarning = new JLabel("<html><p ALIGN=\"LEFT\">WARNING: any change in the sites' definition will reset all the defined <p ALIGN=\"LEFT\">initial quantities to the default initial value of "+MainGui.species_defaultInitialValue+" </html>");
@@ -435,14 +438,37 @@ public class MultistateBuilderFrame extends JDialog	 {
 			jButton.setText("<html><p ALIGN=\"CENTER\">Add /<p ALIGN=\"CENTER\">Change</html>");
 			jButton.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
-					addNewSite();
+					
+					if(name_before.trim().length() == 0) {
+						addNewSite();
+					} else {
+						applyChangeSite();
+					}
+					
+					name_before = new String();
+					states_before.clear();
 				}
 			});
 		}
 		return jButton;
 	}
 	
+private void applyChangeSite() {
+		
+		String sp = this.jTextField_species.getText().trim();
+		if(sp.length() <= 0) return;
+	
+		String name = this.jTextField_newSite.getText().trim();
+		if(name.length() <= 0) return;
+		
+		this.species.deleteSite(name_before);
+		
+		addNewSite();
+}
+
+
 	private void addNewSite() {
+		
 		String sp = this.jTextField_species.getText().trim();
 		if(sp.length() <= 0) return;
 	
@@ -477,7 +503,6 @@ public class MultistateBuilderFrame extends JDialog	 {
 
 		//this.refreshListSitesInTable();
 		this.refreshListSites();
-	
 		
 	}
 	
@@ -550,7 +575,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 			jListSite.setModel(new DefaultListModel<String>());
 			jListSite.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			
-			jListSite.getSelectionModel().addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+			/*jListSite.getSelectionModel().addListSelectionListener(new javax.swing.event.ListSelectionListener() {
 				public void valueChanged(javax.swing.event.ListSelectionEvent e) {
 					if(jListSite.getSelectedIndex() == -1) return;
 					String site = jListSite.getSelectedValue();
@@ -570,7 +595,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 					}
 					jTextField_newSite.setText(name);
 				}
-			});
+			});*/
 		}
 		return jListSite;
 	}
@@ -592,6 +617,53 @@ public class MultistateBuilderFrame extends JDialog	 {
 		}
 		return jButton1;
 	}
+	
+	private JButton getJButton2() {
+		if (jButton2 == null) {
+			jButton2 = new JButton();
+			jButton2.setBounds(new Rectangle(70+11, 243, 70, 30));
+			jButton2.setMargin(new Insets(3,3,3,3));
+			jButton2.setText("Modify site");
+			jButton2.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					modifySite();
+				}
+			});
+		}
+		return jButton2;
+	}
+
+	
+	String name_before = new String();
+	Vector states_before = new Vector();
+	
+	protected void modifySite() {
+		
+		if(jListSite.getSelectedIndex() == -1) return;
+		
+		String site = jListSite.getSelectedValue();
+		if(site.length() == 0) return;
+		String name = site.substring(0,site.indexOf("{"));
+		Vector<?> states = species.getSiteStates(name);
+		String start = (String)states.get(0);
+		String end = (String)states.get(1);
+		String list = (String)states.get(2);
+		boolean bool = (Boolean)states.get(3);
+		
+		if(bool) jRadioBoolean.setSelected(true);
+		else { 
+			jTextField_listStates.setText(list);
+			spinner_upper.setValue(Integer.parseInt(end));
+			spinner_lower.setValue(Integer.parseInt(start));
+		}
+		jTextField_newSite.setText(name);
+		name_before = name;
+		states_before.clear();
+		states_before.addAll(states);
+	}
+	
+	
+	
 
 	private JButton getJButton3() {
 		if (jButton3 == null) {
@@ -667,6 +739,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 		jLabel3 = null;
 		jLabel3b = null;
 		jButton1 = null;
+		jButton2 = null;
 		jButton3 = null;
 		species = new MultistateSpecies(MainGui.multiModel,new String());
 		
