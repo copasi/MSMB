@@ -24,9 +24,6 @@ public interface MSMB_Interface {
 	
 	
 	public Vector<String> getMSMB_listOfSpecies();
-	public Vector<String> getMSMB_listOfInvisibleSpecies();
-	
-	//!!! MISSING: INVISIBLE GLOBAL QUANTITIES !!!
 	public Vector<String> getMSMB_listOfGlobalQuantities();
 	public Vector<String> getMSMB_listOfCompartments();
 	
@@ -36,10 +33,18 @@ public interface MSMB_Interface {
 	public Compartment getMSMB_getCompartment(String name);
 
 	public void addSpecies(String name, String initialQuantity, String compartment) throws Exception;
-	public void addInvisibleSpecies(String name, String initialQuantity, String compartment) throws Exception;
-	
-	public void removeInvisibleSpecies(String name);
+	public void addGlobalQuantity(String name, String initialQuantity) throws Exception;
 
+	public void removeSpecies(String name);
+	public void removeGlobalQuantity(String name);
+
+	/*public void addInvisibleSpecies(String name, String initialQuantity, String compartment) throws Exception;
+	public Vector<String> getMSMB_listOfInvisibleSpecies();
+	//!!! MISSING: INVISIBLE GLOBAL QUANTITIES !!!
+	public void removeInvisibleSpecies(String name);
+	 */
+	
+	
 	public String getDefault_CompartmentName();
 	public String getDefault_SpeciesInitialQuantity();
 	public String getDefault_GlobalQInitialQuantity();

@@ -11,6 +11,7 @@ import java.util.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import javax.imageio.ImageIO;
+import javax.print.attribute.standard.Compression;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.*;
@@ -71,7 +72,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		fromInterface = true;	
 		MainGui.cleanUpModel();
 		try {
-		
 			loadCopasiDataModel_fromKey(copasiKey);
 		} catch (Throwable e) {
 				e.printStackTrace();
@@ -94,7 +94,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 	
 	public Vector<String> getMSMB_listOfSpecies() { return multiModel.getAllSpecies_names();}
-	public Vector<String> getMSMB_listOfInvisibleSpecies() { return multiModel.getAllInvisibleSpecies_names();}
 	public Vector<String> getMSMB_listOfGlobalQuantities() { return multiModel.getAllGlobalQuantities_names();}
 	public Vector<String> getMSMB_listOfCompartments() { return multiModel.getAllCompartments_names();}
 	
@@ -135,9 +134,51 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		return;
 	}
 	
-	public void removeInvisibleSpecies(String name) {
+	public void addGlobalQuantity(String name, String initialQuantity) throws Exception {
+		boolean oldAutocompleteWithDefaults = autocompleteWithDefaults;
+		boolean oldShowDefaultDialogWindow = show_defaults_dialog_window;
+		autocompleteWithDefaults = true;
+		show_defaults_dialog_window = false;
+		multiModel.addGlobalQuantity_fromInterface(name, initialQuantity);
+		updateGlobalQTableFromMultiModel();
+		autocompleteWithDefaults = oldAutocompleteWithDefaults;
+		show_defaults_dialog_window = oldShowDefaultDialogWindow;
+		return;
+	}
+	
+	public void removeSpecies(String name) {
+		Integer index = multiModel.getSpeciesIndex(name);
+		if(index != null && index != -1) {
+			//vv set some variables to trigger the correct execution path in the deletion
+			jTableSpecies.setRowSelectionInterval(index-1,index-1);
+			MainGui.row_to_highlight.set(Constants.TitlesTabs.SPECIES.index, index-1);
+			MainGui.cellTableEdited = Constants.TitlesTabs.SPECIES.description;
+			jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
+			//^^
+			deleteElementMenu.doClick();
+			return;
+		}
+	}
+	
+	public void removeGlobalQuantity(String name) {
+		Integer index = multiModel.getGlobalQIndex(name);
+		if(index != null && index != -1) {
+			//vv set some variables to trigger the correct execution path in the deletion
+			jTableGlobalQ.setRowSelectionInterval(index-1,index-1);
+			MainGui.row_to_highlight.set(Constants.TitlesTabs.GLOBALQ.index, index-1);
+			MainGui.cellTableEdited = Constants.TitlesTabs.GLOBALQ.description;
+			jTabGeneral.setSelectedIndex(Constants.TitlesTabs.GLOBALQ.index);
+			//^^
+			deleteElementMenu.doClick();
+			return;
+		}
+	}
+	
+	/*public void removeInvisibleSpecies(String name) {
 		multiModel.removeInvisibleSpecies(name); 
 	}
+	
+	public Vector<String> getMSMB_listOfInvisibleSpecies() { return multiModel.getAllInvisibleSpecies_names();}
 	
 	public void addInvisibleSpecies(String name, String initialQuantity, String compartment) throws Exception {
 		boolean oldAutocompleteWithDefaults = autocompleteWithDefaults;
@@ -149,7 +190,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		autocompleteWithDefaults = oldAutocompleteWithDefaults;
 		show_defaults_dialog_window = oldShowDefaultDialogWindow;
 		return;
-	}
+	}*/
 	
 	public String getDefault_CompartmentName() { return compartment_default_for_dialog_window; }
 	public String getDefault_SpeciesInitialQuantity() { return species_defaultInitialValue; }
@@ -426,6 +467,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	private String lastLoadSaveAction_file_format = null;
 
 	private JMenuItem saveMultistateFormat;
+
+	private JMenuItem deleteElementMenu;
 
 	public static boolean importFromTables = false;
 	public static boolean importFromSBMLorCPS = false;
@@ -2066,9 +2109,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			menuEdit.add(menu_reverse);
 			
 			
-			JMenuItem del = new JMenuItem(MSMB_MenuItem.DELETE_ELEMENT.getMenuString());
-			del.setEnabled(true);
-			del.addActionListener(new ActionListener(){
+			deleteElementMenu = new JMenuItem(MSMB_MenuItem.DELETE_ELEMENT.getMenuString());
+			deleteElementMenu.setEnabled(true);
+			deleteElementMenu.addActionListener(new ActionListener(){
 	            public void actionPerformed(ActionEvent arg0) {
 	            	MutablePair<FoundElementToDelete, DefaultMutableTreeTableNode> elementToDelete = collectDeleteTreeTableModel();
 	            	if(elementToDelete == null) {
@@ -2090,7 +2133,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					}
 	            }
 			});
-			menuEdit.add(del);
+			menuEdit.add(deleteElementMenu);
 			
 			
 			menuEdit.addSeparator();
@@ -6486,9 +6529,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 			jTabGeneral.setSelectedIndex(Constants.TitlesTabs.REACTIONS.index);
 			textFieldModelName.setText(multiModel.getModelName());
+			
 		} catch (Throwable e) {
 			if(MainGui.fromMainGuiTest) throw e;
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
 			
 		}
 		finally { 
@@ -6497,7 +6541,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			setCursor(null); 
 			loadPreferencesFile();
 			modelHasBeenModified = false;
-			
 		}
 	}
 	
@@ -6631,9 +6674,12 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		multiModel.compressSpecies();
 
 		
-		updateSpeciesTableFromMultiModel();
 	
 		if(!MainGui.fromMainGuiTest) compressAllExpressions();
+		
+		
+
+		updateSpeciesTableFromMultiModel();
 		
 		jTabGeneral.setSelectedIndex(0);
 		renamingOption = oldRenamingOption;
@@ -6641,7 +6687,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 	}
 	
-	private void compressAllExpressions() {
+	private static void compressAllExpressions() {
 		boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
 		//set to false otherwise all the isMultistateName checks will automatically return false because that should check for the annotation
 		MainGui.importFromSBMLorCPS = false;
@@ -6657,7 +6703,13 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				try { tableSpeciesmodel.setValueAt_withoutUpdate(
 						multiModel.reprintExpression_forceCompressionElements(tableSpeciesmodel.getValueAt( i-1, Constants.SpeciesColumns.EXPRESSION.index).toString(),Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description), 
 						i-1,  Constants.SpeciesColumns.EXPRESSION.index);
-				} catch (Throwable e) {	e.printStackTrace();	}
+				} catch (Throwable e) {	
+					tableSpeciesmodel.setValueAt_withoutUpdate(
+							tableSpeciesmodel.getValueAt( i-1, Constants.SpeciesColumns.EXPRESSION.index), 
+							i-1,  Constants.SpeciesColumns.EXPRESSION.index);
+					e.printStackTrace();
+					
+					}
 				 }
 			jTableSpecies.revalidate();
 			
@@ -6791,12 +6843,24 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			//System.out.println(i+" out of "+species.size()+" SPECIES "+sp.getDisplayedName());
 			//System.out.flush();
 			tableSpeciesmodel.setValueAt_withoutUpdate(sp.getDisplayedName(), i-1, Constants.SpeciesColumns.NAME.index);
-			//tableSpeciesmodel.setValueAt_withoutUpdate(sp.getInitialConcentration(), i-1, 2);
-			//tableSpeciesmodel.setValueAt_withoutUpdate(sp.getInitialAmount(), i-1, 3);
 			tableSpeciesmodel.setValueAt_withoutUpdate(sp.getInitialQuantity_listString(), i-1,  Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			tableSpeciesmodel.setValueAt_withoutUpdate(Constants.SpeciesType.getDescriptionFromCopasiType(sp.getType()), i-1,  Constants.SpeciesColumns.TYPE.index);
 			tableSpeciesmodel.setValueAt_withoutUpdate(sp.getCompartment_listString(), i-1,  Constants.SpeciesColumns.COMPARTMENT.index);
 			tableSpeciesmodel.setValueAt_withoutUpdate(sp.getExpression(), i-1,  Constants.SpeciesColumns.EXPRESSION.index);
+				
+			/*try { tableSpeciesmodel.setValueAt_withoutUpdate(
+					multiModel.reprintExpression_forceCompressionElements(sp.getExpression(),Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description), 
+					i-1,  Constants.SpeciesColumns.EXPRESSION.index);
+			} catch (Throwable e) {
+				tableSpeciesmodel.setValueAt_withoutUpdate(
+						//tableSpeciesmodel.getValueAt( i-1, Constants.SpeciesColumns.EXPRESSION.index), 
+						sp.getExpression(),
+						i-1,  Constants.SpeciesColumns.EXPRESSION.index);
+				//e.printStackTrace();
+				
+				}
+			*/
+			
 			tableSpeciesmodel.setValueAt_withoutUpdate(sp.getNotes(), i-1,  Constants.SpeciesColumns.NOTES.index);
 			if(CellParsers.isMultistateSpeciesName(sp.getDisplayedName())) {
 				 tableSpeciesmodel.disableCell(i-1,Constants.SpeciesColumns.INITIAL_QUANTITY.index);
@@ -6813,11 +6877,14 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		     tableSpeciesmodel.enableCell(i-1,Constants.SpeciesColumns.TYPE.index);
 		}
 		
-
+		
 		tableSpeciesmodel.addAddEmptyRow_Listener();
 		tableSpeciesmodel.addRow(new Vector());
 		jTableSpecies.clearSelection();
 		jTableSpecies.revalidate();
+		
+		tableSpeciesmodel.fireTableDataChanged();
+		
 	}
 	
 
@@ -8032,7 +8099,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		DebugMessage dm = MainGui.debugMessages.get(key);
 		if(dm!=null) {
 			String missing = dm.getProblem();
-			pair.right = missing.substring(missing.indexOf(":")+1);
+			//pair.right = missing.substring(missing.indexOf(":")+1);
+			pair.right = missing;
 		} else {
 			pair.right = new String();
 		}
@@ -8798,7 +8866,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						case 0:  multiModel.removeReaction(currentIndexToDelete);
 								jTableReactions.revalidate();
 								break;
-						case 1: multiModel.removeSpecies(currentIndexToDelete); updateSpeciesTableFromMultiModel(); 
+						case 1:
+								multiModel.removeSpecies(currentIndexToDelete); updateSpeciesTableFromMultiModel(); 
 								break;
 						case 2: multiModel.removeGlobalQ(currentIndexToDelete); updateGlobalQTableFromMultiModel();
 								break;
@@ -8826,8 +8895,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					}
 					indexToDelete.put(element.getTableDescription(),numberOfElementsAlreadyDeletedFromThisTable);
 					
+				}
+			} catch (Throwable e) {
+				//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
+					e.printStackTrace();
 			}
-			
 			
 			for(int i = 0; i < otherActions.size(); i++) {
 				FoundElementToDelete element =  otherActions.get(i);
@@ -8840,16 +8912,13 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 			revalidateExpressions(inconsistent);
 			
-		} catch (Throwable e) {
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
-			e.printStackTrace();
-		} finally {
+		// finally {
 			MainGui.donotCleanDebugMessages = false;
 			jTabGeneral.setSelectedIndex(1);
 			jTabGeneral.setSelectedIndex(2);
 			jTabGeneral.setSelectedIndex(previousSelectedIndex);
 			
-		}
+	//	}
 		
 	
 		
@@ -8893,8 +8962,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		if(mod!= null) {
 			jTabGeneral.setSelectedIndex(tabToSelect);
 			table.setColumnSelectionInterval(element.getCol(), element.getCol());
-			//String newValue = RenamingFrame.replaceAllWords(mod.getValueAt(element.getRow(), element.getCol()).toString(),element.getOldValue(),element.getNewValue());
-	     	String newValue2 = CellParsers.replaceVariableInExpression(mod.getValueAt(element.getRow(), element.getCol()).toString(),element.getOldValue(),element.getNewValue());
+			System.out.println("IN "+mod.getValueAt(element.getRow(), element.getCol()).toString()+" REPLACE: "+element.getOldValue() + " WITH " +element.getNewValue());
+			String newValue2 = CellParsers.replaceVariableInExpression(mod.getValueAt(element.getRow(), element.getCol()).toString(),element.getOldValue(),element.getNewValue());
 		 	mod.setValueAt_withoutUpdate(newValue2, element.getRow(), element.getCol());
 	     	table.revalidate();
 			jTabGeneral.setSelectedIndex(selectedTab);

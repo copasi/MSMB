@@ -72,6 +72,11 @@ public class GlobalQ {
 		try {
 			this.expression = expr;	
 			 CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.EXPRESSION.description);
+		
+				boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
+				MainGui.importFromSBMLorCPS = false;
+				this.expression = m.reprintExpression_forceCompressionElements(expression,Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.EXPRESSION.description);
+				MainGui.importFromSBMLorCPS = oldImportFromSBMLorCPS;
 		} catch (Throwable ex) {
 			throw ex;
 		}

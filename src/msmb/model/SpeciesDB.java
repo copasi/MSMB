@@ -454,7 +454,16 @@ public class SpeciesDB {
 	}
 
 	public boolean containsSpecies(String speciesName) {
-		return containsSpecies(speciesName,false);
+		boolean ret = containsSpecies(speciesName,false);
+		if(ret && CellParsers.isMultistateSpeciesName(speciesName)) {
+			MultistateSpecies m = (MultistateSpecies) this.getSpecies(speciesName);
+			try {
+				ret = ret && m.containsSpecificConfiguration(speciesName);
+			} catch (Exception e) {
+				//e.printStackTrace();
+			}
+		}
+		return ret;
 	}
 
 
@@ -551,7 +560,7 @@ public class SpeciesDB {
 	}
 
 	public Integer getSpeciesIndex(String name) {
-		String speciesName = new String();
+		String speciesName = new String(name);
 		
 		if(CellParsers.isMultistateSpeciesName(name)) {
 			speciesName = CellParsers.extractMultistateName(name);

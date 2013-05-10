@@ -11,6 +11,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import com.google.common.base.Throwables;
@@ -161,7 +162,17 @@ public class CellParsers {
 		if(name.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.ARCCOTH)) == 0) return true;
 		
 		
-		
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_CONC).substring(1)) == 0) return true;
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_FLUX).substring(1)) == 0) return true;
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_FUNCTION).substring(1)) == 0) return true;
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_GLOBALQ).substring(1)) == 0) return true;
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_INIT).substring(1)) == 0) return true;
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_PARTICLE).substring(1)) == 0) return true;
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_RATE).substring(1)) == 0) return true;
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_REACTION).substring(1)) == 0) return true;
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_SPECIES).substring(1)) == 0) return true;
+		if(name.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.EXTENSION_TRANS).substring(1)) == 0) return true;
+			
 		
 
 		return false;
@@ -702,7 +713,7 @@ public class CellParsers {
 			return multiStateProd;
 	}
 
-	public static Vector parseMultistateSpecies_states(String states) {
+	public static Vector parseMultistateSpecies_states(String states) throws Exception {
 		StringTokenizer st_states = new StringTokenizer(states, ",");
 		Vector single_states = new Vector();
 		boolean foundTrue = false;
@@ -721,6 +732,9 @@ public class CellParsers {
 						){
 					foundFalse = true;
 				}
+				if(CellParsers.isKeyword(s)) {
+		    		 throw new Exception("Problem adding state "+s+": it is a reserved word.");
+		    	}
 				single_states.add(s);
 		}
 		if((foundFalse||foundTrue) && single_states.size()!=2) {

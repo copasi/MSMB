@@ -213,7 +213,7 @@ class ExportMultistateFormat {
 			MainGui.exportConcentration = Boolean.parseBoolean(modelProperties.get(4));
 			MainGui.quantityIsConc = Boolean.parseBoolean(modelProperties.get(5));
 			
-			try{
+			/*try{
 					Vector<Species> invisibleSpecies = (Vector<Species>)in.readObject();
 					if(invisibleSpecies!=null) {
 						for(Species sp : invisibleSpecies) {
@@ -224,7 +224,7 @@ class ExportMultistateFormat {
 				//problems reading the invisibleSpecies, it's ok for old msmb files
 				//e.printStackTrace();
 			}
-			
+			*/
 			
 			in.close();
 		} catch (Exception e) {

@@ -2456,6 +2456,8 @@ public class MultiModel {
 
 	public Vector expandReaction(Vector metabolites, int row) throws Throwable {
 		Vector ret = new Vector();
+	//	Vector<String> problems = new Vector<String>();
+		
 		Vector subs = (Vector)metabolites.get(0);
 	    Vector prod =(Vector)metabolites.get(1);
 		Vector mod = (Vector)metabolites.get(2);
@@ -2544,10 +2546,45 @@ public class MultiModel {
 						MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,single, sub_prefix);
 						start.accept(v);
 						Vector<Species> expansion = v.getProductExpansion();
-						single_reaction_prod_toCombine.add(expansion);
+						
+					
+						
+						if(expansion.size() == 0) {
+							DebugMessage dm = new DebugMessage();
+							dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+							dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
+							dm.setOrigin_row(row+1);
+							Vector elements = new Vector();
+							for(Species s : single) {
+								String speciesName = s.getDisplayedName();
+								 if(speciesName.startsWith(sub_prefix)) {
+									 speciesName = speciesName.substring(sub_prefix.length());
+								 }
+								 elements.add(speciesName);
+							}
+							dm.setProblem("Problem in the expansion of "+species+ " from " + elements);
+							dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+							MainGui.addDebugMessage_ifNotPresent(dm);
+						} else {
+							single_reaction_prod_toCombine.add(expansion);
+						}
 					} catch(Throwable e) {
-						e.printStackTrace();
-						single_reaction_prod_toCombine.add(species);
+						//e.printStackTrace();
+						DebugMessage dm = new DebugMessage();
+						dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+						dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
+						dm.setOrigin_row(row+1);
+						Vector elements = new Vector();
+						for(Species s : single) {
+							String speciesName = s.getDisplayedName();
+							 if(speciesName.startsWith(sub_prefix)) {
+								 speciesName = speciesName.substring(sub_prefix.length());
+							 }
+							 elements.add(speciesName);
+						}
+						dm.setProblem("Problem in the expansion of "+species+ " from " + elements);
+						dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+						MainGui.addDebugMessage_ifNotPresent(dm);
 						continue;
 					}
 					
@@ -2605,18 +2642,17 @@ public class MultiModel {
 				
 				
 		
-				
-				single_reaction.add(single_reaction_subs);
-				single_reaction.add(single_reaction_prod);
-				single_reaction.add(single_reaction_mod);
-				ret.add(single_reaction);
+					single_reaction.add(single_reaction_subs);
+					single_reaction.add(single_reaction_prod);
+					single_reaction.add(single_reaction_mod);
+					ret.add(single_reaction);
 				
 			}
 			
 		 	
 		}
 		
-		return ret;
+	 	return ret;
 	}
 	
 	
@@ -5019,6 +5055,19 @@ public Integer getGlobalQIndex(String name) {
 		} catch (Throwable e) {
 				//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 				throw new Exception("Error adding the new Species: "+e.getMessage());
+		}
+
+		return;
+	}
+	
+	public void addGlobalQuantity_fromInterface(String name, String initialQuantity) throws Exception{
+		HashMap<String, String> entry_q = new HashMap<String, String>();
+		entry_q.put(name,initialQuantity);
+		try {
+			this.globalqDB.addChangeGlobalQ(-1, name, initialQuantity, Constants.GlobalQType.FIXED.description, new String(), new String());
+		} catch (Throwable e) {
+				//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+				throw new Exception("Error adding the new Global Quantity: "+e.getMessage());
 		}
 
 		return;

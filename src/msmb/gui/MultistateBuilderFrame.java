@@ -138,6 +138,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 		this.jButton.setEnabled(b);
 		this.jButton1.setEnabled(b);
 		this.jButton2.setEnabled(b);
+		this.jButton3.setEnabled(b);
 		if(!b) jButton.setForeground(Color.lightGray);
 		else jButton.setForeground(jButton1.getForeground());
 	}
@@ -148,11 +149,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 			jTextField_species.setBounds(new Rectangle(86, 10, 125, 18));
 			jTextField_species.addKeyListener(new KeyListener() {
 			        public void keyTyped(KeyEvent keyEvent) {
-			          if(jTextField_species.getText().length() > 0) {
-			        	 setTabbedPane_enable(true);   	  
-			          } else {
-			        	  setTabbedPane_enable(false); 
-			          }
+			        	return;
 			        }
 
 					public void keyPressed(KeyEvent arg0) {
@@ -160,7 +157,17 @@ public class MultistateBuilderFrame extends JDialog	 {
 					}
 
 					public void keyReleased(KeyEvent e) {
-						return;
+						String checkName = jTextField_species.getText();
+			        	if(CellParsers.isKeyword(checkName)) {
+			        		 JOptionPane.showMessageDialog(null,"The name "+checkName+" is a reserved word. Please chose a different Species name!", "Error", JOptionPane.ERROR_MESSAGE);
+			      			setTabbedPane_enable(false); 
+			        		return;
+			        	}
+			          if(checkName.length() > 0) {
+			        	 setTabbedPane_enable(true);   	  
+			          } else {
+			        	  setTabbedPane_enable(false); 
+			          }
 					}
 			      
 			      });
@@ -463,6 +470,11 @@ private void applyChangeSite() {
 		
 		this.species.deleteSite(name_before);
 		
+		if(CellParsers.isKeyword(name)) {
+    		 JOptionPane.showMessageDialog(null,"The name "+name+" is a reserved word. Please chose a different site name!", "Error", JOptionPane.ERROR_MESSAGE);
+  			return;
+    	}
+    	
 		addNewSite();
 }
 
@@ -474,7 +486,12 @@ private void applyChangeSite() {
 	
 		String name = this.jTextField_newSite.getText().trim();
 		if(name.length() <= 0) return;
-		
+	
+		if(CellParsers.isKeyword(name)) {
+			JOptionPane.showMessageDialog(null,"The name "+name+" is a reserved word. Please chose a different site name!", "Error", JOptionPane.ERROR_MESSAGE);
+ 			return;
+		}
+   	
 		int lower = (Integer)this.spinner_lower.getValue();
 		int upper = (Integer)this.spinner_upper.getValue();
 		
@@ -495,7 +512,7 @@ private void applyChangeSite() {
 		} catch(Exception ex) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 			//problem in parsing species (e.g. cdhBoolWrong(p{TRUE,FALSE,somethingElse}))
-			  JOptionPane.showMessageDialog(this,"Problem parsing the current site. The definition cannot be accepted.", "Error", JOptionPane.ERROR_MESSAGE);
+			  JOptionPane.showMessageDialog(this,"Problem parsing the current site. The definition cannot be accepted. Some states are using reserved word.", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 	

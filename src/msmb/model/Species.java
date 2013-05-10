@@ -3,6 +3,7 @@ package msmb.model;
 import java.io.UnsupportedEncodingException;
 import java.util.Vector;
 
+import msmb.gui.MainGui;
 import msmb.utility.*;
 
 
@@ -21,12 +22,18 @@ public class Species  {
 		if(expr.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		if(expr.length() == 0) return ;
 		try {
+		
+			
 			this.expression = expr;	
 			CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
+			boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
+			MainGui.importFromSBMLorCPS = false;
+			this.expression = m.reprintExpression_forceCompressionElements(expression,Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
+			MainGui.importFromSBMLorCPS = oldImportFromSBMLorCPS;
+					
 		} catch (Exception ex) {
 			throw ex;
 		} finally {
-			
 			editableExpression = expr;
 		}
 	}
@@ -215,6 +222,7 @@ public class Species  {
 
 	public void setExpression_withoutParsing(String expression) {
 		this.expression = expression;
+		
 	}
 
 
