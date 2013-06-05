@@ -12,9 +12,9 @@ public enum MSMB_MenuItem
 			OPEN_MSMB(".msmb"),
 		SAVE("Save"),
 		SAVE_AS("Save as..."),
-			SAVE_CPS(".cps"),		
 			SAVE_MSMB(".msmb"),
 		EXPORT("Export"),
+			SAVE_CPS("to .cps"),		
 			EXPORT_SBML("to .xml"),
 			EXPORT_XPP("to .xpp"),
 		PRINT_TABLES_PDF("Print tables to PDF"),
@@ -32,7 +32,8 @@ public enum MSMB_MenuItem
 		ADD_REVERSE_REACTION("Add reverse reaction"),
 		DELETE_ELEMENT("Delete element..."),
 		VALIDATE("Validate model"),
-		MULTISTATE_BUILDER("Multistate builder...");
+		MULTISTATE_BUILDER("Multistate builder..."),
+		COMPLEX_BUILDER("Complex builder...");
 	
 	private final String menuString;
 	

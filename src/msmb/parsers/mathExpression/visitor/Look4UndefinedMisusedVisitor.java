@@ -186,6 +186,10 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 	Vector<SumExpansion> sumExpansion = new Vector<SumExpansion>();
 	
 	public Vector<SumExpansion> getSumExpansions() {
+		//to initialize correctly the weights. I don't know why, but if I delete that part the weights are not in the final expression!??!
+		for(SumExpansion element : sumExpansion) {
+			element.printCompleteSum();
+		}
 		return sumExpansion;
 	}
 
@@ -438,7 +442,17 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 				root.accept(undefVisitor);
 				Vector<String> undef = undefVisitor.getUndefinedElements();
 				Vector<String> misused2 = undefVisitor.getMisusedElements();
-				if(undef.size() > 0) { missing.addAll(undef); return false;}
+				
+				  Vector<String> realUndef = new Vector();
+				   Set sites = sp.getSitesNames();
+				  for(String which : undef) {
+					  if(!sites.contains(which)) {
+						  realUndef.add(which);
+					  }
+				  }
+				  
+				  
+				if(realUndef.size() > 0) { missing.addAll(realUndef); return false;}
 				if(misused2.size() > 0) { misused.addAll(undef); return false;}
 				
 				
@@ -605,7 +619,8 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 						
 						e.printStackTrace();
 					}
-					continue; //I DON'T CHECK ANYTHING HERE...I should check the usage parsing the SUM
+					usedAs.add(new MutablePair<String, String>(element, types.get(i)));
+					continue; 
 				}
 				
 				Vector<Integer> definedInTable = multiModel.getWhereNameIsUsed(element);
@@ -635,7 +650,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 						if(!missing.contains(element)) { // because if it is missing it is also misused, but the user should see only the missing error
 							misused.add(element);
 						}
-					}
+					} 
 				} else if (Constants.FunctionParamType.VOLUME.signatureType.compareTo(types.get(i))==0) {
 					if(!definedInTable.contains(new Integer(Constants.TitlesTabs.COMPARTMENTS.index))) { 
 						if(!missing.contains(element)) { // because if it is missing it is also misused, but the user should see only the missing error
@@ -741,7 +756,7 @@ class SumExpansion {
 	}
 	
 	private String weightFunWithCurrentSpecies(MultistateSpecies current) {
-		String ret = new String();
+		String ret = new String(weightFunctionName+ToStringVisitor.toString(coeffFunctionArgumentList));
 		try {
 			if(weightFunctionName == null || weightFunctionName.length() == 0) return null;
 			Function f = multiModel.getFunctionByName(weightFunctionName);
@@ -827,7 +842,6 @@ class SumExpansion {
 		String ret = new String();
 		
 		try {
-			
 			Vector<Species> spec = getSpeciesSum();
 			Vector<String> weight = getWeightFun();
 			for(int i = 0; i < spec.size()-1; i++) {

@@ -8,8 +8,10 @@ import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
@@ -42,6 +44,7 @@ public class GraphicalProperties {
 		 while(it.hasNext()) {
 			 JButton current = it.next();
 			 current.setFont(MainGui.customFont);
+			 
 		 }
 		 
 		 List<JTextPane> textPanes = SwingUtils.getDescendantsOfClass(JTextPane.class, container);
@@ -111,7 +114,23 @@ public class GraphicalProperties {
 			 current.setFont(MainGui.customFont);
 		 }
 		 
+			List<JComboBox> combos = SwingUtils.getDescendantsOfClass(JComboBox.class, container);
+			 Iterator<JComboBox> it12 = combos.iterator();
+			 while(it12.hasNext()) {
+				 JComboBox current  = it12.next();
+				 current.setFont(MainGui.customFont);
+			 }
 		 
+		 
+		 
+			List<JPanel> panels = SwingUtils.getDescendantsOfClass(JPanel.class, container);
+			 Iterator<JPanel> it13 = panels.iterator();
+			 while(it13.hasNext()) {
+				 JPanel current = it13.next();
+				 resetFonts(current);
+			 }
+			 
+		
 		 
 		 container.revalidate();
 		 SwingUtilities.updateComponentTreeUI(container);

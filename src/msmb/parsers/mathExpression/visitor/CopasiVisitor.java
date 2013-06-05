@@ -173,7 +173,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 					GetFunctionParametersVisitor v = new GetFunctionParametersVisitor();
 					root2.accept(v);
 					Vector<String> parametersActuals = v.getActualParameters();
-
+					System.out.println("parametersActuals in CopasiVisitor "+parametersActuals);
 					for(int i = 0; i < parametersActuals.size(); i++) {
 						InputStream isR = new ByteArrayInputStream(parametersActuals.get(i).getBytes("UTF-8"));
 						MR_Expression_Parser parserR = new MR_Expression_Parser(isR);
@@ -342,7 +342,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				String element_kind_quantifier = getKindQuantifier(extensions);
 				String element_timing_quantifier = getTimingQuantifier(extensions);
 				String element_quantity_quantifier = getQuantityQuantifier(extensions);
-			
+			System.out.println("extension in CopasiVisitor "+extensions);
 				try {
 					if(element_kind_quantifier == null || element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES))==0) {
 						if(cmp.length() > 0 ) {

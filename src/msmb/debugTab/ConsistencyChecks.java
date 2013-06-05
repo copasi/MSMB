@@ -151,24 +151,52 @@ public class ConsistencyChecks {
 			paramMapping = 	multiModel.funDB.get_mappings_speciesExpression(rowIndex, functionCall);
 		}
 		
-		/*if(paramMapping== null) {
+		if(paramMapping== null) {
 			//the function itself in undefined
 			Vector ret = new Vector();
-			InputStream is = new ByteArrayInputStream(functionCall.getBytes("UTF-8"));
-			MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
-			SingleFunctionCall root = parser.SingleFunctionCall();
-			GetFunctionNameVisitor vis = new GetFunctionNameVisitor();
-			root.accept(vis);
-			ret.add(vis.getFunctionName());
-			DebugMessage dm = new DebugMessage();
-			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-			 dm.setProblem("Missing function definition: " + vis.getFunctionName());
-			 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
-			 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
-			 dm.setOrigin_row(rowIndex+1);
-			 MainGui.addDebugMessage_ifNotPresent(dm);
-			return ret;
-		}*/
+			try{
+				InputStream is = new ByteArrayInputStream(functionCall.getBytes("UTF-8"));
+				MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
+				SingleFunctionCall root = parser.SingleFunctionCall();
+				GetFunctionNameVisitor vis = new GetFunctionNameVisitor();
+				root.accept(vis);
+				ret.add(vis.getFunctionName());
+				DebugMessage dm = new DebugMessage();
+				 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+				 dm.setProblem("Missing function definition: " + vis.getFunctionName());
+				 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+				 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
+				 dm.setOrigin_row(rowIndex+1);
+				 MainGui.addDebugMessage_ifNotPresent(dm);
+				return ret;
+			} catch(Exception ex) {
+				//this is not a function call but it is a single parameter, its existance is checked elsewhere
+				//ex.printStackTrace();
+			}
+		} else {//the mapping exist but maybe the function name has been changed!
+			
+			String funName = ((Function) paramMapping.get(0)).getName();
+			try{
+				InputStream is = new ByteArrayInputStream(functionCall.getBytes("UTF-8"));
+				MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
+				SingleFunctionCall root = parser.SingleFunctionCall();
+				GetFunctionNameVisitor vis = new GetFunctionNameVisitor();
+				root.accept(vis);
+				String currentName = vis.getFunctionName();
+				if(currentName.compareTo(funName)!=0) {
+					DebugMessage dm = new DebugMessage();
+					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+					 dm.setProblem("Missing function definition: " + vis.getFunctionName());
+					 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+					 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
+					 dm.setOrigin_row(rowIndex+1);
+					 MainGui.addDebugMessage_ifNotPresent(dm);
+				}
+			} catch(Exception ex) {
+				//ex.printStackTrace();
+			}
+			
+		}
 
 		return all_parameters_in_functionCalls_exist(multiModel,rowIndex,paramMapping);
 		
@@ -177,6 +205,7 @@ public class ConsistencyChecks {
 	
 	private static Vector<String> all_parameters_in_functionCalls_exist(MultiModel multiModel, int rowIndex, Vector<?> paramMapping) throws Exception {
 			Vector<String> missingParameters = new Vector<String>();
+			
 			if(paramMapping == null) return missingParameters;
 			Function f = (Function)paramMapping.get(0);
 			Vector<Integer> paramRoles =  f.getParametersTypes_CFunctionParameter();

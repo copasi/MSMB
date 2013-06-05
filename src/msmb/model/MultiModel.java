@@ -38,6 +38,7 @@ import msmb.parsers.mathExpression.syntaxtree.CompleteExpression;
 import msmb.parsers.mathExpression.syntaxtree.SingleFunctionCall;
 import msmb.parsers.mathExpression.visitor.CopasiVisitor;
 import msmb.parsers.mathExpression.visitor.ExpressionVisitor;
+import msmb.parsers.mathExpression.visitor.GetElementWithExtensions;
 import msmb.parsers.mathExpression.visitor.GetFunctionNameVisitor;
 import msmb.parsers.mathExpression.visitor.GetFunctionParametersVisitor;
 import msmb.parsers.mathExpression.visitor.GetUsedVariablesInEquation;
@@ -1400,8 +1401,9 @@ public class MultiModel {
 							break;
 						case Constants.SITE_FOR_WEIGHT_IN_SUM:
 							Double parValue = null;
-							for(int j = 0; j < subs.size(); j++){
-								String element1 = (String) subs.get(j);
+						/*	for(int j = 0; j < subs.size(); j++){
+								HERE FIX AS IN REACTIONDB WHERE Constants.FunctionParamType.SITE.signatureType 
+										String element1 = (String) subs.get(j);
 								MultistateSpecies sp = new MultistateSpecies(this, element1);
 								if(sp.getSitesNames().contains(actualModelParameter)) {
 									Vector siteValues = sp.getSiteStates_complete(actualModelParameter);
@@ -1414,7 +1416,48 @@ public class MultiModel {
 									}
 								}
 							}
+						*/
+							GetElementWithExtensions elementWithExtensions = null;
+							try{
+								
+								InputStream is = new ByteArrayInputStream(actualModelParameter.getBytes("UTF-8"));
+								MR_Expression_Parser parser = new MR_Expression_Parser(is);
+								CompleteExpression root = parser.CompleteExpression();
+								elementWithExtensions = new GetElementWithExtensions();
+								root.accept(elementWithExtensions);
+							}catch (Throwable e) {
+								e.printStackTrace();
+								
+							}
 						
+							String speciesName = elementWithExtensions.getElementName();
+							Vector<String> extensions = elementWithExtensions.getExtensions();
+							if(extensions.size()!=0) {
+								String site = extensions.get(0).substring(1);
+								for(int j = 0; j < subs.size(); j++){
+									String element1 =subs.get(j).toString();
+									element1 = extractName(element1);
+									String element1_justName_ifMultistate = element1;
+									if(CellParsers.isMultistateSpeciesName(element1)) {
+										element1_justName_ifMultistate = CellParsers.extractMultistateName(element1);
+									}
+									if(speciesName.compareTo(element1_justName_ifMultistate) == 0) {
+										MultistateSpecies sp = new MultistateSpecies(this, element1);
+										if(sp.getSitesNames().contains(site)) {
+											Vector siteValues = sp.getSiteStates_complete(site);
+											try{
+												parValue = Double.parseDouble(siteValues.get(0).toString());
+												reaction.setParameterValue(parameterNameInFunction,parValue.doubleValue());
+												checkAllRoles = false;
+											} catch(NumberFormatException ex) { //the site has not a numerical value should be an error stopped before
+												ex.printStackTrace();
+											}
+										}
+									}
+								}
+								
+								
+							}
 							break;
 						default:
 							System.out.println("missing parameter role in function, "+chosenFun.getObjectName()+" for actual value " + actualModelParameter);
@@ -2539,7 +2582,7 @@ public class MultiModel {
 				if(!(sp instanceof MultistateSpecies)) {
 					non_multistate_prod.add(species);
 				} else {
-					try {
+				  try {
 						InputStream is = new ByteArrayInputStream(species.getBytes("UTF-8"));
 						MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
 						CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
@@ -2547,24 +2590,35 @@ public class MultiModel {
 						start.accept(v);
 						Vector<Species> expansion = v.getProductExpansion();
 						
-					
-						
 						if(expansion.size() == 0) {
-							DebugMessage dm = new DebugMessage();
-							dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-							dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
-							dm.setOrigin_row(row+1);
-							Vector elements = new Vector();
-							for(Species s : single) {
-								String speciesName = s.getDisplayedName();
-								 if(speciesName.startsWith(sub_prefix)) {
-									 speciesName = speciesName.substring(sub_prefix.length());
-								 }
-								 elements.add(speciesName);
+							
+							try { //check if is a simple multistate species with no operator
+								is = new ByteArrayInputStream(species.getBytes("UTF-8"));
+								react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+								CompleteMultistateSpecies start2 = react.CompleteMultistateSpecies();
+								MultistateSpeciesVisitor v2 = new MultistateSpeciesVisitor(null);
+								start2.accept(v2);
+							 	 non_multistate_prod.add(species); 
+							} catch (Throwable e) {
+								DebugMessage dm = new DebugMessage();
+								dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+								dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
+								dm.setOrigin_row(row+1);
+								Vector elements = new Vector();
+								for(Species s : single) {
+									String speciesName = s.getDisplayedName();
+									 if(speciesName.startsWith(sub_prefix)) {
+										 speciesName = speciesName.substring(sub_prefix.length());
+									 }
+									 elements.add(speciesName);
+								}
+								dm.setProblem("Problem in the expansion of "+species+ " from " + elements);
+								dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+								MainGui.addDebugMessage_ifNotPresent(dm);
+							
 							}
-							dm.setProblem("Problem in the expansion of "+species+ " from " + elements);
-							dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
-							MainGui.addDebugMessage_ifNotPresent(dm);
+							
+							
 						} else {
 							single_reaction_prod_toCombine.add(expansion);
 						}
@@ -3833,12 +3887,15 @@ public class MultiModel {
 		for (String expr : elements) {
 			try{
 				String current = new String();
+				
 				InputStream is = new ByteArrayInputStream(expr.getBytes("UTF-8"));
 				MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
 				CompleteExpression root = parser.CompleteExpression();
 				MainGui.jListFunctionToCompact.setSelectionInterval(0, MainGui.listModel_FunctionToCompact.size()-1);
 
-				ExpressionVisitor vis = new ExpressionVisitor(MainGui.jListFunctionToCompact.getSelectedValuesList(), this,false);
+				List<String> list = MainGui.jListFunctionToCompact.getSelectedValuesList();
+				list.add("SUM");
+				ExpressionVisitor vis = new ExpressionVisitor(list, this,false);
 
 				root.accept(vis);
 				if(vis.getExceptions().size() == 0) {
@@ -4351,6 +4408,7 @@ public class MultiModel {
 		}
 		try {
 			reactionDB.addChangeReaction(nrow, name, reaction_string, Constants.ReactionType.getCopasiTypeFromDescription(type), equation, notes);
+			ConsistencyChecks.all_parameters_in_functionCalls_exist(Constants.TitlesTabs.REACTIONS.index, this, equation,nrow-1);
 		} catch (Exception e) {
 			//e.printStackTrace();
 			//ok, the problems are going to be handled somewhere else (in mainGui)
@@ -4977,8 +5035,37 @@ public Integer getGlobalQIndex(String name) {
 	}
 
 	
-	public boolean checkUsageOfSiteType(int row, String siteName) {
+	public boolean checkUsageOfSiteType(int row, String completeSiteRef) {
 		Vector misused = new Vector<String>();
+		
+		GetElementWithExtensions elementWithExtensions = null;
+		try{
+			
+			InputStream is = new ByteArrayInputStream(completeSiteRef.getBytes("UTF-8"));
+			MR_Expression_Parser parser = new MR_Expression_Parser(is);
+			CompleteExpression root = parser.CompleteExpression();
+			elementWithExtensions = new GetElementWithExtensions();
+			root.accept(elementWithExtensions);
+		}catch (Throwable e) {
+			e.printStackTrace();
+		}
+	
+		String speciesName = elementWithExtensions.getElementName();
+		Vector<String> extensions = elementWithExtensions.getExtensions();
+		if(extensions.size() ==0) {
+			DebugMessage dm = new DebugMessage();
+			dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+		    dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
+		    dm.setOrigin_row(row+1);
+			dm.setProblem("Site specification has to be in the form of SpeciesName.siteName");
+		    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
+			MainGui.addDebugMessage_ifNotPresent(dm);
+			return false;
+		} else {
+			String siteName = extensions.get(0).substring(1);
+			
+		
+		
 		
 		Reaction r = reactionDB.getReaction(row+1);
 		Vector<String> subs = r.getSubstrates(this);
@@ -4991,6 +5078,18 @@ public Integer getGlobalQIndex(String name) {
 				if(CellParsers.isMultistateSpeciesName(element1)) {
 					element1_justName_ifMultistate = CellParsers.extractMultistateName(element1);
 				}
+				if(!(this.getSpecies(element1_justName_ifMultistate) instanceof MultistateSpecies)) {
+					DebugMessage dm = new DebugMessage();
+					dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+				    dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
+				    dm.setOrigin_row(row+1);
+					dm.setProblem("Site not available for a non-multistate Species!");
+				    dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+					MainGui.addDebugMessage_ifNotPresent(dm);
+					return false;
+				}
+				
+			if(speciesName.compareTo(element1_justName_ifMultistate) == 0) {
 				MultistateSpecies sp = (MultistateSpecies) this.getSpecies(element1_justName_ifMultistate);
 				if(sp.getSitesNames().contains(siteName)) {
 					Vector values = sp.getSiteStates_complete(siteName);
@@ -5007,7 +5106,9 @@ public Integer getGlobalQIndex(String name) {
 					}
 					return true;
 				}
+				}
 			}
+		}
 		
 		return false;
 	}

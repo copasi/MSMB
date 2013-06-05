@@ -144,14 +144,40 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 						while(it_sites.hasNext()) {
 							String siteAssigned = (String) it_sites.next();
 							String transferFrom = current_site_nextState.get(siteAssigned);
-							//EXTRACT SUCC/PRED FROM TRANSFERFROM
+							String operator = transferFrom_extractOperator(transferFrom);
+							if(operator.length() > 0) {
+								transferFrom = transferFrom.substring(operator.length()+1, transferFrom.length()-1);
+							}
+							
 							if(transferFrom_extractSpeciesName(transferFrom).compareTo(react.getSpeciesName()) ==0 ) {
 								String siteFrom = transferFrom_extractSiteName(transferFrom);
-								Vector states = react.getSiteStates_complete(siteFrom);
+								Vector states = new Vector();
+								if(operator.length() == 0) {
+									states = react.getSiteStates_complete(siteFrom);
+								} else {
+									
+									if(operator.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.SUCC))==0) {
+										Vector react_states = react.getSiteStates_complete(siteFrom);
+										if(react_states.size() > 0) {
+											MultistateSpecies from = (MultistateSpecies) multiModel.getSpecies(react.getSpeciesName());
+											String succState = ((MultistateSpecies) from).getSucc(siteFrom,react_states.get(0).toString());
+											if(succState!=null) {
+												states.add(succState);
+											} else {
+												System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
+												return;
+											}
+										}
+									
+									}
+								}
 								if(states != null && states.size() == 1) {
 									currentTransferPieces.add(siteAssigned+"{"+states.get(0)+"}");
 								} else {
-									System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
+									//System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
+									//return;
+									exceptions.add(new Exception("Problems with the transfer state from "+transferFrom));
+									return;
 								}
 							}
 						}
@@ -273,7 +299,17 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	private String transferFrom_extractSpeciesName(String transferFrom) {
 		//TO CHANGE to account for the fact that . can exists in names, if between quotes
 			return transferFrom.substring(0, transferFrom.lastIndexOf("."));
-	}
+	}	
+	
+	private String transferFrom_extractOperator(String transferFrom) {
+		
+		if(transferFrom.startsWith(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.SUCC)+"(")) {
+			return MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.SUCC);
+		} else if(transferFrom.startsWith(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.PREC)+"(")) {
+			return MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.PREC);
+		}
+		else return "";
+  }
 	private String transferFrom_extractSiteName(String transferFrom) {
 		//TO CHANGE to account for the fact that . can exists in names, if between quotes
 			return transferFrom.substring(transferFrom.lastIndexOf(".")+1);

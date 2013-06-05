@@ -132,10 +132,63 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	  
 	
 	public void visit(MultistateSum n) {
+		try {
+			if(!elementsExpanded) {
+				expression +=  ToStringVisitor.toString(n);
+				return;
+			}
 		Vector<SumExpansion> expansion = getSumMultistateVector(ToStringVisitor.toString(n));
+
+		for(int i = 0; i < expansion.size(); i++) {
+			  expression += "(";
+			 SumExpansion el = expansion.get(i);
+			 Vector<String> weights = el.getWeightFun();
+			 Vector<Species> species = el.getSpeciesSum();
+			  for(int j =0; j < species.size()-1; j++){
+				  if(weights!= null &&  weights.size()==species.size() && weights.get(j).length()>0) {
+					  InputStream isR = new ByteArrayInputStream(weights.get(j).getBytes("UTF-8"));
+					  MR_Expression_Parser parserR = new MR_Expression_Parser(isR);
+					  CompleteExpression rootR = parserR.CompleteExpression();
+					  ExpressionVisitor vis = new ExpressionVisitor(this.listFunctionToCompact, multiModel);
+					 rootR.accept(vis);
+					  if(vis.getExceptions().size() == 0) {
+							String copasiExpr  = vis.getExpression();
+							expression += copasiExpr+"*";
+						} else {
+							this.exceptions.addAll(vis.exceptions);
+						} 
+				  }
+				  //generateCopasiElement(species.get(j).getDisplayedName());
+				  expression += species.get(j).getDisplayedName();//expansion.get(i).toString();
+				  expression += " + ";
+			}
+			  //and for the last element
+			  if(weights!= null &&  weights.size()==species.size() && weights.get(species.size()-1).length()>0) {
+				  InputStream isR = new ByteArrayInputStream(weights.get(species.size()-1).getBytes("UTF-8"));
+				  MR_Expression_Parser parserR = new MR_Expression_Parser(isR);
+				  CompleteExpression rootR = parserR.CompleteExpression();
+				  ExpressionVisitor vis = new ExpressionVisitor(this.listFunctionToCompact, multiModel);
+				  rootR.accept(vis);
+				  if(vis.getExceptions().size() == 0) {
+						String copasiExpr  = vis.getExpression();
+						expression += copasiExpr+"*";
+					} else {
+						this.exceptions.addAll(vis.exceptions);
+					} 
+			  }
+			  expression += species.get(species.size()-1).getDisplayedName();
+			  expression += ")";
+		  }
+		  }catch (Exception e) {
+				 e.printStackTrace() ;
+			}
+		
+		return;
+		/*expression += "(";
 		for(int i = 0; i < expansion.size(); i++) {
 			expression += expansion.get(i).toString();
 		}
+		expression += ")";*/
 	}
 	
 	private Vector<SumExpansion> getSumMultistateVector(String element) {
@@ -146,7 +199,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			  Look4UndefinedMisusedVisitor multistateSum = new Look4UndefinedMisusedVisitor(multiModel);
 			  root.accept(multistateSum);
 			  Vector<SumExpansion> sum = multistateSum.getSumExpansions();
-			  return sum;
+			   return sum;
 		  }catch (Exception e) {
 			 return new Vector();
 		}
@@ -435,6 +488,13 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			}
 			String element_substring = name.getElementName();
 			
+			String comp = CellParsers.extractCompartmentLabel(element_substring);
+			if(comp!= null && comp.length() > 0) {
+				String speciesName = CellParsers.extractMultistateName(element_substring);
+				if(multiModel.getSpecies(speciesName).getCompartments().size()==1) {
+					element_substring = speciesName;
+				}
+			}
 			
 			
 			Vector<String> extensions = name.getExtensions();

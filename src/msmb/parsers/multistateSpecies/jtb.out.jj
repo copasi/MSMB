@@ -157,6 +157,14 @@ public class MR_MultistateSpecies_Parser {
       v = new MyVisitor();
       op.accept(v);
       System.out.println("...................................");
+    //No spaces are allowed because here can be ok, but it is not ok for the reactions
+    /*expression = new String("Cdh1(p{1, 2}; q{4})");
+	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_MultistateSpecies_Parser(is);
+  	  start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");*/
     }
     catch (Exception e) {
       System.out.println("Oops.");

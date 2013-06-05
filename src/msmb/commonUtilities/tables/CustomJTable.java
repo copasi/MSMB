@@ -28,9 +28,6 @@ public class CustomJTable extends JTable  {
 	MutablePair<Integer, Integer> cell_to_highlight = null;
 	public MutablePair<Integer, Integer> getCell_to_highlight() {return cell_to_highlight;}
 	public void setCell_to_highlight(MutablePair<Integer, Integer> cell_to_highlight) {
-		//int modelRow = getRowSorter().convertRowIndexToModel(cell_to_highlight.left-1);
-		//int modelColumn = convertColumnIndexToModel(cell_to_highlight.right);
-		//this.cell_to_highlight = new MutablePair<>(modelRow+1, modelColumn);
 		this.cell_to_highlight = cell_to_highlight;
 	}
 
@@ -66,23 +63,6 @@ public class CustomJTable extends JTable  {
 	    this.setColumnSelectionAllowed(false);
 	
 	    this.getTableHeader().setReorderingAllowed(false);
-		//this.setRowSorter(new CustomTableRowSorter(model));
-	    
-	
-	    
-	    
-	/*	this.getTableHeader().addMouseListener(new MouseAdapter() {
-		      @Override
-		      public void mousePressed(MouseEvent mouseEvent) {
-		        int index = convertColumnIndexToModel(columnAtPoint(mouseEvent.getPoint()));
-		        if (index >= 0) {
-		        	System.out.println("model.getRowCount() in mouse Clicked " + model.getRowCount());
-		          System.out.println("Clicked on column " + index);
-		          model.addRow(new Vector());
-		          model.fireTableDataChanged();
-		        }
-		      };
-		    });*/
 		
 	    setBackground(UIManager.getColor("Button.background"));
 	  
@@ -119,9 +99,8 @@ public class CustomJTable extends JTable  {
 		                int col = columnAtPoint(p); 
 		                clearSelection();
                     	setColumnSelectionInterval(col, col);
-                    	if(row > 0 && row < getRowCount()) setRowSelectionInterval(row, row);
-                   
-		         		revalidate();
+                    	if(row >= 0 && row < getRowCount()) setRowSelectionInterval(row, row);
+                    	revalidate();
 		            } 
 		        }
 		});

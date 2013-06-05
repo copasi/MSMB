@@ -143,10 +143,33 @@ public class MR_ChemicalReaction_Parser{  public static void main(String args 
       System.out.println("...................................");
 
 
+ 	 //No spaces are allowed in species names (not even in multistateSpecies) because it creates problem in parsing the reactions
+    // expression = new String("SBF( p{0} ) + Whi5(p{0:2}) -> CmplxSBFWhi5(sbf_p=SBF.p;whi5_p=Whi5.p)");
 
 
-       
-      
+
+
+      expression = new String("\"EGFR(Y1068~P!?)\" ->");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+  		expression = new String("\"EGFR(L!1,CR1).EGF(R!1)\" ->");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      	expression = new String("\"EGFR(L!+,CR1)\" ->");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
     }
     catch (Exception e)
     {
@@ -211,7 +234,7 @@ public void visit(SpeciesWithCoeff n) {
 TOKEN :
 {
   < IDENTIFIER : < STRING_LITERAL > |
-   				 (< LETTER >|<DIGIT>|";"|"="|"= "|" = "|","|", "|" , "|" ,"|< STRING_LITERAL >)* (<LETTER>|<DIGIT>|< STRING_LITERAL >)>
+   				 (< LETTER >|<DIGIT>| ";"|"="|"= "|" = "|","|", "|" , "|" ,"|< STRING_LITERAL >)* (<LETTER>|<DIGIT>|< STRING_LITERAL >)>
 |  < #DIGIT:   ["0"-"9"]  >
 |  < #STRING_LITERAL:
       "\""

@@ -1,5 +1,7 @@
 package msmb.model;
 
+import msmb.debugTab.DebugConstants;
+import msmb.debugTab.DebugMessage;
 import msmb.debugTab.FoundElement;
 import msmb.gui.MainGui;
 
@@ -10,6 +12,9 @@ import java.util.Vector;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import msmb.parsers.mathExpression.MR_Expression_Parser;
+import msmb.parsers.mathExpression.syntaxtree.CompleteExpression;
+import msmb.parsers.mathExpression.visitor.GetElementWithExtensions;
 import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
@@ -204,17 +209,55 @@ public class ReactionDB {
 				}
 				if(!ok) misused.add(name);
 			}else if(type.compareTo(Constants.FunctionParamType.SITE.signatureType)==0) {
-				for(int j = 0; j < subs.size(); j++){
-					String element1 = subs.get(j);
-					element1 = multiModel.extractName(element1);
-					String element1_justName_ifMultistate = element1;
-					if(CellParsers.isMultistateSpeciesName(element1)) {
-						element1_justName_ifMultistate = CellParsers.extractMultistateName(element1);
-					}
-					MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(element1_justName_ifMultistate);
-					if(sp.getSitesNames().contains(name)) {
-						ok = true;
-						break;
+				GetElementWithExtensions elementWithExtensions = null;
+				try{
+					
+					InputStream is = new ByteArrayInputStream(name.getBytes("UTF-8"));
+					MR_Expression_Parser parser = new MR_Expression_Parser(is);
+					CompleteExpression root = parser.CompleteExpression();
+					elementWithExtensions = new GetElementWithExtensions();
+					root.accept(elementWithExtensions);
+				}catch (Throwable e) {
+					e.printStackTrace();
+					
+				}
+			
+				String speciesName = elementWithExtensions.getElementName();
+				Vector<String> extensions = elementWithExtensions.getExtensions();
+				if(extensions.size() ==0) {
+					
+					if(!misused.contains(name)) misused.add(name);
+					
+				} else {
+						String site = extensions.get(0).substring(1);
+					
+					System.out.println("qui species name "+speciesName +" and site "+site);
+					
+					for(int j = 0; j < subs.size(); j++){
+						String element1 = subs.get(j);
+						element1 = multiModel.extractName(element1);
+						String element1_justName_ifMultistate = element1;
+						if(CellParsers.isMultistateSpeciesName(element1)) {
+							element1_justName_ifMultistate = CellParsers.extractMultistateName(element1);
+						}
+						if(speciesName.compareTo(element1_justName_ifMultistate) == 0) {
+							if(!(multiModel.getSpecies(element1_justName_ifMultistate) instanceof MultistateSpecies)) {
+								DebugMessage dm = new DebugMessage();
+								dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+							    dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
+							    dm.setOrigin_row(row+1);
+								dm.setProblem("Site not available for a non-multistate Species!");
+							    dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+								MainGui.addDebugMessage_ifNotPresent(dm);
+								ok = false;
+								break;
+							}
+							MultistateSpecies sp = (MultistateSpecies) multiModel.getSpecies(element1_justName_ifMultistate);
+							if(sp.getSitesNames().contains(site)) {
+								ok = true;
+								break;
+							}
+						}
 					}
 				}
 				if(!ok) misused.add(name);

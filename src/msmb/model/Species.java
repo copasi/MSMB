@@ -1,9 +1,15 @@
 package msmb.model;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Set;
 import java.util.Vector;
 
 import msmb.gui.MainGui;
+import msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
+import msmb.parsers.mathExpression.syntaxtree.CompleteExpression;
+import msmb.parsers.mathExpression.visitor.Look4UndefinedMisusedVisitor;
 import msmb.utility.*;
 
 
@@ -16,7 +22,8 @@ public class Species  {
 	String expression = new String();
 	private String editableInitialQuantity = new String();
 	private String editableExpression = expression;
-	public String getExpression() { 	return expression.trim();	}
+	public String getExpression() { 	
+		return expression.trim();	}
 		
 	public void setExpression(MultiModel m, String expr) throws Throwable {	
 		if(expr.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
@@ -25,6 +32,7 @@ public class Species  {
 		
 			
 			this.expression = expr;	
+		
 			CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
 			boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
 			MainGui.importFromSBMLorCPS = false;
@@ -32,6 +40,7 @@ public class Species  {
 			MainGui.importFromSBMLorCPS = oldImportFromSBMLorCPS;
 					
 		} catch (Exception ex) {
+
 			throw ex;
 		} finally {
 			editableExpression = expr;
