@@ -532,6 +532,11 @@ public class MultistateSpecies extends Species {
 		return s.isCircular();
 	}
 	
+	public boolean isRange(String site) {
+		return this.sites_type.get(site).getType()== SiteType.RANGE;
+	}
+	
+	
 	private void setCircular(String site, boolean b) {
 		SiteType s = sites_type.get(site);
 		s.setCircular(b);

@@ -60,7 +60,7 @@ public class PrintTablesToPDF {
         	if(element instanceof CustomTableModel_MSMB) {
         		CustomTableModel_MSMB tablemodel = (CustomTableModel_MSMB) element;
         		int col = tablemodel.getColumnCount();
-
+        		
         		Paragraph title = new Paragraph(tablemodel.getTableName());
 
         		Section section = chapter.addSection(title);
@@ -92,16 +92,16 @@ public class PrintTablesToPDF {
         		cell.setColspan(tablemodel.getColumnCount());
         		table.addCell(cell);
 
-
+        		            	
         		table.getDefaultCell().setBackgroundColor(BaseColor.LIGHT_GRAY);
 
         		Vector<String> header = null;
-        		if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0) header = Constants.species_columns;
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) header = Constants.compartments_columns;
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.EVENTS.description)==0) header = Constants.events_columns;
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) header = Constants.functions_columns;
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) header = Constants.globalQ_columns;
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0) header = Constants.reactions_columns;
+        		if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0) header = new Vector(Constants.species_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) header = new Vector(Constants.compartments_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.EVENTS.description)==0) header = new Vector(Constants.events_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) header = new Vector(Constants.functions_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) header = new Vector(Constants.globalQ_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0) header = new Vector(Constants.reactions_columns);
         		else if(tablemodel.getTableName().compareTo(Constants.MULTISTATE_TITLE_TABLE_PDF)==0) {
         			header = new Vector<String>();
         			header.add("Single state of Multistate Species");
@@ -117,7 +117,7 @@ public class PrintTablesToPDF {
         		}
         		table.getDefaultCell().setBackgroundColor(null);
         		table.setHeaderRows(2);
-
+        		            	
         		for(int i1 = 0; i1 < tablemodel.getRowCount()-1; i1++) {
         			for(int j = 0; j < tablemodel.getColumnCount(); j++) {
         				//if(isButtonColumn(tablemodel.getTableName(),j)) continue;
@@ -143,6 +143,8 @@ public class PrintTablesToPDF {
         				table.addCell(cell1);
         	  			}
         		}
+        		
+        		            	
         		section.add(table);
 
         		section.newPage();

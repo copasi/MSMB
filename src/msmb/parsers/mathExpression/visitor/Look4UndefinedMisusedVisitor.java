@@ -117,7 +117,13 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 						}
 						if(f==null){	
 							if(!CellParsers.isKeyword(ToStringVisitor.toString(n.name.nodeChoice.choice))) {
-								if(!missing.contains(name))	missing.add(name); }
+								if(!missing.contains(name))	{
+									missing.add(name); 
+									}
+								if(!misused.contains(name))	{
+									misused.add(name); 
+									}
+								}
 							}
 						else{
 							checkParameterUsage((ArgumentList)nodeOptional.node,f);

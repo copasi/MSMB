@@ -131,6 +131,13 @@ public class GraphicalProperties {
 			 }
 			 
 		
+			 List<JTree> tree = SwingUtils.getDescendantsOfClass(JTree.class, container);
+			 Iterator<JTree> it14 = tree.iterator();
+			 while(it14.hasNext()) {
+				 JTree current = it14.next();
+				 current.setFont(MainGui.customFont);
+				 current.setRowHeight(MainGui.customFont.getSize()+3);
+			 }
 		 
 		 container.revalidate();
 		 SwingUtilities.updateComponentTreeUI(container);

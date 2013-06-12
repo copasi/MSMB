@@ -891,7 +891,8 @@ public class Constants {
 			   REACTIONS(1,"Reactions", CMetab.REACTIONS),
 			   ASSIGNMENT(2,"Assignment", CMetab.ASSIGNMENT),
 			   ODE(3,"ODE", CMetab.ODE),
-			   MULTISTATE(4,"Multistate", Constants.MULTISTATE_TYPE);
+			   MULTISTATE(4,"Multistate", Constants.MULTISTATE_TYPE),
+			   COMPLEX(5,"Complex", Constants.COMPLEX_TYPE);
 			   
 			          
 			   public final int arrayIndex;
@@ -958,7 +959,9 @@ public class Constants {
 			speciesTypes.add(Constants.SpeciesType.FIXED.description);
 			speciesTypes.add(Constants.SpeciesType.REACTIONS.description);
 			speciesTypes.add(Constants.SpeciesType.ASSIGNMENT.description);
+			speciesTypes.add(Constants.SpeciesType.ODE.description);
 			speciesTypes.add(Constants.SpeciesType.MULTISTATE.description);
+			//speciesTypes.add(Constants.SpeciesType.COMPLEX.description);
 		}
 		
 		
@@ -1122,6 +1125,7 @@ public class Constants {
 		}
 		
 		public static final int MULTISTATE_TYPE = -127;
+		public static final int COMPLEX_TYPE = -524;
 		public static final int SITE_FOR_WEIGHT_IN_SUM = -376;
 		public static final int ROLE_EXPRESSION = -603;
 		public static final int PARAM_TYPE_FUN = -739;

@@ -82,7 +82,11 @@ public class CustomTableModel_MSMB extends CustomTableModel{
 	}
 	
 	public Class getColumnClass(int c) {
-        return getValueAt(0, c).getClass();
+		Object element = getValueAt(0, c);
+		if(element == null) {
+			System.out.println(this.getTableName()+" null at column "+c);
+		}
+        return element.getClass();
    }
 	 public void setValueAt_old(Object value, int row, int col) {
 	       MainGui.cell_to_highlight = null;
@@ -120,7 +124,8 @@ public class CustomTableModel_MSMB extends CustomTableModel{
 		   try {
 			gui.validateMultiModel(false, false);
 			} catch (Exception e) {
-				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+					e.printStackTrace();
 			}
 	    }
 	    
@@ -756,7 +761,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 				if(model.isViewEditable(row,Constants.SpeciesColumns.EXPRESSION.index)) 
 					model.enableCell(row, Constants.SpeciesColumns.EXPRESSION.index);
 				model.disableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
-			} else 	if(typeS.compareTo(Constants.SpeciesType.MULTISTATE.description)==0) {
+			} else 	if(typeS.compareTo(Constants.SpeciesType.MULTISTATE.description)==0 || typeS.compareTo(Constants.SpeciesType.COMPLEX.description)==0) {
 				model.disableCell(row, Constants.SpeciesColumns.EXPRESSION.index);
 				model.disableCell(row, Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			}else if(typeS.compareTo(Constants.SpeciesType.ODE.description)==0) {

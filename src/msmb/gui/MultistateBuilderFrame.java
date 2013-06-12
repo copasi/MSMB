@@ -706,10 +706,7 @@ private void applyChangeSite() {
 		Vector<String> reactions = new Vector<String>();
 		this.species.setType(Constants.SpeciesType.MULTISTATE.copasiType);
 		
-	
-		
 		this.parentFrame.updateModel_fromMultiBuilder(this.species, reactions);
-		
 		dispose();
 	}
 	

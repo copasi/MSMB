@@ -73,7 +73,8 @@ public class MultiModel {
 	
 		Vector<Integer> where = getWhereNameIsUsed(name);
 		if(where != null) { 
-			if(where.contains(tableIndex) && tableIndex != Constants.TitlesTabs.SPECIES.index) throw new Exception(); //already defined in that table
+			if(where.contains(tableIndex)
+					&& tableIndex != Constants.TitlesTabs.SPECIES.index) throw new Exception(); //already defined in that table
 		} else {
 			where = new Vector<Integer>();
 		}
@@ -5181,6 +5182,24 @@ public Integer getGlobalQIndex(String name) {
 	public void addInvisibleSpecies(String name, String initialQuantity,
 			String compartment) throws Exception {
 		this.speciesDB.addInvisibleSpecies(name, initialQuantity, compartment);
+		
+	}
+
+	public ComplexSpecies getComplexSpecies(String name) {
+		return speciesDB.getComplexSpecies(name);
+	}
+
+	public void updateComplex(String name, ComplexSpecies newComplex) {
+			System.out.println("COMPLEX name" + name);
+			System.out.println("COMPLEX initials" + newComplex);
+		}
+
+	public void addChangeComplex(int index, ComplexSpecies complex) {
+		try {
+			speciesDB.addChangeComplex(index, complex);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 		
 	}
 

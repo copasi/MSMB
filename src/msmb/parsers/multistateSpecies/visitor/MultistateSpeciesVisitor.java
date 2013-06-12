@@ -338,6 +338,9 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 			 if(seq.nodes.size()>1) {
 				 NodeOptional opt = (NodeOptional)(seq.nodes.get(1));
 				 NodeChoice nchoice = (NodeChoice) (opt.node);
+				 if(nchoice == null) {//only the name, but should be ok
+					 return;
+				 }
 				 if(nchoice.which == 0) {
 					 NodeSequence seq2 = (NodeSequence) (nchoice.choice);
 					 if(seq2!=null) {	

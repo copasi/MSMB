@@ -25,28 +25,34 @@ public class SpeciesDB {
 	Vector< Species> invisibleSpeciesVector = new Vector<Species>();
 	TreeMap<Integer, Species> speciesVector = new TreeMap<Integer, Species>();
 	HashMap<String, Integer> speciesIndexes = new HashMap<String, Integer>();
+	
+	Vector< Integer > indexesComplexSpecies = new Vector<Integer>();
+
+	
 	MultiModel multiModel = null;
 	
 	public SpeciesDB(MultiModel mm) {
 		speciesIndexes = new HashMap<String, Integer>();
 		speciesVector = new TreeMap<Integer, Species>();
 		speciesVector.put(0,null);
+		indexesComplexSpecies = new Vector<Integer>();
 		multiModel = mm;
 	}
 	
 	public int addChangeSpecies(int index, String sbmlID, String name, HashMap<String, String> initialQuant, int type, String compartment, String expression, boolean fromMultistateBuilder, String notes, boolean autoMergeSpecies,boolean parseExpression) throws Throwable {
 	
+		if(type == Constants.SpeciesType.COMPLEX.copasiType) {
+			return -1;
+		} 
+		
+		
 		Integer ind;
 		if(CellParsers.isMultistateSpeciesName(name)) {
 			ind = speciesIndexes.get(new MultistateSpecies(multiModel,name).getSpeciesName());
 		} else {
 			ind = speciesIndexes.get(name);
 		}
-		/*if(name.contains("(")) { 
-			ind = speciesIndexes.get(name.substring(0, name.indexOf("(")));
-		} else {
-			ind = speciesIndexes.get(name);
-		}*/
+		
 			
 		if(ind != null && ind != index && !CellParsers.isMultistateSpeciesName(name)) { 
 			// the name is already assigned to another species
@@ -87,6 +93,7 @@ public class SpeciesDB {
 				
 				Species old = speciesVector.get(ind);
 				if(old instanceof MultistateSpecies) {
+					
 					MultistateSpecies m_old = (MultistateSpecies) old;
 					MultistateSpecies m_new = null;
 					try{				
@@ -137,11 +144,24 @@ public class SpeciesDB {
 					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.description, ind);
 					return -ind;
 				} else {
-					if(old instanceof Species) {
+					if(old instanceof Species && speciesIndexes.containsKey(old.getSpeciesName())) {
 						Throwable cause = new Throwable(name);
 						throw new ClassNotFoundException("A non-multistate species already exists with that name", cause);
 					}
-					else throw new Exception("problem addChangeSpecies");
+					else {//rename of a regular species to multistate but on the same row, so overwrite old string, add multi as it is new, but in the old index in the vector
+						MultistateSpecies s = new MultistateSpecies(multiModel,name);
+						s.setInitialQuantity(initialQuant);
+						s.setCompartment(multiModel,compartment);
+						if(parseExpression == true) s.setExpression(multiModel,expression);
+						else s.setExpression_withoutParsing(expression);
+						s.setType(Constants.SpeciesType.MULTISTATE.copasiType);
+						s.setNotes(notes);
+						if(index == -1) { index = speciesVector.size(); }
+						speciesIndexes.put(s.getSpeciesName(), index);
+						speciesVector.put(index,s);
+						multiModel.addNamedElement(s.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
+						return index;
+					}
 				}
 			}
 			
@@ -165,7 +185,7 @@ public class SpeciesDB {
 					MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(MSMB_Element.SPECIES);
 					changeToReport_IntfSpecies.setElementBefore(null);
 					changeToReport_IntfSpecies.setElementAfter(new ChangedElement(name, MSMB_Element.SPECIES));
-					MainGui.setChangeToReport(changeToReport_IntfSpecies);
+					if(MainGui.actionInColumnName) MainGui.setChangeToReport(changeToReport_IntfSpecies);
 					
 					Species s = new Species(name);
 					s.setCompartment(multiModel,compartment);
@@ -209,7 +229,7 @@ public class SpeciesDB {
 						MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(MSMB_Element.SPECIES);
 						changeToReport_IntfSpecies.setElementBefore(new ChangedElement(oldName,MSMB_Element.SPECIES));
 						changeToReport_IntfSpecies.setElementAfter(new ChangedElement(name,MSMB_Element.SPECIES));
-						MainGui.setChangeToReport(changeToReport_IntfSpecies);
+						if(MainGui.actionInColumnName)  MainGui.setChangeToReport(changeToReport_IntfSpecies);
 					}
 					s.setName(name);
 					s.setCompartment(multiModel,compartment);
@@ -238,6 +258,7 @@ public class SpeciesDB {
 			speciesIndexes.put(name, index);
 			if(ex.getColumn()==Constants.SpeciesColumns.EXPRESSION.index && expression.trim().length() >0) {
 				Vector<String> undef = null;
+				Vector<String> misused = null;
 				if(expression.length() >0) {
 					  InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 					  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
@@ -246,6 +267,7 @@ public class SpeciesDB {
 						  Look4UndefinedMisusedVisitor undefVisitor = new Look4UndefinedMisusedVisitor(multiModel);
 						  root.accept(undefVisitor);
 						  undef = undefVisitor.getUndefinedElements();
+						  misused = undefVisitor.getMisusedElements();
 					  }catch (Exception e) {
 						addChangeSpecies(index, sbmlID, name, initialQuant,  type, compartment, expression, fromMultistateBuilder, notes, autoMergeSpecies,false);
 						throw ex;
@@ -253,9 +275,30 @@ public class SpeciesDB {
 					  
 				}
 				if(undef != null){
-					 if( undef.size() ==0 || (undef.size()==1 && undef.get(0).compareTo(name)==0)) { //just self reference in ode/expression and it is allowed
-						return addChangeSpecies(index, sbmlID, name, initialQuant,  type, compartment, expression, fromMultistateBuilder, notes, autoMergeSpecies,false);
+					 if( undef.size() ==0 || (undef.size()==1 && undef.get(0).compareTo(name)==0)&& !misused.contains(name)) { 
+							//just self reference in ode/expression and it is allowed, however if it is in the misused, it means that is a case like mu*m(1-m/ms) where the first m is a function call and ms is the species reference
+						 return addChangeSpecies(index, sbmlID, name, initialQuant,  type, compartment, expression, fromMultistateBuilder, notes, autoMergeSpecies,false);
 					}
+					 else {
+						 for(int i = 0; i < undef.size(); i++) {
+							 if(undef.get(i).compareTo(name)==0){
+								 undef.remove(i);
+								 break;
+							 }
+						 }
+						
+						 if(undef.size() > 0){
+							 String message = "Missing element definition: " + undef.toString();
+							 ex = new MySyntaxException(message, ex);
+						 } else {
+							 if(misused.size() > 0){
+								 String message = "Misused element: " + misused.toString();
+								 ex = new MySyntaxException(message, ex);
+							 } 
+						 }
+						 
+					
+					 }
 					throw ex;
 				} 
 
@@ -456,12 +499,14 @@ public class SpeciesDB {
 	public boolean containsSpecies(String speciesName) {
 		boolean ret = containsSpecies(speciesName,false);
 		if(ret && CellParsers.isMultistateSpeciesName(speciesName)) {
-			MultistateSpecies m = (MultistateSpecies) this.getSpecies(speciesName);
-			try {
-				ret = ret && m.containsSpecificConfiguration(speciesName);
-			} catch (Exception e) {
-				//e.printStackTrace();
-			}
+			if(this.getSpecies(speciesName) instanceof MultistateSpecies) { 
+				MultistateSpecies m = (MultistateSpecies) this.getSpecies(speciesName);
+				try {
+					ret = ret && m.containsSpecificConfiguration(speciesName);
+				} catch (Exception e) {
+					//e.printStackTrace();
+				}
+			} 
 		}
 		return ret;
 	}
@@ -629,4 +674,43 @@ public class SpeciesDB {
 		return;
 		
 	}
+	
+	public ComplexSpecies getComplexSpecies(String name) {
+		String real_name = new String(name);
+		if(CellParsers.isMultistateSpeciesName(name)) {
+			real_name = CellParsers.extractMultistateName(name);
+			if(speciesIndexes.get(real_name)==null) return null;
+			int ind = speciesIndexes.get(real_name).intValue();
+			if(indexesComplexSpecies.contains(ind)) {
+				return (ComplexSpecies) speciesVector.get(ind);
+			}
+		} 
+		
+		return null;
+		
+		/*System.out.println("TEST getComplexSpecies" + name);
+		ComplexSpecies test = null;
+		try {
+			test = new ComplexSpecies("Cmplx(p1{0:5};p2{0:3})");
+		} catch (Exception e) {
+				e.printStackTrace();
+		}
+		return test;*/
+	}
+	
+	public void addChangeComplex(int index, ComplexSpecies complex) throws Throwable {
+		if(index==-1) {
+			index = speciesVector.size();
+			indexesComplexSpecies.add(index);
+		}	else {
+			multiModel.removeNamedElement(speciesVector.get(index).getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
+		}
+		speciesIndexes.put(complex.getSpeciesName(), index);
+		speciesVector.put(index,complex);
+		multiModel.addNamedElement(complex.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
+		System.out.println("COMPLEXES at indexes: "+indexesComplexSpecies);
+		return;
+	}
+	
+	
 }

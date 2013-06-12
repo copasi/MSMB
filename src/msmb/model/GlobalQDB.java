@@ -96,8 +96,8 @@ public class GlobalQDB {
 				MSMB_InterfaceChange changeToReport_IntfGlq = new MSMB_InterfaceChange(MSMB_Element.GLOBAL_QUANTITY);
 				changeToReport_IntfGlq.setElementBefore(null);
 				changeToReport_IntfGlq.setElementAfter(new ChangedElement(name,MSMB_Element.GLOBAL_QUANTITY));
-				MainGui.setChangeToReport(changeToReport_IntfGlq);
-				
+				if(MainGui.actionInColumnName) MainGui.setChangeToReport(changeToReport_IntfGlq);
+			
 				
 				GlobalQ c = new GlobalQ(name);
 				c.setNotes(notes);
@@ -121,12 +121,11 @@ public class GlobalQDB {
 					MSMB_InterfaceChange changeToReport_IntfGlq = new MSMB_InterfaceChange(MSMB_Element.GLOBAL_QUANTITY);
 					changeToReport_IntfGlq.setElementBefore(new ChangedElement(oldName,MSMB_Element.GLOBAL_QUANTITY));
 					changeToReport_IntfGlq.setElementAfter(new ChangedElement(name,MSMB_Element.GLOBAL_QUANTITY));
-					MainGui.setChangeToReport(changeToReport_IntfGlq);
+					if(MainGui.actionInColumnName) MainGui.setChangeToReport(changeToReport_IntfGlq);
 				}
 				c.setName(name);
 				
 				globalQIndexes.put(name, index);
-				multiModel.addNamedElement(name, Constants.TitlesTabs.GLOBALQ.index);
 				columnToAnalyze  = Constants.GlobalQColumns.EXPRESSION.index;
 				c.setExpression(multiModel,expression);
 				columnToAnalyze  = Constants.GlobalQColumns.VALUE.index;
@@ -135,13 +134,15 @@ public class GlobalQDB {
 				c.setNotes(notes);
 				c.setType(type);
 				globalQVector.put(index,c);
-				
+				multiModel.addNamedElement(name, Constants.TitlesTabs.GLOBALQ.index);
+					
 				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.GLOBALQ.description, ind);
 				return index;
 			}
 		} catch (MySyntaxException ex) {
 			if(ex.getColumn()==Constants.GlobalQColumns.EXPRESSION.index && expression.trim().length() >0) {
 				Vector<String> undef = null;
+				Vector<String> misused = null;
 				if(expression.length() >0) {
 					  InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 					  MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
@@ -149,22 +150,35 @@ public class GlobalQDB {
 					  Look4UndefinedMisusedVisitor undefVisitor = new Look4UndefinedMisusedVisitor(multiModel);
 					  root.accept(undefVisitor);
 					  undef = undefVisitor.getUndefinedElements();
+					  misused = undefVisitor.getMisusedElements();
 				}
 				if(undef != null){
 					if(undef.size() ==0) throw ex; 
-					if(undef.size()==1 && undef.get(0).compareTo(name)==0) { //just self reference in ode/expression and it is allowed
+					if(undef.size()==1 && undef.get(0).compareTo(name)==0
+							&& !misused.contains(name)) { 
+						//just self reference in ode/expression and it is allowed, however if it is in the misused, it means that is a case like mu*m(1-m/ms) where the first m is a function call and ms is the species reference
 						return addChangeGlobalQ_withoutParsing(name,  initialValue, type, expression, notes);
 					} 
 					 
 					 else {
-						for(int i = 0; i < undef.size(); i++) {
+						 for(int i = 0; i < undef.size(); i++) {
 							 if(undef.get(i).compareTo(name)==0){
 								 undef.remove(i);
 								 break;
 							 }
 						 }
-						 String message = "Missing element definition: " + undef.toString();
-						 ex = new MySyntaxException(message, ex);
+						
+						 if(undef.size() > 0){
+							 String message = "Missing element definition: " + undef.toString();
+							 ex = new MySyntaxException(message, ex);
+						 } else {
+							 if(misused.size() > 0){
+								 String message = "Misused element: " + misused.toString();
+								 ex = new MySyntaxException(message, ex);
+							 } 
+						 }
+						 
+					
 					 }
 					throw ex;
 				} 

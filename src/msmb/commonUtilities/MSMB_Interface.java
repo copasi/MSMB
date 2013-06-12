@@ -4,6 +4,7 @@ import java.util.Vector;
 
 import javax.swing.JMenuBar;
 import javax.swing.JTabbedPane;
+import javax.swing.JTable;
 import javax.swing.event.ChangeListener;
 
 import msmb.model.Compartment;
@@ -40,7 +41,6 @@ public interface MSMB_Interface {
 
 	/*public void addInvisibleSpecies(String name, String initialQuantity, String compartment) throws Exception;
 	public Vector<String> getMSMB_listOfInvisibleSpecies();
-	//!!! MISSING: INVISIBLE GLOBAL QUANTITIES !!!
 	public void removeInvisibleSpecies(String name);
 	 */
 	
@@ -52,4 +52,9 @@ public interface MSMB_Interface {
 
 	public Font getCustomFont();
 	public void addChangeListener(ChangeListener c, MSMB_Element element);	
+	
+	
+	public void setModelName(String newModelName);
+	public JTable getSpeciesJTable();
+	public JTable getGlobalQJTable();
 }
