@@ -296,8 +296,7 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
   /**
    * nodeChoice -> . %0 #0 ( AdditiveExpression() )?<br>
    * .......... .. . .. #1 ( Blank() )*<br>
-   * .......... .. . .. #2 ( &0 <ARROW><br>
-   * .......... .. . .. .. | &1 <COMPLEXATION_ARROW> )<br>
+   * .......... .. . .. #2 <ARROW><br>
    * .......... .. . .. #3 ( $0 ( " " )<br>
    * .......... .. . .. .. . $1 ( Blank() )*<br>
    * .......... .. . .. .. . $2 ( AdditiveExpression() )? )*<br>

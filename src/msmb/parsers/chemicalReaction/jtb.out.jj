@@ -164,6 +164,20 @@ public class MR_ChemicalReaction_Parser {
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
+      expression = new String("Cdh1(p{1:10}) + ClbM -> Cdh1(pred(p))");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p) -> _Cdh1(AAA=Cdh1.p)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
     }
     catch (Exception e) {
       System.out.println("Oops.");

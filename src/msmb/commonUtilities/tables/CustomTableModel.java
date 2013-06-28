@@ -328,6 +328,7 @@ public class CustomTableModel extends DefaultTableModel {
 
 	@Override
 	public void setValueAt(Object value, int row, int col) {
+		
 		   if(row < 0) return;
 	       Vector r = (Vector)data.get(row);
 		   Object old = r.get(col);

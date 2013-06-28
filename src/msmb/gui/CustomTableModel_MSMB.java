@@ -27,6 +27,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import msmb.commonUtilities.ChangedElement;
+import msmb.commonUtilities.MSMB_Element;
+import msmb.commonUtilities.MSMB_InterfaceChange;
 import msmb.commonUtilities.tables.CustomJTable;
 import msmb.commonUtilities.tables.CustomTableModel;
 import msmb.commonUtilities.tables.CustomTableModelListener;
@@ -273,261 +276,273 @@ class CustomJTable_MSMB extends CustomJTable  {
 	private PopUpViewActionListener_2 customListener;
 	private PopUpViewActionListener_2 currentAsEditable;
 	
-	
-	
-    
+	   
 	public void initializeCustomTable(CustomTableModel_MSMB m) {
 		super.initializeCustomTable(m);
 		
 	    if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0) 
 	    	this.setAutoCreateRowSorter(true); 
 
-		 
-	    addMouseListener(new MouseAdapter()   {
-	    
-	    	private JMenuItem ackMenuItem;
-	    	private JMenuItem copySignature;
-			private JMenuItem errorMenuItem;
-			public void mousePressed(MouseEvent e) {   mouseClicked(e);  }
-	    	public void mouseReleased(MouseEvent e) {   mouseClicked(e); }
-	    	 
-	        public void mouseClicked(MouseEvent e)      {
-	        	
-            	  if (e.getButton() == MouseEvent.BUTTON1 || e.getModifiers() == MouseEvent.BUTTON1_MASK )   {
-	        		revalidate(); // to recolor cell not highlighted any more
-			        repaint(); // to display the cleared cells
-			        
-	                Point p = e.getPoint();
-	                int row = rowAtPoint(p); 
-	                int col = columnAtPoint(p); 
-	                    
-	            	if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description) == 0) {
-		        		MultistateBuilderFrame.row_to_highlight = row;
-		        		return;
-		        	}
-	            	
-	                if(row == -1 || col == -1) {
-	                	//System.err.println("row at point "+row + ", col at point "+ col);
-        				return;
-	                }
-	        
-	               if(MainGui.cellTableEdited.compareTo(model.getTableName()) !=0) MainGui.resetViewsInExpressions();
-	                
-	                MainGui.cellValueBeforeChange = model.getValueAt(row,col).toString();
-	             	
-	                
-	               
-	             	MainGui.cellSelectedRow= row;
-	             	MainGui.cellSelectedCol=col;
-	             	MainGui.cellTableEdited = model.getTableName();
-	             	highlightCellSelectedRow();
-		             
-	             	try {
-						if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(MainGui.cellTableEdited, MainGui.cellSelectedRow+1);
-					} catch (Throwable e1) {
-						e1.printStackTrace();
-					}
-	             } else {
-	     		       
-	            	showPopup(e);
-	            }
-	        }
-	        
-	        private void showPopup(MouseEvent e) {
-	        	if (e.isPopupTrigger()) {
-	        		if (isEditing()){ getCellEditor().stopCellEditing(); }
-	        		
-	        		boolean showPopup = false;
-	            	popupMenu.removeAll();
-		            Point p = e.getPoint();
-		             final int row = rowAtPoint(p); 
-		             final int col = columnAtPoint(p); 
-		             if(row == -1 || col == -1) return;
-		            
-		         	MainGui.cellSelectedRow=row;
-	             	MainGui.cellSelectedCol=col;
-	             	MainGui.cellTableEdited = model.getTableName();
-	             	highlightCellSelectedRow();
-	             	
-	             	
-	             	
-		             if(MainGui.isCellWithDefaultValue(model.getTableName(), row, col)) {
-		            	 showPopup = true;
-		            	 DebugMessage dm = new DebugMessage();
-			             dm.setOrigin_table(model.getTableName());
-			             dm.setProblem("");
-			             dm.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
-			             dm.setOrigin_col(col);
-			             dm.setOrigin_row(row+1);
-						 MainGui.toBeAck_debugMessage =dm;
-		            	 ackMenuItem = new JMenuItem("Acknowledge default value");
-		    			 ackMenuItem.addActionListener(new ActionListener() {
-		    				  public void actionPerformed(ActionEvent e) {
-		    					  try {
-		    						MainGui.ackSelectedDebugMessage();
-		    					} catch (Throwable e1) {
-		    						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
-		    					}
-		    				  }
-		    			  });
-		    		    popupMenu.insert(ackMenuItem,0);
-		    		 } else {
-		    			 if(ackMenuItem!= null) popupMenu.remove(ackMenuItem);
-		    		 }
-		            
-		             if(MainGui.isCellWithErrors(model.getTableName(), row, col)) {
-		            	 	 showPopup = true;
-		               	    errorMenuItem = new JMenuItem("Go to error");
-		               	    errorMenuItem.addActionListener(new ActionListener() {
-		         			  @Override
-		         			  public void actionPerformed(ActionEvent e) {
-		         				  			MainGui.goToError(model.getTableName(), row, col);
-		         			  }
-		         				});
-		    		    popupMenu.insert(errorMenuItem,0);
-		    		 } else {
-		    			 if(errorMenuItem!= null) popupMenu.remove(errorMenuItem);
-		    		 }
-		             
-		             if(MainGui.isCellWithMultipleView(model.getTableName(), row, col) && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
+	 
+		if(this.getMouseListeners().length <=2) {
+		    addMouseListener(new MouseAdapter()   {
+		    
+		    	private JMenuItem ackMenuItem;
+		    	private JMenuItem copySignature;
+				private JMenuItem errorMenuItem;
+				
+				//on different OS popupTrigger is recognized in different calls (either mouse pressed or mouse released or mouse click) so I call the same method for all cases
+				public void mousePressed(MouseEvent e) {   	if(e.getButton() != MouseEvent.BUTTON1) mouseClicked(e); 		}
+		    
+				public void mouseReleased(MouseEvent e) {  if(e.getButton() != MouseEvent.BUTTON1) mouseClicked(e);     	}
+		    	 
+		        public void mouseClicked(MouseEvent e)      {
+		      	  if (e.getButton() == MouseEvent.BUTTON1 || e.getModifiers() == MouseEvent.BUTTON1_MASK )   {
+		        		revalidate(); // to recolor cell not highlighted any more
+				        repaint(); // to display the cleared cells
+				        
+		                Point p = e.getPoint();
+		                int row = rowAtPoint(p); 
+		                int col = columnAtPoint(p); 
+		                    
+		            	if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description) == 0) {
+			        		MultistateBuilderFrame.row_to_highlight = row;
+			        		return;
+			        	}
+		            	
+		                if(row == -1 || col == -1) {
+		                	//System.err.println("row at point "+row + ", col at point "+ col);
+	        				return;
+		                }
+		        
+		               if(MainGui.cellTableEdited.compareTo(model.getTableName()) !=0) MainGui.resetViewsInExpressions();
 		                
-		            	 MainGui.cellTableEdited = model.getTableName();
-		            	 
-		            	JMenuItem editableView = new JMenuItem(Constants.Views.EDITABLE.description);
-		         	    editableListener = new PopUpViewActionListener_2(Constants.Views.EDITABLE.index);
-		         		editableView.addActionListener(editableListener);
-		         		popupMenu.add(editableView);
-		         	    
-		         		JMenuItem expandedView = new JMenuItem(Constants.Views.EXPANDED.description);
-		         	    expandedListener = new PopUpViewActionListener_2(Constants.Views.EXPANDED.index);
-		         		expandedView.addActionListener(expandedListener);
-		         		popupMenu.add(expandedView);
-		         	
-		         		popupMenu.addSeparator();
-		         		
-		         		
-		         	/*	if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)!=0) {
-		         			JMenuItem expandedAllView = new JMenuItem(Constants.Views.EXPANDED_ALL.description);
-		         			expandedAllListener = new PopUpViewActionListener_2(Constants.Views.EXPANDED_ALL.index);
-			         		expandedAllView.addActionListener(expandedAllListener);
-			         		expandedAllView.setEnabled(false);
-			         		popupMenu.add(expandedAllView);
-		         		}*/
-		         		
-		         		/*JMenuItem compressedView = new JMenuItem(Constants.Views.COMPRESSED.description);
-		         	    //compressedListener = new PopUpViewActionListener(Constants.Views.COMPRESSED.index);
-		         		//compressedView.addActionListener(compressedListener);
-		         		//popupMenu.add(compressedView); // compressed is the editable*/
-		         		
-		         	    JMenuItem customView = new JMenuItem(Constants.Views.CUSTOM.description);
-		         	    customListener = new PopUpViewActionListener_2(Constants.Views.CUSTOM.index);
-		         	    customView.addActionListener(customListener);
-		         	    // popupMenu.addSeparator();
-			         	//popupMenu.add(customView);
-		         		
-		         	   if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
-		         		  JMenuItem goToDefinition = new JMenuItem("Go to Function Definition");
-		         		  goToDefinition.addActionListener(new ActionListener() {
-		         			  @Override
-		         			  public void actionPerformed(ActionEvent e) {
-		         				    MutablePair<Integer, Integer> index = ((CustomTableModel_MSMB)model).getFunctionDefinitionIndex();
-		         				    
-		         					if(index != null) {
-		         						index.right = index.right -1; //because the returned one is the nrow not the row in the table
-		         						if(index.left == Constants.TitlesTabs.FUNCTIONS.index) {
-		         							MainGui.jTableFunctions.setRowSelectionInterval(index.right, index.right);
-		         							MainGui.jTableFunctions.scrollRectToVisible(new Rectangle(MainGui.jTableFunctions.getCellRect(index.right+5, 0, true))); 
-		         							MainGui.jTableFunctions.revalidate();
-		         							MainGui.row_to_highlight.set(Constants.TitlesTabs.FUNCTIONS.index, index.right);
-		         							MainGui.jTableBuiltInFunctions.clearSelection();
-		         						} else {
-		         							MainGui.jTableBuiltInFunctions.setRowSelectionInterval(index.right, index.right);
-		         							MainGui.jTableBuiltInFunctions.scrollRectToVisible(new Rectangle(MainGui.jTableBuiltInFunctions.getCellRect(index.right+5, 0, true))); 
-		         							MainGui.jTableBuiltInFunctions.revalidate();
-		         							MainGui.row_to_highlight.set(Constants.TitlesTabs.BUILTINFUNCTIONS.index, index.right);
-		         							MainGui.jTableFunctions.clearSelection();
-		         						}
-		         						MainGui.jTabGeneral.setSelectedIndex(Constants.TitlesTabs.FUNCTIONS.index);
-			         					
-		         					}
-		         				}
-		         		  });
-		         		  popupMenu.add(goToDefinition);	
-		         	   }
-		         	     
-		         	  if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)!=0) {  
-		         		  popupMenu.addSeparator();
-		         	     JMenuItem setCurrentAsEditable = new JMenuItem(Constants.Views.CURRENT_AS_EDITABLE.description);
-		         	     currentAsEditable = new PopUpViewActionListener_2(Constants.Views.CURRENT_AS_EDITABLE.index);
-		         	     setCurrentAsEditable.addActionListener(currentAsEditable);
-		         		 popupMenu.add(setCurrentAsEditable);
-		         	  }
-		         		
-		         		if(editableListener != null) {
-		         			editableListener.setTable(model.getTableName());
-		         			editableListener.setRow(row);
-		         			editableListener.setColumn(col);
-		         		}
-		         		if(expandedListener != null) {
-		         			expandedListener.setTable(model.getTableName());
-		         			expandedListener.setRow(row);
-		         			expandedListener.setColumn(col);
-		         		}
-		         		if(expandedAllListener != null) {
-		         			expandedAllListener.setTable(model.getTableName());
-		         			expandedAllListener.setRow(row);
-		         			expandedAllListener.setColumn(col);
-		         		}
-		         		if(compressedListener != null) {
-		         			compressedListener.setTable(model.getTableName());
-		         			compressedListener.setRow(row);
-		         			compressedListener.setColumn(col);
-		         		}
-		         		if(customListener != null) {
-		         			customListener.setTable(model.getTableName());
-		         			customListener.setRow(row);
-		         			customListener.setColumn(col);
-		         		}
-
-		         		if(currentAsEditable != null) {
-		         			currentAsEditable.setTable(model.getTableName());
-		         			currentAsEditable.setRow(row);
-		         			currentAsEditable.setColumn(col);
-		         		}
-			             showPopup = true;
-			         }
-		             
-		             if(model.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
-		            	 copySignature = new JMenuItem("Copy signature to Clipboard");
-		            	 copySignature.addActionListener(new ActionListener() {
-		    				  public void actionPerformed(ActionEvent e) {
-		    					  try {
-		    						  String typedText = (String) model.getValueAt(row, Constants.FunctionsColumns.NAME.index);
-		    						  Clipboard clipboard = getToolkit().getSystemClipboard();
-		    					  clipboard.setContents(new StringSelection(typedText), null );
-		    					  MainGui.copiedSignature=true;
-		    					} catch (Exception e1) {
-		    						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
-		    					}
-		    				  }
-
-							
-		    			  });
-		    		    popupMenu.insert(copySignature,0);
-		    		    showPopup = true;
+		                MainGui.cellValueBeforeChange = model.getValueAt(row,col).toString();
+		             	
+		             	MainGui.cellSelectedRow= row;
+		             	MainGui.cellSelectedCol=col;
+		             	MainGui.cellTableEdited = model.getTableName();
+		             	highlightCellSelectedRow();
+		             	
+		            	if(model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description) == 0) {
+		    		        	MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(MSMB_Element.SELECTED_SPECIES);
+		    		        	changeToReport.setElementBefore(null);
+		    		        	 changeToReport.setElementAfter(new ChangedElement(model.getValueAt(row,Constants.SpeciesColumns.NAME.index).toString(), MSMB_Element.SELECTED_SPECIES));
+		    		        	MainGui.setChangeToReport(changeToReport);
+		            	} else if(model.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) {
+		                	MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(MSMB_Element.SELECTED_GLOBAL_QUANTITY);
+	    		        	changeToReport.setElementBefore(null);
+	    		        	 changeToReport.setElementAfter(new ChangedElement(model.getValueAt(row,Constants.GlobalQColumns.NAME.index).toString(), MSMB_Element.SELECTED_GLOBAL_QUANTITY));
+	    		        	MainGui.setChangeToReport(changeToReport);
+	    		        }
+		            	
+		             	try {
+							if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(MainGui.cellTableEdited, MainGui.cellSelectedRow+1);
+						} catch (Throwable e1) {
+							e1.printStackTrace();
+						}
 		             } else {
-		    			 if(copySignature!= null) popupMenu.remove(copySignature);
-		    		 }
-		              if(showPopup) {
-		            	 popupMenu.show(e.getComponent(), e.getX(), e.getY());
-			         }
+		     		       
+		            	showPopup(e);
+		            }
+		        }
+		        
+		        private void showPopup(MouseEvent e) {
+		        	if (e.isPopupTrigger()) {
+		        		if (isEditing()){ getCellEditor().stopCellEditing(); }
+		        		
+		        		boolean showPopup = false;
+		            	popupMenu.removeAll();
+			            Point p = e.getPoint();
+			             final int row = rowAtPoint(p); 
+			             final int col = columnAtPoint(p); 
+			             if(row == -1 || col == -1) return;
+			            
+			         	MainGui.cellSelectedRow=row;
+		             	MainGui.cellSelectedCol=col;
+		             	MainGui.cellTableEdited = model.getTableName();
+		             	highlightCellSelectedRow();
+		             	
+		             	
+		             	
+			             if(MainGui.isCellWithDefaultValue(model.getTableName(), row, col)) {
+			            	 showPopup = true;
+			            	 DebugMessage dm = new DebugMessage();
+				             dm.setOrigin_table(model.getTableName());
+				             dm.setProblem("");
+				             dm.setPriority(DebugConstants.PriorityType.DEFAULTS.priorityCode);
+				             dm.setOrigin_col(col);
+				             dm.setOrigin_row(row+1);
+							 MainGui.toBeAck_debugMessage =dm;
+			            	 ackMenuItem = new JMenuItem("Acknowledge default value");
+			    			 ackMenuItem.addActionListener(new ActionListener() {
+			    				  public void actionPerformed(ActionEvent e) {
+			    					  try {
+			    						MainGui.ackSelectedDebugMessage();
+			    					} catch (Throwable e1) {
+			    						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
+			    					}
+			    				  }
+			    			  });
+			    		    popupMenu.insert(ackMenuItem,0);
+			    		 } else {
+			    			 if(ackMenuItem!= null) popupMenu.remove(ackMenuItem);
+			    		 }
+			            
+			             if(MainGui.isCellWithErrors(model.getTableName(), row, col)) {
+			            	 	 showPopup = true;
+			               	    errorMenuItem = new JMenuItem("Go to error");
+			               	    errorMenuItem.addActionListener(new ActionListener() {
+			         			  @Override
+			         			  public void actionPerformed(ActionEvent e) {
+			         				  			MainGui.goToError(model.getTableName(), row, col);
+			         			  }
+			         				});
+			    		    popupMenu.insert(errorMenuItem,0);
+			    		 } else {
+			    			 if(errorMenuItem!= null) popupMenu.remove(errorMenuItem);
+			    		 }
+			             
+			             if(MainGui.isCellWithMultipleView(model.getTableName(), row, col) && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
+			                
+			            	 MainGui.cellTableEdited = model.getTableName();
+			            	 
+			            	JMenuItem editableView = new JMenuItem(Constants.Views.EDITABLE.description);
+			         	    editableListener = new PopUpViewActionListener_2(Constants.Views.EDITABLE.index);
+			         		editableView.addActionListener(editableListener);
+			         		popupMenu.add(editableView);
+			         	    
+			         		JMenuItem expandedView = new JMenuItem(Constants.Views.EXPANDED.description);
+			         	    expandedListener = new PopUpViewActionListener_2(Constants.Views.EXPANDED.index);
+			         		expandedView.addActionListener(expandedListener);
+			         		popupMenu.add(expandedView);
+			         	
+			         		popupMenu.addSeparator();
+			         		
+			         		
+			         	/*	if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)!=0) {
+			         			JMenuItem expandedAllView = new JMenuItem(Constants.Views.EXPANDED_ALL.description);
+			         			expandedAllListener = new PopUpViewActionListener_2(Constants.Views.EXPANDED_ALL.index);
+				         		expandedAllView.addActionListener(expandedAllListener);
+				         		expandedAllView.setEnabled(false);
+				         		popupMenu.add(expandedAllView);
+			         		}*/
+			         		
+			         		/*JMenuItem compressedView = new JMenuItem(Constants.Views.COMPRESSED.description);
+			         	    //compressedListener = new PopUpViewActionListener(Constants.Views.COMPRESSED.index);
+			         		//compressedView.addActionListener(compressedListener);
+			         		//popupMenu.add(compressedView); // compressed is the editable*/
+			         		
+			         	    JMenuItem customView = new JMenuItem(Constants.Views.CUSTOM.description);
+			         	    customListener = new PopUpViewActionListener_2(Constants.Views.CUSTOM.index);
+			         	    customView.addActionListener(customListener);
+			         	    // popupMenu.addSeparator();
+				         	//popupMenu.add(customView);
+			         		
+			         	   if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
+			         		  JMenuItem goToDefinition = new JMenuItem("Go to Function Definition");
+			         		  goToDefinition.addActionListener(new ActionListener() {
+			         			  @Override
+			         			  public void actionPerformed(ActionEvent e) {
+			         				    MutablePair<Integer, Integer> index = ((CustomTableModel_MSMB)model).getFunctionDefinitionIndex();
+			         				    
+			         					if(index != null) {
+			         						index.right = index.right -1; //because the returned one is the nrow not the row in the table
+			         						if(index.left == Constants.TitlesTabs.FUNCTIONS.index) {
+			         							MainGui.jTableFunctions.setRowSelectionInterval(index.right, index.right);
+			         							MainGui.jTableFunctions.scrollRectToVisible(new Rectangle(MainGui.jTableFunctions.getCellRect(index.right+5, 0, true))); 
+			         							MainGui.jTableFunctions.revalidate();
+			         							MainGui.row_to_highlight.set(Constants.TitlesTabs.FUNCTIONS.index, index.right);
+			         							MainGui.jTableBuiltInFunctions.clearSelection();
+			         						} else {
+			         							MainGui.jTableBuiltInFunctions.setRowSelectionInterval(index.right, index.right);
+			         							MainGui.jTableBuiltInFunctions.scrollRectToVisible(new Rectangle(MainGui.jTableBuiltInFunctions.getCellRect(index.right+5, 0, true))); 
+			         							MainGui.jTableBuiltInFunctions.revalidate();
+			         							MainGui.row_to_highlight.set(Constants.TitlesTabs.BUILTINFUNCTIONS.index, index.right);
+			         							MainGui.jTableFunctions.clearSelection();
+			         						}
+			         						MainGui.jTabGeneral.setSelectedIndex(Constants.TitlesTabs.FUNCTIONS.index);
+				         					
+			         					}
+			         				}
+			         		  });
+			         		  popupMenu.add(goToDefinition);	
+			         	   }
+			         	     
+			         	  if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)!=0) {  
+			         		  popupMenu.addSeparator();
+			         	     JMenuItem setCurrentAsEditable = new JMenuItem(Constants.Views.CURRENT_AS_EDITABLE.description);
+			         	     currentAsEditable = new PopUpViewActionListener_2(Constants.Views.CURRENT_AS_EDITABLE.index);
+			         	     setCurrentAsEditable.addActionListener(currentAsEditable);
+			         		 popupMenu.add(setCurrentAsEditable);
+			         	  }
+			         		
+			         		if(editableListener != null) {
+			         			editableListener.setTable(model.getTableName());
+			         			editableListener.setRow(row);
+			         			editableListener.setColumn(col);
+			         		}
+			         		if(expandedListener != null) {
+			         			expandedListener.setTable(model.getTableName());
+			         			expandedListener.setRow(row);
+			         			expandedListener.setColumn(col);
+			         		}
+			         		if(expandedAllListener != null) {
+			         			expandedAllListener.setTable(model.getTableName());
+			         			expandedAllListener.setRow(row);
+			         			expandedAllListener.setColumn(col);
+			         		}
+			         		if(compressedListener != null) {
+			         			compressedListener.setTable(model.getTableName());
+			         			compressedListener.setRow(row);
+			         			compressedListener.setColumn(col);
+			         		}
+			         		if(customListener != null) {
+			         			customListener.setTable(model.getTableName());
+			         			customListener.setRow(row);
+			         			customListener.setColumn(col);
+			         		}
+	
+			         		if(currentAsEditable != null) {
+			         			currentAsEditable.setTable(model.getTableName());
+			         			currentAsEditable.setRow(row);
+			         			currentAsEditable.setColumn(col);
+			         		}
+				             showPopup = true;
+				         }
+			             
+			             if(model.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
+			            	 copySignature = new JMenuItem("Copy signature to Clipboard");
+			            	 copySignature.addActionListener(new ActionListener() {
+			    				  public void actionPerformed(ActionEvent e) {
+			    					  try {
+			    						  String typedText = (String) model.getValueAt(row, Constants.FunctionsColumns.NAME.index);
+			    						  Clipboard clipboard = getToolkit().getSystemClipboard();
+			    					  clipboard.setContents(new StringSelection(typedText), null );
+			    					  MainGui.copiedSignature=true;
+			    					} catch (Exception e1) {
+			    						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
+			    					}
+			    				  }
+	
+								
+			    			  });
+			    		    popupMenu.insert(copySignature,0);
+			    		    showPopup = true;
+			             } else {
+			    			 if(copySignature!= null) popupMenu.remove(copySignature);
+			    		 }
+			              if(showPopup) {
+			            	 popupMenu.show(e.getComponent(), e.getX(), e.getY());
+				         }
 				
 	            }
 	          }
 	    });
-	    
+		}    
 	}
 	
+
 
 	 protected void highlightCellSelectedRow() {
 		 
@@ -535,7 +550,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 		 
 		 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description)==0) { 
      		MainGui.row_to_highlight.set(Constants.TitlesTabs.SPECIES.index, row);	
-     	MainGui.jTableSpecies.setRowSelectionInterval(row, row);
+     		MainGui.jTableSpecies.setRowSelectionInterval(row, row);
      		MainGui.jTableSpecies.revalidate();
      	}
      	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) { 
@@ -650,7 +665,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 					if(this.isRowSelected(rowIndex)) {
 						c.setForeground(GraphicalProperties.color_cell_to_highlight);
 					}
-					else c.setForeground(Color.LIGHT_GRAY);
+					else c.setForeground(Color.GRAY);
 				}
 			} else {
 				c.setForeground(getForeground());
@@ -681,16 +696,31 @@ class CustomJTable_MSMB extends CustomJTable  {
 				else if(c instanceof ScientificFormatCellRenderer) ((ScientificFormatCellRenderer)c).setBorder(compound);
 			} 
 		
-			if((this.model.disabledCell.contains(rowIndex+"_"+vColIndex))&&isRowSelected(rowIndex)){
-				c.setBackground(GraphicalProperties.color_cell_to_highlight);
-				Border compound = null;
-				Border redline = BorderFactory.createLineBorder(Color.LIGHT_GRAY,3);
-				compound = BorderFactory.createCompoundBorder(redline, compound);
-				if(c instanceof EditableCellRenderer_MSMB) ((EditableCellRenderer_MSMB)c).setBorder(compound);
-				else if(c instanceof ScientificFormatCellRenderer) ((ScientificFormatCellRenderer)c).setBorder(compound);
-				else if(c instanceof DefaultTableCellRenderer) ((DefaultTableCellRenderer)c).setBorder(compound);
+			if(this.model.disabledCell.contains(rowIndex+"_"+vColIndex)){
+				if(isRowSelected(rowIndex)){
+						c.setBackground(GraphicalProperties.color_cell_to_highlight);
+						c.setForeground(Color.GRAY);
+						Border compound = null;
+						Border redline = BorderFactory.createLineBorder(Color.LIGHT_GRAY,3);
+						compound = BorderFactory.createCompoundBorder(redline, compound);
+						if(c instanceof EditableCellRenderer_MSMB) ((EditableCellRenderer_MSMB)c).setBorder(compound);
+						else if(c instanceof ScientificFormatCellRenderer) ((ScientificFormatCellRenderer)c).setBorder(compound);
+						else if(c instanceof DefaultTableCellRenderer) ((DefaultTableCellRenderer)c).setBorder(compound);
+				}
+				if(isCellWithError(rowIndex,vColIndex)) {
+					Border compound = null;
+					Border redline = BorderFactory.createLineBorder(GraphicalProperties.color_cell_with_errors,3);
+					compound = BorderFactory.createCompoundBorder(redline, compound);
+					if(c instanceof EditableCellRenderer_MSMB) ((EditableCellRenderer_MSMB)c).setBorder(compound);
+					else if(c instanceof ScientificFormatCellRenderer) ((ScientificFormatCellRenderer)c).setBorder(compound);
+				}	else {
+					if(c instanceof EditableCellRenderer_MSMB) ((EditableCellRenderer_MSMB)c).setBorder(null);
+					else if(c instanceof ScientificFormatCellRenderer) ((ScientificFormatCellRenderer)c).setBorder(null);
+					
+				}
 			} 
 			
+	
 			return c;
 			
 		} catch(Exception ex) {

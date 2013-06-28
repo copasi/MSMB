@@ -6,25 +6,29 @@ import msmb.parsers.multistateSpecies.visitor.*;
 /**
  * JTB node class for the production MultistateSpecies_Operator_SiteSingleState:<br>
  * Corresponding grammar:<br>
- * nodeChoice -> . %0 <STRING_LITERAL><br>
- * .......... .. | %1 ( &0 <MULTI_IDENTIFIER><br>
- * .......... .. . .. | &1 <NUMBER> )+<br>
+ * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
+ * nodeListOptional -> ( #0 <SITE_STATES_SEPARATOR> #1 MultistateSpecies_SiteSingleElement() )*<br>
  */
 public class MultistateSpecies_Operator_SiteSingleState implements INode {
 
   /** Child node 1 */
-  public NodeChoice nodeChoice;
+  public MultistateSpecies_SiteSingleElement multistateSpecies_SiteSingleElement;
+
+  /** Child node 2 */
+  public NodeListOptional nodeListOptional;
 
   /** The serial version UID */
   private static final long serialVersionUID = 147L;
 
   /**
-   * Constructs the node with its child node.
+   * Constructs the node with all its children nodes.
    *
-   * @param n0 - the child node
+   * @param n0 - first child node
+   * @param n1 - next child node
    */
-  public MultistateSpecies_Operator_SiteSingleState(final NodeChoice n0) {
-    nodeChoice = n0;
+  public MultistateSpecies_Operator_SiteSingleState(final MultistateSpecies_SiteSingleElement n0, final NodeListOptional n1) {
+    multistateSpecies_SiteSingleElement = n0;
+    nodeListOptional = n1;
   }
 
   /**

@@ -156,11 +156,10 @@ public interface IVoidArguVisitor<A> {
    * Visits a {@link MultistateSpecies_SingleStateDefinition} node, whose children are the following :
    * <p>
    * multistateSpecies_SiteName -> MultistateSpecies_SiteName()<br>
-   * nodeToken -> <OPEN_C><br>
-   * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
-   * nodeListOptional -> ( #0 <SITE_STATES_SEPARATOR> #1 MultistateSpecies_SiteSingleElement() )*<br>
-   * nodeToken1 -> <CLOSED_C><br>
-   * nodeOptional -> ( <CIRCULAR_FLAG> )?<br>
+   * nodeOptional -> ( #0 <OPEN_C> #1 MultistateSpecies_SiteSingleElement()<br>
+   * ............ .. . #2 ( $0 <SITE_STATES_SEPARATOR> $1 MultistateSpecies_SiteSingleElement() )*<br>
+   * ............ .. . #3 <CLOSED_C><br>
+   * ............ .. . #4 ( <CIRCULAR_FLAG> )? )?<br>
    *
    * @param n - the node to visit
    * @param argu - the user argument
@@ -225,9 +224,7 @@ public interface IVoidArguVisitor<A> {
    * nodeChoice -> . %0 <STRING_LITERAL><br>
    * .......... .. | %1 ( &0 <MULTI_IDENTIFIER><br>
    * .......... .. . .. | &1 <CLOSED_C><br>
-   * .......... .. . .. | &2 <OPEN_R><br>
-   * .......... .. . .. | &3 <CLOSED_R><br>
-   * .......... .. . .. | &4 <SITE_STATES_SEPARATOR> )+<br>
+   * .......... .. . .. | &2 <OPEN_R> )+<br>
    *
    * @param n - the node to visit
    * @param argu - the user argument
@@ -290,9 +287,8 @@ public interface IVoidArguVisitor<A> {
   /**
    * Visits a {@link MultistateSpecies_Operator_SiteSingleState} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 <STRING_LITERAL><br>
-   * .......... .. | %1 ( &0 <MULTI_IDENTIFIER><br>
-   * .......... .. . .. | &1 <NUMBER> )+<br>
+   * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
+   * nodeListOptional -> ( #0 <SITE_STATES_SEPARATOR> #1 MultistateSpecies_SiteSingleElement() )*<br>
    *
    * @param n - the node to visit
    * @param argu - the user argument

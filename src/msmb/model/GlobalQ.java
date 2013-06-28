@@ -1,14 +1,11 @@
 package msmb.model;
 
-import msmb.debugTab.DebugMessage;
 import msmb.gui.MainGui;
 
 import java.util.Vector;
 
 import msmb.utility.CellParsers;
 import msmb.utility.Constants;
-import msmb.utility.MySyntaxException;
-
 import org.COPASI.*;
 
 
@@ -20,6 +17,14 @@ public class GlobalQ {
 	String initialValue = MainGui.globalQ_defaultValue_for_dialog_window;
 	String expression = new String();
 	String notes = new String();
+	String SBMLid = new String();
+
+	public String getSBMLid() {
+		return SBMLid;
+	}
+	public void setSBMLid(String sBMLid) {
+		SBMLid = sBMLid;
+	}
 	
 	private String editableValue = new String();
 	private String editableExpression = expression;

@@ -156,6 +156,31 @@ public class MR_MultistateSpecies_Parser
       op.accept(v);
       System.out.println("...................................");
 
+ 	expression = new String("Cdh1(p)");
+	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_MultistateSpecies_Parser(is);
+  	  op = react.CompleteMultistateSpecies_Operator();
+      v = new MyVisitor();
+      op.accept(v);
+      System.out.println("...................................");
+
+
+      expression = new String("Cdh1(p{1};q)");
+	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_MultistateSpecies_Parser(is);
+  	  op = react.CompleteMultistateSpecies_Operator();
+      v = new MyVisitor();
+      op.accept(v);
+      System.out.println("...................................");
+
+       expression = new String("Cdh1(p{1,2};q)");
+	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_MultistateSpecies_Parser(is);
+  	  op = react.CompleteMultistateSpecies_Operator();
+      v = new MyVisitor();
+      op.accept(v);
+      System.out.println("...................................");
+      
       //No spaces are allowed because here can be ok, but it is not ok for the reactions
  	  /*expression = new String("Cdh1(p{1, 2}; q{4})");
 	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
@@ -296,9 +321,11 @@ void MultistateSpecies() throws ParseException:
 void MultistateSpecies_SingleStateDefinition() throws ParseException:
 {}
 {
-MultistateSpecies_SiteName() < OPEN_C >
+MultistateSpecies_SiteName() (
+  		< OPEN_C >
   			MultistateSpecies_SiteSingleElement() (< SITE_STATES_SEPARATOR > MultistateSpecies_SiteSingleElement())*
   		 < CLOSED_C > ( < CIRCULAR_FLAG >)?
+  		 )?
 }
 
 void MultistateSpecies_Name() throws ParseException:
@@ -306,7 +333,8 @@ void MultistateSpecies_Name() throws ParseException:
 {
    < STRING_LITERAL >
   | (< MULTI_IDENTIFIER > | < CIRCULAR_FLAG >
-  		| < CLOSED_R> | < SITE_NAMES_SEPARATOR > | < RANGE_SEPARATOR >
+  		| < CLOSED_R>
+  		| < SITE_NAMES_SEPARATOR > | < RANGE_SEPARATOR >
   		| 	< SITE_STATES_SEPARATOR >  | < CLOSED_C >
   	)+
 } 
@@ -330,10 +358,11 @@ void MultistateSpecies_SiteSingleElement_Range() throws ParseException:
 
 void MultistateSpecies_SiteName() throws ParseException:
 {}
-{
+{ 
   < STRING_LITERAL >
  | (< MULTI_IDENTIFIER > |
- 	< CLOSED_C > | < OPEN_R >| < CLOSED_R>  | 	< SITE_STATES_SEPARATOR >
+ 	< CLOSED_C > | < OPEN_R >
+ 	//| < CLOSED_R>  | 	< SITE_STATES_SEPARATOR > //not allowed otherwise I cannot have implicit all states recognized
    	)+
  	
 }
@@ -357,9 +386,8 @@ void MultistateSpecies_Operator_SingleSite()  throws ParseException:
   		 	MultistateSpecies_Operator_SiteName()
   		 < CLOSED_R> 
 |  MultistateSpecies_Operator_SiteName() (  
-	 	"=" MultistateSpecies_Operator_SiteTransferSelector()
+	 	 "=" MultistateSpecies_Operator_SiteTransferSelector()
 	    |  ( < OPEN_C>  MultistateSpecies_Operator_SiteSingleState()  < CLOSED_C>)
-		
 		   )?
 }
 
@@ -373,9 +401,9 @@ void MultistateSpecies_Operator_SiteTransferSelector() throws ParseException:{}
 |   MultistateSpecies_Name() "." MultistateSpecies_Operator_SiteName()}
 
 
-void MultistateSpecies_Operator_SiteName()  throws ParseException:
+void MultistateSpecies_Operator_SiteName()  throws ParseException: 
 {}
-{
+{ 
  < STRING_LITERAL >
   | (< MULTI_IDENTIFIER >| < NUMBER > )+//| < OPEN_R >|  < RANGE_SEPARATOR > )+
  }
@@ -383,6 +411,5 @@ void MultistateSpecies_Operator_SiteName()  throws ParseException:
  void MultistateSpecies_Operator_SiteSingleState() throws ParseException:
 {}
 {
-   < STRING_LITERAL >
-  | (< MULTI_IDENTIFIER >| < NUMBER > )+//| < OPEN_R >|  < RANGE_SEPARATOR > )+
+   MultistateSpecies_SiteSingleElement() (< SITE_STATES_SEPARATOR > MultistateSpecies_SiteSingleElement())* //< STRING_LITERAL >  | (< MULTI_IDENTIFIER >| < NUMBER > )+//| < OPEN_R >|  < RANGE_SEPARATOR > )+
 }

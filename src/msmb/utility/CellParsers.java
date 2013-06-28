@@ -41,7 +41,9 @@ import  msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
 import  msmb.parsers.multistateSpecies.MR_MultistateSpecies_ParserConstantsNOQUOTES;
 import  msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
 import  msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
+import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_RangeString;
 import  msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
+import msmb.parsers.multistateSpecies.visitor.MultistateSpecies_SubstitutionVisitor;
 import  msmb.parsers.multistateSpecies.visitor.MultistateSpecies_UndefinedSitesVisitor;
 import  msmb.gui.*;
 
@@ -293,7 +295,53 @@ public class CellParsers {
 			
 		
 	 }
+	
+public static String replaceNamesInMultistateAfterAssignment(String fullSpDefinition, String replacementSpName, HashMap<String, String> sitesName_origRepl) {
+		
+			try{
+			InputStream is = new ByteArrayInputStream(fullSpDefinition.getBytes("UTF-8"));
+			 MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies_Operator complete = parser.CompleteMultistateSpecies_Operator();
+			 MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(fullSpDefinition,replacementSpName,sitesName_origRepl, true);
+						 complete.accept(mySV);
 
+			String newExpr = mySV.getNewMultistate();
+			return newExpr;
+			}catch (Throwable e2) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e2.printStackTrace();
+				return null;
+			}
+	 }
+
+	public static String replaceNamesInMultistate(String fullSpDefinition, String replacementSpName, HashMap<String, String> sitesName_origRepl) {
+		
+		try {
+			InputStream is = new ByteArrayInputStream(fullSpDefinition.getBytes("UTF-8"));
+			 MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies complete = parser.CompleteMultistateSpecies();
+			 MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(fullSpDefinition,replacementSpName,sitesName_origRepl);
+			 complete.accept(mySV);
+
+			String newExpr = mySV.getNewMultistate();
+			
+			return newExpr;
+			
+		} catch (Throwable e) {
+			try{
+			InputStream is = new ByteArrayInputStream(fullSpDefinition.getBytes("UTF-8"));
+			 MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies_Operator complete = parser.CompleteMultistateSpecies_Operator();
+			 MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(fullSpDefinition,replacementSpName,sitesName_origRepl);
+			 complete.accept(mySV);
+
+			String newExpr = mySV.getNewMultistate();
+			return newExpr;
+			}catch (Throwable e2) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e2.printStackTrace();
+				return null;
+			}
+		}
+	 }
 	
 	public static Vector<String> extractNamesInList(MultiModel m, String expression, String table_descr, String column_descr) throws MySyntaxException {
 		 Vector<String> ret = new Vector<String>();
@@ -810,7 +858,8 @@ public class CellParsers {
 		    subs_prod_mod.addAll(v.getAll_asString());
 		      
 		} catch(Throwable ex) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				ex.printStackTrace();
 			
 			 DebugMessage dm = new DebugMessage();
 			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);

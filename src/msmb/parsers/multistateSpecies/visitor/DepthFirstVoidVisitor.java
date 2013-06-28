@@ -323,11 +323,10 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
    * Visits a {@link MultistateSpecies_SingleStateDefinition} node, whose children are the following :
    * <p>
    * multistateSpecies_SiteName -> MultistateSpecies_SiteName()<br>
-   * nodeToken -> <OPEN_C><br>
-   * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
-   * nodeListOptional -> ( #0 <SITE_STATES_SEPARATOR> #1 MultistateSpecies_SiteSingleElement() )*<br>
-   * nodeToken1 -> <CLOSED_C><br>
-   * nodeOptional -> ( <CIRCULAR_FLAG> )?<br>
+   * nodeOptional -> ( #0 <OPEN_C> #1 MultistateSpecies_SiteSingleElement()<br>
+   * ............ .. . #2 ( $0 <SITE_STATES_SEPARATOR> $1 MultistateSpecies_SiteSingleElement() )*<br>
+   * ............ .. . #3 <CLOSED_C><br>
+   * ............ .. . #4 ( <CIRCULAR_FLAG> )? )?<br>
    *
    * @param n - the node to visit
    */
@@ -335,33 +334,43 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
     // multistateSpecies_SiteName -> MultistateSpecies_SiteName()
     final MultistateSpecies_SiteName n0 = n.multistateSpecies_SiteName;
     n0.accept(this);
-    // nodeToken -> <OPEN_C>
-    final NodeToken n1 = n.nodeToken;
-    n1.accept(this);
-    // multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()
-    final MultistateSpecies_SiteSingleElement n2 = n.multistateSpecies_SiteSingleElement;
-    n2.accept(this);
-    // nodeListOptional -> ( #0 <SITE_STATES_SEPARATOR> #1 MultistateSpecies_SiteSingleElement() )*
-    final NodeListOptional n3 = n.nodeListOptional;
-    if (n3.present()) {
-      for (int i = 0; i < n3.size(); i++) {
-        final INode n3Mi = n3.elementAt(i);
-        final NodeSequence n3MiS0 = (NodeSequence) n3Mi;
-        // #0 <SITE_STATES_SEPARATOR>
-        final INode n3MiS0A0 = n3MiS0.elementAt(0);
-        n3MiS0A0.accept(this);
-        // #1 MultistateSpecies_SiteSingleElement()
-        final INode n3MiS0A1 = n3MiS0.elementAt(1);
-        n3MiS0A1.accept(this);
+    // nodeOptional -> ( #0 <OPEN_C> #1 MultistateSpecies_SiteSingleElement()
+    // ............ .. . #2 ( $0 <SITE_STATES_SEPARATOR> $1 MultistateSpecies_SiteSingleElement() )*
+    // ............ .. . #3 <CLOSED_C>
+    // ............ .. . #4 ( <CIRCULAR_FLAG> )? )?
+    final NodeOptional n1 = n.nodeOptional;
+    if (n1.present()) {
+      final NodeSequence n1S0 = (NodeSequence) n1.node;
+      // #0 <OPEN_C>
+      final INode n1S0A0 = n1S0.elementAt(0);
+      n1S0A0.accept(this);
+      // #1 MultistateSpecies_SiteSingleElement()
+      final INode n1S0A1 = n1S0.elementAt(1);
+      n1S0A1.accept(this);
+      // #2 ( $0 <SITE_STATES_SEPARATOR> $1 MultistateSpecies_SiteSingleElement() )*
+      final INode n1S0A2 = n1S0.elementAt(2);
+      final NodeListOptional n1S0A2T = (NodeListOptional) n1S0A2;
+      if (n1S0A2T.present()) {
+        for (int i = 0; i < n1S0A2T.size(); i++) {
+          final INode n1S0A2TMi = n1S0A2T.elementAt(i);
+          final NodeSequence n1S0A2TMiS1 = (NodeSequence) n1S0A2TMi;
+          // $0 <SITE_STATES_SEPARATOR>
+          final INode n1S0A2TMiS1A0 = n1S0A2TMiS1.elementAt(0);
+          n1S0A2TMiS1A0.accept(this);
+          // $1 MultistateSpecies_SiteSingleElement()
+          final INode n1S0A2TMiS1A1 = n1S0A2TMiS1.elementAt(1);
+          n1S0A2TMiS1A1.accept(this);
+        }
       }
-    }
-    // nodeToken1 -> <CLOSED_C>
-    final NodeToken n4 = n.nodeToken1;
-    n4.accept(this);
-    // nodeOptional -> ( <CIRCULAR_FLAG> )?
-    final NodeOptional n5 = n.nodeOptional;
-    if (n5.present()) {
-      n5.accept(this);
+      // #3 <CLOSED_C>
+      final INode n1S0A3 = n1S0.elementAt(3);
+      n1S0A3.accept(this);
+      // #4 ( <CIRCULAR_FLAG> )?
+      final INode n1S0A4 = n1S0.elementAt(4);
+      final NodeOptional n1S0A4P = (NodeOptional) n1S0A4;
+      if (n1S0A4P.present()) {
+        n1S0A4P.accept(this);
+      }
     }
   }
 
@@ -641,9 +650,7 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
    * nodeChoice -> . %0 <STRING_LITERAL><br>
    * .......... .. | %1 ( &0 <MULTI_IDENTIFIER><br>
    * .......... .. . .. | &1 <CLOSED_C><br>
-   * .......... .. . .. | &2 <OPEN_R><br>
-   * .......... .. . .. | &3 <CLOSED_R><br>
-   * .......... .. . .. | &4 <SITE_STATES_SEPARATOR> )+<br>
+   * .......... .. . .. | &2 <OPEN_R> )+<br>
    *
    * @param n - the node to visit
    */
@@ -651,9 +658,7 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
     // nodeChoice -> . %0 <STRING_LITERAL>
     // .......... .. | %1 ( &0 <MULTI_IDENTIFIER>
     // .......... .. . .. | &1 <CLOSED_C>
-    // .......... .. . .. | &2 <OPEN_R>
-    // .......... .. . .. | &3 <CLOSED_R>
-    // .......... .. . .. | &4 <SITE_STATES_SEPARATOR> )+
+    // .......... .. . .. | &2 <OPEN_R> )+
     final NodeChoice n0C = n.nodeChoice;
     final INode n0CH = n0C.choice;
     switch (n0C.which) {
@@ -664,9 +669,7 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
       case 1:
         // %1 ( &0 <MULTI_IDENTIFIER>
         // .. | &1 <CLOSED_C>
-        // .. | &2 <OPEN_R>
-        // .. | &3 <CLOSED_R>
-        // .. | &4 <SITE_STATES_SEPARATOR> )+
+        // .. | &2 <OPEN_R> )+
         final NodeList n0CHL = (NodeList) n0CH;
         for (int i = 0; i < n0CHL.size(); i++) {
           final INode n0CHLEi = n0CHL.elementAt(i);
@@ -683,14 +686,6 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
               break;
             case 2:
               // &2 <OPEN_R>
-              n0CHLEiCH.accept(this);
-              break;
-            case 3:
-              // &3 <CLOSED_R>
-              n0CHLEiCH.accept(this);
-              break;
-            case 4:
-              // &4 <SITE_STATES_SEPARATOR>
               n0CHLEiCH.accept(this);
               break;
             default:
@@ -986,49 +981,28 @@ public class DepthFirstVoidVisitor implements IVoidVisitor {
   /**
    * Visits a {@link MultistateSpecies_Operator_SiteSingleState} node, whose children are the following :
    * <p>
-   * nodeChoice -> . %0 <STRING_LITERAL><br>
-   * .......... .. | %1 ( &0 <MULTI_IDENTIFIER><br>
-   * .......... .. . .. | &1 <NUMBER> )+<br>
+   * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
+   * nodeListOptional -> ( #0 <SITE_STATES_SEPARATOR> #1 MultistateSpecies_SiteSingleElement() )*<br>
    *
    * @param n - the node to visit
    */
   public void visit(final MultistateSpecies_Operator_SiteSingleState n) {
-    // nodeChoice -> . %0 <STRING_LITERAL>
-    // .......... .. | %1 ( &0 <MULTI_IDENTIFIER>
-    // .......... .. . .. | &1 <NUMBER> )+
-    final NodeChoice n0C = n.nodeChoice;
-    final INode n0CH = n0C.choice;
-    switch (n0C.which) {
-      case 0:
-        // %0 <STRING_LITERAL>
-        n0CH.accept(this);
-        break;
-      case 1:
-        // %1 ( &0 <MULTI_IDENTIFIER>
-        // .. | &1 <NUMBER> )+
-        final NodeList n0CHL = (NodeList) n0CH;
-        for (int i = 0; i < n0CHL.size(); i++) {
-          final INode n0CHLEi = n0CHL.elementAt(i);
-          final NodeChoice n0CHLEiC = (NodeChoice) n0CHLEi;
-          final INode n0CHLEiCH = n0CHLEiC.choice;
-          switch (n0CHLEiC.which) {
-            case 0:
-              // &0 <MULTI_IDENTIFIER>
-              n0CHLEiCH.accept(this);
-              break;
-            case 1:
-              // &1 <NUMBER>
-              n0CHLEiCH.accept(this);
-              break;
-            default:
-              // should not occur !!!
-              break;
-          }
-        }
-        break;
-      default:
-        // should not occur !!!
-        break;
+    // multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()
+    final MultistateSpecies_SiteSingleElement n0 = n.multistateSpecies_SiteSingleElement;
+    n0.accept(this);
+    // nodeListOptional -> ( #0 <SITE_STATES_SEPARATOR> #1 MultistateSpecies_SiteSingleElement() )*
+    final NodeListOptional n1 = n.nodeListOptional;
+    if (n1.present()) {
+      for (int i = 0; i < n1.size(); i++) {
+        final INode n1Mi = n1.elementAt(i);
+        final NodeSequence n1MiS0 = (NodeSequence) n1Mi;
+        // #0 <SITE_STATES_SEPARATOR>
+        final INode n1MiS0A0 = n1MiS0.elementAt(0);
+        n1MiS0A0.accept(this);
+        // #1 MultistateSpecies_SiteSingleElement()
+        final INode n1MiS0A1 = n1MiS0.elementAt(1);
+        n1MiS0A1.accept(this);
+      }
     }
   }
 

@@ -13,6 +13,7 @@ import com.sun.mail.handlers.multipart_mixed;
 
 import msmb.debugTab.DebugMessage;
 
+import msmb.model.ComplexSpecies;
 import msmb.model.Function;
 import msmb.model.MultistateSpecies;
 import msmb.model.Species;
@@ -77,7 +78,7 @@ class ExportMultistateFormat {
 				Vector<Vector<String>> singleTable = new Vector<Vector<String>>();
 				CustomTableModel_MSMB tablemodel = tables.get(t);
 				if(tablemodel==null) continue;
-				tablemodel.fireTableDataChanged();
+			//	tablemodel.fireTableDataChanged();
 				for(int i = 0; i < tablemodel.getRowCount()-1; i++) {
 					Vector<String> row = new Vector<String>();
 		    		for(int j = 0; j < tablemodel.getColumnCount(); j++) {
@@ -127,21 +128,28 @@ class ExportMultistateFormat {
 			
 			out.writeObject(modelProperties);
 			
-			Vector invisibleSpecies = MainGui.multiModel.getAllInvisibleSpecies();
-			out.writeObject(invisibleSpecies);
-			
+		//	Vector invisibleSpecies = MainGui.multiModel.getAllInvisibleSpecies();
+		//	out.writeObject(invisibleSpecies);
 			out.flush();
+					
+			Vector<Vector> complexSpecies = new Vector();
+			complexSpecies.addAll(MainGui.multiModel.getAllComplexSpeciesSerialized());
+			out.writeObject(complexSpecies);
+			out.flush();
+			
 			out.close();
 			if(mainW!=null)mainW.progress(100);
 			
 			return byteOutputStream.toByteArray();
 		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				e.printStackTrace();
 		}
 		return null;
 	}
 	
-	public static HashMap<String, HashMap<String, String>> import_MSMB_format(byte[] byteString) {
+	public static MutablePair<	HashMap<String, HashMap<String, String>>,	Vector > import_MSMB_format(byte[] byteString) {
+	//public static HashMap<String, HashMap<String, String>> import_MSMB_format(byte[] byteString) {
 		if(file!= null) { //import from MSMB, byteString should be null and read from the file
 		try {
 			 InputStream in = new FileInputStream(file);
@@ -170,8 +178,15 @@ class ExportMultistateFormat {
 
 
 	
-	private static HashMap<String, HashMap<String, String>> importMultistateFormat(byte[] byteString) {
+	
+//	private static HashMap<String, HashMap<String, String>> importMultistateFormat(byte[] byteString) {
+	public static MutablePair<	HashMap<String, HashMap<String, String>>,	Vector > importMultistateFormat(byte[] byteString) {
+		MutablePair<	HashMap<String, HashMap<String, String>>,	Vector > multistateInitials_complexes = new MutablePair<HashMap<String,HashMap<String,String>>, Vector>();
+		
+		
 		HashMap<String, HashMap<String, String>> multistateInitials = null;
+		Vector<ComplexSpecies> complexSpecies = null;
+		
 		try {
 			//in = new ObjectInputStream(new FileInputStream(file));
 			
@@ -213,6 +228,20 @@ class ExportMultistateFormat {
 			MainGui.exportConcentration = Boolean.parseBoolean(modelProperties.get(4));
 			MainGui.quantityIsConc = Boolean.parseBoolean(modelProperties.get(5));
 			
+			try{
+				complexSpecies = new Vector<ComplexSpecies>();
+				Vector<Vector> complexDataSerialized = 	(Vector<Vector>)in.readObject();
+				for(Vector complexData: complexDataSerialized ) {
+					ComplexSpecies species = new ComplexSpecies(complexData);
+					complexSpecies.add(species);
+				}
+			} catch(Exception e) {
+				//problems reading the complexes, it's ok for old msmb files
+				//e.printStackTrace();
+			}
+	
+	
+			
 			/*try{
 					Vector<Species> invisibleSpecies = (Vector<Species>)in.readObject();
 					if(invisibleSpecies!=null) {
@@ -232,7 +261,10 @@ class ExportMultistateFormat {
 				e.printStackTrace();
 		}
 		
-		return multistateInitials;
+		multistateInitials_complexes.left = multistateInitials;
+		multistateInitials_complexes.right = complexSpecies;
+		
+		return multistateInitials_complexes;
 		
 	}
 		

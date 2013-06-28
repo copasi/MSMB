@@ -1,5 +1,6 @@
 package msmb.parsers.chemicalReaction.visitor;
 
+import msmb.model.MultistateSpecies;
 import msmb.parsers.chemicalReaction.syntaxtree.*;
 import msmb.utility.CellParsers;
 import msmb.gui.MainGui;
@@ -50,49 +51,31 @@ public class SubstitutionVisitorReaction extends DepthFirstVoidVisitor {
 		public void visit(Species n) {
 			String name = ToStringVisitor.toString(n);
 			if(name.compareTo(originalName)==0) printToken(replacementExpr);
-			else printToken(name);
-		// TODO Auto-generated method stub
-		//super.visit(n);
-		}
-		
-	/*	@Override
-		public void visit(SpeciesReferenceOrFunctionCall_prefix n) {
-			String name = ToStringVisitor.toString(n.name.nodeChoice.choice);
-			if(n.nodeOptional.present())  {
-				NodeOptional nodeOptional = (NodeOptional) ((NodeSequence) n.nodeOptional.node).nodes.get(1);
-				if(nodeOptional.node==null){
-					//System.out.println("FUNCTION CALL (0): "+name);
-					if(name.compareTo(originalName)==0) printToken(replacementExpr);
-					super.visit(n);
+			else {
+				if(CellParsers.isMultistateSpeciesName(name)) {
+					printNewMultistate(name, originalName, replacementExpr);
 				}
-				else {
-					if(!isMultistateSitesList(nodeOptional.node)) {
-						//System.out.println("FUNCTION CALL ("+getNumberArguments((ArgumentList)nodeOptional.node)+"): " +name);
-						if(name.compareTo(originalName)==0) printToken(replacementExpr);
-						super.visit(n.nodeOptional);
-					} else {
-						//System.out.println("SPECIES: "+ToStringVisitor.toString(n)); // to print complete "multistate" definition
-						if(name.compareTo(originalName)==0) printToken("("+replacementExpr+")");
-						else super.visit(n);
-					}
-				}
-			} else {
-				//System.out.println("SPECIES: "+ToStringVisitor.toString(n));
-				if(name.compareTo(originalName)==0) printToken("("+replacementExpr+")");
-				else super.visit(n);
+				else printToken(name);
 			}
-
-	}*/
-	  
-	 
-	  
-	 
+		}
 
 
-
-
-
-
-
-	
-}
+	private void printNewMultistate(String currentSpecies, String originalName,	String replacementExpr) {
+		String onlyNameOriginal = CellParsers.extractMultistateName(originalName);
+		String  onlyNameReplacementExpr = CellParsers.extractMultistateName(replacementExpr);
+		String onlyNameCurrentSpecies = CellParsers.extractMultistateName(currentSpecies);
+					
+		try{
+			if(onlyNameCurrentSpecies.compareTo(onlyNameOriginal) == 0) {
+				out.print(currentSpecies.replaceFirst(onlyNameOriginal, onlyNameReplacementExpr));
+			} else {
+				out.print(currentSpecies);
+			}
+		} catch(Exception ex) { 
+			//ex.printStackTrace();
+			out.print(currentSpecies);
+			
+		}
+		finally { out.flush();}	
+		}
+	}

@@ -2,6 +2,7 @@ package msmb.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Set;
 import java.util.Vector;
@@ -13,7 +14,7 @@ import msmb.parsers.mathExpression.visitor.Look4UndefinedMisusedVisitor;
 import msmb.utility.*;
 
 
-public class Species  {
+public class Species   implements Serializable{
 	String name = new String();
 	boolean invisibleSpecies = false;
 	Vector<String> initialQuantity = new Vector<String>(); 
@@ -23,6 +24,7 @@ public class Species  {
 	private String editableInitialQuantity = new String();
 	private String editableExpression = expression;
 	public String getExpression() { 	
+		if(expression == null) return new String();
 		return expression.trim();	}
 		
 	public void setExpression(MultiModel m, String expr) throws Throwable {	
@@ -161,6 +163,7 @@ public class Species  {
 	
 	public String getCompartment_listString() {		
 		String ret = new String();
+		if(compartment == null) return ret;
 		if(compartment.size() > 0) {
 			for(int i = 0; i< compartment.size()-1; i++) {
 				ret += compartment.get(i)+", ";

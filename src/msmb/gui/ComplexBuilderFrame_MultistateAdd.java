@@ -25,6 +25,8 @@ import javax.swing.DefaultComboBoxModel;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import com.google.common.collect.HashBiMap;
+
 import msmb.model.MultistateSpecies;
 import msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 import msmb.parsers.mathExpression.syntaxtree.CompleteListOfExpression;
@@ -43,6 +45,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,7 +58,7 @@ import java.awt.event.FocusEvent;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-public class ComplexBuilderFrame_MultistateAdd extends JDialog {
+public class ComplexBuilderFrame_MultistateAdd extends JDialog implements WindowListener {
 
 	private JPanel contentPane;
 	private JTextField txtSomething;
@@ -66,6 +70,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 	private JTextPane jTextPane_message;
 	private ComplexBuilderFrame parentFrame;
 	private Vector<String> siteNameAlreadyUsed = new Vector<String>();
+	protected ExitOption exitOption;
 	static HashSet<String> usedNames = new HashSet<String>();
 	protected static String selectOneString = "(Select one)";
 	
@@ -87,7 +92,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 
 	
 	
-	public ComplexBuilderFrame_MultistateAdd(ComplexBuilderFrame complexBuilderFrame) {
+	public ComplexBuilderFrame_MultistateAdd(ComplexBuilderFrame complexBuilderFrame)  {
 		
 		parentFrame = complexBuilderFrame;
 		setTitle("Add sites to COMPLEX");
@@ -145,15 +150,15 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 		JButton btnOk = new JButton("OK");
 		btnOk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
 				try {
 					parentFrame.addElementsToComplex(getElementsToAdd());
 					panel_2.removeAll();
 					addTitleLabels();
+					exitOption = ExitOption.OK;
 					dispose();
 				} catch(Exception ex) {
 					//something wrong in the consistency checks so I cannot add the sites or dispose the dialog
-					//ex.printStackTrace();
+					ex.printStackTrace();
 				}
 			}
 		});
@@ -164,6 +169,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 			public void actionPerformed(ActionEvent arg0) {
 					panel_2.removeAll();
 					addTitleLabels();
+					exitOption = ExitOption.CANCEL;
 					dispose();
 			}
 		});	
@@ -171,7 +177,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 		
 		
 		GraphicalProperties.resetFonts(this);
-		
+		addWindowListener(this);
 	}
 
 	
@@ -186,7 +192,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 		panel_labels.add(name2);
 		name2.setBorder(border);
 		
-		JLabel name3 = new JLabel(" States ");
+		JLabel name3 = new JLabel(" States restrictions ");
 		panel_labels.add(name3);
 		name3.setBorder(border);
 		
@@ -209,7 +215,8 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 		//								- complexSite name
 		//								- multistateSpecies name origin
 		//								- multiateSpecies site origin
-		
+		//third entry (to build the reaction): a hashmap with sites and state selected (note: here we can have the site states empty because it will be used in the reactants)
+		//forth entry: hashbimap of renamed sites
 		
 		Vector<String> currentNames = new Vector<String>();
 		currentNames.addAll(siteNameAlreadyUsed);
@@ -277,7 +284,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 					else{
 						statesString = start + ":"+end;
 					}
-				 }
+			 }
 			  element_for_first_entry.right = new String(statesString);
 			 first_entry.add(element_for_first_entry);
 			 second_entry.add(element_for_second_entry);
@@ -291,18 +298,23 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 		ret.add(first_entry);
 		ret.add(second_entry);
 		ret.add(third_entry);
+		ret.add(renamed_sites);
 		return ret;
 	}
 
 	private JPanel createPanelNewSite(String siteName, String originSite, String states) {
 		JPanel panel_4 = new JPanel();
-			if(currentMultistateSpecies != null) {
+		if(currentMultistateSpecies != null) {
 			panel_4.setLayout(new GridLayout(0, 3, 3, 3));
 			txtSomething = new JTextField();
 			panel_4.add(txtSomething);
 			txtSomething.setColumns(10);
 			
 			if(siteName!= null) txtSomething.setText(siteName);
+			
+			txtSomething.addFocusListener(new FocusListener_Renaming(this));
+			
+			
 			
 			Set names = currentMultistateSpecies.getSitesNames();
 			DefaultComboBoxModel comboBoxModel = new DefaultComboBoxModel();
@@ -315,7 +327,6 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 		  
 		  
 			textField = new JTextField();
-			
 			textField.addFocusListener(new FocusListener_withComboBox(comboBoxNewSite, this));
 			
 			if(states!= null) textField.setText(states);
@@ -426,10 +437,11 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 		if(selectedValue == null) return;
 		siteNameAlreadyUsed.clear();
 		siteNameAlreadyUsed.addAll(names);
+		renamed_sites.clear();
 		try {
 			currentMultistateSpecies = new MultistateSpecies(null, selectedValue.toString());
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		if(currentMultistateSpecies!= null) {
 			String text = "The species you want to add has multistate sites.\r\n\n"+currentMultistateSpecies.toString()+"\r\n\r\nAdd the sites that you want to track in the complex.\r\nRemember that each site in the complex needs to have a different name \nand that any non-tracked state is lost once the complex is created.";
@@ -449,6 +461,8 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 	}
 
 	public void setMultistateTracking(Vector<Vector<String>> trackedTriplets) {
+		panel_2.removeAll();
+		addTitleLabels();
 		for(Vector<String> sites : trackedTriplets) {
 			JPanel panel_new = createPanelNewSite(sites.get(0),sites.get(1),sites.get(2));
 			if(totSites>4) {
@@ -460,6 +474,51 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog {
 		revalidate();
 		
 	}
+
+
+
+	@Override
+	public void windowActivated(WindowEvent e) {}
+
+	@Override
+	public void windowClosed(WindowEvent e) {
+		if(exitOption!= ExitOption.OK) exitOption = ExitOption.CANCEL;
+	}
+
+
+	@Override
+	public void windowClosing(WindowEvent e) {	}
+
+
+
+	@Override
+	public void windowDeactivated(WindowEvent e) {}
+
+
+
+	@Override
+	public void windowDeiconified(WindowEvent e) {}
+
+
+	@Override
+	public void windowIconified(WindowEvent e) {	}
+
+
+	@Override
+	public void windowOpened(WindowEvent e) {	}
+
+
+
+	HashBiMap<String, String> renamed_sites = HashBiMap.create();
+	public void renameSite(String before, String current) {
+		if(before.length() == 0) return;
+		if(renamed_sites.inverse().containsKey(before)) {
+			before = renamed_sites.inverse().get(before);
+		}
+		renamed_sites.put(before, current);
+		System.out.println("hashbimap : "+renamed_sites);
+	}
+	
 
 	
 
@@ -480,8 +539,9 @@ class ItemChangeListener_withTextField implements ItemListener{
 	          String item = event.getItem().toString();
 	            if(item.compareTo(parent.selectOneString)==0) {
 	            	values.setText("");
-	            } else {
-	            	MultistateSpecies m = parent.getMultistateSpecies();
+	            } /*else {
+	            	//listener that add all the states by default -- deleted
+		        	MultistateSpecies m = parent.getMultistateSpecies();
 	            	String siteString = m.printSite(item);
 	            	siteString = siteString.substring(item.length()+1, siteString.length()-1);
 	              	try {
@@ -495,7 +555,7 @@ class ItemChangeListener_withTextField implements ItemListener{
 					}
 					
 	            	values.setText(siteString);
-	            }
+	            }*/
 	       }
 	    }       
 	
@@ -536,6 +596,31 @@ class FocusListener_withComboBox implements FocusListener{
 	@Override
 	public void focusGained(FocusEvent e) {
 		
+	}
+}
+
+class FocusListener_Renaming implements FocusListener{
+	ComplexBuilderFrame_MultistateAdd parent = null;
+	String before = null;
+	
+	public FocusListener_Renaming(ComplexBuilderFrame_MultistateAdd parent_dialog) {
+		parent = parent_dialog;
+	}
+	
+	@Override
+	public void focusLost(FocusEvent event) {
+		JTextField textField = (JTextField)event.getComponent();
+	    String current = textField.getText();
+	    if(before != null && before.compareTo(current) != 0) {
+	    	parent.renameSite(before, current);
+	    }
+	}
+
+	@Override
+	public void focusGained(FocusEvent e) {
+		JTextField textField = (JTextField)e.getComponent();
+	    before = textField.getText();
+	    System.out.println("site before "+before);
 	}
 }
 

@@ -49,6 +49,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 	private JPanel panel;
 	private JLabel lblWarning;
 	private JRadioButton jRadioBoolean;
+	private HashMap<String, String> renamed_sites = new HashMap<String, String>();
 	
 	public MultistateBuilderFrame(MainGui owner) throws Exception {
 		super(owner);
@@ -58,6 +59,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 	}
 	
 	private void initialize() {
+		renamed_sites.clear();
 		this.setSize(407, 400);
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.setContentPane(getJContentPane());
@@ -468,13 +470,14 @@ private void applyChangeSite() {
 		String name = this.jTextField_newSite.getText().trim();
 		if(name.length() <= 0) return;
 		
-		this.species.deleteSite(name_before);
-		
 		if(CellParsers.isKeyword(name)) {
     		 JOptionPane.showMessageDialog(null,"The name "+name+" is a reserved word. Please chose a different site name!", "Error", JOptionPane.ERROR_MESSAGE);
   			return;
     	}
-    	
+
+		this.species.deleteSite(name_before);
+		renamed_sites .put(name_before, name);
+		
 		addNewSite();
 }
 
@@ -691,7 +694,6 @@ private void applyChangeSite() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					try{
 						updateModel();
-						
 					} catch(Throwable ex) {
 						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 					}
@@ -703,10 +705,8 @@ private void applyChangeSite() {
 	
 	private void updateModel() throws Throwable{
 		this.species.setName(new String(this.jTextField_species.getText()));
-		Vector<String> reactions = new Vector<String>();
 		this.species.setType(Constants.SpeciesType.MULTISTATE.copasiType);
-		
-		this.parentFrame.updateModel_fromMultiBuilder(this.species, reactions);
+		this.parentFrame.updateModel_fromMultiBuilder(this.species, renamed_sites);
 		dispose();
 	}
 	

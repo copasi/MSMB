@@ -3,6 +3,8 @@ package msmb.model;
 import msmb.commonUtilities.ChangedElement;
 import msmb.commonUtilities.MSMB_Element;
 import msmb.commonUtilities.MSMB_InterfaceChange;
+import msmb.debugTab.DebugConstants;
+import msmb.debugTab.DebugMessage;
 import msmb.gui.MainGui;
 
 import java.io.ByteArrayInputStream;
@@ -10,6 +12,8 @@ import java.io.InputStream;
 import java.util.*;
 
 import javax.mail.internet.NewsAddress;
+
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import msmb.utility.*;
 
@@ -40,11 +44,8 @@ public class SpeciesDB {
 	}
 	
 	public int addChangeSpecies(int index, String sbmlID, String name, HashMap<String, String> initialQuant, int type, String compartment, String expression, boolean fromMultistateBuilder, String notes, boolean autoMergeSpecies,boolean parseExpression) throws Throwable {
-	
-		if(type == Constants.SpeciesType.COMPLEX.copasiType) {
-			return -1;
-		} 
-		
+
+		if(indexesComplexSpecies.contains(index)) return index;
 		
 		Integer ind;
 		if(CellParsers.isMultistateSpeciesName(name)) {
@@ -443,19 +444,21 @@ public class SpeciesDB {
 				} else {
 					this.addChangeSpecies(current.getDisplayedName(),new Vector(Arrays.asList(0.0)),new Vector(Arrays.asList(0.0)), false);
 				}*/
+				if(current instanceof ComplexSpecies) {
+					this.updateComplex(-1, (ComplexSpecies) current);
+					continue;
+				}
 				
-				if(current instanceof MultistateSpecies) {
+				if( (current instanceof MultistateSpecies) &&!(current instanceof ComplexSpecies))  {
 					MultistateSpecies multiCurrent = (MultistateSpecies) current;
 				
 					//this.addChangeSpecies(multiCurrent.getDisplayedName(),multiCurrent.getInitialConcentration_multi(),multiCurrent.getInitialAmount_multi(), multiCurrent.getType(), multiCurrent.getCompartment(), multiCurrent.getExpression(), false);
 					this.addChangeSpecies(-1,new String(),multiCurrent.getDisplayedName(),multiCurrent.getInitialQuantity_multi(), multiCurrent.getType(), multiCurrent.getCompartment_listString(), multiCurrent.getExpression(), false, multiCurrent.getNotes(),true,false);
-				} else {
+				}  else if(!(current instanceof MultistateSpecies))  {
 					HashMap<String, String> entry_quantity = new HashMap<String, String>();
 					entry_quantity.put(current.getDisplayedName(),current.getInitialQuantity_listString());
 					this.addChangeSpecies(i,current.getSBMLid(),current.getDisplayedName(),entry_quantity, current.getType(), current.getCompartment_listString(), current.getExpression(), false, current.getNotes(),true,false);
-					
-								
-				}
+				} 
 			}
 		}
 		
@@ -484,13 +487,12 @@ public class SpeciesDB {
 				 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(multiModel);
 				 start.accept(v);
 				 justName = v.getSpeciesName();
+				 
 			} catch (Exception e1) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
 			}
 			
 		} 
-		
-		
 		
 		return this.speciesIndexes.containsKey(justName);
 		
@@ -679,23 +681,15 @@ public class SpeciesDB {
 		String real_name = new String(name);
 		if(CellParsers.isMultistateSpeciesName(name)) {
 			real_name = CellParsers.extractMultistateName(name);
+		}
 			if(speciesIndexes.get(real_name)==null) return null;
 			int ind = speciesIndexes.get(real_name).intValue();
 			if(indexesComplexSpecies.contains(ind)) {
 				return (ComplexSpecies) speciesVector.get(ind);
 			}
-		} 
+		 
 		
 		return null;
-		
-		/*System.out.println("TEST getComplexSpecies" + name);
-		ComplexSpecies test = null;
-		try {
-			test = new ComplexSpecies("Cmplx(p1{0:5};p2{0:3})");
-		} catch (Exception e) {
-				e.printStackTrace();
-		}
-		return test;*/
 	}
 	
 	public void addChangeComplex(int index, ComplexSpecies complex) throws Throwable {
@@ -706,11 +700,130 @@ public class SpeciesDB {
 			multiModel.removeNamedElement(speciesVector.get(index).getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
 		}
 		speciesIndexes.put(complex.getSpeciesName(), index);
-		speciesVector.put(index,complex);
+		speciesVector.put(index, new ComplexSpecies(complex));
 		multiModel.addNamedElement(complex.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
-		System.out.println("COMPLEXES at indexes: "+indexesComplexSpecies);
 		return;
 	}
+
+	public void updateComplex(int index, ComplexSpecies newComplex) throws Throwable {
+		ComplexSpecies oldComplex = (ComplexSpecies) speciesVector.get(index);
+		if(oldComplex != null) {
+			multiModel.removeNamedElement(oldComplex.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
+			speciesIndexes.remove(oldComplex.getSpeciesName());
+		}
+		if(index==-1) index = speciesVector.size();
+		speciesVector.put(index, new ComplexSpecies(newComplex));
+		speciesIndexes.put(newComplex.getSpeciesName(), index);
+		multiModel.addNamedElement(newComplex.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
+		return;
+	}
+
+	public Vector<Integer> replaceElementInComplex(String toSearch, String replace) throws Throwable {
+	Vector<Integer> elementToUpdate = new Vector<Integer>();
+		for(Integer complex_index : indexesComplexSpecies) {
+			ComplexSpecies c = (ComplexSpecies) speciesVector.get(complex_index);
+			boolean replaced = c.replaceElement(toSearch, replace);
+			if(replaced) {
+				elementToUpdate.add(complex_index);
+				updateComplex(complex_index, c);
+			}
+		}
+		return elementToUpdate;
+	}
+	
+	public MutablePair<Vector<Integer>, Vector<Integer>> replaceMultistateElementInComplex(String oldMultiSpecies, MultistateSpecies sp,	HashMap<String, String> renamed_sites) {
+		//first vector of integer are the ones that has been changed
+		//second vector of integer are the ones with errors in tracking
+		Vector<Integer> elementToUpdate = new Vector<Integer>();
+		Vector<Integer> elementWithError = new Vector<Integer>();
+		for(Integer complex_index : indexesComplexSpecies) {
+			ComplexSpecies c = (ComplexSpecies) speciesVector.get(complex_index);
+			boolean replaced = false;
+			MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.SPECIES.description, DebugConstants.PriorityType.INCONSISTENCIES.priorityCode, complex_index, Constants.SpeciesColumns.NAME.index);
+			try {
+				replaced = c.replaceMultistateElementInComplex(oldMultiSpecies, sp,renamed_sites);
+			} catch(Exception ex) {
+				//previous tracking not coherent with new multistate
+				//	ex.printStackTrace();
+				DebugMessage dm = new DebugMessage();
+				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				dm.setProblem(ex.getMessage());
+				dm.setPriority(DebugConstants.PriorityType.INCONSISTENCIES.priorityCode);
+				dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
+				dm.setOrigin_row(complex_index);
+				MainGui.addDebugMessage_ifNotPresent(dm);
+				elementWithError.add(complex_index);
+			}finally {
+				if(replaced) {
+					elementToUpdate.add(complex_index);
+					try {
+						updateComplex(complex_index, c);
+					} catch (Throwable e) {
+						e.printStackTrace();
+					}
+				}
+				continue;
+			}
+		}
+		
+		MutablePair<Vector<Integer>, Vector<Integer>> ret = new MutablePair<Vector<Integer>, Vector<Integer>>();
+		ret.left = elementToUpdate;
+		ret.right = elementWithError;
+		return ret;
+	}
+	
+
+	public Vector getAllComplexSpeciesSerialized() {
+		Vector ret = new Vector<>();
+		for(Integer ind : indexesComplexSpecies){
+			ret.add(((ComplexSpecies)speciesVector.get(ind)).getSerializedInfo());
+		}
+		return ret;
+	}
+
+	public void initializeComplexFromImport(Vector<ComplexSpecies> listOfComplex) {
+		HashMap<String, Integer> names_indexInList = new HashMap<String, Integer>();
+		
+		for(int i = 0; i < listOfComplex.size(); i++) {
+			names_indexInList.put(listOfComplex.get(i).getSpeciesName(),i);
+		}
+		
+		for(int i = 0; i < speciesVector.size(); i++) {
+			Species sp = speciesVector.get(i);
+			if(sp==null) continue;
+			if(names_indexInList.containsKey(sp.getSpeciesName())) {
+				int compl_index = names_indexInList.get(sp.getSpeciesName());
+				speciesVector.put(i, listOfComplex.get(compl_index));
+				indexesComplexSpecies.add(i);
+			}
+		}
+		
+	}
+
+	public void moveUpRow_linkedReaction(int row) {
+		for(Integer cmplx_index : indexesComplexSpecies) {
+			ComplexSpecies c = (ComplexSpecies) speciesVector.get(cmplx_index);
+			MutablePair<Integer, Integer> pair = c.getLinkedReactionIndexes();
+			if(pair.left == row) pair.left = -1;
+			else if(pair.left > row) pair.left = pair.left -1;
+				
+			if(pair.right == row) pair.right = -1;
+			else if(pair.right > row) pair.right = pair.right -1;
+			c.setLinkedReactionIndexes(pair.left, pair.right);
+			speciesVector.put(cmplx_index, c);
+		}
+	}
+
+	public void updateSBMLid_fromCopasiDataModel(String name,	String compartment, String sbmlid) {
+		Integer index = getSpeciesIndex(name);
+		if(index != null) {
+			Species sp = speciesVector.get(index);
+			if(sp!=null) sp.setSBMLid(sbmlid); 
+			speciesVector.put(index, sp);
+		}
+	}
+
+
 	
 	
 }

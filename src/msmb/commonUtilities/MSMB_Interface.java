@@ -55,6 +55,8 @@ public interface MSMB_Interface {
 	
 	
 	public void setModelName(String newModelName);
-	public JTable getSpeciesJTable();
-	public JTable getGlobalQJTable();
+	
+	public void highlightElement(MSMB_Element element, String name);
+
+	
 }

@@ -7,11 +7,10 @@ import msmb.parsers.multistateSpecies.visitor.*;
  * JTB node class for the production MultistateSpecies_SingleStateDefinition:<br>
  * Corresponding grammar:<br>
  * multistateSpecies_SiteName -> MultistateSpecies_SiteName()<br>
- * nodeToken -> <OPEN_C><br>
- * multistateSpecies_SiteSingleElement -> MultistateSpecies_SiteSingleElement()<br>
- * nodeListOptional -> ( #0 <SITE_STATES_SEPARATOR> #1 MultistateSpecies_SiteSingleElement() )*<br>
- * nodeToken1 -> <CLOSED_C><br>
- * nodeOptional -> ( <CIRCULAR_FLAG> )?<br>
+ * nodeOptional -> ( #0 <OPEN_C> #1 MultistateSpecies_SiteSingleElement()<br>
+ * ............ .. . #2 ( $0 <SITE_STATES_SEPARATOR> $1 MultistateSpecies_SiteSingleElement() )*<br>
+ * ............ .. . #3 <CLOSED_C><br>
+ * ............ .. . #4 ( <CIRCULAR_FLAG> )? )?<br>
  */
 public class MultistateSpecies_SingleStateDefinition implements INode {
 
@@ -19,18 +18,6 @@ public class MultistateSpecies_SingleStateDefinition implements INode {
   public MultistateSpecies_SiteName multistateSpecies_SiteName;
 
   /** Child node 2 */
-  public NodeToken nodeToken;
-
-  /** Child node 3 */
-  public MultistateSpecies_SiteSingleElement multistateSpecies_SiteSingleElement;
-
-  /** Child node 4 */
-  public NodeListOptional nodeListOptional;
-
-  /** Child node 5 */
-  public NodeToken nodeToken1;
-
-  /** Child node 6 */
   public NodeOptional nodeOptional;
 
   /** The serial version UID */
@@ -41,18 +28,10 @@ public class MultistateSpecies_SingleStateDefinition implements INode {
    *
    * @param n0 - first child node
    * @param n1 - next child node
-   * @param n2 - next child node
-   * @param n3 - next child node
-   * @param n4 - next child node
-   * @param n5 - next child node
    */
-  public MultistateSpecies_SingleStateDefinition(final MultistateSpecies_SiteName n0, final NodeToken n1, final MultistateSpecies_SiteSingleElement n2, final NodeListOptional n3, final NodeToken n4, final NodeOptional n5) {
+  public MultistateSpecies_SingleStateDefinition(final MultistateSpecies_SiteName n0, final NodeOptional n1) {
     multistateSpecies_SiteName = n0;
-    nodeToken = n1;
-    multistateSpecies_SiteSingleElement = n2;
-    nodeListOptional = n3;
-    nodeToken1 = n4;
-    nodeOptional = n5;
+    nodeOptional = n1;
   }
 
   /**

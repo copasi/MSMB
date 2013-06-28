@@ -263,6 +263,16 @@ public class GlobalQDB {
 	public Integer getGlobalQIndex(String name) {
 		return globalQIndexes.get(name);
 	}
+
+	public void updateSBMLid_fromCopasiDataModel(String name, String sbmlId) {
+			Integer index = getGlobalQIndex(name);
+			if(index != null) {
+				GlobalQ el = globalQVector.get(index);
+				if(el!=null) el.setSBMLid(sbmlId); 
+				globalQVector.put(index, el);
+			}
+		
+	}
 	
 	
 }

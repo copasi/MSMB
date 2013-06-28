@@ -52,14 +52,15 @@ public class ExtractNamesSpeciesUsedVisitor extends DepthFirstVoidVisitor {
 		  }
 		  
 		  if(CellParsers.isMultistateSpeciesName(name)) {
-			  MultistateSpecies r = null;
+			  /*MultistateSpecies r = null;
 			  try {
 				  r = new MultistateSpecies(multiModel,name);
-			  } catch (Exception e) {
+			  } catch (Exception e) {afsd
 				  exceptions.add(new Exception("Error: "+e.getMessage()));
 				  return;
 			  }
-			  names.add(r.getSpeciesName());
+			  names.add(r.getSpeciesName());*/
+			  names.add(CellParsers.extractMultistateName(name));
 		  } else {
 			  names.add(name);
 		  }

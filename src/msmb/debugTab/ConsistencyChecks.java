@@ -346,6 +346,8 @@ public class ConsistencyChecks {
 					metabolites = CellParsers.parseReaction(multiModel,string_reaction,i+1);
 					singleConfigurations = multiModel.expandReaction(metabolites,i);
 				} catch(Throwable ex) {
+					//System.out.println("PROBLEMS WITH REACTION "+string_reaction);
+					//ex.printStackTrace();
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex.printStackTrace();
 					 DebugMessage dm = new DebugMessage();
 					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);

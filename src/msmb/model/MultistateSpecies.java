@@ -4,6 +4,7 @@ import msmb.gui.MainGui;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,17 +25,15 @@ import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
 import msmb.parsers.multistateSpecies.MR_MultistateSpecies_ParserConstants;
 import msmb.parsers.multistateSpecies.ParseException;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies;
-import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_RangeString;
 import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 
 import com.google.common.collect.Sets;
-//import com.sun.tools.internal.xjc.generator.util.ExistingBlockReference;
-//import com.sun.tools.javac.util.Pair;
 
 
 
-public class MultistateSpecies extends Species {
+
+public class MultistateSpecies extends Species implements Serializable {
 	
 	private TreeMap sites = new TreeMap();
 	private HashMap<String, SiteType> sites_type = new HashMap<String, SiteType>();
@@ -121,6 +120,8 @@ public class MultistateSpecies extends Species {
 		multiModel = m;
 		newParser(complete_string,isReactantReactionWithPossibleRanges);
 	}
+	
+	
 	public void addSite_range(String name, int start, int end) {
 		Vector st = new Vector();
 		for(int i = start; i <= end; i++) { st.add(Integer.toString(i)); }
@@ -188,6 +189,24 @@ public class MultistateSpecies extends Species {
 	public Vector getSiteStates_complete(String site_name) {//always unfolded
 		return (Vector)sites.get(site_name);
 	}
+	
+	
+	public String getSiteStates_string(String site_name) {
+		String ret = new String();
+		Vector states = getSiteStates(site_name);
+		String start = (String)states.get(0);
+		String end = (String)states.get(1);
+		String list = (String)states.get(2);
+		boolean bool = (Boolean)states.get(3);
+		if(start.equals("0") & end.equals("0")) {
+			ret = list;
+		}
+		else{
+			ret = start + ":"+end;
+		}
+		return ret;
+	}
+	
 	
 	public Vector getSiteStates(String site_name) {//compacted if possible
 		Vector start_end_list = new Vector();
@@ -270,10 +289,16 @@ public class MultistateSpecies extends Species {
 			String key = site_it2.next().toString();  
 			Vector states = (Vector)newSpecies.sites.get(key);
 			Vector statesOld = (Vector)merged.sites.get(key);
-			if(this.sites_type.get(key) != merged.sites_type.get(key)) throw new MySyntaxException(Constants.SpeciesColumns.NAME.index, "Inconsistent site type during merging.", Constants.TitlesTabs.SPECIES.description);
-			if(this.sites_type.get(key).getType() == SiteType.BOOLEAN) {
+			
+			SiteType thisType = this.sites_type.get(key);
+			SiteType mergedType = merged.sites_type.get(key);
+			
+			if((thisType.circular != mergedType.circular) || thisType.type != mergedType.type) {
+				throw new MySyntaxException(Constants.SpeciesColumns.NAME.index, "Inconsistent site type during merging.", Constants.TitlesTabs.SPECIES.description);
+			}
+			if(thisType.getType() == SiteType.BOOLEAN) {
 				continue;
-			} else if(this.sites_type.get(key).getType() == SiteType.RANGE) {
+			} else if(thisType.getType() == SiteType.RANGE) {
 				HashSet statesWithoutDuplicates = new HashSet();
 			    if(states != null) statesWithoutDuplicates.addAll(states);
 			    if(statesOld != null) statesWithoutDuplicates.addAll(statesOld);
@@ -412,14 +437,15 @@ public class MultistateSpecies extends Species {
 
 	private Species createSingleConfigurationState(MultiModel m,Vector<String> site_value) throws Throwable {
 		String name = new String(this.getSpeciesName());
-		name += "(";
-		for(int i = 0; i < site_value.size(); i=i+2) {
-			name+= site_value.get(i) + "{"+ site_value.get(i+1)+"}"; 
-			name+=";";
+		if(site_value.size() > 0) {
+			name += "(";
+			for(int i = 0; i < site_value.size(); i=i+2) {
+				name+= site_value.get(i) + "{"+ site_value.get(i+1)+"}"; 
+				name+=";";
+			}
+			name = name.substring(0, name.length()-1);
+			name += ")";
 		}
-		name = name.substring(0, name.length()-1);
-		name += ")";
-		
 		Species ret = new Species();
 		ret.setName(name);
 		ret.setCompartment(multiModel,this.getCompartment_listString());
@@ -522,7 +548,7 @@ public class MultistateSpecies extends Species {
 	    	 
 	     }
 //		if(sites_fromRanges.contains(site)) return null;
-		if(!!isCircular(site)) return null;
+		if(!isCircular(site)) return null;
 		return (String)states.get(states.size()-1);
 	}
 	
@@ -787,4 +813,9 @@ class SiteType {
 	int getType() {return type;}
 	void setCircular(boolean b) {	circular = b; }
 	public boolean isCircular() {	return circular;	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return (this.type == ((SiteType)obj).type) && (circular ==  ((SiteType)obj).circular);
+	}
 };

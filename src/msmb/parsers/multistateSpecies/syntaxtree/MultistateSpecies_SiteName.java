@@ -9,9 +9,7 @@ import msmb.parsers.multistateSpecies.visitor.*;
  * nodeChoice -> . %0 <STRING_LITERAL><br>
  * .......... .. | %1 ( &0 <MULTI_IDENTIFIER><br>
  * .......... .. . .. | &1 <CLOSED_C><br>
- * .......... .. . .. | &2 <OPEN_R><br>
- * .......... .. . .. | &3 <CLOSED_R><br>
- * .......... .. . .. | &4 <SITE_STATES_SEPARATOR> )+<br>
+ * .......... .. . .. | &2 <OPEN_R> )+<br>
  */
 public class MultistateSpecies_SiteName implements INode {
 

@@ -88,7 +88,7 @@ public class CustomJTable extends JTable  {
 		
 		
 		
-		addMouseListener(new MouseAdapter() {
+		/*addMouseListener(new MouseAdapter() {
 		    	public void mousePressed(MouseEvent e) { }
 		    	public void mouseReleased(MouseEvent e) { }
 		    	    
@@ -97,13 +97,13 @@ public class CustomJTable extends JTable  {
 		                Point p = e.getPoint();
 		                int row = rowAtPoint(p); 
 		                int col = columnAtPoint(p); 
-		                clearSelection();
-                    	setColumnSelectionInterval(col, col);
-                    	if(row >= 0 && row < getRowCount()) setRowSelectionInterval(row, row);
+		             //   clearSelection();
+                    //	setColumnSelectionInterval(col, col);
+                    //	if(row >= 0 && row < getRowCount()) setRowSelectionInterval(row, row);
                     	revalidate();
 		            } 
 		        }
-		});
+		});*/
 		
 		
 		

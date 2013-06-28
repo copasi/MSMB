@@ -157,6 +157,27 @@ public class MR_MultistateSpecies_Parser {
       v = new MyVisitor();
       op.accept(v);
       System.out.println("...................................");
+      expression = new String("Cdh1(p)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      op = react.CompleteMultistateSpecies_Operator();
+      v = new MyVisitor();
+      op.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{1};q)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      op = react.CompleteMultistateSpecies_Operator();
+      v = new MyVisitor();
+      op.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{1,2};q)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      op = react.CompleteMultistateSpecies_Operator();
+      v = new MyVisitor();
+      op.accept(v);
+      System.out.println("...................................");
     //No spaces are allowed because here can be ok, but it is not ok for the reactions
     /*expression = new String("Cdh1(p{1, 2}; q{4})");
 	  is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
@@ -474,43 +495,56 @@ MultistateSpecies_SingleStateDefinition MultistateSpecies_SingleStateDefinition(
 {
   // --- JTB generated node declarations ---
   MultistateSpecies_SiteName n0 = null;
-  NodeToken n1 = null;
-  Token n2 = null;
-  MultistateSpecies_SiteSingleElement n3 = null;
-  NodeListOptional n4 = new NodeListOptional();
-  NodeSequence n5 = null;
-  NodeToken n6 = null;
-  Token n7 = null;
-  MultistateSpecies_SiteSingleElement n8 = null;
-  NodeToken n9 = null;
-  Token n10 = null;
-  NodeOptional n11 = new NodeOptional();
-  NodeToken n12 = null;
-  Token n13 = null;
+  NodeOptional n1 = new NodeOptional();
+  NodeSequence n2 = null;
+  NodeToken n3 = null;
+  Token n4 = null;
+  MultistateSpecies_SiteSingleElement n5 = null;
+  NodeListOptional n6 = null;
+  NodeSequence n7 = null;
+  NodeToken n8 = null;
+  Token n9 = null;
+  MultistateSpecies_SiteSingleElement n10 = null;
+  NodeToken n11 = null;
+  Token n12 = null;
+  NodeOptional n13 = null;
+  NodeToken n14 = null;
+  Token n15 = null;
 }
 {
   n0 = MultistateSpecies_SiteName()
-  n2 = < OPEN_C >
-  { n1 = JTBToolkit.makeNodeToken(n2); }
-  n3 = MultistateSpecies_SiteSingleElement()
   (
-    { n5 = new NodeSequence(2); }
-    n7 = < SITE_STATES_SEPARATOR >
-    { n6 = JTBToolkit.makeNodeToken(n7); }
-    { n5.addNode(n6); }
-    n8 = MultistateSpecies_SiteSingleElement()
-    { n5.addNode(n8); }
-    { n4.addNode(n5); }
-  )*
-  { n4.nodes.trimToSize(); }
-  n10 = < CLOSED_C >
-  { n9 = JTBToolkit.makeNodeToken(n10); }
-  (
-    n13 = < CIRCULAR_FLAG >
-    { n12 = JTBToolkit.makeNodeToken(n13); }
-    { n11.addNode(n12); }
+    { n6 = new NodeListOptional(); }
+    { n13 = new NodeOptional(); }
+    { n2 = new NodeSequence(5); }
+    n4 = < OPEN_C >
+    { n3 = JTBToolkit.makeNodeToken(n4); }
+    { n2.addNode(n3); }
+    n5 = MultistateSpecies_SiteSingleElement()
+    { n2.addNode(n5); }
+    (
+      { n7 = new NodeSequence(2); }
+      n9 = < SITE_STATES_SEPARATOR >
+      { n8 = JTBToolkit.makeNodeToken(n9); }
+      { n7.addNode(n8); }
+      n10 = MultistateSpecies_SiteSingleElement()
+      { n7.addNode(n10); }
+      { n6.addNode(n7); }
+    )*
+    { n6.nodes.trimToSize(); }
+    { n2.addNode(n6); }
+    n12 = < CLOSED_C >
+    { n11 = JTBToolkit.makeNodeToken(n12); }
+    { n2.addNode(n11); }
+    (
+      n15 = < CIRCULAR_FLAG >
+      { n14 = JTBToolkit.makeNodeToken(n15); }
+      { n13.addNode(n14); }
+    )?
+    { n2.addNode(n13); }
+    { n1.addNode(n2); }
   )?
-  { return new MultistateSpecies_SingleStateDefinition(n0, n1, n3, n4, n9, n11); }
+  { return new MultistateSpecies_SingleStateDefinition(n0, n1); }
 }
 
 MultistateSpecies_Name MultistateSpecies_Name() throws ParseException :
@@ -757,10 +791,6 @@ MultistateSpecies_SiteName MultistateSpecies_SiteName() throws ParseException :
   Token n8 = null;
   NodeToken n9 = null;
   Token n10 = null;
-  NodeToken n11 = null;
-  Token n12 = null;
-  NodeToken n13 = null;
-  Token n14 = null;
 }
 {
   (
@@ -772,25 +802,18 @@ MultistateSpecies_SiteName MultistateSpecies_SiteName() throws ParseException :
       (
         n6 = < MULTI_IDENTIFIER >
         { n5 = JTBToolkit.makeNodeToken(n6); }
-        { n4 = new NodeChoice(n5, 0, 5); }
+        { n4 = new NodeChoice(n5, 0, 3); }
       |
         n8 = < CLOSED_C >
         { n7 = JTBToolkit.makeNodeToken(n8); }
-        { n4 = new NodeChoice(n7, 1, 5); }
+        { n4 = new NodeChoice(n7, 1, 3); }
       |
         n10 = < OPEN_R >
         { n9 = JTBToolkit.makeNodeToken(n10); }
-        { n4 = new NodeChoice(n9, 2, 5); }
-      |
-        n12 = < CLOSED_R >
-        { n11 = JTBToolkit.makeNodeToken(n12); }
-        { n4 = new NodeChoice(n11, 3, 5); }
-      |
-        n14 = < SITE_STATES_SEPARATOR >
-        { n13 = JTBToolkit.makeNodeToken(n14); }
-        { n4 = new NodeChoice(n13, 4, 5); }
+        { n4 = new NodeChoice(n9, 2, 3); }
       )
       { n3.addNode(n4); }
+    //| < CLOSED_R>  | 	< SITE_STATES_SEPARATOR > //not allowed otherwise I cannot have implicit all states recognized
     )+
     { n3.nodes.trimToSize(); }
     { n0 = new NodeChoice(n3, 1, 2); }
@@ -1044,37 +1067,25 @@ MultistateSpecies_Operator_SiteName MultistateSpecies_Operator_SiteName() throws
 MultistateSpecies_Operator_SiteSingleState MultistateSpecies_Operator_SiteSingleState() throws ParseException :
 {
   // --- JTB generated node declarations ---
-  NodeChoice n0 = null;
-  NodeToken n1 = null;
-  Token n2 = null;
-  NodeList n3 = new NodeList();
-  NodeChoice n4 = null;
-  NodeToken n5 = null;
-  Token n6 = null;
-  NodeToken n7 = null;
-  Token n8 = null;
+  MultistateSpecies_SiteSingleElement n0 = null;
+  NodeListOptional n1 = new NodeListOptional();
+  NodeSequence n2 = null;
+  NodeToken n3 = null;
+  Token n4 = null;
+  MultistateSpecies_SiteSingleElement n5 = null;
 }
 {
+  n0 = MultistateSpecies_SiteSingleElement()
   (
-    n2 = < STRING_LITERAL >
-    { n1 = JTBToolkit.makeNodeToken(n2); }
-    { n0 = new NodeChoice(n1, 0, 2); }
-  |
-    (
-      (
-        n6 = < MULTI_IDENTIFIER >
-        { n5 = JTBToolkit.makeNodeToken(n6); }
-        { n4 = new NodeChoice(n5, 0, 2); }
-      |
-        n8 = < NUMBER >
-        { n7 = JTBToolkit.makeNodeToken(n8); }
-        { n4 = new NodeChoice(n7, 1, 2); }
-      )
-      { n3.addNode(n4); }
-    )+
-    { n3.nodes.trimToSize(); }
-    { n0 = new NodeChoice(n3, 1, 2); }
-  )
-  { return new MultistateSpecies_Operator_SiteSingleState(n0); }
-//| < OPEN_R >|  < RANGE_SEPARATOR > )+
+    { n2 = new NodeSequence(2); }
+    n4 = < SITE_STATES_SEPARATOR >
+    { n3 = JTBToolkit.makeNodeToken(n4); }
+    { n2.addNode(n3); }
+    n5 = MultistateSpecies_SiteSingleElement()
+    { n2.addNode(n5); }
+    { n1.addNode(n2); }
+  )*
+  { n1.nodes.trimToSize(); }
+  { return new MultistateSpecies_Operator_SiteSingleState(n0, n1); }
+//< STRING_LITERAL >  | (< MULTI_IDENTIFIER >| < NUMBER > )+//| < OPEN_R >|  < RANGE_SEPARATOR > )+
 }

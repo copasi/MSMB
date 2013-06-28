@@ -148,7 +148,6 @@ public class MR_ChemicalReaction_Parser{  public static void main(String args 
 
 
 
-
       expression = new String("\"EGFR(Y1068~P!?)\" ->");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  react = new MR_ChemicalReaction_Parser(is);
@@ -164,6 +163,23 @@ public class MR_ChemicalReaction_Parser{  public static void main(String args 
       start.accept(v);
       System.out.println("...................................");
       	expression = new String("\"EGFR(L!+,CR1)\" ->");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+      
+    expression = new String("Cdh1(p{1:10}) + ClbM -> Cdh1(pred(p))");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+       expression = new String("Cdh1(p) -> _Cdh1(AAA=Cdh1.p)");
       is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 	  react = new MR_ChemicalReaction_Parser(is);
   	  start = react.CompleteReaction();

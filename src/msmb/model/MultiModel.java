@@ -208,8 +208,8 @@ public class MultiModel {
 	//RESETS COMPLETELY THE SPECIES WITH THE NEW NAME/SITES
 	public void modifyMultistateSpecies(MultistateSpecies species, boolean fromMultistateBuilder,int row, boolean autoMergeSpecies) throws Throwable {
 		String name = species.printCompleteDefinition();
-		
 		int n = this.speciesDB.addChangeSpecies(row+1, new String(), name,species.getInitialQuantity_multi(), species.getType(), species.getCompartment_listString(), species.getExpression(),fromMultistateBuilder, new String(),autoMergeSpecies,true);
+		
 	}
 	
 	public int findCompartment(String name) {
@@ -402,7 +402,7 @@ public class MultiModel {
 	
 	
 	public void saveSBML(File file) throws Exception {
-		 this.copasiDataModel.exportSBML(file.getAbsolutePath(), true);
+		 this.copasiDataModel.exportSBML(file.getAbsolutePath(), true, 3, 1);
 	}
 	
 	
@@ -2526,7 +2526,43 @@ public class MultiModel {
 				//merge the possibly missing sites/states
 				//vv
 				MultistateSpecies msp = new MultistateSpecies(this, sp.getDisplayedName());
-				MultistateSpecies current = new MultistateSpecies(this, species);
+				MultistateSpecies current = null;
+				try{
+					current = new MultistateSpecies(this, species);
+				} catch(Throwable ex) {
+					//e.g. Cdh1(p) (with no range) is used in the reactant, it cannot be used to build a complete multistate species
+					//
+					 InputStream is;
+						try{
+							is = new ByteArrayInputStream(species.getBytes("UTF-8"));
+							 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+							 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+							 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this);
+							 start.accept(v);
+							 String justName = v.getSpeciesName();
+							 String newCompleteMultiForMerging = justName;
+							 Set<String> sites = v.getAllSites_names();
+							 if(sites.size() > 0) 			{
+								 newCompleteMultiForMerging +="(";
+							 }
+							 for(String site : sites) {
+								 if(v.getSiteStates_string(site).length() ==0) {
+									 newCompleteMultiForMerging += site+"{"+msp.getSiteStates_string(site)+"};";
+								 } else newCompleteMultiForMerging += site+"{"+v.getSiteStates_string(site)+"};";
+							 }
+							if(sites.size() > 0) {
+								newCompleteMultiForMerging = newCompleteMultiForMerging.substring(0,newCompleteMultiForMerging.length()-1);
+								 newCompleteMultiForMerging += ")";
+							}
+							 current = new MultistateSpecies(this, newCompleteMultiForMerging);
+						} catch (Exception e1) {
+							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
+							throw e1;
+						}
+						
+					
+				}
+				
 				current.mergeStatesWith_Minimum(msp);
 				//^^
 				MultistateSpecies multi = new MultistateSpecies(this,  sub_prefix+current);
@@ -3971,6 +4007,8 @@ public class MultiModel {
 		
 		for(int i = 1; i < this.speciesDB.getSizeSpeciesDB(); i++) {
 			Species sp = speciesDB.getSpecies(i);
+			if(sp instanceof ComplexSpecies) continue;
+			
 			if(!(sp instanceof MultistateSpecies)) {
 				this.updateSpecies(i, sp.getDisplayedName(), 
 										//sp.getInitialConcentration(), 
@@ -4108,7 +4146,7 @@ public class MultiModel {
 		Vector rows = new Vector();
 		
 		Species sp = this.speciesDB.getSpecies(name);
-		
+		if(sp == null) return rows;
 		try{
 			sp.setCompartment(this,compartment);
 			sp.setInitialQuantity(this,initialQ);
@@ -4961,9 +4999,18 @@ public class MultiModel {
 		speciesDB.setEditableExpression(editableString, row, column);
 	}
 
-	public Species getSpecies(String name) {
-		return speciesDB.getSpecies(name);
+	public Species getSpecies(String name, String compartment) {
+		Species sp = speciesDB.getSpecies(name);
+		if(compartment != null) {
+			if(sp.getCompartments().contains(compartment)) return sp;
+			else return null;
+		} else return sp;
 	}
+	
+	public Species getSpecies(String name){
+		return getSpecies(name, null);
+	}
+	
 	
 	public Reaction getReaction(int index) {
 		return reactionDB.getReaction(index);
@@ -5189,10 +5236,9 @@ public Integer getGlobalQIndex(String name) {
 		return speciesDB.getComplexSpecies(name);
 	}
 
-	public void updateComplex(String name, ComplexSpecies newComplex) {
-			System.out.println("COMPLEX name" + name);
-			System.out.println("COMPLEX initials" + newComplex);
-		}
+	public void updateComplex(int index, ComplexSpecies newComplex) throws Throwable {
+		speciesDB.updateComplex(index, newComplex);
+	}
 
 	public void addChangeComplex(int index, ComplexSpecies complex) {
 		try {
@@ -5200,6 +5246,54 @@ public Integer getGlobalQIndex(String name) {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
+		
+	}
+
+	public Vector getAllComplexSpeciesSerialized() {
+		return speciesDB.getAllComplexSpeciesSerialized();
+	}
+
+	public void setComplexSpecies(Vector listOfComplex) {
+		speciesDB.initializeComplexFromImport(listOfComplex);
+	}
+
+	public void moveUpRow_linkedReaction(int row) {
+		speciesDB.moveUpRow_linkedReaction(row);
+	}
+
+	public Species getSpeciesAt(Integer index) {
+		return speciesDB.getSpecies(index);
+	}
+
+	public void updateSBMLid_fromCopasiDataModel(String table, String name, String compartment) {
+		if(table.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
+			try {
+				int index = findMetabolite(name, compartment, false);
+				if(index != -1) {
+					CMetab metab = copasiDataModel.getModel().getMetabolite(index);
+					String sbmlId = metab.getSBMLId();
+					//System.out.println("current sbml id (species) = "+sbmlId);
+					this.speciesDB.updateSBMLid_fromCopasiDataModel(name, compartment, sbmlId);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else if(table.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
+			try {
+				int index = findGlobalQ(name,  false);
+				if(index != -1) {
+					CModelValue element = copasiDataModel.getModel().getModelValue(index);
+					String sbmlId = element.getSBMLId();
+					//System.out.println("current sbml id (global q) = "+sbmlId);
+					this.globalqDB.updateSBMLid_fromCopasiDataModel(name, sbmlId);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} 
+		
+		
+		
 		
 	}
 

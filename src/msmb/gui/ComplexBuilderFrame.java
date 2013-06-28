@@ -3,11 +3,6 @@ package msmb.gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.SplashScreen;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -27,21 +22,14 @@ import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
 import javax.swing.JList;
-import javax.swing.AbstractListModel;
-import javax.swing.JTable;
 import javax.swing.JTextPane;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
@@ -50,34 +38,31 @@ import javax.swing.tree.TreeSelectionModel;
 
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import javax.swing.JTextArea;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import javax.swing.SwingConstants;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 
-import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
 
-import msmb.commonUtilities.MSMB_MenuItem;
-import msmb.debugTab.DebugConstants.PriorityType;
 import msmb.model.ComplexSpecies;
 import msmb.model.MultistateSpecies;
 import msmb.model.Species;
+import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
+import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 import msmb.utility.CellParsers;
-import msmb.utility.Constants;
 import msmb.utility.GraphicalProperties;
+import msmb.utility.MySyntaxException;
 
 import java.awt.FlowLayout;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import javax.swing.JCheckBox;
 
 public class ComplexBuilderFrame extends JDialog {
@@ -90,7 +75,6 @@ public class ComplexBuilderFrame extends JDialog {
 	protected ComplexBuilderFrame_MultistateAdd multistateAdd_frame;
 	protected ComplexBuilderFrame_Initials complexInitials_frame;
 	private DefaultListModel listMultistateSpeciesModel;
-	private JScrollPane scrollPane_2;
 	private JSplitPane splitPane;
 	private DynamicTree treePanel;
 
@@ -99,8 +83,13 @@ public class ComplexBuilderFrame extends JDialog {
 	private DefaultListModel listRegularSpeciesModel;
 	protected ExitOption exitOption;
 	private JLabel labelName;
+	private JCheckBox checkCustomName;
+	private JCheckBox checkboxAddReactions;
+	private JCheckBox checkboxAddComplexSpecies;
+	private JCheckBox checkboxLinkReactions;
+	private JSplitPane splitPane_global;
 
-	
+	HashBiMap<String, String> renamed_sites = HashBiMap.create();
 	static boolean fromChangeMenu = false;
 	
 	public static void main(String[] args) {
@@ -121,12 +110,46 @@ public class ComplexBuilderFrame extends JDialog {
 	
 	
 
-	ComplexSpecies showDialog() {
-	    setVisible(true);
-	    if(exitOption == ExitOption.CANCEL) return null;
-	    if(exitOption == ExitOption.UPDATE_MODEL_ONLY_SPECIES) complexSpecies.returnOnlySpecies(true);
-	    if(exitOption == ExitOption.UPDATE_MODEL_SPECIES_REACTION)  complexSpecies.returnOnlySpecies(false);
-	   return complexSpecies;
+	MutablePair<ComplexSpecies, HashMap<String, String>> showDialog() {
+		pack();
+		setLocationRelativeTo(null);
+		setVisible(true);
+	    
+	    if(complexSpecies.getComponents().size() ==0 && complexSpecies.getComponents_multi().size() ==0  ) {
+	    	return null;
+	    }
+	    if(checkCustomName.isSelected() && textField.getText().length() > 0) {
+	    	complexSpecies.setCustomFullName(textField.getText());
+	    } else {
+	    	complexSpecies.setCustomFullName(new String());
+	    	complexSpecies.setPrefixName(textField.getText());
+	    }
+	    
+	    if(checkboxAddReactions.isSelected())  {
+	    	complexSpecies.returnOnlySpecies(false);
+	     } else {
+	    	 complexSpecies.returnOnlySpecies(true);
+	     }
+	    
+	    if(checkboxLinkReactions.isSelected()) {
+	    	complexSpecies.setLinkReactions(true);
+	    } else {
+	    	 complexSpecies.setLinkReactions(false);
+	    }
+	    
+	    try {
+			complexSpecies.setCompartment(MainGui.multiModel, MainGui.compartment_default_for_dialog_window);
+		} catch (MySyntaxException e) {
+			e.printStackTrace();
+		}
+	    
+	    MutablePair<ComplexSpecies,  HashMap<String, String>> ret = new MutablePair<ComplexSpecies,  HashMap<String, String>>();
+	    ret.left = complexSpecies;
+	    HashMap<String, String> fromTo = new HashMap<String, String>();
+	    fromTo.putAll(renamed_sites);
+	    ret.right = fromTo;
+	    
+	    return ret;
 	}
 	
 	
@@ -134,8 +157,8 @@ public class ComplexBuilderFrame extends JDialog {
 		setTitle("Complex Builder");
 		setModal(true);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
-		setLocationRelativeTo(null);
+		//setBounds(100, 100, 450, 300);
+		
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -154,7 +177,11 @@ public class ComplexBuilderFrame extends JDialog {
 		textField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent arg0) {
-				complexSpecies.setComplexName(textField.getText());
+				if(checkCustomName.isSelected()) {
+					complexSpecies.setCustomFullName(textField.getText());
+				} else {
+					complexSpecies.setPrefixName(textField.getText());
+				}
 			}
 		});
 		
@@ -166,7 +193,7 @@ public class ComplexBuilderFrame extends JDialog {
 		lblName2.setText("By default, the name will be composed of the prefix and the list of all the components of the complex. \r\nIf, instead, you want to give a custom name, select the checkbox below");
 		panel.add(panel2, BorderLayout.SOUTH);
 		panel2.add(lblName2, BorderLayout.NORTH);
-		JCheckBox checkCustomName = new JCheckBox("Full custom name");
+		checkCustomName = new JCheckBox("Full custom name");
 		panel2.add(checkCustomName, BorderLayout.CENTER);
 		checkCustomName.addItemListener(new ItemListener() {
 			
@@ -208,7 +235,14 @@ public class ComplexBuilderFrame extends JDialog {
 					  treePanel.addObject(null, e);
 					}
 				} else {
-					multistateAdd_frame.setMultistateSpecies((MultistateSpecies) listMultistateSpecies.getSelectedValue(), complexSpecies.getSiteNamesUsed());
+					/*Vector<String> names = complexSpecies.getSiteNamesUsed();
+					Vector<String> namesWithRenaming = new Vector<String>();
+					for(String name : names) {
+						if(renamed_sites.containsKey(name)) namesWithRenaming.add(renamed_sites.get(name));
+						else namesWithRenaming.add(name);
+					}*/
+					
+					multistateAdd_frame.setMultistateSpecies((MultistateSpecies) listMultistateSpecies.getSelectedValue(), complexSpecies.getSiteNamesUsed() );
 					multistateAdd_frame.setVisible(true);
 				}
 				listMultistateSpecies.clearSelection();
@@ -254,7 +288,7 @@ public class ComplexBuilderFrame extends JDialog {
 		lblRegularSpeciesleft.setHorizontalAlignment(SwingConstants.LEFT);
 		panel_6.add(lblRegularSpeciesleft);
 		
-		JSplitPane splitPane_global = new JSplitPane();
+		splitPane_global = new JSplitPane();
 		panel_1.add(splitPane_global, BorderLayout.CENTER);
 		
 
@@ -267,6 +301,7 @@ public class ComplexBuilderFrame extends JDialog {
 		splitPane.setResizeWeight(0.5);
 		splitPane_global.setLeftComponent(splitPane);
 		splitPane_global.setRightComponent(treePanel);
+		splitPane_global.setResizeWeight(0.5);
 		
 		JScrollPane scrollPane = new JScrollPane();
 		splitPane.setLeftComponent(scrollPane);
@@ -311,36 +346,38 @@ public class ComplexBuilderFrame extends JDialog {
 		
 		JPanel panel_2 = new JPanel();
 		contentPane.add(panel_2, BorderLayout.SOUTH);
-		panel_2.setLayout(new GridLayout(2, 0, 0, 0));
+		panel_2.setLayout(new BorderLayout(3, 0));
 		
+		JPanel panel_32 = new JPanel();
+		panel_32.setLayout(new BorderLayout(3, 0));
+				
 		JPanel panel_3 = new JPanel();
-		panel_2.add(panel_3);
-		panel_3.setLayout(new BorderLayout(3, 0));
+		panel_2.add(panel_32, BorderLayout.CENTER);
+		panel_32.add(panel_3, BorderLayout.CENTER);
 		
-		JCheckBox chckbxAddComplexSpecies = new JCheckBox("Add Complex Species AND complexation/decomplexation reaction");
-		panel_3.add(chckbxAddComplexSpecies, BorderLayout.CENTER);
+		panel_3.setLayout(new GridLayout(3, 0,0,0));
 		
-	/*	 jtextareaMSMBcompliant = new JTextArea(1, 20);
-		jtextareaMSMBcompliant.setFont(lblNameOfThe.getFont());
-		jtextareaMSMBcompliant.setEnabled(false);
-		jtextareaMSMBcompliant.setEditable(false);
-		scrollPane_2 = new JScrollPane(jtextareaMSMBcompliant);
-		panel_3.add(scrollPane_2, BorderLayout.CENTER);
-		
-		JLabel lblMsmbCompliantDefinition = new JLabel("MSMB compliant definition:");
-		panel_3.add(lblMsmbCompliantDefinition, BorderLayout.WEST);
-*/
-		JPanel panel_4 = new JPanel();
-		panel_2.add(panel_4);
-		
-		JButton btnNewButton = new JButton("Add ONLY Species");
-		btnNewButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(null, complexSpecies.getFullComplexDefinition(), "I will add this to the species",JOptionPane.INFORMATION_MESSAGE);
+		checkboxAddComplexSpecies = new JCheckBox("Add complex to Species");
+		panel_3.add(checkboxAddComplexSpecies);
+		checkboxAddComplexSpecies.setSelected(true);
+		checkboxAddComplexSpecies.setEnabled(false);
+		checkboxAddReactions = new JCheckBox("Add complexation/decomplexation Reaction");
+		panel_3.add(checkboxAddReactions);
+		checkboxAddReactions.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.DESELECTED) {
+					checkboxLinkReactions.setSelected(false);
+		        } 
 			}
 		});
-//		panel_4.add(btnNewButton);
-			
+
+		checkboxLinkReactions = new JCheckBox("Link Reactions to Complex updates");
+		panel_3.add(checkboxLinkReactions);
+		
+		JPanel panel_4 = new JPanel();
+		panel_2.add(panel_4,  BorderLayout.SOUTH);
+		
 		JButton button = new JButton("Set initial quantities");
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -357,13 +394,9 @@ public class ComplexBuilderFrame extends JDialog {
 		btnNewButton_1.addActionListener(new ActionListener() {
 		
 			public void actionPerformed(ActionEvent e) {
-				String speciesAndReact = "SPECIES: "+complexSpecies.getFullComplexDefinition()+"\n";
-				speciesAndReact += complexSpecies.getComplexationReaction()+"\n";
-				speciesAndReact += complexSpecies.getDecomplexationReaction()+"\n";				
-				JOptionPane.showMessageDialog(null, speciesAndReact, "I will add this to the model",JOptionPane.INFORMATION_MESSAGE);
-			
-				exitOption = ExitOption.UPDATE_MODEL_ONLY_SPECIES;
+				System.out.println("before dispose");
 				dispose();
+				
 				//setVisible(false);
 			}
 		});
@@ -383,6 +416,7 @@ public class ComplexBuilderFrame extends JDialog {
 
 	protected void cancel() {
 		exitOption = ExitOption.CANCEL;
+		System.out.println("in the cancel");
 		dispose();
 	}
 
@@ -391,11 +425,11 @@ public class ComplexBuilderFrame extends JDialog {
 	@Override
 	public void setVisible(boolean b) {
 		GraphicalProperties.resetFonts(this);
-		splitPane.setDividerLocation(0.5);
-		this.setSize(45*MainGui.customFont.getSize(), 25*MainGui.customFont.getSize());
-		splitPane.setDividerLocation(0.5);
-		setLocationRelativeTo(null);
+		//this.setSize(45*MainGui.customFont.getSize(), 25*MainGui.customFont.getSize());
+		splitPane_global.setDividerLocation(0.5);
 		pack();
+		splitPane_global.setDividerLocation(0.5);
+		setLocationRelativeTo(null);
 		super.setVisible(true);
 	}
 	
@@ -407,22 +441,57 @@ public class ComplexBuilderFrame extends JDialog {
 		trackableMultistate.clear();
 		treePanel.clear();
 		
+		Vector<String> simpleSpecies = new Vector<>();
+		Vector<String> multistate = new Vector<>();
 		for(Species sp : modelSpecies) {
 			if(sp==null) continue;
 			String spName = sp.getDisplayedName();
-			if(CellParsers.isMultistateSpeciesName(spName)) {
-				listMultistateSpeciesModel.addElement(sp);
-		   	   trackableMultistate.put(sp.getSpeciesName(), sp.getDisplayedName());
+			if(sp instanceof MultistateSpecies) {
+				multistate.add(spName);
 			} else {
-				listRegularSpeciesModel.addElement(spName);
+				simpleSpecies.add(spName);
 			}
 		}
 		
+		Collections.sort(simpleSpecies);
+		Collections.sort(multistate);
+		
+		for(String spName : multistate) {
+			MultistateSpecies sp = null;
+			try {
+				sp = new MultistateSpecies(null, spName);
+			} catch (Exception e) {
+			
+				e.printStackTrace();
+			}
+				listMultistateSpeciesModel.addElement(sp);
+		   	   trackableMultistate.put(sp.getSpeciesName(), sp.getDisplayedName());
+		}
+		for(String sp : simpleSpecies) {
+			listRegularSpeciesModel.addElement(sp);
+		}
+	
 		listMultistateSpecies.revalidate();
 		listRegularSpecies.revalidate();
 	}
 	
+	public void applyRenamingSites(HashBiMap<String, String> renamed) {
+		Set<String> from = renamed.keySet();
+		for(String before : from) {
+			String before_inComplex = before;
+			if(renamed_sites.inverse().containsKey(before)) {
+				before_inComplex = renamed_sites.inverse().get(before);
+			}
+			renamed_sites.put(before_inComplex, renamed.get(before));
+		}
+	}
+	
 	public void addElementsToComplex(Vector elementsToAdd) {
+		HashBiMap<String, String> renamingOfFromMultistate = HashBiMap.create();
+		renamingOfFromMultistate.putAll((HashBiMap<String, String>) elementsToAdd.get(elementsToAdd.size()-1));
+		applyRenamingSites(renamingOfFromMultistate);
+		
+		elementsToAdd.removeElementAt(elementsToAdd.size()-1);
 		String componentToAdd = complexSpecies.addMultistateElementsToComplex(elementsToAdd);
 		if(!fromChangeMenu ) {
 			treePanel.addObject(null, componentToAdd);
@@ -473,8 +542,126 @@ public class ComplexBuilderFrame extends JDialog {
 			m = new MultistateSpecies(null, multistateDefinition);
 			complexSpecies.removeComponentFromComplex(m.getDisplayedName());
 		} catch (Exception e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			//this function can be used also to check with Cdh1(p) tracked... so I have to analyze name without complete site states.
+			 InputStream is;
+			try {
+				is = new ByteArrayInputStream(multistateDefinition.getBytes("UTF-8"));
+				 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+				 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+				 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(null);
+				 start.accept(v);
+				 String justName = v.getSpeciesName();
+				 complexSpecies.removeComponentFromComplex(justName);
+			} catch (Exception e1) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
+			}
+		}
+	}
+
+
+
+	public void setComplexSpecies(ComplexSpecies originalComplex) {
+		try {
+			complexSpecies = new ComplexSpecies(originalComplex);
+			renamed_sites.clear();
+			
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		if(complexSpecies.getCustomFullName().length() > 0) {
+			textField.setText(originalComplex.getCustomFullName());
+			checkCustomName.setSelected(true);
+		} else {
+			textField.setText(originalComplex.getPrefixName());
+			checkCustomName.setSelected(false);
+		}
+		
+		if(complexSpecies.getLinkReactions()) {
+			checkboxAddReactions.setEnabled(false);
+			checkboxAddReactions.setSelected(true);
+			checkboxAddReactions.setText("Add complexation/decomplexation Reaction (already in the model)");
+			checkboxLinkReactions.setSelected(true);
+		} else {
+			checkboxLinkReactions.setSelected(false);
+			checkboxAddReactions.setText("Add complexation/decomplexation Reaction");
+			checkboxAddReactions.setEnabled(true);
+			checkboxAddReactions.setSelected(false);
+		}
+		
+		treePanel.clearOnlyTree();
+		for(String e : complexSpecies.getComponents()) {
+		  treePanel.addObject(null, e);
+		}
+		
+		Set<String> keys = complexSpecies.getComponents_multi().keySet();
+		for(String k : keys) {
+			String element = new String();
+			element += k +"(";
+			Vector<MutablePair<String, String>> sitesList = complexSpecies.getComponents_multi().get(k);
+			for(MutablePair<String, String> pair : sitesList){
+				element += pair.left;
+					if(pair.right.length() > 0) {
+						String siteConf = pair.right;
+						if(!siteConf.startsWith("{")) {	siteConf = "{"+siteConf;	}
+						if(!siteConf.endsWith("}")) {	siteConf += "}";	}
+						element += siteConf;
+					}
+					element +=";";
+			}
+			element = element.substring(0, element.length()-1);
+			element +=")";
+			  treePanel.addObject(null, element);
+			
+		}
+		
+		trackableMultistate.remove(complexSpecies.getSpeciesName());
+		listMultistateSpeciesModel.clear();
+		Vector<String> sorted = new Vector<String>();
+		sorted.addAll(trackableMultistate.keySet());
+		Collections.sort(sorted);
+		
+		for(String element : sorted) {
+			try {
+				if(!keys.contains(element)) { // because for now we don't allow homodimer of multistate species
+					listMultistateSpeciesModel.addElement(new MultistateSpecies(null, trackableMultistate.get(element)));
+				}
+			} catch (Exception e1) {
+			
+				e1.printStackTrace();
+			}
+		}
+		
+		
+		revalidate();
+	}
+
+
+
+	public void clearAll() {
+		checkboxAddReactions.setText("Add complexation/decomplexation Reaction");
+		checkboxAddReactions.setEnabled(true);
+		checkboxAddReactions.setSelected(false);
+		checkboxLinkReactions.setEnabled(true);
+		checkboxLinkReactions.setSelected(false);
+		textField.setText("");
+		try {
+			complexSpecies = new ComplexSpecies("NO_NAME");
+		} catch (Exception e) {
+			//e.printStackTrace();
+		}
+	}
+
+
+
+	public ComplexSpecies getCurrentComplex() {
+		try {
+			return new ComplexSpecies(complexSpecies);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	
@@ -576,10 +763,15 @@ class DynamicTree extends JPanel {
 					try {
 						Vector<Vector<String>> trackedTriplets = parentDialog.complexSpecies.getTrackedTriplets(CellParsers.extractMultistateName(multistateChosen));
 						parentDialog.fromChangeMenu = true;
-						parentDialog.multistateAdd_frame.setMultistateTracking(trackedTriplets);
+						ComplexSpecies old = parentDialog.getCurrentComplex();
 						parentDialog.clearReferencesTo(multistateTracked);
 						parentDialog.multistateAdd_frame.setMultistateSpecies(new MultistateSpecies(null, multistateTracked), parentDialog.complexSpecies.getSiteNamesUsed());
+						parentDialog.multistateAdd_frame.setMultistateTracking(trackedTriplets);
 						parentDialog.multistateAdd_frame.setVisible(true);
+						
+						if(parentDialog.multistateAdd_frame.exitOption == ExitOption.CANCEL) {
+							parentDialog.setComplexSpecies(old);
+						}
 					} catch (Exception e) {
 						e.printStackTrace();
 					} finally{
@@ -612,6 +804,17 @@ class DynamicTree extends JPanel {
 			  String removedComponent = removeCurrentNode();
 			removeComponentFromComplex(removedComponent);
 			treeModel.reload();
+		  }
+	   
+		
+	  }
+	  
+	  public void clearOnlyTree() {
+		  int children = rootNode.getChildCount();
+		  for(int i = 0; i < children; i++) {
+			  tree.setSelectionRow(1);
+			  String removedComponent = removeCurrentNode();
+			  treeModel.reload();
 		  }
 	   
 		
@@ -676,9 +879,7 @@ class DynamicTree extends JPanel {
 }
 	  
 enum ExitOption {
-	   CANCEL(0), 
-	   UPDATE_MODEL_ONLY_SPECIES(1),
-	   UPDATE_MODEL_SPECIES_REACTION(2);
+	   CANCEL(0), OK(1);
 	   			          
 	   public final int code;
 	   

@@ -27,6 +27,7 @@ import javax.swing.event.DocumentListener;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import msmb.utility.CellParsers;
+import msmb.utility.Constants;
 import msmb.utility.GridLayout2;
 
 import msmb.debugTab.FoundElement;
@@ -449,7 +450,9 @@ public String getClosingOperation() {
 		for(Component c: comps){
 			if(c instanceof JCheckBox) ((JCheckBox)c).setSelected(true);
 		}
+			
 		MainGui.applyRenaming(collectRenamingElements());
+			
 	}
 
 	@Override
