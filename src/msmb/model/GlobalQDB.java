@@ -187,6 +187,7 @@ public class GlobalQDB {
 			throw ex;
 			//return -1; 
 		} catch (Throwable e) {
+			e.printStackTrace();
 			MySyntaxException ex = new MySyntaxException(columnToAnalyze, "Problem parsing the expression.", Constants.TitlesTabs.GLOBALQ.description);
 			throw ex;
 		}

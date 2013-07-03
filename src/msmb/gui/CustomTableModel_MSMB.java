@@ -440,33 +440,34 @@ class CustomJTable_MSMB extends CustomJTable  {
 				         	//popupMenu.add(customView);
 			         		
 			         	   if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
-			         		  JMenuItem goToDefinition = new JMenuItem("Go to Function Definition");
-			         		  goToDefinition.addActionListener(new ActionListener() {
-			         			  @Override
-			         			  public void actionPerformed(ActionEvent e) {
-			         				    MutablePair<Integer, Integer> index = ((CustomTableModel_MSMB)model).getFunctionDefinitionIndex();
-			         				    
-			         					if(index != null) {
-			         						index.right = index.right -1; //because the returned one is the nrow not the row in the table
-			         						if(index.left == Constants.TitlesTabs.FUNCTIONS.index) {
-			         							MainGui.jTableFunctions.setRowSelectionInterval(index.right, index.right);
-			         							MainGui.jTableFunctions.scrollRectToVisible(new Rectangle(MainGui.jTableFunctions.getCellRect(index.right+5, 0, true))); 
-			         							MainGui.jTableFunctions.revalidate();
-			         							MainGui.row_to_highlight.set(Constants.TitlesTabs.FUNCTIONS.index, index.right);
-			         							MainGui.jTableBuiltInFunctions.clearSelection();
-			         						} else {
-			         							MainGui.jTableBuiltInFunctions.setRowSelectionInterval(index.right, index.right);
-			         							MainGui.jTableBuiltInFunctions.scrollRectToVisible(new Rectangle(MainGui.jTableBuiltInFunctions.getCellRect(index.right+5, 0, true))); 
-			         							MainGui.jTableBuiltInFunctions.revalidate();
-			         							MainGui.row_to_highlight.set(Constants.TitlesTabs.BUILTINFUNCTIONS.index, index.right);
-			         							MainGui.jTableFunctions.clearSelection();
-			         						}
-			         						MainGui.jTabGeneral.setSelectedIndex(Constants.TitlesTabs.FUNCTIONS.index);
-				         					
-			         					}
-			         				}
-			         		  });
-			         		  popupMenu.add(goToDefinition);	
+			         			  JMenuItem goToDefinition = new JMenuItem("Go to Function Definition");
+			         			  goToDefinition.addActionListener(new ActionListener() {
+			         				  @Override
+			         				  public void actionPerformed(ActionEvent e) {
+			         					  MutablePair<Integer, Integer> index = ((CustomTableModel_MSMB)model).getFunctionDefinitionIndex();
+
+			         					  if(index != null) {
+			         						  index.right = index.right -1; //because the returned one is the nrow not the row in the table
+			         						  if(index.left == Constants.TitlesTabs.FUNCTIONS.index) {
+			         							  MainGui.jTableFunctions.setRowSelectionInterval(index.right, index.right);
+			         							  MainGui.jTableFunctions.scrollRectToVisible(new Rectangle(MainGui.jTableFunctions.getCellRect(index.right+5, 0, true))); 
+			         							  MainGui.jTableFunctions.revalidate();
+			         							  MainGui.row_to_highlight.set(Constants.TitlesTabs.FUNCTIONS.index, index.right);
+			         							  MainGui.jTableBuiltInFunctions.clearSelection();
+			         						  } else {
+			         							  MainGui.jTableBuiltInFunctions.setRowSelectionInterval(index.right, index.right);
+			         							  MainGui.jTableBuiltInFunctions.scrollRectToVisible(new Rectangle(MainGui.jTableBuiltInFunctions.getCellRect(index.right+5, 0, true))); 
+			         							  MainGui.jTableBuiltInFunctions.revalidate();
+			         							  MainGui.row_to_highlight.set(Constants.TitlesTabs.BUILTINFUNCTIONS.index, index.right);
+			         							  MainGui.jTableFunctions.clearSelection();
+			         						  }
+			         						  MainGui.jTabGeneral.setSelectedIndex(Constants.TitlesTabs.FUNCTIONS.index);
+
+			         					  }
+			         				  }
+			         			  });
+			         			  popupMenu.add(goToDefinition);	
+			         		  
 			         	   }
 			         	     
 			         	  if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)!=0) {  
@@ -510,6 +511,19 @@ class CustomJTable_MSMB extends CustomJTable  {
 			         		}
 				             showPopup = true;
 				         }
+			             
+			             if(col == Constants.ReactionsColumns.REACTION.index && !isCellEditable(row, col)) {
+		         			  //reaction linked to a complex
+		         			 JMenuItem unlinkReaction = new JMenuItem("Unlink reaction");
+		         			unlinkReaction.addActionListener(new ActionListener() {
+		         				  @Override
+		         				  public void actionPerformed(ActionEvent e) {
+		         					  MainGui.unlinkReaction(row);
+		         				  }
+		         			  });
+		         			  popupMenu.add(unlinkReaction);	
+		         			 showPopup = true;
+			             }
 			             
 			             if(model.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
 			            	 copySignature = new JMenuItem("Copy signature to Clipboard");

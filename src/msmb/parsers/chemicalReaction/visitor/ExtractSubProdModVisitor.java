@@ -18,6 +18,8 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 		Vector<MutablePair<Double, String>> substrates;
 		Vector<MutablePair<Double, String>> products;
 		Vector<MutablePair<Double, String>> modifiers;
+		HashMap<String, String> alias_completeMultistateDefinition;
+		HashMap<Integer, String> alias_reactantIndex_aliasName;
 		private int use_vector = 0;
 		private Double stoichiometry = new Double(1.0);
 		MultiModel multiModel = null;
@@ -26,6 +28,8 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 		   substrates = new Vector<MutablePair<Double, String>>();
 		   products = new Vector<MutablePair<Double, String>>();
 		   modifiers = new Vector<MutablePair<Double, String>>();
+		   alias_completeMultistateDefinition = new HashMap<String, String>();
+		   alias_reactantIndex_aliasName = new HashMap<Integer, String>();
 		   multiModel = m;
 	   }
 
@@ -48,7 +52,14 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 			return ret;	
 		}
 		
-		  
+		
+		public HashMap<String, String> getAliases_CompleteReactant() {
+			return alias_completeMultistateDefinition;
+		}
+		 
+		public HashMap<Integer, String> getAliases_2_CompleteReactant() {
+			return alias_reactantIndex_aliasName;
+		}
 				public Vector<Vector<MutablePair<Double,String>>> getAll_onlyNames() {	
 					Vector ret = new Vector<Vector<MutablePair<Double,String>>> ();
 					ret.add(getSubstrates_onlyNames());
@@ -155,19 +166,12 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 			  }
 		  }
 		  
-		 /* if(CellParsers.isMultistateSpeciesName(name)) {
-			  MultistateSpecies r = null;
-			  try {
-				  r = new MultistateSpecies(multiModel,name);
-			  } catch (Exception e) {
-				  exceptions.add(new Exception("Error: "+e.getMessage()));
-				  return;
-			  }
-			  name = r.printCompleteDefinition();
-		  }*/
-
 		  if(use_vector==0) {
-			  substrates.add(new MutablePair(stoichiometry, name));
+			  addAlias(name);
+			  //substrates.add(new MutablePair(stoichiometry, name));
+			  MutablePair<String, String> aliasPair = CellParsers.extractAlias(name);
+			  substrates.add(new MutablePair(stoichiometry, aliasPair.right));
+			  addIndexAlias(substrates.size(), aliasPair.left);
 			  stoichiometry = new Double(1.0);
 		  } else if(use_vector == 1){
 			  products.add(new MutablePair(stoichiometry, name));
@@ -180,6 +184,30 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 		  super.visit(n);
 		}
 		
+		
+		private void addAlias(String name) {
+		
+			MutablePair<String, String> alias_restOfName = CellParsers.extractAlias(name);
+			if(alias_restOfName.left == null) return;
+			
+			if(alias_completeMultistateDefinition.containsKey(alias_restOfName.left))  {
+			     exceptions.add(new Exception("Error: Duplicate alias "+alias_restOfName.left));
+			     return;
+			}
+			alias_completeMultistateDefinition.put(alias_restOfName.left, alias_restOfName.right);
+			
+			return;
+		}
+		
+		private void addIndexAlias(Integer index, String alias) {
+			if(alias == null) return;
+			alias_reactantIndex_aliasName.put(index, alias);
+			return;
+		}
+		
+		
+		
+
 		@Override
 		public void visit(ListModifiers n) {
 			use_vector = 2;

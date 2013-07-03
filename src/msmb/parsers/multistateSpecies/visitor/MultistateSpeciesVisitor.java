@@ -4,6 +4,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
 
+import javax.mail.search.IntegerComparisonTerm;
+import javax.security.auth.kerberos.KerberosKey;
+
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import msmb.gui.MainGui;
@@ -89,8 +92,9 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 		
 	
 	 private Vector<MultistateSpecies> reactants = new Vector<MultistateSpecies>();
-		 
-	 public MultistateSpeciesVisitor(MultiModel mm, List<Species> reactants_combination, String sub_prefix) {
+	 private HashMap<String, String> aliases_of_reactants = new HashMap<String, String>();
+	 
+	 public MultistateSpeciesVisitor(MultiModel mm, List<Species> reactants_combination, HashMap<String, String> aliases_1,String sub_prefix) {
 		 multiModel = mm;
 		 Iterator it = reactants_combination.iterator();
 		 while(it.hasNext()) {
@@ -108,6 +112,8 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 					e.printStackTrace();
 			}
 		 }
+			aliases_of_reactants.clear();
+			aliases_of_reactants.putAll(aliases_1);
 	 }
 	 
 	 
@@ -115,6 +121,16 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 		 multiModel = mm;	
 		 enforceRangesNumeric = !isReactantReactionWithPossibleRanges;
 	}
+
+	public MultistateSpeciesVisitor(MultiModel multiModel2,  HashMap<String, String> aliases) {
+		if(aliases != null) {
+			aliases_of_reactants.clear();
+			aliases_of_reactants.putAll(aliases);
+		}
+	}
+	
+	
+
 
 	boolean isRealMultiStateSpecies = false;
 	
@@ -145,11 +161,11 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 		
 		if(reactants.size()> 0) {
 		
-						
 			current_site_nextState = new HashMap<String,String>();
 			super.visit(n);
 			
 			Iterator it_react = reactants.iterator();
+			
 			boolean okExpanded = false;
 			while(it_react.hasNext()) {
 				MultistateSpecies react = (MultistateSpecies) it_react.next();
@@ -192,7 +208,6 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 							if(operator.length() > 0) {
 								transferFrom = transferFrom.substring(operator.length()+1, transferFrom.length()-1);
 							}
-							
 							if(transferFrom_extractSpeciesName(transferFrom).compareTo(react.getSpeciesName()) ==0 ) {
 								String siteFrom = transferFrom_extractSiteName(transferFrom);
 								Vector states = new Vector();
@@ -223,10 +238,56 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 									exceptions.add(new Exception("Problems with the transfer state from "+transferFrom));
 									return;
 								}
+							} else { // not the right name, but maybe it is an alias
+								
+								if(aliases_of_reactants.containsKey(transferFrom_extractSpeciesName(transferFrom))) {
+									String speciesReferenced = aliases_of_reactants.get(transferFrom_extractSpeciesName(transferFrom));
+									if(CellParsers.extractMultistateName(speciesReferenced).compareTo(react.getSpeciesName()) ==0 ) {
+											String siteFrom = transferFrom_extractSiteName(transferFrom);
+											Vector states = new Vector();
+											if(operator.length() == 0) {
+												states = react.getSiteStates_complete(siteFrom);
+											} else {
+												
+												if(operator.compareTo(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstants.SUCC))==0) {
+													Vector react_states = react.getSiteStates_complete(siteFrom);
+													if(react_states.size() > 0) {
+														MultistateSpecies from = (MultistateSpecies) multiModel.getSpecies(react.getSpeciesName());
+														String succState = ((MultistateSpecies) from).getSucc(siteFrom,react_states.get(0).toString());
+														if(succState!=null) {
+															states.add(succState);
+														} else {
+															System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
+															return;
+														}
+													}
+												
+												}
+											}
+											if(states != null && states.size() == 1) {
+												currentTransferPieces.add(siteAssigned+"{"+states.get(0)+"}");
+											} else {
+												//System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
+												//return;
+												exceptions.add(new Exception("Problems with the transfer state from "+transferFrom));
+												return;
+											}
+									}	 
+								} else {
+									exceptions.add(new Exception("Problems with the transfer state from "+transferFrom));
+									return;
+								}
+								
 							}
+							
+							
 						}
 					}
 					
+					if(currentTransferPieces.size() != current_site_nextState.size()){
+						exceptions.add(new Exception("Problems with the transfer state of "+ToStringVisitor.toString(n)));
+						return;
+					}
 					String currentTransferSpeciesPieced = new String(speciesName+"(");
 					for(int i = 0; i < currentTransferPieces.size(); ++i) {
 						String element = currentTransferPieces.get(i);

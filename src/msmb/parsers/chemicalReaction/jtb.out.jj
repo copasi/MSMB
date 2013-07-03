@@ -178,6 +178,20 @@ public class MR_ChemicalReaction_Parser {
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
+      expression = new String("A1=A(p) + A2 = A(p) -> Complex(p1=A1.p;p2=A2.p)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("A1=A(p{2:4}) + A2=A(p{1:3}) -> Complex(p1=A1.p;p2=A2.p)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
     }
     catch (Exception e) {
       System.out.println("Oops.");
@@ -197,8 +211,8 @@ class MyVisitor extends DepthFirstVoidVisitor {
     //System.out.println("visit Species");
     String noQuotes = new String(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstants.EXTENSION_CONC]);
     noQuotes = noQuotes.substring(1, noQuotes.length() - 1);
-    if (n.nodeToken.tokenImage.toString().endsWith(noQuotes)) {//System.out.println("something wrong");
-    }
+    /*  if(n.nodeToken.tokenImage.toString().endsWith(noQuotes))  {			//System.out.println("something wrong");
+	  }*/
     super.visit(n);
   }
 
@@ -623,8 +637,7 @@ Species Species() throws ParseException :
   Token n4 = null;
 }
 {
-  n1 = /*	< IDENTIFIER >  (< IDENTIFIER > (" " < IDENTIFIER >)*	 )? //for cases as "name species"(multistate_states with spaces in the states)*/
-  < IDENTIFIER >
+  n1 = < IDENTIFIER >
   { n0 = JTBToolkit.makeNodeToken(n1); }
   (
     n4 = < IDENTIFIER >

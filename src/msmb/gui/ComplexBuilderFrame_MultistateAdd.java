@@ -329,7 +329,16 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 			textField = new JTextField();
 			textField.addFocusListener(new FocusListener_withComboBox(comboBoxNewSite, this));
 			
-			if(states!= null) textField.setText(states);
+			if(states!= null) {
+				textField.setText(states);
+				try {
+					fixStatesString(originSite, states);
+					textField.setBackground(Color.WHITE);
+				} catch (Exception ex) {
+					//something wrong in the format, color textfield to show the problem
+					textField.setBackground(GraphicalProperties.color_cell_with_errors);
+				}
+			}
 			
 			comboBoxNewSite.addItemListener(new ItemChangeListener_withTextField(textField, this));
 		  
@@ -337,7 +346,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 			
 			
 			panel_4.add(textField);
-			textField.setColumns(10);
+				textField.setColumns(10);
 			}
 			
 			GraphicalProperties.resetFonts(panel_4);

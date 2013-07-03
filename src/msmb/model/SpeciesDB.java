@@ -813,7 +813,19 @@ public class SpeciesDB {
 			speciesVector.put(cmplx_index, c);
 		}
 	}
-
+	
+	public void unlinkReaction(int row) {
+		for(Integer cmplx_index : indexesComplexSpecies) {
+			ComplexSpecies c = (ComplexSpecies) speciesVector.get(cmplx_index);
+			MutablePair<Integer, Integer> pair = c.getLinkedReactionIndexes();
+			if(pair.left == row) pair.left = -1;
+			if(pair.right == row) pair.right = -1;
+			c.setLinkedReactionIndexes(pair.left, pair.right);
+			speciesVector.put(cmplx_index, c);
+		}
+	}
+	
+	
 	public void updateSBMLid_fromCopasiDataModel(String name,	String compartment, String sbmlid) {
 		Integer index = getSpeciesIndex(name);
 		if(index != null) {

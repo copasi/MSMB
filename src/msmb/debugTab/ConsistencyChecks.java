@@ -18,6 +18,7 @@ import msmb.utility.Constants.TitlesTabs;
 
 
 import org.COPASI.CFunctionParameter;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import  msmb.parsers.mathExpression.MR_Expression_Parser;
 import  msmb.parsers.mathExpression.syntaxtree.CompleteExpression;
@@ -344,10 +345,13 @@ public class ConsistencyChecks {
 				Vector<?> singleConfigurations = new Vector<Object>();
 				try{ 
 					metabolites = CellParsers.parseReaction(multiModel,string_reaction,i+1);
-					singleConfigurations = multiModel.expandReaction(metabolites,i);
+					HashMap<String, String> aliases = CellParsers.getAllAliases(string_reaction);
+					HashMap<Integer, String> aliases2 = CellParsers.getAllAliases_2(string_reaction);
+					
+					singleConfigurations = multiModel.expandReaction(metabolites,aliases,aliases2,i);
 				} catch(Throwable ex) {
-					//System.out.println("PROBLEMS WITH REACTION "+string_reaction);
-					//ex.printStackTrace();
+					System.out.println("PROBLEMS WITH REACTION "+string_reaction);
+					ex.printStackTrace();
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex.printStackTrace();
 					 DebugMessage dm = new DebugMessage();
 					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);

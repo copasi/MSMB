@@ -161,6 +161,20 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
+      expression = new String("A1=A(p) + A2 = A(p) -> Complex(p1=A1.p;p2=A2.p)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("A1=A(p{2:4}) + A2=A(p{1:3}) -> Complex(p1=A1.p;p2=A2.p)");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
     }
     catch (Exception e) {
       System.out.println("Oops.");
@@ -724,49 +738,6 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     finally { jj_save(2, xla); }
   }
 
-  private boolean jj_3R_21() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_24()) jj_scanpos = xsp;
-    if (jj_3R_25()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_20() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_28() {
-    if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_19() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_27() {
-    if (jj_scan_token(INTEGER_LITERAL)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_22() {
-    if (jj_scan_token(18)) return true;
-    return false;
-  }
-
-  private boolean jj_3_3() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_25() {
-    if (jj_scan_token(IDENTIFIER)) return true;
-    return false;
-  }
-
   private boolean jj_3R_26() {
     Token xsp;
     xsp = jj_scanpos;
@@ -774,18 +745,6 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     jj_scanpos = xsp;
     if (jj_3R_28()) return true;
     }
-    return false;
-  }
-
-  private boolean jj_3_1() {
-    if (jj_scan_token(18)) return true;
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_17()) { jj_scanpos = xsp; break; }
-    }
-    xsp = jj_scanpos;
-    if (jj_3R_18()) jj_scanpos = xsp;
     return false;
   }
 
@@ -821,6 +780,61 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
 
   private boolean jj_3R_17() {
     if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_21() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_24()) jj_scanpos = xsp;
+    if (jj_3R_25()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_20() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_28() {
+    if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_19() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_22() {
+    if (jj_scan_token(18)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_27() {
+    if (jj_scan_token(INTEGER_LITERAL)) return true;
+    return false;
+  }
+
+  private boolean jj_3_3() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_25() {
+    if (jj_scan_token(IDENTIFIER)) return true;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_scan_token(18)) return true;
+    Token xsp;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_17()) { jj_scanpos = xsp; break; }
+    }
+    xsp = jj_scanpos;
+    if (jj_3R_18()) jj_scanpos = xsp;
     return false;
   }
 
@@ -1116,8 +1130,8 @@ class MyVisitor extends DepthFirstVoidVisitor {
     //System.out.println("visit Species");
     String noQuotes = new String(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstants.EXTENSION_CONC]);
     noQuotes = noQuotes.substring(1, noQuotes.length() - 1);
-    if (n.nodeToken.tokenImage.toString().endsWith(noQuotes)) {//System.out.println("something wrong");
-    }
+    /*  if(n.nodeToken.tokenImage.toString().endsWith(noQuotes))  {			//System.out.println("something wrong");
+	  }*/
     super.visit(n);
   }
 

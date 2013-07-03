@@ -55,7 +55,7 @@ public class Compartment {
 	}
 
 	public void setType(String type_descr) {
-		this.type = Constants.CompartmentsType.getCopasiTypeFromDescription(type_descr);
+		if(type_descr.length() > 0) 	this.type = Constants.CompartmentsType.getCopasiTypeFromDescription(type_descr);
 	}
 	public String getInitialVolume() {
 		return initialVolume;

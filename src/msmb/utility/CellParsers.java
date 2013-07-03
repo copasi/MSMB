@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
+import org.apache.commons.lang3.tuple.MutablePair;
+
 import com.google.common.base.Throwables;
 
 /*import org.lsmp.djep.xjep.XJep;
@@ -858,7 +860,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		    subs_prod_mod.addAll(v.getAll_asString());
 		      
 		} catch(Throwable ex) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				ex.printStackTrace();
 			
 			 DebugMessage dm = new DebugMessage();
@@ -880,6 +882,59 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		return parseReaction_2(m, reaction_complete.trim(), row);
 	}
 	
+	
+	public static HashMap<String, String> getAllAliases(String reaction_complete) throws Exception {
+		HashMap<String, String> ret =  new HashMap<String, String>();
+		
+		try {
+			InputStream is = new ByteArrayInputStream(reaction_complete.getBytes("UTF-8"));
+			MR_ChemicalReaction_Parser react = new MR_ChemicalReaction_Parser(is,"UTF-8");
+		  	CompleteReaction start = react.CompleteReaction();
+		  	ExtractSubProdModVisitor v = new ExtractSubProdModVisitor(null);
+		    start.accept(v);
+		    
+		    if(v.getExceptions().size() != 0) {
+		    	throw new Exception(v.getExceptions().get(0).getMessage());
+		    }
+		   ret.putAll(v.getAliases_CompleteReactant());
+		      
+		} catch(Throwable ex) {
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				ex.printStackTrace();
+		
+		}
+		return ret;
+	}
+	
+	public static HashMap<Integer, String> getAllAliases_2(String reaction_complete) throws Exception {
+		//this method returns the aliases name associated to each reactant index, ordered according to the parser (not necessarily the same as the user)
+	
+		HashMap<Integer, String> ret =  new HashMap<Integer, String>();
+		
+		try {
+			InputStream is = new ByteArrayInputStream(reaction_complete.getBytes("UTF-8"));
+			MR_ChemicalReaction_Parser react = new MR_ChemicalReaction_Parser(is,"UTF-8");
+		  	CompleteReaction start = react.CompleteReaction();
+		  	ExtractSubProdModVisitor v = new ExtractSubProdModVisitor(null);
+		    start.accept(v);
+		    
+		    if(v.getExceptions().size() != 0) {
+		    	throw new Exception(v.getExceptions().get(0).getMessage());
+		    }
+		   ret.putAll(v.getAliases_2_CompleteReactant());
+		      
+		} catch(Throwable ex) {
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				ex.printStackTrace();
+		
+		}
+
+	
+	return ret;
+	
+}
+		
+		
 	
 	
 	/*public static Vector parseReaction_old(String reaction_complete, int row) throws Exception{
@@ -1280,7 +1335,42 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		return ret;
 	}
 
+	
 
+
+	
+	public static MutablePair<String, String> extractAlias(String name) {
+		MutablePair<String, String>  ret = new MutablePair<String, String>();
+		ret.left = null;
+		ret.right = null;
+		
+		if(name.trim().startsWith("\"") &&  name.trim().endsWith("\"")) {
+			ret.right = name;
+			return ret;
+		}
+		name = name.trim();
+		int index = name.indexOf("=");
+		if(index==-1) {
+			ret.right = name;
+			return ret;
+		}
+
+		String alias = name.substring(0,index);
+		alias = alias.trim();
+		System.out.println("alias = "+alias);
+		
+		String restOfName = name.substring(index+1);
+		restOfName = restOfName.trim();
+		System.out.println("restOfName = "+restOfName);
+		if(!CellParsers.isMultistateSpeciesName(restOfName)) {
+			ret.right = name;
+			return ret;
+		}
+		
+		ret.left = alias;
+		ret.right = restOfName;
+		return ret;
+	}
 
 	public static boolean compareMultistateSpecies(MultiModel m, String element1, String name) {
 		MultistateSpecies sp;
@@ -1313,6 +1403,8 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 			return false;
 		}
 	}
+
+
 
 
 

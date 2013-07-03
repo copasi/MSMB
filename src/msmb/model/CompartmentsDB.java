@@ -129,7 +129,7 @@ public class CompartmentsDB {
 				c.setExpression(multiModel,expression.trim());
 				c.setInitialVolume(multiModel,initial);
 				compVector.put(ind,c);
-				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind+1);
+				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind);
 				return compVector.size()-1;
 				
 			} else { //comp already defined
@@ -145,7 +145,7 @@ public class CompartmentsDB {
 
 				compVector.put(ind, c);
 
-				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind+1);
+				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind);
 				return ind;
 			}
 		} catch (MySyntaxException ex) {
@@ -208,7 +208,7 @@ public class CompartmentsDB {
 
 				compVector.put(compIndexes.get(name), c);
 
-				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind+1);
+				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind);
 				return 0;//nothing to do?
 			}
 		

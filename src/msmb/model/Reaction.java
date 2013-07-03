@@ -2,6 +2,7 @@ package msmb.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
 
@@ -108,7 +109,10 @@ public class Reaction {
 				Vector metabolites;
 				
 					metabolites = CellParsers.parseReaction(m,reactionString,-1);
-					Vector singleConfigurations = m.expandReaction(metabolites,-1);
+					HashMap<String, String> aliases = CellParsers.getAllAliases(reactionString);
+					HashMap<Integer, String> aliases2 = CellParsers.getAllAliases_2(reactionString);
+				
+						Vector singleConfigurations = m.expandReaction(metabolites, aliases, aliases2,-1);
 				
 					  InputStream is = new ByteArrayInputStream(rateLaw.getBytes("UTF-8"));
 					  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");

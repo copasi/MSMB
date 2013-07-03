@@ -44,12 +44,12 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 	
 	
 	//if true, getComplexation/Decomplexation reaction will return null, so that the caller knows that the user didn't want to add the reaction to the model
-	private boolean returnOnlySpecies = false;
+	private boolean returnOnlySpecies = true;
 	
 	//if the reaction are added to the model, they can linked to the structure of the complex so that any change will be propagated when happens
 	//note that cells with linked reactions need to be disabled since the user cannot type them directly 
 	private MutablePair<Integer, Integer> linkedReactionIndexes;
-	private boolean linkReaction = false;
+	//private boolean linkReaction = true;
 
 	
 	
@@ -87,6 +87,7 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 	public ComplexSpecies(String complete_string) throws Exception {
 		super(null, complete_string);
 		setType(Constants.SpeciesType.COMPLEX.copasiType);
+	
 	}
 	
 	public ComplexSpecies(ComplexSpecies c) throws Exception {
@@ -101,7 +102,7 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 		MutablePair<Integer, Integer> element = c.getLinkedReactionIndexes();
 		if(element != null) linkedReactionIndexes = new MutablePair<Integer, Integer>(element.left, element.right);
 		else linkedReactionIndexes = null;
-		linkReaction = c.linkReaction;
+		//linkReaction = c.linkReaction;
 		complexSite_emptyTracking_implicitAllStates.addAll(c.complexSite_emptyTracking_implicitAllStates);
 		setCompartment(MainGui.multiModel, c.getCompartment_listString());
 	}
@@ -296,7 +297,7 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 			}
 			sitesFinal+=";";
 		}
-		sitesFinal = sitesFinal.substring(0, sitesFinal.length()-1);
+		if(sitesFinal.length() > 0) sitesFinal = sitesFinal.substring(0, sitesFinal.length()-1);
 		
 		components_multi.put(currentMultistateSpeciesName, entry);
 			
@@ -345,19 +346,28 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 		returnOnlySpecies = b;
 	}
 	
-	public void setLinkReactions(boolean b) {
+	/*public void setLinkReactions(boolean b) {
 		linkReaction = b;
 	}
-	
 	public boolean getLinkReactions() {return linkReaction;}
+	*/
+	
+	public boolean getLinkReactions() {
+		if(linkedReactionIndexes.right != -1) return true;
+		if(linkedReactionIndexes.left != -1) return true;
+		
+		return false;
+	}
+	
 	
 	public MutablePair<Integer, Integer> getLinkedReactionIndexes() {
 		return linkedReactionIndexes;
 	}
 	
 	public void setLinkedReactionIndexes(int compl_index, int decompl_index) {
-		if(this.linkReaction) 	linkedReactionIndexes = new MutablePair<Integer, Integer>(compl_index, decompl_index);
-		else linkedReactionIndexes = new MutablePair<Integer, Integer>(-1, -1);
+	/*	if(this.linkReaction) 	linkedReactionIndexes = new MutablePair<Integer, Integer>(compl_index, decompl_index);
+		else linkedReactionIndexes = new MutablePair<Integer, Integer>(-1, -1);*/
+		linkedReactionIndexes = new MutablePair<Integer, Integer>(compl_index, decompl_index);
 	}
 	
 	
@@ -580,7 +590,7 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 			
 			linkedReactionIndexes = (MutablePair<Integer, Integer>) serializedInfo.get(8);
 			
-			linkReaction = ((Boolean) serializedInfo.get(9)).booleanValue();
+			//linkReaction = ((Boolean) serializedInfo.get(9)).booleanValue();
 		
 		} catch(Throwable e) {
 			e.printStackTrace();
@@ -598,7 +608,7 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 		ret.add(complexSite_emptyTracking_implicitAllStates);
 		ret.add(new Boolean(returnOnlySpecies));
 		ret.add(linkedReactionIndexes);
-		ret.add(new Boolean(linkReaction));
+	//	ret.add(new Boolean(linkReaction));
 		return ret;
 	}
 	

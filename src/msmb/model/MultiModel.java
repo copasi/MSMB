@@ -19,6 +19,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.*;
+import java.util.Map.Entry;
 
 import msmb.utility.*;
 
@@ -634,8 +635,13 @@ public class MultiModel {
 
 				boolean parseErrors = false;
 				Vector metabolites = new Vector();
+				HashMap<String, String> aliases = null;
+				HashMap<Integer, String> aliases2 = null;
 				try{ 
 					metabolites = CellParsers.parseReaction(this,string_reaction,i+1);
+					aliases = CellParsers.getAllAliases(string_reaction);
+					 aliases2 = CellParsers.getAllAliases_2(string_reaction);
+		
 				} catch(Exception ex) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 					parseErrors = true;
@@ -647,7 +653,7 @@ public class MultiModel {
 				if(parseErrors) continue;
 
 
-				Vector singleConfigurations = expandReaction(metabolites,i);
+				Vector singleConfigurations = expandReaction(metabolites, aliases,aliases2, i);
 				CReaction reaction;
 				for(int j = 0; j < singleConfigurations.size(); j++) {
 					Vector expandedReaction = (Vector) singleConfigurations.get(j);
@@ -2498,21 +2504,21 @@ public class MultiModel {
 	}
 
 
-	public Vector expandReaction(Vector metabolites, int row) throws Throwable {
+	public Vector expandReaction(Vector metabolites, HashMap<String, String> aliases, HashMap<Integer, String> aliases_2, int row) throws Throwable {
 		Vector ret = new Vector();
 	//	Vector<String> problems = new Vector<String>();
 		
 		Vector subs = (Vector)metabolites.get(0);
 	    Vector prod =(Vector)metabolites.get(1);
 		Vector mod = (Vector)metabolites.get(2);
-	
 		
+			
 		Vector non_multistate_react = new Vector();
 		Vector non_multistate_mod = new Vector();
 		Vector non_multistate_prod = new Vector();
 		HashMap<String, Vector<Species>> multistate_name_expansion_react = new HashMap<String, Vector<Species>>();
 		HashMap<String, Vector<Species>> multistate_name_expansion_mod = new HashMap<String, Vector<Species>>();
-		
+		HashMap<String, String> alias_temp_originalName = new HashMap<String, String>();
 		
 		String sub_prefix = "SUB_";
 		String mod_prefix = "MOD_";
@@ -2523,6 +2529,12 @@ public class MultiModel {
 			if(!(sp instanceof MultistateSpecies)) {
 				non_multistate_react.add(species);
 			} else {
+				
+				sp = new MultistateSpecies(null, ((MultistateSpecies)sp).printCompleteDefinition());
+				if(aliases_2 != null && aliases_2.containsKey(i+1)) {
+					sp.setName(aliases_2.get(i+1));
+				}
+				
 				//merge the possibly missing sites/states
 				//vv
 				MultistateSpecies msp = new MultistateSpecies(this, sp.getDisplayedName());
@@ -2537,7 +2549,7 @@ public class MultiModel {
 							is = new ByteArrayInputStream(species.getBytes("UTF-8"));
 							 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
 							 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
-							 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this);
+							 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,aliases);
 							 start.accept(v);
 							 String justName = v.getSpeciesName();
 							 String newCompleteMultiForMerging = justName;
@@ -2555,6 +2567,7 @@ public class MultiModel {
 								 newCompleteMultiForMerging += ")";
 							}
 							 current = new MultistateSpecies(this, newCompleteMultiForMerging);
+					
 						} catch (Exception e1) {
 							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
 							throw e1;
@@ -2563,9 +2576,20 @@ public class MultiModel {
 					
 				}
 				
+				 if(aliases_2 != null  && aliases_2.containsKey(i+1)) {
+					 current.setName(aliases_2.get(i+1));
+					}
+				 
+				 
 				current.mergeStatesWith_Minimum(msp);
 				//^^
 				MultistateSpecies multi = new MultistateSpecies(this,  sub_prefix+current);
+				
+				if(multistate_name_expansion_react.containsKey(multi.getSpeciesName())) {
+					String alias =  multi.getSpeciesName() + "_"+i;
+					alias_temp_originalName.put(alias, multi.getSpeciesName());
+					multi.setName(alias);
+				}
 				multistate_name_expansion_react.put(multi.getSpeciesName(), multi.getExpandedSpecies(this));
 			}
 		}
@@ -2623,7 +2647,7 @@ public class MultiModel {
 						InputStream is = new ByteArrayInputStream(species.getBytes("UTF-8"));
 						MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
 						CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
-						MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,single, sub_prefix);
+						MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,single, aliases, sub_prefix);
 						start.accept(v);
 						Vector<Species> expansion = v.getProductExpansion();
 						
@@ -2649,7 +2673,7 @@ public class MultiModel {
 									 }
 									 elements.add(speciesName);
 								}
-								dm.setProblem("Problem in the expansion of "+species+ " from " + elements);
+								dm.setProblem("Problem in the expansion of "+species);
 								dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
 								MainGui.addDebugMessage_ifNotPresent(dm);
 							
@@ -2673,7 +2697,7 @@ public class MultiModel {
 							 }
 							 elements.add(speciesName);
 						}
-						dm.setProblem("Problem in the expansion of "+species+ " from " + elements);
+						dm.setProblem("Problem in the expansion of "+species);
 						dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
 						MainGui.addDebugMessage_ifNotPresent(dm);
 						continue;
@@ -2720,7 +2744,32 @@ public class MultiModel {
 				while(combination_element.hasNext()) {
 					Species element = (Species) combination_element.next();
 					String which = element.getSpeciesName().substring(0, sub_prefix.length());
-					String realName =  element.getSpeciesName().substring(sub_prefix.length());
+					String realName =  element.getSpeciesName();
+					
+					
+					if(alias_temp_originalName.containsKey(CellParsers.extractMultistateName(realName))) {
+						try {
+							MultistateSpecies temp = new MultistateSpecies(null, realName);
+							temp.setName(alias_temp_originalName.get(CellParsers.extractMultistateName(realName)));
+							realName = temp.printCompleteDefinition();
+						} catch(Exception ex) {
+							ex.printStackTrace();
+						}
+						
+					}
+					realName =  realName.substring(sub_prefix.length());
+					if(aliases.containsKey(CellParsers.extractMultistateName(realName))) {
+						try {
+							MultistateSpecies temp = new MultistateSpecies(null, realName);
+							String fullAliasReference = aliases.get(CellParsers.extractMultistateName(realName));
+							temp.setName(CellParsers.extractMultistateName(fullAliasReference));
+							realName = temp.printCompleteDefinition();
+						} catch(Exception ex) {
+							ex.printStackTrace();
+						}
+					}
+					
+					
 					if(which.compareTo(sub_prefix)==0) {
 						single_reaction_subs.add(realName);
 					} else {
@@ -2747,115 +2796,8 @@ public class MultiModel {
 	}
 	
 	
-	
-	/*public Vector expandReaction_old(Vector metabolites, int row) throws Throwable {
-		Vector ret = new Vector();
-		Vector subs = (Vector)metabolites.get(0);
-	    Vector prod =(Vector)metabolites.get(1);
-		Vector mod = (Vector)metabolites.get(2);
-		
-		Vector multistate_reactants_expanded = new Vector();
-		Vector non_multistate_reactants = new Vector();
-		Vector multistate_reactants_single_states = new Vector();
-		
-		for(int i = 0; i < subs.size(); i++) {
-			String species = (String) subs.get(i);
-			if(CellParsers.isMultistateSpeciesName(species)) {
-				Vector current_expanded = getExpandedStatesReactant(species);
-				if(current_expanded.size() == 1) { 
-					//there is a multistate reactant but with no ranges, so it's like a single species
-					//except that it can still change it's state!! 
-					non_multistate_reactants.add(species);
-					multistate_reactants_single_states.addAll(current_expanded);
-				} else {
-					multistate_reactants_expanded.addAll(current_expanded);
-				}
-			} else {
-				non_multistate_reactants.add(species);
-			}
-		}
-		
-		
-	
-		
-		
-	
-		for(int i = 0; i < multistate_reactants_expanded.size(); i++) {
-			Vector subs_exp = new Vector();
-			subs_exp.addAll(non_multistate_reactants);
-			Species sp = ((Species)multistate_reactants_expanded.get(i));
-			subs_exp.add(sp.getDisplayedName());
-			
-			Vector single_reaction = new Vector();
-			single_reaction.add(subs_exp);
-			
-			Vector prod_expanded = new Vector();
-			for(int j = 0; j < prod.size(); j++) {
-				 String pr = (String) prod.get(j);
-				 InputStream is = new ByteArrayInputStream(pr.getBytes("UTF-8"));
-				 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
-				 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
-				 MultistateSpeciesVisitor v = null;
-				if(CellParsers.isSpeciesWithTransferSiteState(pr)) {
-					v = null;
-				 } else {
-					 Vector species = new Vector<Species>();
-					 species.add(sp);
-					 v = new MultistateSpeciesVisitor(this,species,multistate_reactants_single_states);
-				} 
-			start.accept(v);
-				 String exp = v.getProductExpansion();
-				 if(exp != null && v.getExceptions().size() == 0) { prod_expanded.add(exp);}
-				 else {
-						DebugMessage dm = new DebugMessage();
-						dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-					    dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
-					    dm.setOrigin_row(row+1);
-						dm.setProblem("Undefined multistate state: "+sp.getDisplayedName() + " -> ??"+ pr+"??");
-						dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
-						MainGui.addDebugMessage_ifNotPresent(dm);
-						MainGui.updateDebugTab();						
-					}
-				
-				
-			}
-			
-				
-			
-			
-			single_reaction.add(prod_expanded);
-			single_reaction.add(mod);
-			
-			if(prod_expanded.size() == prod.size()) ret.add(single_reaction);
-		}
-		
-	
-		
-		if(multistate_reactants_expanded.size() == 0) {
-			Vector single_reaction = new Vector();
-			single_reaction.add(non_multistate_reactants);
-			single_reaction.add(prod);
-			single_reaction.add(mod);
-			ret.add(single_reaction);
-		}
-		
-		return ret;
-	}
-	*/
-
 	private Vector getExpandedStatesReactant(String species) throws Throwable {
-	/*	Vector<Species> ret = new Vector<Species>();
-		
-		
-		 try {
-			 ret = existing.getExpandedSpecies_Minimum(this,species);
-		
-		 
-		 } catch(Exception ex){
-				throw new ParseException("Model yet not complete. Element "+species+" not found");
-			}
-		
-			return ret;*/
+
 		Vector<Species> ret = new Vector<Species>();
 		MultistateSpecies temp = new MultistateSpecies(this,species,true);
 		
@@ -3930,7 +3872,8 @@ public class MultiModel {
 				CompleteExpression root = parser.CompleteExpression();
 				MainGui.jListFunctionToCompact.setSelectionInterval(0, MainGui.listModel_FunctionToCompact.size()-1);
 
-				List<String> list = MainGui.jListFunctionToCompact.getSelectedValuesList();
+				ArrayList<String> list = new ArrayList<String>();
+				list.addAll(MainGui.jListFunctionToCompact.getSelectedValuesList());
 				list.add("SUM");
 				ExpressionVisitor vis = new ExpressionVisitor(list, this,false);
 
@@ -5260,6 +5203,10 @@ public Integer getGlobalQIndex(String name) {
 	public void moveUpRow_linkedReaction(int row) {
 		speciesDB.moveUpRow_linkedReaction(row);
 	}
+	
+	public void unlinkReaction(int row) {
+		speciesDB.unlinkReaction(row);
+	}
 
 	public Species getSpeciesAt(Integer index) {
 		return speciesDB.getSpecies(index);
@@ -5297,6 +5244,7 @@ public Integer getGlobalQIndex(String name) {
 		
 	}
 
+	
 	
 	
 }
