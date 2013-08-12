@@ -13,217 +13,213 @@ public interface MR_Expression_ParserConstants {
   /** RegularExpression Id. */
   int IF = 7;
   /** RegularExpression Id. */
-  int THEN = 8;
+  int FALSE = 8;
   /** RegularExpression Id. */
-  int ELSE = 9;
+  int TRUE = 9;
   /** RegularExpression Id. */
-  int FALSE = 10;
+  int TRUE_1 = 10;
   /** RegularExpression Id. */
-  int TRUE = 11;
+  int TRUE_2 = 11;
   /** RegularExpression Id. */
-  int TRUE_1 = 12;
+  int TRUE_3 = 12;
   /** RegularExpression Id. */
-  int TRUE_2 = 13;
+  int FALSE_1 = 13;
   /** RegularExpression Id. */
-  int TRUE_3 = 14;
+  int FALSE_2 = 14;
   /** RegularExpression Id. */
-  int FALSE_1 = 15;
+  int FALSE_3 = 15;
   /** RegularExpression Id. */
-  int FALSE_2 = 16;
+  int TIME = 16;
   /** RegularExpression Id. */
-  int FALSE_3 = 17;
+  int TYPE_PAR = 17;
   /** RegularExpression Id. */
-  int TIME = 18;
+  int TYPE_VAR = 18;
   /** RegularExpression Id. */
-  int TYPE_PAR = 19;
+  int TYPE_SUB = 19;
   /** RegularExpression Id. */
-  int TYPE_VAR = 20;
+  int TYPE_PROD = 20;
   /** RegularExpression Id. */
-  int TYPE_SUB = 21;
+  int TYPE_MOD = 21;
   /** RegularExpression Id. */
-  int TYPE_PROD = 22;
+  int TYPE_SITE = 22;
   /** RegularExpression Id. */
-  int TYPE_MOD = 23;
+  int TYPE_VOL = 23;
   /** RegularExpression Id. */
-  int TYPE_SITE = 24;
+  int TYPE_TIME = 24;
   /** RegularExpression Id. */
-  int TYPE_VOL = 25;
+  int EXTENSION_CONC = 25;
   /** RegularExpression Id. */
-  int TYPE_TIME = 26;
+  int EXTENSION_PARTICLE = 26;
   /** RegularExpression Id. */
-  int EXTENSION_CONC = 27;
+  int EXTENSION_TRANS = 27;
   /** RegularExpression Id. */
-  int EXTENSION_PARTICLE = 28;
+  int EXTENSION_INIT = 28;
   /** RegularExpression Id. */
-  int EXTENSION_TRANS = 29;
+  int EXTENSION_RATE = 29;
   /** RegularExpression Id. */
-  int EXTENSION_INIT = 30;
+  int EXTENSION_SPECIES = 30;
   /** RegularExpression Id. */
-  int EXTENSION_RATE = 31;
+  int EXTENSION_GLOBALQ = 31;
   /** RegularExpression Id. */
-  int EXTENSION_SPECIES = 32;
+  int EXTENSION_COMPARTMENT = 32;
   /** RegularExpression Id. */
-  int EXTENSION_GLOBALQ = 33;
+  int EXTENSION_REACTION = 33;
   /** RegularExpression Id. */
-  int EXTENSION_COMPARTMENT = 34;
+  int EXTENSION_FUNCTION = 34;
   /** RegularExpression Id. */
-  int EXTENSION_REACTION = 35;
+  int EXTENSION_FLUX = 35;
   /** RegularExpression Id. */
-  int EXTENSION_FUNCTION = 36;
+  int MY_SPECIAL_EXTENSION = 36;
   /** RegularExpression Id. */
-  int EXTENSION_FLUX = 37;
+  int SUM = 37;
   /** RegularExpression Id. */
-  int MY_SPECIAL_EXTENSION = 38;
+  int DELAY = 38;
   /** RegularExpression Id. */
-  int SUM = 39;
+  int FLOOR = 39;
   /** RegularExpression Id. */
-  int DELAY = 40;
+  int CEIL = 40;
   /** RegularExpression Id. */
-  int FLOOR = 41;
+  int COS = 41;
   /** RegularExpression Id. */
-  int CEIL = 42;
+  int SIN = 42;
   /** RegularExpression Id. */
-  int COS = 43;
+  int TAN = 43;
   /** RegularExpression Id. */
-  int SIN = 44;
+  int ACOS = 44;
   /** RegularExpression Id. */
-  int TAN = 45;
+  int ASIN = 45;
   /** RegularExpression Id. */
-  int ACOS = 46;
+  int ATAN = 46;
   /** RegularExpression Id. */
-  int ASIN = 47;
+  int TANH = 47;
   /** RegularExpression Id. */
-  int ATAN = 48;
+  int COSH = 48;
   /** RegularExpression Id. */
-  int TANH = 49;
+  int SEC = 49;
   /** RegularExpression Id. */
-  int COSH = 50;
+  int CSC = 50;
   /** RegularExpression Id. */
-  int SEC = 51;
+  int COT = 51;
   /** RegularExpression Id. */
-  int CSC = 52;
+  int SINH = 52;
   /** RegularExpression Id. */
-  int COT = 53;
+  int ARCSEC = 53;
   /** RegularExpression Id. */
-  int SINH = 54;
+  int ARCCSC = 54;
   /** RegularExpression Id. */
-  int ARCSEC = 55;
+  int ARCCOT = 55;
   /** RegularExpression Id. */
-  int ARCCSC = 56;
+  int ARCSINH = 56;
   /** RegularExpression Id. */
-  int ARCCOT = 57;
+  int ARCCOSH = 57;
   /** RegularExpression Id. */
-  int ARCSINH = 58;
+  int ARCTANH = 58;
   /** RegularExpression Id. */
-  int ARCCOSH = 59;
+  int ARCSECH = 59;
   /** RegularExpression Id. */
-  int ARCTANH = 60;
+  int ARCCSCH = 60;
   /** RegularExpression Id. */
-  int ARCSECH = 61;
+  int ARCCOTH = 61;
   /** RegularExpression Id. */
-  int ARCCSCH = 62;
+  int SQRT = 62;
   /** RegularExpression Id. */
-  int ARCCOTH = 63;
+  int FACTORIAL = 63;
   /** RegularExpression Id. */
-  int SQRT = 64;
+  int EXP = 64;
   /** RegularExpression Id. */
-  int FACTORIAL = 65;
+  int LOG = 65;
   /** RegularExpression Id. */
-  int EXP = 66;
+  int LOG10 = 66;
   /** RegularExpression Id. */
-  int LOG = 67;
+  int ABS = 67;
   /** RegularExpression Id. */
-  int LOG10 = 68;
+  int MIN = 68;
   /** RegularExpression Id. */
-  int ABS = 69;
+  int MAX = 69;
   /** RegularExpression Id. */
-  int MIN = 70;
+  int PI = 70;
   /** RegularExpression Id. */
-  int MAX = 71;
+  int EXPONENTIALE = 71;
   /** RegularExpression Id. */
-  int PI = 72;
+  int NAN1 = 72;
   /** RegularExpression Id. */
-  int EXPONENTIALE = 73;
+  int NAN2 = 73;
   /** RegularExpression Id. */
-  int NAN1 = 74;
+  int CONST_AVOGADRO = 74;
   /** RegularExpression Id. */
-  int NAN2 = 75;
+  int CONST_QUANTITY_CONV_FACTOR = 75;
   /** RegularExpression Id. */
-  int CONST_AVOGADRO = 76;
+  int CONST_MODEL_TIME = 76;
   /** RegularExpression Id. */
-  int CONST_QUANTITY_CONV_FACTOR = 77;
+  int CONST_MODEL_TIME_INITIAL = 77;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME = 78;
+  int INTEGER_LITERAL = 78;
   /** RegularExpression Id. */
-  int CONST_MODEL_TIME_INITIAL = 79;
+  int FLOATING_POINT_LITERAL = 79;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 80;
+  int EXPONENT = 80;
   /** RegularExpression Id. */
-  int FLOATING_POINT_LITERAL = 81;
+  int LPAREN = 81;
   /** RegularExpression Id. */
-  int EXPONENT = 82;
+  int RPAREN = 82;
   /** RegularExpression Id. */
-  int LPAREN = 83;
+  int LBRACE = 83;
   /** RegularExpression Id. */
-  int RPAREN = 84;
+  int RBRACE = 84;
   /** RegularExpression Id. */
-  int LBRACE = 85;
+  int LBRACKET = 85;
   /** RegularExpression Id. */
-  int RBRACE = 86;
+  int RBRACKET = 86;
   /** RegularExpression Id. */
-  int LBRACKET = 87;
+  int SEMICOLON = 87;
   /** RegularExpression Id. */
-  int RBRACKET = 88;
+  int COMMA = 88;
   /** RegularExpression Id. */
-  int SEMICOLON = 89;
+  int COLON = 89;
   /** RegularExpression Id. */
-  int COMMA = 90;
+  int DOT = 90;
   /** RegularExpression Id. */
-  int COLON = 91;
+  int PLUS = 91;
   /** RegularExpression Id. */
-  int DOT = 92;
+  int MINUS = 92;
   /** RegularExpression Id. */
-  int PLUS = 93;
+  int TIMES = 93;
   /** RegularExpression Id. */
-  int MINUS = 94;
+  int DIV = 94;
   /** RegularExpression Id. */
-  int TIMES = 95;
+  int ASSIGN = 95;
   /** RegularExpression Id. */
-  int DIV = 96;
+  int GT = 96;
   /** RegularExpression Id. */
-  int ASSIGN = 97;
+  int LT = 97;
   /** RegularExpression Id. */
-  int GT = 98;
+  int BANG = 98;
   /** RegularExpression Id. */
-  int LT = 99;
+  int CARET = 99;
   /** RegularExpression Id. */
-  int BANG = 100;
+  int PERC = 100;
   /** RegularExpression Id. */
-  int CARET = 101;
+  int EQ = 101;
   /** RegularExpression Id. */
-  int PERC = 102;
+  int LEQ = 102;
   /** RegularExpression Id. */
-  int EQ = 103;
+  int GEQ = 103;
   /** RegularExpression Id. */
-  int LEQ = 104;
+  int NE = 104;
   /** RegularExpression Id. */
-  int GEQ = 105;
+  int OR = 105;
   /** RegularExpression Id. */
-  int NE = 106;
+  int XOR = 106;
   /** RegularExpression Id. */
-  int OR = 107;
+  int AND = 107;
   /** RegularExpression Id. */
-  int XOR = 108;
+  int IDENTIFIER = 108;
   /** RegularExpression Id. */
-  int AND = 109;
+  int LETTER = 109;
   /** RegularExpression Id. */
-  int IDENTIFIER = 110;
+  int DIGIT = 110;
   /** RegularExpression Id. */
-  int LETTER = 111;
-  /** RegularExpression Id. */
-  int DIGIT = 112;
-  /** RegularExpression Id. */
-  int STRING_LITERAL = 113;
+  int STRING_LITERAL = 111;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -238,8 +234,6 @@ public interface MR_Expression_ParserConstants {
     "<token of kind 5>",
     "<token of kind 6>",
     "\"if\"",
-    "\"then\"",
-    "\"else\"",
     "<FALSE>",
     "<TRUE>",
     "\"true\"",

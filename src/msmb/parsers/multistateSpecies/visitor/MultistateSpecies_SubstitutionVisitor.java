@@ -12,28 +12,43 @@ import msmb.utility.CellParsers;
 
 public class MultistateSpecies_SubstitutionVisitor  extends DepthFirstVoidVisitor {
 	String originalSpeciesFullDefinition = new String();
+	String originalSpeciesTransferAssignment = new String();
 	String replacementSpeciesName = new String();
 	HashMap<String, String> sitesName_originalReplacement = new HashMap<String, String> ();
 	boolean replaceElementsAfterTransferAssign = false;
 	PrintWriter out;
 	ByteArrayOutputStream newMultistate = new ByteArrayOutputStream();
+	private HashMap<String, String> aliases = new HashMap<String, String> ();
 	 
 	 public String getNewMultistate() {	
 		return newMultistate.toString();
 	 }
 	 
    public MultistateSpecies_SubstitutionVisitor(String originalSpFull, String replacementSpName, HashMap<String, String> sitesName_origRepl)  {
-	   this(originalSpFull,replacementSpName,sitesName_origRepl, false);
+	   this(originalSpFull,replacementSpName,sitesName_origRepl, false, new HashMap<String, String>());
    }
    
-    public MultistateSpecies_SubstitutionVisitor(String originalSpFull, String replacementSpName, HashMap<String, String> sitesName_origRepl, boolean replaceElementsAfterTransferAssign)  {
+    public MultistateSpecies_SubstitutionVisitor(String originalSpFull, String replacementSpName, HashMap<String, String> sitesName_origRepl, boolean replaceElementsAfterTransferAssign, HashMap<String, String> aliases)  {
 	   originalSpeciesFullDefinition = originalSpFull;
 	   replacementSpeciesName = replacementSpName;
 	   sitesName_originalReplacement.clear();
 	   sitesName_originalReplacement.putAll(sitesName_origRepl);
 	   out = new PrintWriter(newMultistate, true); 
 	   this.replaceElementsAfterTransferAssign = replaceElementsAfterTransferAssign;
+	   originalSpeciesTransferAssignment = null;
+	   this.aliases.clear();
+	 	 this.aliases.putAll(aliases);
    }
+    
+    public MultistateSpecies_SubstitutionVisitor(String originalSpFull, String originTransferSpName, String replacementTransferSpName, HashMap<String, String> aliases)  {
+ 	   originalSpeciesFullDefinition = originalSpFull;
+ 	   out = new PrintWriter(newMultistate, true); 
+ 	  originalSpeciesTransferAssignment = originTransferSpName;
+ 	  replacementSpeciesName = replacementTransferSpName;
+ 	 this.replaceElementsAfterTransferAssign = true;
+ 	 this.aliases.clear();
+ 	 this.aliases.putAll(aliases);
+    }
    
     @Override
     public void visit(MultistateSpecies_Name n) {
@@ -86,12 +101,22 @@ public class MultistateSpecies_SubstitutionVisitor  extends DepthFirstVoidVisito
 			out.println(ToStringVisitor.toString(sequence.nodes.get(0))); // print succ/pred
 			out.println(ToStringVisitor.toString(sequence.nodes.get(1))); // print (
 			spFromName = ToStringVisitor.toString(sequence.nodes.get(2));
-			out.print(spFromName); // print species name
+			if(originalSpeciesTransferAssignment!= null && spFromName.compareTo(originalSpeciesTransferAssignment)==0) {
+				out.print(replacementSpeciesName); // print species name
+			}	else {
+				out.print(spFromName); // print species name
+			}
+			
+			
 			out.println(ToStringVisitor.toString(sequence.nodes.get(3))); // print dot
-			//print old name or new name
+			
 			siteFromName = ToStringVisitor.toString(sequence.nodes.get(4));
+			//print old name or new name for site
+			if(aliases != null && aliases.containsKey(spFromName)) {
+				spFromName = CellParsers.extractMultistateName(aliases.get(spFromName));
+			}
     		if(spFromName.compareTo(replacementSpeciesName) == 0) {
-				if(sitesName_originalReplacement.containsKey(siteFromName)) {
+				if(originalSpeciesTransferAssignment!= null) {
 		    		out.print(sitesName_originalReplacement.get(siteFromName));
 		    	} else {
 		    		out.print(siteFromName);
@@ -108,10 +133,18 @@ public class MultistateSpecies_SubstitutionVisitor  extends DepthFirstVoidVisito
     			NodeSequence sequence = (NodeSequence)(n.nodeChoice.choice);
     			spFromName = ToStringVisitor.toString(sequence.nodes.get(0));
     			siteFromName = ToStringVisitor.toString(sequence.nodes.get(2));
-    			out.print(spFromName); // print species name
+    			if(originalSpeciesTransferAssignment!= null && spFromName.compareTo(originalSpeciesTransferAssignment)==0) {
+    				out.print(replacementSpeciesName); // print species name
+    			}	else {
+    				out.print(spFromName); // print species name
+    			}
+    			
     			out.println(ToStringVisitor.toString(sequence.nodes.get(1))); // print dot
     			
-    			//print old name or new name
+    			//print old name or new name for site
+    			if(aliases != null && aliases.containsKey(spFromName)) {
+    				spFromName = CellParsers.extractMultistateName(aliases.get(spFromName));
+    			}
     			if(spFromName.compareTo(replacementSpeciesName) == 0) {
     				if(sitesName_originalReplacement.containsKey(siteFromName)) {
     		    		out.print(sitesName_originalReplacement.get(siteFromName));

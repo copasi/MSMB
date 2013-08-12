@@ -42,6 +42,7 @@ public class QuoteKeywordInExpressionVisitor extends DepthFirstVoidVisitor {
 				if(n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0) out.print(" ");
 				printToken(n.tokenImage); 
 				if(n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0) out.print(" ");
+				if(n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.BANG))==0) out.print(" ");
 				super.visit(n);
 			}
 			

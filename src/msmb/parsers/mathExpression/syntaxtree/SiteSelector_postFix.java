@@ -7,14 +7,11 @@ import msmb.parsers.mathExpression.visitor.*;
  * JTB node class for the production SiteSelector_postFix:<br>
  * Corresponding grammar:<br>
  * nodeToken -> <LBRACE><br>
- * nodeChoice -> ( %0 Name()<br>
- * .......... .. | %1 Literal() )<br>
+ * expression -> Expression()<br>
  * nodeOptional -> ( %0 ( #0 <COMMA><br>
  * ............ .. . .. . #1 ( &0 Name()<br>
  * ............ .. . .. . .. | &1 Literal() ) )+<br>
- * ............ .. | %1 ( #0 <COLON><br>
- * ............ .. . .. . #1 ( &0 Name()<br>
- * ............ .. . .. . .. | &1 Literal() ) ) )?<br>
+ * ............ .. | %1 ( #0 <COLON> #1 Expression() ) )?<br>
  * nodeToken1 -> <RBRACE><br>
  */
 public class SiteSelector_postFix implements INode {
@@ -23,7 +20,7 @@ public class SiteSelector_postFix implements INode {
   public NodeToken nodeToken;
 
   /** Child node 2 */
-  public NodeChoice nodeChoice;
+  public Expression expression;
 
   /** Child node 3 */
   public NodeOptional nodeOptional;
@@ -42,9 +39,9 @@ public class SiteSelector_postFix implements INode {
    * @param n2 - next child node
    * @param n3 - next child node
    */
-  public SiteSelector_postFix(final NodeToken n0, final NodeChoice n1, final NodeOptional n2, final NodeToken n3) {
+  public SiteSelector_postFix(final NodeToken n0, final Expression n1, final NodeOptional n2, final NodeToken n3) {
     nodeToken = n0;
-    nodeChoice = n1;
+    expression = n1;
     nodeOptional = n2;
     nodeToken1 = n3;
   }

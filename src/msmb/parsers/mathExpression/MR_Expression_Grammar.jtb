@@ -18,12 +18,7 @@ import java.io.*;
 
 
 public class MR_Expression_Parser {
- 	/*public final String[] escapable = { ".", ",", ";", ":", "<", ">", "|", "&",
-						"!", "?", "@", "#", "$", "%", "^",
-						"+", "-", "*", "/", "~", "`", 
-						"("  , ")"  ,  "{"  ,  "}", " ", "[", "]", 
-					 	"\\", "\""
-						};		*/			  public static void main(String args [])  {
+  public static void main(String args [])  {
     try    {     
        String expression = new String("1*floor(Time/tau)");
       InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
@@ -286,14 +281,7 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
       start33.accept(v2);
       System.out.println("...................................");
 
-       expression2 = new String("g\u03b1");
-      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
-	  react2 = new MR_Expression_Parser(is2, "UTF-8");
-  	  start2 = react2.CompleteExpression();
-      v2 = new MyVisitor();
-      start2.accept(v2);
-      System.out.println("...................................");
-
+   
       
   	  expression2 = new String("if(Time<0 xor 24<0,Time-24*ceil(Time/24),Time-24*floor(Time/24))>1");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
@@ -311,7 +299,7 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
       start2.accept(v2);
       System.out.println("...................................");
 
-           expression2 = new String("not FALSE"); 
+       expression2 = new String("not FALSE"); 
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 	  react2 = new MR_Expression_Parser(is2, "UTF-8");
   	  start2 = react2.CompleteExpression();
@@ -361,8 +349,25 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
       v2 = new MyVisitor(); 
       start2.accept(v2);
       System.out.println("...................................");
+      
+    expression2 = new String("g\u03b1\u03b1");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2, "UTF-8");
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
 
-		   } catch(Exception ex)  {
+
+
+		  expression2 = new String("SUM(Cdh1;p{(low+5)*0.5:upper-1})");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2, "UTF-8");
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+         } catch(Exception ex)  {
     ex.printStackTrace();  }   	  }}
 
 class MyVisitor extends DepthFirstVoidVisitor
@@ -380,8 +385,8 @@ class MyVisitor extends DepthFirstVoidVisitor
 TOKEN :
 {
   < IF: "if" >
-| < THEN: "then" >
-| < ELSE: "else" >
+//| < THEN: "then" >
+//| < ELSE: "else" >
 
 | < FALSE: < FALSE_1> | < FALSE_2> | < FALSE_3> >
 | < TRUE: < TRUE_1> | < TRUE_2> | < TRUE_3>>
@@ -752,9 +757,9 @@ void Selector() :{}
 
 void SiteSelector_postFix() : {}
 {
- < LBRACE >  (Name() | Literal() )
-  (    ( < COMMA >  (Name() | Literal())  )+ |
-  ( < COLON >  (Name() | Literal())  )
+ < LBRACE >  Expression()  //(Name() | Literal())
+  (     ( < COMMA >  (Name() | Literal())  )+ |
+  ( < COLON >  Expression()  ) //(Name() | Literal())
   )?
    < RBRACE >}
 

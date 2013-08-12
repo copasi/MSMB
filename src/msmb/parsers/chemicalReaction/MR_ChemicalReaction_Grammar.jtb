@@ -203,6 +203,22 @@ public class MR_ChemicalReaction_Parser{  public static void main(String args 
       start.accept(v);
       System.out.println("...................................");
 
+         expression = new String("A(p{2:up-1})  -> ");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+        expression = new String("Cdh1(p{low:up-1}) -> Cdh1(succ(p))");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+	  react = new MR_ChemicalReaction_Parser(is);
+  	  start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
     }
     catch (Exception e)
     {
@@ -288,8 +304,9 @@ TOKEN :
   |  < #LETTER:   ["A"-"Z", "_", "a"-"z","'",
 				".", ":", "<", ">", "|", "&",
 						"!", "?", "@", "#", "$", "%", "^",
-						"~", "`", "[", "]"
-						,"("  , ")"  ,  "{"  ,  "}", "\u0370"-"\u03ff"
+						"~", "`", "[", "]",
+						"+", "-", "*", "/",						
+						"("  , ")"  ,  "{"  ,  "}", "\u0370"-"\u03ff"
 						/*,  "\""*/
 				] >
 }

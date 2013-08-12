@@ -189,7 +189,6 @@ public class PreferencesFrame extends JDialog {
 			GraphicalProperties.resetFonts(panelFontSize);
 			GraphicalProperties.resetFonts(panel_1);
 		}
-		super.setVisible(b);
 		if(btnNewButton!=null){
 			btnNewButton.doClick();
 			btnNewButton.setSelected(true);
@@ -197,7 +196,9 @@ public class PreferencesFrame extends JDialog {
 			btnNewButton_2.setSelected(false);
 			btnNewButton_3.setSelected(false);
 		}
-		
+		pack();
+		panelRight.repaint();
+		super.setVisible(b);
 	}
 	
 	public PreferencesFrame(MainGui gui) {
@@ -530,7 +531,7 @@ public class PreferencesFrame extends JDialog {
 				String s = defaultCompName.getText();
 				MainGui.compartment_default_for_dialog_window = s;
 		
-				//MOOOOOOOOOOOOOOOOOOOOOOOOVE THOSE COMMANDS FOR WHEN WHEN THE USER CLICK OK!!!
+				//MOVE THOSE COMMANDS AFTER THE USER CLICK OK!!!
 				MainGui.updateDefaultValue(Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.index, MainGui.compartment_default_for_dialog_window);
 				MainGui.updateDefaultValue(Constants.TitlesTabs.COMPARTMENTS.description, Constants.CompartmentsColumns.NAME.index, MainGui.compartment_default_for_dialog_window);
 			}
@@ -674,7 +675,6 @@ public class PreferencesFrame extends JDialog {
 				}
 				((JDialog)c).pack();
 				panelRight.repaint();
-			
 			}
 		});
 		panel_5.add(btnNewButton);

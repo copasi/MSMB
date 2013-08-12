@@ -8,6 +8,7 @@ import javax.swing.text.Document;
 import javax.swing.text.Element;
 import javax.swing.text.JTextComponent;
 
+import msmb.gui.CustomTableModel_MSMB;
 import msmb.gui.MainGui;
 import msmb.model.Compartment;
 import msmb.model.Function;
@@ -457,7 +458,22 @@ public class AutocompleteDB {
 		else if(MainGui.autocompletionContext==Constants.FunctionParamType.FUNCTION.copasiType) {
 			return getAllDefinedFunctions();
 		}
-		else return getAllNamedElements();
+		else 	if(MainGui.autocompletionContext==Constants.FunctionParamType.ASSIGNMENT_FLAG.copasiType) {
+			Vector<Vector<String>> allNames = getAllNamedElements();
+			CustomTableModel_MSMB tableModel = MainGui.getTableModelFromDescription(MainGui.cellTableEdited);
+			String currentVariable = (String) tableModel.getValueAt(MainGui.cellSelectedRow, MainGui.getMainElementColumn(MainGui.cellTableEdited));
+			Vector<Vector<String>> ret = new Vector<Vector<String>>();
+			for(Vector<String> element : allNames) {
+				if(element.get(0).compareTo(currentVariable)==0 &&
+						element.get(1).startsWith(MainGui.cellTableEdited.substring(0, MainGui.cellTableEdited.indexOf(" "))) ) {
+					continue;
+				} else {
+					ret.add(element);
+				}
+			}
+			return ret;
+		}
+		return getAllNamedElements();
 		
 		
 		
@@ -468,11 +484,12 @@ public class AutocompleteDB {
 
 	public Vector<Vector<String>> getAllNamedElements() {
 		Vector<Vector<String>> ret = new Vector<Vector<String>>();
+		if(multiModel == null) return ret;
+		
 		ret.addAll(getAllDefinedFunctions());
 		ret.addAll(getAllDefinedSpecies());
 		ret.addAll(getAllDefinedGlobalQuantities());
 		ret.addAll(getAllDefinedCompartments());
-		
 		return ret;
 	}
 

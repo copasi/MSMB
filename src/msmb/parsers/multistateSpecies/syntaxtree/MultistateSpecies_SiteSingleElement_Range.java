@@ -6,28 +6,28 @@ import msmb.parsers.multistateSpecies.visitor.*;
 /**
  * JTB node class for the production MultistateSpecies_SiteSingleElement_Range:<br>
  * Corresponding grammar:<br>
- * nodeToken -> <NUMBER><br>
+ * multistateSpecies_SiteSingleElement_Range_Limits -> MultistateSpecies_SiteSingleElement_Range_Limits()<br>
  * nodeListOptional -> ( " " )*<br>
- * nodeToken1 -> <RANGE_SEPARATOR><br>
+ * nodeToken -> <RANGE_SEPARATOR><br>
  * nodeListOptional1 -> ( " " )*<br>
- * nodeToken2 -> <NUMBER><br>
+ * multistateSpecies_SiteSingleElement_Range_Limits1 -> MultistateSpecies_SiteSingleElement_Range_Limits()<br>
  */
 public class MultistateSpecies_SiteSingleElement_Range implements INode {
 
   /** Child node 1 */
-  public NodeToken nodeToken;
+  public MultistateSpecies_SiteSingleElement_Range_Limits multistateSpecies_SiteSingleElement_Range_Limits;
 
   /** Child node 2 */
   public NodeListOptional nodeListOptional;
 
   /** Child node 3 */
-  public NodeToken nodeToken1;
+  public NodeToken nodeToken;
 
   /** Child node 4 */
   public NodeListOptional nodeListOptional1;
 
   /** Child node 5 */
-  public NodeToken nodeToken2;
+  public MultistateSpecies_SiteSingleElement_Range_Limits multistateSpecies_SiteSingleElement_Range_Limits1;
 
   /** The serial version UID */
   private static final long serialVersionUID = 147L;
@@ -41,12 +41,12 @@ public class MultistateSpecies_SiteSingleElement_Range implements INode {
    * @param n3 - next child node
    * @param n4 - next child node
    */
-  public MultistateSpecies_SiteSingleElement_Range(final NodeToken n0, final NodeListOptional n1, final NodeToken n2, final NodeListOptional n3, final NodeToken n4) {
-    nodeToken = n0;
+  public MultistateSpecies_SiteSingleElement_Range(final MultistateSpecies_SiteSingleElement_Range_Limits n0, final NodeListOptional n1, final NodeToken n2, final NodeListOptional n3, final MultistateSpecies_SiteSingleElement_Range_Limits n4) {
+    multistateSpecies_SiteSingleElement_Range_Limits = n0;
     nodeListOptional = n1;
-    nodeToken1 = n2;
+    nodeToken = n2;
     nodeListOptional1 = n3;
-    nodeToken2 = n4;
+    multistateSpecies_SiteSingleElement_Range_Limits1 = n4;
   }
 
   /**

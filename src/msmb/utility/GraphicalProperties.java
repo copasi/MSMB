@@ -9,18 +9,22 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 
 import msmb.gui.MainGui;
 
@@ -127,6 +131,10 @@ public class GraphicalProperties {
 			 Iterator<JPanel> it13 = panels.iterator();
 			 while(it13.hasNext()) {
 				 JPanel current = it13.next();
+				 Border border = current.getBorder();
+				 if(border != null && border instanceof TitledBorder) {
+					  ((TitledBorder)current.getBorder()).setTitleFont(MainGui.customFont);
+				 }
 				 resetFonts(current);
 			 }
 			 
@@ -139,6 +147,15 @@ public class GraphicalProperties {
 				 current.setRowHeight(MainGui.customFont.getSize()+3);
 			 }
 		 
+			 
+			 List<JTabbedPane> tabpanels = SwingUtils.getDescendantsOfClass(JTabbedPane.class, container);
+			 Iterator<JTabbedPane> it15 = tabpanels.iterator();
+			 while(it15.hasNext()) {
+				 JTabbedPane current = it15.next();
+				 current.setFont(customFont);
+			 }
+			 
+
 		 container.revalidate();
 		 SwingUtilities.updateComponentTreeUI(container);
 		

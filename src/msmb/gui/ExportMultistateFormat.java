@@ -15,6 +15,7 @@ import msmb.debugTab.DebugMessage;
 
 import msmb.model.ComplexSpecies;
 import msmb.model.Function;
+import msmb.model.MultiModel;
 import msmb.model.MultistateSpecies;
 import msmb.model.Species;
 import msmb.utility.CellParsers;
@@ -85,7 +86,6 @@ class ExportMultistateFormat {
 		    			if(tablemodel.getValueAt(i, j)==null) continue;
 		    			String value = tablemodel.getValueAt(i, j).toString();
 		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && j == Constants.FunctionsColumns.EQUATION.index && value.trim().length() < 1) {
-		    				System.err.println("Empty EQUATION field!"); 
 		    				JOptionPane.showMessageDialog(new JButton(),"Empty EQUATION field at export!!", "Problem at export!", JOptionPane.ERROR_MESSAGE);
 		    			}
 		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0 && j == Constants.CompartmentsColumns.NAME.index && value.trim().length() == 0) {row=null; break;}
@@ -94,11 +94,14 @@ class ExportMultistateFormat {
 		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0 && j == Constants.GlobalQColumns.NAME.index && value.trim().length() == 0) {
 		    				row=null; break;}
 		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && j == Constants.ReactionsColumns.REACTION.index && value.trim().length() == 0) {row=null; break;}
-		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0 && j == Constants.SpeciesColumns.NAME.index && value.trim().length() == 0)  {row=null; break;}
+		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0 && j == Constants.SpeciesColumns.NAME.index && value.trim().length() == 0)  {
+		    				row=null; break;
+		    				}
 				    	if(value.length() <=0) value = " ";
 		    			row.add(value);
 		    		}
-		    		if(row != null) singleTable.add(new Vector<String>(row));
+		    		if(row != null) 
+		    			singleTable.add(new Vector<String>(row));
 		    	}
 				data.add(singleTable);
 			}
@@ -185,7 +188,7 @@ class ExportMultistateFormat {
 		
 		
 		HashMap<String, HashMap<String, String>> multistateInitials = null;
-		Vector<ComplexSpecies> complexSpecies = null;
+		Vector<MutablePair<Integer, ComplexSpecies>> complexSpecies = null;
 		
 		try {
 			//in = new ObjectInputStream(new FileInputStream(file));
@@ -229,11 +232,12 @@ class ExportMultistateFormat {
 			MainGui.quantityIsConc = Boolean.parseBoolean(modelProperties.get(5));
 			
 			try{
-				complexSpecies = new Vector<ComplexSpecies>();
-				Vector<Vector> complexDataSerialized = 	(Vector<Vector>)in.readObject();
-				for(Vector complexData: complexDataSerialized ) {
-					ComplexSpecies species = new ComplexSpecies(complexData);
-					complexSpecies.add(species);
+				complexSpecies = new Vector<MutablePair<Integer,ComplexSpecies>>();
+				Vector complexDataSerialized = 	(Vector)in.readObject();
+				for(int i = 0; i < complexDataSerialized.size(); i=i+2) {
+					 Integer index = (Integer)complexDataSerialized.get(i);
+					ComplexSpecies species = new ComplexSpecies((Vector)complexDataSerialized.get(i+1));
+					complexSpecies.add(new MutablePair(index,species));
 				}
 			} catch(Exception e) {
 				//problems reading the complexes, it's ok for old msmb files

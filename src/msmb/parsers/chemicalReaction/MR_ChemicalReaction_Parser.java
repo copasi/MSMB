@@ -175,6 +175,20 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
+      expression = new String("A(p{2:up-1})  -> ");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{low:up-1}) -> Cdh1(succ(p))");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
     }
     catch (Exception e) {
       System.out.println("Oops.");
@@ -738,6 +752,48 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     finally { jj_save(2, xla); }
   }
 
+  private boolean jj_3R_28() {
+    if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_19() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_22() {
+    if (jj_scan_token(18)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_27() {
+    if (jj_scan_token(INTEGER_LITERAL)) return true;
+    return false;
+  }
+
+  private boolean jj_3_3() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_25() {
+    if (jj_scan_token(IDENTIFIER)) return true;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_scan_token(18)) return true;
+    Token xsp;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_17()) { jj_scanpos = xsp; break; }
+    }
+    xsp = jj_scanpos;
+    if (jj_3R_18()) jj_scanpos = xsp;
+    return false;
+  }
+
   private boolean jj_3R_26() {
     Token xsp;
     xsp = jj_scanpos;
@@ -793,48 +849,6 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
 
   private boolean jj_3R_20() {
     if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_28() {
-    if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_19() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_22() {
-    if (jj_scan_token(18)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_27() {
-    if (jj_scan_token(INTEGER_LITERAL)) return true;
-    return false;
-  }
-
-  private boolean jj_3_3() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_25() {
-    if (jj_scan_token(IDENTIFIER)) return true;
-    return false;
-  }
-
-  private boolean jj_3_1() {
-    if (jj_scan_token(18)) return true;
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_17()) { jj_scanpos = xsp; break; }
-    }
-    xsp = jj_scanpos;
-    if (jj_3R_18()) jj_scanpos = xsp;
     return false;
   }
 

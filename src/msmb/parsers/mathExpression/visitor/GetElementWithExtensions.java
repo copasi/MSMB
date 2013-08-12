@@ -1,13 +1,15 @@
 package msmb.parsers.mathExpression.visitor;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Vector;
 
 import msmb.parsers.mathExpression.MR_Expression_ParserConstants;
 import msmb.parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import msmb.parsers.mathExpression.syntaxtree.*;
+import msmb.utility.CellParsers;
 
 public class GetElementWithExtensions extends DepthFirstVoidVisitor {
-		String returnName = new String();
+		String returnName = null;
 		Vector<String> extensions = new Vector<String>();
 		boolean getName = false;
 		
@@ -16,15 +18,8 @@ public class GetElementWithExtensions extends DepthFirstVoidVisitor {
 		
 	   public GetElementWithExtensions()  {}
 		
-	/*@Override
-	public void visit(Name n) {
-		if(n.nodeChoice.which ==0) {
-			super.visit(n);
-			NodeSequence nodes = (NodeSequence) n.nodeChoice.choice;
-			returnName = ToStringVisitor.toString(nodes.nodes.get(0));
-		}
-	}*/
-	   
+	
+	    @Override
 	   public void visit(SpeciesReferenceOrFunctionCall n) {
 		   returnName = ToStringVisitor.toString(n.speciesReferenceOrFunctionCall_prefix);
 		   super.visit(n);

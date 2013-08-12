@@ -155,7 +155,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 					panel_2.removeAll();
 					addTitleLabels();
 					exitOption = ExitOption.OK;
-					dispose();
+					setVisible(false);
 				} catch(Exception ex) {
 					//something wrong in the consistency checks so I cannot add the sites or dispose the dialog
 					ex.printStackTrace();
@@ -170,7 +170,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 					panel_2.removeAll();
 					addTitleLabels();
 					exitOption = ExitOption.CANCEL;
-					dispose();
+					setVisible(false);
 			}
 		});	
 		panel_1.add(btnCancel);
@@ -206,7 +206,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 		GraphicalProperties.resetFonts(this);
 		pack();
 		setLocationRelativeTo(null);
-		super.setVisible(true);
+		super.setVisible(b);
 	}
 
 	protected Vector getElementsToAdd() throws Exception {
@@ -519,15 +519,14 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 
 
 	HashBiMap<String, String> renamed_sites = HashBiMap.create();
+	
 	public void renameSite(String before, String current) {
 		if(before.length() == 0) return;
 		if(renamed_sites.inverse().containsKey(before)) {
 			before = renamed_sites.inverse().get(before);
 		}
 		renamed_sites.put(before, current);
-		System.out.println("hashbimap : "+renamed_sites);
 	}
-	
 
 	
 
@@ -629,7 +628,6 @@ class FocusListener_Renaming implements FocusListener{
 	public void focusGained(FocusEvent e) {
 		JTextField textField = (JTextField)e.getComponent();
 	    before = textField.getText();
-	    System.out.println("site before "+before);
 	}
 }
 

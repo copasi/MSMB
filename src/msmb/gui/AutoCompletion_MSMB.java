@@ -18,11 +18,8 @@ public class AutoCompletion_MSMB extends AutoCompletion{
 	MultiModel multiModel = null;
 	
 	public AutoCompletion_MSMB(CompletionProvider arg0, MultiModel multiModel) {	
-		
-		
 		super(arg0);
 		this.multiModel = multiModel;
-		
 	}
 
 	

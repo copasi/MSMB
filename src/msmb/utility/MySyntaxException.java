@@ -29,12 +29,9 @@ public class MySyntaxException extends IOException {
 
    	
     public MySyntaxException(String newMessage, MySyntaxException oldEx) {
-    	super(newMessage);
-      
-       this.column = oldEx.column;
-       table = oldEx.table;
+    	this(oldEx.column, newMessage, oldEx.table);
     }
-
+    
   
 }
 

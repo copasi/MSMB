@@ -74,19 +74,20 @@ public class GlobalQ {
 	public void setExpression(MultiModel m, String expr) throws Throwable {	
 		if(expr.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		if(expr.trim().length() == 0) return ;
+		boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
 		try {
 			this.expression = expr;	
 			 CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.EXPRESSION.description);
 		
-				boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
 				MainGui.importFromSBMLorCPS = false;
 				this.expression = m.reprintExpression_forceCompressionElements(expression,Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.EXPRESSION.description);
-				MainGui.importFromSBMLorCPS = oldImportFromSBMLorCPS;
+		
 		} catch (Throwable ex) {
 			throw ex;
 		}
 		finally {
 			editableExpression = expr;
+			MainGui.importFromSBMLorCPS = oldImportFromSBMLorCPS;
 		}
 	}
 	

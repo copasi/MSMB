@@ -158,8 +158,6 @@ public class FunctionsDB {
 		if(f.getType() == CFunction.UserDefined) userDefinedFun.put(row, f); 
 		else  builtInFun.put(row, f); 
 		
-	//	System.out.println("in addChangeFunction: "+userDefinedFun);
-		
 		//recalculate mappings
 		if(whereFuncIsUsed.get(f.getName())!=null) {
 			HashSet<Integer> used = whereFuncIsUsed.get(f.getName());

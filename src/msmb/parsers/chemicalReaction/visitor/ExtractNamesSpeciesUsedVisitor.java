@@ -51,6 +51,11 @@ public class ExtractNamesSpeciesUsedVisitor extends DepthFirstVoidVisitor {
 			  }
 		  }
 		  
+			MutablePair<String, String> aliasPair = CellParsers.extractAlias(name);
+			if(aliasPair.left != null) {
+				name = aliasPair.right;
+			}
+		  
 		  if(CellParsers.isMultistateSpeciesName(name)) {
 			  /*MultistateSpecies r = null;
 			  try {

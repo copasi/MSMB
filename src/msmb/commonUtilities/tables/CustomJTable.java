@@ -138,6 +138,11 @@ public class CustomJTable extends JTable  {
 		public void clearCellsWithErrors() { cells_with_errors.clear();	}
 		public void clearCellsWithDefaults() { cells_with_defaults.clear();	}
 
+@Override
+public void setRowSelectionInterval(int index0, int index1) {
+	cell_to_highlight = null;
+	super.setRowSelectionInterval(index0, index1);
+};
 		
 		
 	public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int vColIndex) {
@@ -150,7 +155,9 @@ public class CustomJTable extends JTable  {
 					c.setBackground(GraphicalProperties.color_cell_to_highlight);
 					return c;
 				}
-			}
+			} 
+			
+			
 			
 			if(this.model.disabledCell.contains(rowIndex+"_"+vColIndex)) {
 				c.setBackground(Constants.vt_blues_1);

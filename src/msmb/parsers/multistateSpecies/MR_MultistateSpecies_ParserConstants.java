@@ -49,29 +49,31 @@ public interface MR_MultistateSpecies_ParserConstants {
   /** RegularExpression Id. */
   int MULTI_IDENTIFIER = 24;
   /** RegularExpression Id. */
-  int UNDEFINED_SITE_SYMBOL = 25;
+  int MATH_ELEMENT = 25;
   /** RegularExpression Id. */
-  int EXTENSION_CONC = 26;
+  int UNDEFINED_SITE_SYMBOL = 26;
   /** RegularExpression Id. */
-  int EXTENSION_PARTICLE = 27;
+  int EXTENSION_CONC = 27;
   /** RegularExpression Id. */
-  int EXTENSION_TRANS = 28;
+  int EXTENSION_PARTICLE = 28;
   /** RegularExpression Id. */
-  int EXTENSION_INIT = 29;
+  int EXTENSION_TRANS = 29;
   /** RegularExpression Id. */
-  int EXTENSION_RATE = 30;
+  int EXTENSION_INIT = 30;
   /** RegularExpression Id. */
-  int EXTENSION_SPECIES = 31;
+  int EXTENSION_RATE = 31;
   /** RegularExpression Id. */
-  int EXTENSION_GLOBALQ = 32;
+  int EXTENSION_SPECIES = 32;
   /** RegularExpression Id. */
-  int EXTENSION_COMPARTMENT = 33;
+  int EXTENSION_GLOBALQ = 33;
   /** RegularExpression Id. */
-  int EXTENSION_REACTION = 34;
+  int EXTENSION_COMPARTMENT = 34;
   /** RegularExpression Id. */
-  int EXTENSION_FUNCTION = 35;
+  int EXTENSION_REACTION = 35;
   /** RegularExpression Id. */
-  int EXTENSION_FLUX = 36;
+  int EXTENSION_FUNCTION = 36;
+  /** RegularExpression Id. */
+  int EXTENSION_FLUX = 37;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -103,6 +105,7 @@ public interface MR_MultistateSpecies_ParserConstants {
     "<STRING_LITERAL>",
     "<NUMBER>",
     "<MULTI_IDENTIFIER>",
+    "<MATH_ELEMENT>",
     "\"?\"",
     "\".conc\"",
     "\".part\"",

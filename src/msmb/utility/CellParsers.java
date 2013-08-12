@@ -1,35 +1,17 @@
 package msmb.utility;
 
-import java.awt.event.InputEvent;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.StringTokenizer;
-import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
+import java.io.*;
+import java.util.*;
+import java.util.regex.*;
 
 import org.apache.commons.lang3.tuple.MutablePair;
-
-import com.google.common.base.Throwables;
-
-/*import org.lsmp.djep.xjep.XJep;
-import org.nfunk.jep.Node;
-import org.nfunk.jep.OperatorSet;
-import org.nfunk.jep.ParseException;
-import org.nfunk.jep.SymbolTable;
-import org.nfunk.jep.function.*;*/
 
 import  msmb.parsers.chemicalReaction.MR_ChemicalReaction_Parser;
 import  msmb.parsers.chemicalReaction.syntaxtree.CompleteReaction;
 import  msmb.parsers.chemicalReaction.visitor.ExtractSubProdModVisitor;
 import msmb.parsers.chemicalReaction.visitor.SubstitutionVisitorReaction;
 import  msmb.parsers.mathExpression.MR_Expression_Parser;
+import msmb.parsers.mathExpression.MR_Expression_ParserConstants;
 import  msmb.parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import  msmb.parsers.mathExpression.MR_Expression_Parser_ReducedParserException;
 
@@ -183,7 +165,7 @@ public class CellParsers {
 	}
 	
 	public static boolean isMultistateSpeciesName(String name) {
-		if( MainGui.importFromSBMLorCPS) {
+		if( MainGui.importFromSBMLorCPS && CellParsers.extractCompartmentLabel(name).length() ==0) {//because I may have added the compartment label during the import so it may have become a real multistate species
 			return false;
 		}
 		if(name.startsWith("\"")&&name.endsWith("\"")) return false;
@@ -246,6 +228,32 @@ public class CellParsers {
 		}
 	}
 	
+	public static Integer evaluateExpression(String expression) throws Throwable {
+		
+		//	System.out.println("...........evaluateExpression..............");
+		//	System.out.println(expression);
+		//	System.out.println(".................................");
+		
+			if(expression.trim().length()==0) return null;
+			try {
+			  Integer ret = new Integer(0);
+		      ByteArrayInputStream is2 = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+				  MR_Expression_Parser parser = new MR_Expression_Parser(is2,"UTF-8");
+			  	  CompleteExpression start = parser.CompleteExpression();
+			      EvaluateExpressionVisitor vis = new EvaluateExpressionVisitor(null);
+			      start.accept(vis);
+				  if(vis.getExceptions().size() == 0) {
+					  ret  = vis.evaluateExpression();
+				  } else {
+							throw vis.getExceptions().get(0);
+					}
+				  return ret;
+			} catch (Exception e) {
+				//e.printStackTrace();
+				return null;
+			}
+		}
+	
 	
 	
 	
@@ -298,14 +306,32 @@ public class CellParsers {
 		
 	 }
 	
-public static String replaceNamesInMultistateAfterAssignment(String fullSpDefinition, String replacementSpName, HashMap<String, String> sitesName_origRepl) {
+	
+	public static String replaceSpeciesName_AfterTransferAssignment(String fullSpDefinition, String originalSpName, String replacementSpName, HashMap<String, String> aliases) {
+		
+		try{
+		InputStream is = new ByteArrayInputStream(fullSpDefinition.getBytes("UTF-8"));
+		 MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
+		 CompleteMultistateSpecies_Operator complete = parser.CompleteMultistateSpecies_Operator();
+		 MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(fullSpDefinition,originalSpName,replacementSpName,aliases);
+		complete.accept(mySV);
+		String newExpr = mySV.getNewMultistate();
+		return newExpr;
+		}catch (Throwable e2) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e2.printStackTrace();
+			return null;
+		}
+ }
+	
+	
+public static String replaceNamesInMultistateAfterAssignment(String fullSpDefinition, String replacementSpName, HashMap<String, String> sitesName_origRepl, HashMap<String, String> aliases) {
 		
 			try{
 			InputStream is = new ByteArrayInputStream(fullSpDefinition.getBytes("UTF-8"));
 			 MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
 			 CompleteMultistateSpecies_Operator complete = parser.CompleteMultistateSpecies_Operator();
-			 MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(fullSpDefinition,replacementSpName,sitesName_origRepl, true);
-						 complete.accept(mySV);
+			 MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(fullSpDefinition,replacementSpName,sitesName_origRepl, true, aliases);
+			complete.accept(mySV);
 
 			String newExpr = mySV.getNewMultistate();
 			return newExpr;
@@ -503,7 +529,8 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 				  
 				  if(undef.size() != 0 || misused.size() != 0) {
 					    String message = new String();
-						if(undef.size() >0) {
+					    
+						if(undef.size() >0 ) {
 							 message += "Missing element definition: " + undef.toString();
 						}
 						if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
@@ -659,7 +686,12 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 	public static String cleanName(String objectName, boolean species) {
 		//return cleanName_2(objectName);
 		//return oldCleanName(objectName, species);
-		
+		try {
+			objectName = new String(objectName.getBytes("UTF-8"),"UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if(!objectName.startsWith("\"")) {
 			if(objectName.indexOf(' ')!=-1 ||
 					objectName.indexOf('+')!=-1 ||
@@ -762,6 +794,39 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 			
 			return multiStateProd;
 	}
+	
+	public static MutablePair<String, String> parseMultistateSpecies_rangeWithVariables(String states) throws Exception {
+		MutablePair<String, String> lower_upper = new MutablePair<String, String>();
+		//lower_upper.left = "low";
+		//lower_upper.right = "up";
+		
+	  try {  	 
+			  InputStream is = new ByteArrayInputStream(states.getBytes());
+			 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies_RangeString range = react.CompleteMultistateSpecies_RangeString();
+			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(null);
+			 range.accept(v);
+			
+			 MutablePair<String, String> pair = v.getStringRangeLimits();
+			 System.out.println("in parseMultistateSpecies_rangeWithVariables: "+pair);
+			 Integer res1 = CellParsers.evaluateExpression(pair.left);
+			 Integer res2 = CellParsers.evaluateExpression(pair.right);
+			 if(res1 != null)	 lower_upper.left = res1.toString();
+			 else lower_upper.left = pair.left;
+			 if(res2 != null)	 lower_upper.right = res1.toString();
+			 else lower_upper.right = pair.right;
+			 System.out.println("lower_upper.left: "+ lower_upper.left);
+			 System.out.println("lower_upper.right "+ lower_upper.right );
+		  } catch (Throwable e2) {
+			  //if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)  
+				  e2.printStackTrace();
+			  throw new Exception("Something wrong in the states format.");
+		  }
+		
+		
+		return lower_upper;
+	}
+	
 
 	public static Vector parseMultistateSpecies_states(String states) throws Exception {
 		StringTokenizer st_states = new StringTokenizer(states, ",");
@@ -1292,6 +1357,74 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		return ret;
 	}
 	
+	
+	public static MutablePair<String, Vector<String>> extractNameExtensions(String element)  {
+		GetElementWithExtensions name;
+		try{
+			InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
+			MR_Expression_Parser parser = new MR_Expression_Parser(is);
+			CompleteExpression root = parser.CompleteExpression();
+			name = new GetElementWithExtensions();
+			root.accept(name);
+		}catch (Throwable e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
+			return new MutablePair<String, Vector<String>>(element, new Vector<String>());
+		}
+		
+	
+	
+			String element_name = name.getElementName();
+			if(element_name==null || element_name.length() ==0 ||
+					ToStringVisitor.toBinary(element_name).length()!= ToStringVisitor.toBinary(element).length() ) {
+				element_name = element; // for simple numbers and for things that do not look ok because of the encoding
+			}
+			Vector<String> extensions = name.getExtensions();
+			return new MutablePair<String, Vector<String>>(element_name, extensions);
+	
+		
+			
+	}
+	
+	//it returns the title of the table, not the extension
+	public static String extractKindQuantifier_fromExtensions(Vector<String> extensions) {
+		for(int i = 0; i < extensions.size(); i++) {
+			String ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT);
+			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.COMPARTMENTS.description;	} 
+			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES);
+			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.SPECIES.description;	} 
+			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ);
+			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.GLOBALQ.description;	} 
+			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_REACTION);
+			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.REACTIONS.description;	} 
+		}
+		return null;
+	}
+
+	public String extractQuantityQuantifier_fromExtensions(Vector<String> extensions) {
+		for(int i = 0; i < extensions.size(); i++) {
+				String ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_PARTICLE);
+				if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
+				ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_CONC);
+				if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
+			}
+			return null;
+	}
+
+	public String extractTimingQuantifier_fromExtensions(Vector<String> extensions) {
+		for(int i = 0; i < extensions.size(); i++) {
+			String ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_INIT);
+			if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
+			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_RATE);
+			if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
+			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_TRANS);
+			if(extensions.get(i).compareTo(ext)==0) {	return ext;	} 
+		}
+		return null;
+	}
+
+	
+	
+	
 	public static String extractCompartmentLabel(String name) {
 		String ret = new String();
 
@@ -1332,6 +1465,8 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 			
 		}
 		
+	
+ 		
 		return ret;
 	}
 
@@ -1354,6 +1489,12 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 			ret.right = name;
 			return ret;
 		}
+		int indexRoundBracket = name.indexOf("(");
+		if(indexRoundBracket!= -1 && index > indexRoundBracket) {
+			//is the = for the transfer state
+			ret.right = name;
+			return ret;
+		}
 
 		String alias = name.substring(0,index);
 		alias = alias.trim();
@@ -1362,10 +1503,6 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		String restOfName = name.substring(index+1);
 		restOfName = restOfName.trim();
 		System.out.println("restOfName = "+restOfName);
-		if(!CellParsers.isMultistateSpeciesName(restOfName)) {
-			ret.right = name;
-			return ret;
-		}
 		
 		ret.left = alias;
 		ret.right = restOfName;

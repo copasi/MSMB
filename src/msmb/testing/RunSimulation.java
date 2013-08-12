@@ -408,7 +408,6 @@ public class RunSimulation {
 		 problem.setStepNumber(steps);
 		 // start at time 0
 		 dataModel.getModel().setInitialTime(0.0);
-		 // simulate a duration of 10 time units
 		 problem.setDuration(maxTime);
 		 // tell the problem to actually generate time series data
 		 problem.setTimeSeriesRequested(true);

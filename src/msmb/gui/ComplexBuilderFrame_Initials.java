@@ -26,6 +26,7 @@ import msmb.commonUtilities.tables.ScientificFormatCellRenderer;
 import msmb.model.ComplexSpecies;
 import msmb.model.MultistateSpecies;
 import msmb.model.Species;
+import msmb.utility.CellParsers;
 import msmb.utility.Constants;
 import msmb.utility.GraphicalProperties;
 import msmb.utility.MySyntaxException;
@@ -57,7 +58,7 @@ public class ComplexBuilderFrame_Initials extends JDialog {
 		this.setSize(45*MainGui.customFont.getSize(), 25*MainGui.customFont.getSize());
 		setLocationRelativeTo(null);
 		pack();
-		super.setVisible(true);
+		super.setVisible(b);
 	}
 
 	public ComplexBuilderFrame_Initials() {
@@ -70,19 +71,19 @@ public class ComplexBuilderFrame_Initials extends JDialog {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 		contentPane.add(getInitialsPanel());
-		try {
+		/*try {
 			species = new ComplexSpecies(new String("Multi(a{0:4};b{3:4})"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		updateJTableConcentrationSpecies();
+		updateJTableConcentrationSpecies();*/
 	}
 	
 	
 	public void setComplexSpecies(ComplexSpecies complexSpecies) {
 		try {
-			this.species =  new ComplexSpecies(complexSpecies.getFullComplexDefinition());
-			this.species.setInitialQuantity(complexSpecies.getInitialQuantity_multi());
+			this.species =  new ComplexSpecies(complexSpecies);
+	
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -102,7 +103,7 @@ public class ComplexBuilderFrame_Initials extends JDialog {
 			HashMap<String, String> singleEntry = new HashMap<String, String>();
 				if(expandedSites.size() > 0) {
 				singleConfiguration = this.species.getExpandedSites().get(row);
-				singleConfiguration = this.species.getSpeciesName() + "(" + singleConfiguration + ")";
+				singleConfiguration = CellParsers.extractMultistateName(this.species.getSpeciesName()) + "(" + singleConfiguration + ")";
 			} else {
 				singleConfiguration = this.species.getDisplayedName();
 			}

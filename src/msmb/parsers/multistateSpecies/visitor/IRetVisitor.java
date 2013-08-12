@@ -190,14 +190,17 @@ public interface IRetVisitor<R> {
    * .......... .. | %1 ( &0 <CIRCULAR_FLAG><br>
    * .......... .. . .. | &1 <MULTI_IDENTIFIER><br>
    * .......... .. . .. | &2 <NUMBER><br>
-   * .......... .. . .. | &3 <OPEN_R> )+ )<br>
+   * .......... .. . .. | &3 <OPEN_R><br>
+   * .......... .. . .. | &4 <MATH_ELEMENT> )+ )<br>
    * nodeOptional -> ( #0 ( " " )*<br>
    * ............ .. . #1 <RANGE_SEPARATOR><br>
    * ............ .. . #2 ( " " )*<br>
    * ............ .. . #3 ( %0 <STRING_LITERAL><br>
    * ............ .. . .. | %1 ( &0 <MULTI_IDENTIFIER><br>
    * ............ .. . .. . .. | &1 <NUMBER><br>
-   * ............ .. . .. . .. | &2 <OPEN_R> )+ ) )?<br>
+   * ............ .. . .. . .. | &2 <OPEN_R><br>
+   * ............ .. . .. . .. | &3 <MATH_ELEMENT><br>
+   * ............ .. . .. . .. | &4 <CLOSED_R> )+ ) )?<br>
    *
    * @param n - the node to visit
    * @return the user return information
@@ -207,16 +210,34 @@ public interface IRetVisitor<R> {
   /**
    * Visits a {@link MultistateSpecies_SiteSingleElement_Range} node, whose children are the following :
    * <p>
-   * nodeToken -> <NUMBER><br>
+   * multistateSpecies_SiteSingleElement_Range_Limits -> MultistateSpecies_SiteSingleElement_Range_Limits()<br>
    * nodeListOptional -> ( " " )*<br>
-   * nodeToken1 -> <RANGE_SEPARATOR><br>
+   * nodeToken -> <RANGE_SEPARATOR><br>
    * nodeListOptional1 -> ( " " )*<br>
-   * nodeToken2 -> <NUMBER><br>
+   * multistateSpecies_SiteSingleElement_Range_Limits1 -> MultistateSpecies_SiteSingleElement_Range_Limits()<br>
    *
    * @param n - the node to visit
    * @return the user return information
    */
   public R visit(final MultistateSpecies_SiteSingleElement_Range n);
+
+  /**
+   * Visits a {@link MultistateSpecies_SiteSingleElement_Range_Limits} node, whose children are the following :
+   * <p>
+   * nodeChoice -> . %0 <NUMBER><br>
+   * .......... .. | %1 <STRING_LITERAL><br>
+   * .......... .. | %2 ( &0 " "<br>
+   * .......... .. . .. | &1 <OPEN_R><br>
+   * .......... .. . .. | &2 <CLOSED_R><br>
+   * .......... .. . .. | &3 <MATH_ELEMENT><br>
+   * .......... .. . .. | &4 <NUMBER><br>
+   * .......... .. . .. | &5 <STRING_LITERAL><br>
+   * .......... .. . .. | &6 <MULTI_IDENTIFIER> )+<br>
+   *
+   * @param n - the node to visit
+   * @return the user return information
+   */
+  public R visit(final MultistateSpecies_SiteSingleElement_Range_Limits n);
 
   /**
    * Visits a {@link MultistateSpecies_SiteName} node, whose children are the following :

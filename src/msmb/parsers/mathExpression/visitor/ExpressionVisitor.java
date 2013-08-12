@@ -61,7 +61,9 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	@Override
 	public void visit(NodeToken n) {
 		if(n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0||
-				n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.BANG	))==0) expression+=" ";
+				n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.BANG	))==0) {
+			expression+=" ";
+		}
 		expression+=n.tokenImage;
 		if(n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0||
 				n.tokenImage.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.BANG))==0) expression+=" ";
@@ -367,8 +369,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 		String asCompactedAsPossible = new String();
 		try {
 			asCompactedAsPossible = generateElement_extended(element);
-		
-			
 			if(!elementsExpanded) {
 				InputStream is = new ByteArrayInputStream(asCompactedAsPossible.getBytes("UTF-8"));
 				MR_Expression_Parser parser = new MR_Expression_Parser(is);
@@ -381,11 +381,11 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 				String element_kind_quantifier = getKindQuantifier(extensions);
 				String element_timing_quantifier = getTimingQuantifier(extensions);
 				String element_quantity_quantifier = getQuantityQuantifier(extensions);
-				
+						
 				String comp = CellParsers.extractCompartmentLabel(element_substring);
 				if(comp!= null && comp.length() > 0) {
 					String speciesName = CellParsers.extractMultistateName(element_substring);
-					if(multiModel.getSpecies(speciesName).getCompartments().size()==1) {
+					if(multiModel.getSpecies(speciesName)!= null && multiModel.getSpecies(speciesName).getCompartments().size()==1) {
 						element_substring = speciesName;
 					}
 				}
@@ -393,11 +393,12 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 				String element_newView = element_substring;
 				
 				Vector<Integer> where = multiModel.getWhereNameIsUsed(element_substring);
-				
+				if(where == null) return element;
+		
 				if(where.size() == 1) {
-
 					element_kind_quantifier = ""; // because in only one table
-
+				}
+				
 					if(element_timing_quantifier != null) {
 						if(element_timing_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_TRANS)) ==0 ) {
 							element_timing_quantifier = "";
@@ -420,10 +421,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 					element_newView += element_kind_quantifier + element_quantity_quantifier + element_timing_quantifier;
 
 
-				} else {
-					//System.out.println("again WHEEEEEEEEEEERE > 1... SEE WHAT TO DO...");
-
-				}
+				
 
 				asCompactedAsPossible = element_newView;
 			}
@@ -491,7 +489,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			String comp = CellParsers.extractCompartmentLabel(element_substring);
 			if(comp!= null && comp.length() > 0) {
 				String speciesName = CellParsers.extractMultistateName(element_substring);
-				if(multiModel.getSpecies(speciesName).getCompartments().size()==1) {
+				if(multiModel.getSpecies(speciesName)!= null && multiModel.getSpecies(speciesName).getCompartments().size()==1) {
 					element_substring = speciesName;
 				}
 			}
@@ -504,7 +502,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			element_newView = element_substring;
 
 			Vector<Integer> where = multiModel.getWhereNameIsUsed(element_substring);
-			
+			if(where == null) return element;
 			/*	System.out.println("in generateElement where:" + where);
 			System.out.println("in generateElement element_kind_quantifier:" + element_kind_quantifier);
 			System.out.println("in generateElement element_timing_quantifier:" + element_timing_quantifier);
@@ -544,12 +542,13 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 					}	
 					else if(element_kind_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ))==0 &&
 							table != Constants.TitlesTabs.GLOBALQ.index) {
-						exceptions.add(  new ParseException("Element "+element+" is supposed to have a .gq extension"));
+						exceptions.add(  new ParseException("Element "+element+" is supposed to have a .glq extension"));
 					} else {
 						if(elementsExpanded) element_newView += element_kind_quantifier;
 					}	
 				}
 				else {
+					element_newView += element_kind_quantifier;
 					//System.out.println("WHEEEEEEEEEEERE > 1... SEE WHAT TO DO...");
 				}
 			}

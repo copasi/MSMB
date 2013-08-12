@@ -1683,14 +1683,11 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * Visits a {@link SiteSelector_postFix} node, whose children are the following :
    * <p>
    * nodeToken -> <LBRACE><br>
-   * nodeChoice -> ( %0 Name()<br>
-   * .......... .. | %1 Literal() )<br>
+   * expression -> Expression()<br>
    * nodeOptional -> ( %0 ( #0 <COMMA><br>
    * ............ .. . .. . #1 ( &0 Name()<br>
    * ............ .. . .. . .. | &1 Literal() ) )+<br>
-   * ............ .. | %1 ( #0 <COLON><br>
-   * ............ .. . .. . #1 ( &0 Name()<br>
-   * ............ .. . .. . .. | &1 Literal() ) ) )?<br>
+   * ............ .. | %1 ( #0 <COLON> #1 Expression() ) )?<br>
    * nodeToken1 -> <RBRACE><br>
    *
    * @param n - the node to visit
@@ -1702,30 +1699,13 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     // nodeToken -> <LBRACE>
     final NodeToken n0 = n.nodeToken;
     nRes = n0.accept(this, argu);
-    // nodeChoice -> ( %0 Name()
-    // .......... .. | %1 Literal() )
-    final NodeChoice n1 = n.nodeChoice;
-    final NodeChoice n1C = n1;
-    final INode n1CH = n1C.choice;
-    switch (n1C.which) {
-      case 0:
-        // %0 Name()
-        nRes = n1CH.accept(this, argu);
-        break;
-      case 1:
-        // %1 Literal()
-        nRes = n1CH.accept(this, argu);
-        break;
-      default:
-        // should not occur !!!
-        break;
-    }
+    // expression -> Expression()
+    final Expression n1 = n.expression;
+    nRes = n1.accept(this, argu);
     // nodeOptional -> ( %0 ( #0 <COMMA>
     // ............ .. . .. . #1 ( &0 Name()
     // ............ .. . .. . .. | &1 Literal() ) )+
-    // ............ .. | %1 ( #0 <COLON>
-    // ............ .. . .. . #1 ( &0 Name()
-    // ............ .. . .. . .. | &1 Literal() ) ) )?
+    // ............ .. | %1 ( #0 <COLON> #1 Expression() ) )?
     final NodeOptional n2 = n.nodeOptional;
     if (n2.present()) {
       final NodeChoice n2C = (NodeChoice) n2.node;
@@ -1763,31 +1743,14 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
           }
           break;
         case 1:
-          // %1 ( #0 <COLON>
-          // .. . #1 ( &0 Name()
-          // .. . .. | &1 Literal() ) )
+          // %1 ( #0 <COLON> #1 Expression() )
           final NodeSequence n2CHS0 = (NodeSequence) n2CH;
           // #0 <COLON>
           final INode n2CHS0A0 = n2CHS0.elementAt(0);
           nRes = n2CHS0A0.accept(this, argu);
-          // #1 ( &0 Name()
-          // .. | &1 Literal() )
+          // #1 Expression()
           final INode n2CHS0A1 = n2CHS0.elementAt(1);
-          final NodeChoice n2CHS0A1C = (NodeChoice) n2CHS0A1;
-          final INode n2CHS0A1CH = n2CHS0A1C.choice;
-          switch (n2CHS0A1C.which) {
-            case 0:
-              // &0 Name()
-              nRes = n2CHS0A1CH.accept(this, argu);
-              break;
-            case 1:
-              // &1 Literal()
-              nRes = n2CHS0A1CH.accept(this, argu);
-              break;
-            default:
-              // should not occur !!!
-              break;
-          }
+          nRes = n2CHS0A1.accept(this, argu);
           break;
         default:
           // should not occur !!!

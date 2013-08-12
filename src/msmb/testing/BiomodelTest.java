@@ -40,11 +40,11 @@ public class BiomodelTest {
 	public static final Vector<String> models_with_known_problems;
 	static {
 		models_with_known_problems = new Vector<String>();
-		models_with_known_problems.add("BIOMD0000000248");//BUG REPORTED - convert to irreversible not correct because a global quantity was referring to the flux of a reversible reaction, error not catched
-		models_with_known_problems.add("BIOMD0000000392");
-		models_with_known_problems.add("BIOMD0000000393");
-		models_with_known_problems.add("BIOMD0000000435");
-		
+		models_with_known_problems.add("BIOMD0000000451"); //issue in COPASI gui, association of parameters - possible problems also in reversible reactions
+		models_with_known_problems.add("BIOMD0000000450"); //issue in COPASI gui, not loading 
+		models_with_known_problems.add("BIOMD0000000392"); // COPASI issue, not imported in gui
+		models_with_known_problems.add("BIOMD0000000393"); // COPASI gui crash
+	
 		//non-splittable reversible reactions cannot be interpreted as irreversible (simulation results are different)
 		models_with_known_problems.add("BIOMD0000000051");
 		models_with_known_problems.add("BIOMD0000000075");
@@ -55,10 +55,12 @@ public class BiomodelTest {
 		models_with_known_problems.add("BIOMD0000000161");
 		models_with_known_problems.add("BIOMD0000000165");
 		models_with_known_problems.add("BIOMD0000000166");
-		models_with_known_problems.add("BIOMD0000000182");
+		models_with_known_problems.add("BIOMD0000000182"); 
+		models_with_known_problems.add("BIOMD0000000232");
 		models_with_known_problems.add("BIOMD0000000237");
 		models_with_known_problems.add("BIOMD0000000245");
 		models_with_known_problems.add("BIOMD0000000246");
+		models_with_known_problems.add("BIOMD0000000248");		
 		models_with_known_problems.add("BIOMD0000000250");
 		models_with_known_problems.add("BIOMD0000000256");
 		models_with_known_problems.add("BIOMD0000000265");
@@ -66,14 +68,15 @@ public class BiomodelTest {
 		models_with_known_problems.add("BIOMD0000000273");
 		models_with_known_problems.add("BIOMD0000000327");
 		models_with_known_problems.add("BIOMD0000000404");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
-		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
+		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by the "force to be irreversible" change
 			models_with_known_problems.add("BIOMD0000000408");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
-		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
+		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by the "force to be irreversible" change
 		models_with_known_problems.add("BIOMD0000000409");
 		models_with_known_problems.add("BIOMD0000000426");
 		models_with_known_problems.add("BIOMD0000000428");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
-		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by that forced to be irreversible change
+		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by the "force to be irreversible" change
 		models_with_known_problems.add("BIOMD0000000429");
+		models_with_known_problems.add("BIOMD0000000445");
 	
 	}
 		
@@ -221,11 +224,14 @@ public class BiomodelTest {
 		//indices.add(new Integer(206));//1% should be ok
 		//indices.add(new Integer(232));//high relative, but in a single point, all the previous/following points are the same -> rounding issue
 		//indices.add(new Integer(399));//high relative, but in a single point, all the previous/following points are the same -> rounding issue
-			*/
+		//indices.add(new Integer(266)); //2 glucose in different compartments, one with ODE the other fixed, we don't allow that in MSMB but we rename the second species at import and everything works fine
+		*/
 			
-			/*indices.clear();
-			indices.add(new Integer(255)); */
-			
+		/*	indices.clear();
+			indices.add(new Integer(143)); 
+		*/
+			 
+							
 			boolean simulate255 = false;
 			
 			for(int i = 0; i < indices.size(); i++) {
@@ -254,7 +260,7 @@ public class BiomodelTest {
 				System.out.println("... Analyzing "+sbmlID+"...");
 				System.out.flush();
 				
-				
+			
 				if(simulate255==false && sbmlID.compareTo("BIOMD0000000255")==0) {
 					System.out.println("Very big model, we will load it after all the other models");
 					System.out.flush();
@@ -286,11 +292,13 @@ public class BiomodelTest {
 					System.out.flush();
 					outProgressLog.println(sbmlID + ", exported , "+ formatDate.format(new Date()));
 					outProgressLog.flush();
-
+					double maxTime = 200;
+					if(sbmlID.compareTo("BIOMD0000000437")==0) maxTime = 100; //otherwise we get a simutaneous events error
+				
 					RunSimulation.RunSimulations_CPSfromMSMB_OriginalSBML(
 							cpsFile.getAbsolutePath(),
 							sbmlFile.getAbsolutePath(), 
-							2000, 200,new File(nameFileLogReport).getAbsolutePath());
+							2000, maxTime,new File(nameFileLogReport).getAbsolutePath());
 
 
 					outProgressLog.println(sbmlID + ", simulated , "+ formatDate.format(new Date()));

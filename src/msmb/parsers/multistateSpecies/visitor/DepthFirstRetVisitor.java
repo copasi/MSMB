@@ -512,14 +512,17 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * .......... .. | %1 ( &0 <CIRCULAR_FLAG><br>
    * .......... .. . .. | &1 <MULTI_IDENTIFIER><br>
    * .......... .. . .. | &2 <NUMBER><br>
-   * .......... .. . .. | &3 <OPEN_R> )+ )<br>
+   * .......... .. . .. | &3 <OPEN_R><br>
+   * .......... .. . .. | &4 <MATH_ELEMENT> )+ )<br>
    * nodeOptional -> ( #0 ( " " )*<br>
    * ............ .. . #1 <RANGE_SEPARATOR><br>
    * ............ .. . #2 ( " " )*<br>
    * ............ .. . #3 ( %0 <STRING_LITERAL><br>
    * ............ .. . .. | %1 ( &0 <MULTI_IDENTIFIER><br>
    * ............ .. . .. . .. | &1 <NUMBER><br>
-   * ............ .. . .. . .. | &2 <OPEN_R> )+ ) )?<br>
+   * ............ .. . .. . .. | &2 <OPEN_R><br>
+   * ............ .. . .. . .. | &3 <MATH_ELEMENT><br>
+   * ............ .. . .. . .. | &4 <CLOSED_R> )+ ) )?<br>
    *
    * @param n - the node to visit
    * @return the user return information
@@ -530,7 +533,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     // .......... .. | %1 ( &0 <CIRCULAR_FLAG>
     // .......... .. . .. | &1 <MULTI_IDENTIFIER>
     // .......... .. . .. | &2 <NUMBER>
-    // .......... .. . .. | &3 <OPEN_R> )+ )
+    // .......... .. . .. | &3 <OPEN_R>
+    // .......... .. . .. | &4 <MATH_ELEMENT> )+ )
     final NodeChoice n0 = n.nodeChoice;
     final NodeChoice n0C = n0;
     final INode n0CH = n0C.choice;
@@ -543,7 +547,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
         // %1 ( &0 <CIRCULAR_FLAG>
         // .. | &1 <MULTI_IDENTIFIER>
         // .. | &2 <NUMBER>
-        // .. | &3 <OPEN_R> )+
+        // .. | &3 <OPEN_R>
+        // .. | &4 <MATH_ELEMENT> )+
         final NodeList n0CHL = (NodeList) n0CH;
         for (int i = 0; i < n0CHL.size(); i++) {
           final INode n0CHLEi = n0CHL.elementAt(i);
@@ -566,6 +571,10 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
               // &3 <OPEN_R>
               nRes = n0CHLEiCH.accept(this);
               break;
+            case 4:
+              // &4 <MATH_ELEMENT>
+              nRes = n0CHLEiCH.accept(this);
+              break;
             default:
               // should not occur !!!
               break;
@@ -582,7 +591,9 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     // ............ .. . #3 ( %0 <STRING_LITERAL>
     // ............ .. . .. | %1 ( &0 <MULTI_IDENTIFIER>
     // ............ .. . .. . .. | &1 <NUMBER>
-    // ............ .. . .. . .. | &2 <OPEN_R> )+ ) )?
+    // ............ .. . .. . .. | &2 <OPEN_R>
+    // ............ .. . .. . .. | &3 <MATH_ELEMENT>
+    // ............ .. . .. . .. | &4 <CLOSED_R> )+ ) )?
     final NodeOptional n1 = n.nodeOptional;
     if (n1.present()) {
       final NodeSequence n1S0 = (NodeSequence) n1.node;
@@ -610,7 +621,9 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
       // #3 ( %0 <STRING_LITERAL>
       // .. | %1 ( &0 <MULTI_IDENTIFIER>
       // .. .. | &1 <NUMBER>
-      // .. .. | &2 <OPEN_R> )+ )
+      // .. .. | &2 <OPEN_R>
+      // .. .. | &3 <MATH_ELEMENT>
+      // .. .. | &4 <CLOSED_R> )+ )
       final INode n1S0A3 = n1S0.elementAt(3);
       final NodeChoice n1S0A3C = (NodeChoice) n1S0A3;
       final INode n1S0A3CH = n1S0A3C.choice;
@@ -622,7 +635,9 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
         case 1:
           // %1 ( &0 <MULTI_IDENTIFIER>
           // .. | &1 <NUMBER>
-          // .. | &2 <OPEN_R> )+
+          // .. | &2 <OPEN_R>
+          // .. | &3 <MATH_ELEMENT>
+          // .. | &4 <CLOSED_R> )+
           final NodeList n1S0A3CHL1 = (NodeList) n1S0A3CH;
           for (int i = 0; i < n1S0A3CHL1.size(); i++) {
             final INode n1S0A3CHL1Ei = n1S0A3CHL1.elementAt(i);
@@ -639,6 +654,14 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
                 break;
               case 2:
                 // &2 <OPEN_R>
+                nRes = n1S0A3CHL1EiCH.accept(this);
+                break;
+              case 3:
+                // &3 <MATH_ELEMENT>
+                nRes = n1S0A3CHL1EiCH.accept(this);
+                break;
+              case 4:
+                // &4 <CLOSED_R>
                 nRes = n1S0A3CHL1EiCH.accept(this);
                 break;
               default:
@@ -658,19 +681,19 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
   /**
    * Visits a {@link MultistateSpecies_SiteSingleElement_Range} node, whose children are the following :
    * <p>
-   * nodeToken -> <NUMBER><br>
+   * multistateSpecies_SiteSingleElement_Range_Limits -> MultistateSpecies_SiteSingleElement_Range_Limits()<br>
    * nodeListOptional -> ( " " )*<br>
-   * nodeToken1 -> <RANGE_SEPARATOR><br>
+   * nodeToken -> <RANGE_SEPARATOR><br>
    * nodeListOptional1 -> ( " " )*<br>
-   * nodeToken2 -> <NUMBER><br>
+   * multistateSpecies_SiteSingleElement_Range_Limits1 -> MultistateSpecies_SiteSingleElement_Range_Limits()<br>
    *
    * @param n - the node to visit
    * @return the user return information
    */
   public R visit(final MultistateSpecies_SiteSingleElement_Range n) {
     R nRes = null;
-    // nodeToken -> <NUMBER>
-    final NodeToken n0 = n.nodeToken;
+    // multistateSpecies_SiteSingleElement_Range_Limits -> MultistateSpecies_SiteSingleElement_Range_Limits()
+    final MultistateSpecies_SiteSingleElement_Range_Limits n0 = n.multistateSpecies_SiteSingleElement_Range_Limits;
     nRes = n0.accept(this);
     // nodeListOptional -> ( " " )*
     final NodeListOptional n1 = n.nodeListOptional;
@@ -680,8 +703,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
         nRes = n1Mi.accept(this);
       }
     }
-    // nodeToken1 -> <RANGE_SEPARATOR>
-    final NodeToken n2 = n.nodeToken1;
+    // nodeToken -> <RANGE_SEPARATOR>
+    final NodeToken n2 = n.nodeToken;
     nRes = n2.accept(this);
     // nodeListOptional1 -> ( " " )*
     final NodeListOptional n3 = n.nodeListOptional1;
@@ -691,9 +714,102 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
         nRes = n3Mi.accept(this);
       }
     }
-    // nodeToken2 -> <NUMBER>
-    final NodeToken n4 = n.nodeToken2;
+    // multistateSpecies_SiteSingleElement_Range_Limits1 -> MultistateSpecies_SiteSingleElement_Range_Limits()
+    final MultistateSpecies_SiteSingleElement_Range_Limits n4 = n.multistateSpecies_SiteSingleElement_Range_Limits1;
     nRes = n4.accept(this);
+    return nRes;
+  }
+
+  /**
+   * Visits a {@link MultistateSpecies_SiteSingleElement_Range_Limits} node, whose children are the following :
+   * <p>
+   * nodeChoice -> . %0 <NUMBER><br>
+   * .......... .. | %1 <STRING_LITERAL><br>
+   * .......... .. | %2 ( &0 " "<br>
+   * .......... .. . .. | &1 <OPEN_R><br>
+   * .......... .. . .. | &2 <CLOSED_R><br>
+   * .......... .. . .. | &3 <MATH_ELEMENT><br>
+   * .......... .. . .. | &4 <NUMBER><br>
+   * .......... .. . .. | &5 <STRING_LITERAL><br>
+   * .......... .. . .. | &6 <MULTI_IDENTIFIER> )+<br>
+   *
+   * @param n - the node to visit
+   * @return the user return information
+   */
+  public R visit(final MultistateSpecies_SiteSingleElement_Range_Limits n) {
+    R nRes = null;
+    // nodeChoice -> . %0 <NUMBER>
+    // .......... .. | %1 <STRING_LITERAL>
+    // .......... .. | %2 ( &0 " "
+    // .......... .. . .. | &1 <OPEN_R>
+    // .......... .. . .. | &2 <CLOSED_R>
+    // .......... .. . .. | &3 <MATH_ELEMENT>
+    // .......... .. . .. | &4 <NUMBER>
+    // .......... .. . .. | &5 <STRING_LITERAL>
+    // .......... .. . .. | &6 <MULTI_IDENTIFIER> )+
+    final NodeChoice n0C = n.nodeChoice;
+    final INode n0CH = n0C.choice;
+    switch (n0C.which) {
+      case 0:
+        // %0 <NUMBER>
+        nRes = n0CH.accept(this);
+        break;
+      case 1:
+        // %1 <STRING_LITERAL>
+        nRes = n0CH.accept(this);
+        break;
+      case 2:
+        // %2 ( &0 " "
+        // .. | &1 <OPEN_R>
+        // .. | &2 <CLOSED_R>
+        // .. | &3 <MATH_ELEMENT>
+        // .. | &4 <NUMBER>
+        // .. | &5 <STRING_LITERAL>
+        // .. | &6 <MULTI_IDENTIFIER> )+
+        final NodeList n0CHL = (NodeList) n0CH;
+        for (int i = 0; i < n0CHL.size(); i++) {
+          final INode n0CHLEi = n0CHL.elementAt(i);
+          final NodeChoice n0CHLEiC = (NodeChoice) n0CHLEi;
+          final INode n0CHLEiCH = n0CHLEiC.choice;
+          switch (n0CHLEiC.which) {
+            case 0:
+              // &0 " "
+              nRes = n0CHLEiCH.accept(this);
+              break;
+            case 1:
+              // &1 <OPEN_R>
+              nRes = n0CHLEiCH.accept(this);
+              break;
+            case 2:
+              // &2 <CLOSED_R>
+              nRes = n0CHLEiCH.accept(this);
+              break;
+            case 3:
+              // &3 <MATH_ELEMENT>
+              nRes = n0CHLEiCH.accept(this);
+              break;
+            case 4:
+              // &4 <NUMBER>
+              nRes = n0CHLEiCH.accept(this);
+              break;
+            case 5:
+              // &5 <STRING_LITERAL>
+              nRes = n0CHLEiCH.accept(this);
+              break;
+            case 6:
+              // &6 <MULTI_IDENTIFIER>
+              nRes = n0CHLEiCH.accept(this);
+              break;
+            default:
+              // should not occur !!!
+              break;
+          }
+        }
+        break;
+      default:
+        // should not occur !!!
+        break;
+    }
     return nRes;
   }
 

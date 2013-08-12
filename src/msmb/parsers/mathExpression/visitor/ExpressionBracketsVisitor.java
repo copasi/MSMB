@@ -99,7 +99,7 @@ public class ExpressionBracketsVisitor extends DepthFirstVoidVisitor
 		try{
 			String ret = new String();
 		String expression2 = ToStringVisitor.toString(subExpression);
-	      ByteArrayInputStream is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+		  ByteArrayInputStream is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
 		  MR_Expression_Parser react2 = new MR_Expression_Parser(is2);
 	  	  CompleteExpression start2 = react2.CompleteExpression();
 	      ExpressionBracketsVisitor vis = new ExpressionBracketsVisitor();
@@ -173,7 +173,7 @@ public class ExpressionBracketsVisitor extends DepthFirstVoidVisitor
 	        ReversePolishNotation.FULL_BRACKETS = full_brackets;
 	        //System.out.println(ReversePolishNotation.RPNtoInfix(output));
 	        ret = rpn.RPNtoInfix(output);
-			return ret;
+	        return ret;
 		}
 }
 

@@ -572,14 +572,11 @@ public interface IRetArguVisitor<R, A> {
    * Visits a {@link SiteSelector_postFix} node, whose children are the following :
    * <p>
    * nodeToken -> <LBRACE><br>
-   * nodeChoice -> ( %0 Name()<br>
-   * .......... .. | %1 Literal() )<br>
+   * expression -> Expression()<br>
    * nodeOptional -> ( %0 ( #0 <COMMA><br>
    * ............ .. . .. . #1 ( &0 Name()<br>
    * ............ .. . .. . .. | &1 Literal() ) )+<br>
-   * ............ .. | %1 ( #0 <COLON><br>
-   * ............ .. . .. . #1 ( &0 Name()<br>
-   * ............ .. . .. . .. | &1 Literal() ) ) )?<br>
+   * ............ .. | %1 ( #0 <COLON> #1 Expression() ) )?<br>
    * nodeToken1 -> <RBRACE><br>
    *
    * @param n - the node to visit

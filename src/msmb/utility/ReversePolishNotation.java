@@ -1,6 +1,7 @@
 package msmb.utility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -46,7 +47,7 @@ public class ReversePolishNotation {
         OPERATORS.put("/", new int[] { 5, LEFT_ASSOC, 2 });
         OPERATORS.put("%", new int[] { 6, LEFT_ASSOC, 2 });
         OPERATORS.put("^", new int[] { 7, RIGHT_ASSOC, 2 });
-        OPERATORS.put("!", new int[] { 8, RIGHT_ASSOC, 1 });
+        OPERATORS.put("not", new int[] { 8, RIGHT_ASSOC, 1 });
         OPERATORS.put("*unary*minus", new int[] { 8, RIGHT_ASSOC, 1 });
         OPERATORS.put("*unary*plus", new int[] { 8, RIGHT_ASSOC, 1 });
          
@@ -150,10 +151,11 @@ public class ReversePolishNotation {
     	functions.put("function",3);
     	functions.put("test",2);
     	functions.put("sin",1);
-    	functions.put("if",3);
+    	functions.put("exp",1);
+        functions.put("if",3);
     	ReversePolishNotation rpn = new ReversePolishNotation(functions);
    
-    	String original = "a <= b && c < d";//"Day_in_hours - Time <= 12 && Day_in_hours - Time < 0";//"if ( Time < 30 , 0 , 0.075 * ( Time - 30 ) )"; //"1.11 * sin ( 2 * 3.1416 / 800 * ( Time - 200 ) ) + 1.11";//"2 * sin ( 1 ) + 3";//"a && b && c || d && f";//"a + b * c >= 3 + 2 * 1 && ";//" function ( f - b * c + d , ! e , test ( ( b * s ) / 2 , 4 + 2 + ( 3 ) ) ) ";//"function ( A + ( B + ( ! e + 2 * 4 ) ) , 2 )";
+    	String original = "V / ( 2 * TV )";//"a <= b && c < d";//"Day_in_hours - Time <= 12 && Day_in_hours - Time < 0";//"if ( Time < 30 , 0 , 0.075 * ( Time - 30 ) )"; //"1.11 * sin ( 2 * 3.1416 / 800 * ( Time - 200 ) ) + 1.11";//"2 * sin ( 1 ) + 3";//"a && b && c || d && f";//"a + b * c >= 3 + 2 * 1 && ";//" function ( f - b * c + d , ! e , test ( ( b * s ) / 2 , 4 + 2 + ( 3 ) ) ) ";//"function ( A + ( B + ( ! e + 2 * 4 ) ) , 2 )";
         String[] input = original.split(" ");
     	System.out.println("Original: ");
     	System.out.println(original);
@@ -168,6 +170,26 @@ public class ReversePolishNotation {
         System.out.println(rpn.RPNtoInfix(output));
         FULL_BRACKETS = false;
         System.out.println(rpn.RPNtoInfix(output));
+        
+    	String evaluation = " ( 1 + 2 ) * 0.5  + 3";
+        String[] input2 = evaluation.split(" ");
+    	System.out.println("evaluation: ");
+    	System.out.println(evaluation);
+    	 String[] output2 = rpn.infixToRPN(input2);
+    	  System.out.println("RPN:");
+     	  for (String token : output2) {
+              System.out.print(token + " ");
+          }
+          System.out.println("");
+          System.out.println("Evaluated:");
+         try{
+			double r =rpn.evaluateRPN(output2);
+			 System.out.println("Result: " + r); // print result
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+         
     }
     
 	public String RPNtoInfix(String[] inputTokens) {
@@ -196,11 +218,11 @@ public class ReversePolishNotation {
 	              int operatorPrec = OPERATORS.get(token)[0];
 	             if(isAssociative(token, RIGHT_ASSOC)) {
 	            	 if(rightPrec < operatorPrec || FULL_BRACKETS) { right = "(" + right + ")";   	 }
-	            	 if(leftPrec < operatorPrec || FULL_BRACKETS)  { left = "(" + left + ")";     	 }
+	            	 if(leftPrec <= operatorPrec || FULL_BRACKETS)  { left = "(" + left + ")";     	 }
 	            	 stack.push(left + token + right);
 	            	 stackPrecedence.push(operatorPrec);
 	             } else if(isAssociative(token, LEFT_ASSOC)) {
-	            	 if(rightPrec < operatorPrec || (FULL_BRACKETS 
+	            	 if(rightPrec <= operatorPrec || (FULL_BRACKETS 
 	            			// && token.compareTo("&&")!=0 && token.compareTo("||")!=0
 	            			 ) ) { right = "(" + right + ")";   	 } 
 	            	 		// don't add the brackets around terms of a logical series because otherwise I have problems in the parser
@@ -210,7 +232,8 @@ public class ReversePolishNotation {
 	          		 if(token.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0
 	          				 ||
 	          				token.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.BANG))==0 ) token = " " + token + " ";
-	            	 stack.push(left + token + right);
+	            	
+	          		 stack.push(left + token + right);
 		             stackPrecedence.push(operatorPrec);
 	             }
             } else  if (isOperator(token) && OPERATORS.get(token)[2]==1) {
@@ -221,6 +244,8 @@ public class ReversePolishNotation {
 	            	 if(rightPrec < operatorPrec || FULL_BRACKETS) { right = "(" + right + ")";   	 }
 	            	 if(token.compareTo("*unary*minus")==0) token = "-";
 	            	 if(token.compareTo("*unary*plus")==0) token = "+";
+	            	 if(token.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.BANG))==0 ) token = " " + token + " ";
+	            	
 	            	 stack.push(token + right);
 	            	 stackPrecedence.push(operatorPrec);
 	             } 
@@ -236,6 +261,31 @@ public class ReversePolishNotation {
 	    
         return ret;
         }
-
+	
+	
+public double evaluateRPN(Object[] inputTokens ) throws Exception {
+		  Stack<Object> tks = new Stack<Object>();
+          tks.addAll(Arrays.asList(inputTokens));
+          return evaluateRPN_recursive(tks);
+	}
+	
+ private double evaluateRPN_recursive(Stack<Object> tks) throws Exception  {
+	    String tk = tks.pop().toString();
+	    double x,y;
+	    try  {x = Double.parseDouble(tk);}
+	    catch (Exception e)  {
+	      y = evaluateRPN_recursive(tks);  x = evaluateRPN_recursive(tks);
+	      if      (tk.equals("+"))  x += y;
+	      else if (tk.equals("-"))  x -= y;
+	      else if (tk.equals("*"))  x *= y;
+	      else if (tk.equals("/"))  x /= y;
+	      else {
+	    	  System.out.println("Unrecognized tk: "+tk);
+	    	  throw new Exception();
+	      }
+	    }
+	    return x;
+	  }
+   
 	
 }

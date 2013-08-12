@@ -1,5 +1,6 @@
 package msmb.parsers.mathExpression.visitor;
 import msmb.model.Function;
+import msmb.model.GlobalQ;
 import msmb.model.MultiModel;
 import msmb.model.MultistateSpecies;
 import msmb.model.Species;
@@ -91,13 +92,15 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					try {
 						f = multiModel.getFunctionByName(ToStringVisitor.toString(n.name.nodeChoice.choice));
 					} catch (Throwable e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					if(f==null) {	
 						
 						if(!CellParsers.isKeyword(ToStringVisitor.toString(n.name.nodeChoice.choice))) {
-							if(!missing.contains(name))	missing.add(name); 
+							if(!missing.contains(name))	{
+									missing.add(name); 
+							}
+								
 						}
 					}
 			}
@@ -112,7 +115,6 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 						try {
 							f = multiModel.getFunctionByName(name);
 						} catch (Throwable e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						if(f==null){	
@@ -135,7 +137,9 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 						//ok multistate species existing
 					} else if(!CellParsers.isKeyword(name)	
 							&& multiModel.getWhereNameIsUsed(name)==null) {
-						if(!misused.contains(ToStringVisitor.toString(n))&&!missing.contains(name))	missing.add(name);
+						if(!misused.contains(ToStringVisitor.toString(n))&&!missing.contains(name))	{
+							missing.add(name);
+						}
 					}
 				}
 			}
@@ -143,8 +147,9 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			//System.out.println("SPECIES qui: "+ToStringVisitor.toString(n));
 			if(!CellParsers.isKeyword(name)		
 					&& multiModel.getWhereNameIsUsed(name)==null) {
-				if(!missing.contains(name))	
+				if(!missing.contains(name))	{
 					missing.add(name);
+				}
 			}
 		}
 		super.visit(n);
@@ -332,8 +337,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			}
 		}
 		
-		if( ((NodeChoice)(selector.nodeOptional.node)).which == 1 &&
-					i != nselectors) {
+		if( ((NodeChoice)(selector.nodeOptional.node)).which == 1 &&	i != nselectors) {
 			misused.add("\nFunction \"SUM\" is misformed. The weight function "+nameSiteOrFuN+" should be the last element in the list of selectors.");
 			return false;
 		}
@@ -341,9 +345,41 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		if( ((NodeChoice)(selector.nodeOptional.node)).which == 0) { //site selector
 			SiteSelector_postFix siteSel = (SiteSelector_postFix) ((NodeChoice)(selector.nodeOptional.node)).choice;
 			Vector<String> listedStates = new Vector<String>();
-			String stateFirst = ToStringVisitor.toString(siteSel.nodeChoice);
-			listedStates.add(stateFirst);
+			String stateFirst = ToStringVisitor.toString(siteSel.expression);
+			if(!sp.getSitesNames().contains(nameSiteOrFuN)) {
+				misused.add("\nFunction \"SUM\" is misformed. The site "+nameSiteOrFuN+" does not exist for species "+speciesName+".");
+				return false;
+			}
 			
+			if(!sp.getSitesRangesWithVariables().containsKey(nameSiteOrFuN)) {
+					listedStates.add(stateFirst);
+			} else {
+				try{
+					Long value = Math.round(Double.parseDouble(stateFirst));
+					listedStates.add(value.toString()); // it's a normal number
+				} catch(Exception ex) {
+					//it's a variable or an expression
+					try{
+						listedStates.add(multiModel.getGlobalQ_integerValue(stateFirst).toString());
+					} catch(Throwable ex2) {
+						misused.add("\nProblems evaluating element "+stateFirst);
+						return false;
+					}
+					/*
+					GlobalQ limit = multiModel.getGlobalQ(stateFirst);
+					if(limit == null || limit.getType() != Constants.GlobalQType.FIXED.copasiType) {
+						misused.add("\nLower bound variable "+stateFirst+ " is not defined or its type is not fixed.");
+						return false;
+					}
+					try{
+						Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
+						listedStates.add(value.toString());
+					} catch(Exception ex2) {
+						System.out.println("!!!! 8 INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
+					}*/
+				}
+				
+			}
 			
 			boolean range = false;
 			NodeChoice sequenceOrRange = (NodeChoice)siteSel.nodeOptional.node;
@@ -356,7 +392,36 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 				}
 			} else { // range
 				String stateSecond = ToStringVisitor.toString(((NodeSequence)(sequenceOrRange.choice)).nodes.get(1));
-				listedStates.add(stateSecond);
+				if(!sp.getSitesRangesWithVariables().containsKey(nameSiteOrFuN)) {
+					listedStates.add(stateSecond);
+			} else {
+				try{
+					Long value = Math.round(Double.parseDouble(stateSecond));
+					listedStates.add(value.toString()); // it's a normal number
+				} catch(Exception ex) {
+					//it's a variable or an expression
+					try{
+						listedStates.add(multiModel.getGlobalQ_integerValue(stateSecond).toString());
+					} catch(Throwable ex2) {
+						misused.add("\nProblems evaluating element "+stateSecond);
+						return false;
+					}
+					/*
+					GlobalQ limit = multiModel.getGlobalQ(stateSecond);
+					if(limit == null || limit.getType() != Constants.GlobalQType.FIXED.copasiType) {
+						misused.add("\nLower bound variable "+stateSecond+ " is not defined or its type is not fixed.");
+						return false;
+					}
+					try{
+						Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
+						listedStates.add(value.toString());
+					} catch(Exception ex2) {
+						System.out.println("!!!! 9 INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
+					}*/
+					
+					
+				}
+			}
 				range = true;
 			}
 			
@@ -367,7 +432,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			
 			
 			for(int i1 = 0; i1< listedStates.size(); i1++) {
-				if( states.indexOf(listedStates.get(i1)) == -1) {
+				if( states.indexOf(listedStates.get(i1)) == -1 ) {
 					misused.add("\nFunction \"SUM\" is misformed. The site's state "+listedStates.get(i1)+" does not exist for site "+nameSiteOrFuN+".");
 					return false;
 				}
@@ -458,7 +523,9 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 				  }
 				  
 				  
-				if(realUndef.size() > 0) { missing.addAll(realUndef); return false;}
+				if(realUndef.size() > 0) { 
+					missing.addAll(realUndef); return false;
+				}
 				if(misused2.size() > 0) { misused.addAll(undef); return false;}
 				
 				
@@ -600,6 +667,8 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			else {
 			
 				String element = ToStringVisitor.toString(elementNode);
+			
+				
 				/*Integer definedInTable = multiModel.getWhereNameIsUsed(element);
 				if(definedInTable==null) {//it means that is a number or an expression... and if the function requires something else than a variable, this is not allowed
 					misused.add("Encountered \""+element+"\". Was expecting a "+types.get(i));
@@ -831,7 +900,8 @@ class SumExpansion {
 
 	public Vector<Species> getSpeciesSum(){
 		try {
-			MultistateSpecies ms = new MultistateSpecies(null, new String(species_name));
+			MultistateSpecies ms = new MultistateSpecies(multiModel, new String(species_name));
+			ms = new MultistateSpecies(multiModel, ms.printCompleteDefinition_withActualValues());
 			for(int i = 0; i < sites.size(); i++) {
 				ms.addSite_vector(sites.get(i),sitesStates.get(i));
 			}

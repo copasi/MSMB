@@ -167,6 +167,12 @@ public class GlobalQDB {
 								 break;
 							 }
 						 }
+						 
+						 if(MainGui.importFromSBMLorCPS) {
+							 	//because there may be circular references in the expressions of different parameters so
+							 	//each has to be added anyway and then checked only at the end
+								 return addChangeGlobalQ_withoutParsing(name,  initialValue, type, expression, notes);
+						 }
 						
 						 if(undef.size() > 0){
 							 String message = "Missing element definition: " + undef.toString();
@@ -217,7 +223,8 @@ public class GlobalQDB {
 			c.setType(type);
 			globalQIndexes.put(name, ind);
 			globalQVector.put(ind,c);
-			multiModel.addNamedElement(name, Constants.TitlesTabs.GLOBALQ.index);
+			if(!MainGui.importFromSBMLorCPS) multiModel.addNamedElement(c.getName(), Constants.TitlesTabs.GLOBALQ.index);
+			
 			if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.GLOBALQ.description, ind);
 			return ind;
 		}

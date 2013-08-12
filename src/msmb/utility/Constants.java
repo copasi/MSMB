@@ -1027,7 +1027,8 @@ public class Constants {
 			   SITE(6,"Site", Constants.SITE_FOR_WEIGHT_IN_SUM,"SITE"),
 			   TIME(7,"Time", CFunctionParameter.TIME,"TIME"),
 			   MISSING(-1,"Missing", -1,"MISSING"),
-			    FUNCTION(-2,"Function", Constants.PARAM_TYPE_FUN,"FUN");
+			    FUNCTION(-2,"Function", Constants.PARAM_TYPE_FUN,"FUN"), 
+			    ASSIGNMENT_FLAG(-3,"AssignFlagForAutocompletion", Constants.ASSIGNMENT_FLAG_FOR_AUTOCOMPLETION,"VAR");
 						   
 						          
 			   final int arrayIndex;
@@ -1129,6 +1130,7 @@ public class Constants {
 		public static final int SITE_FOR_WEIGHT_IN_SUM = -376;
 		public static final int ROLE_EXPRESSION = -603;
 		public static final int PARAM_TYPE_FUN = -739;
+		public static final int ASSIGNMENT_FLAG_FOR_AUTOCOMPLETION = -9875;
 		
 		public static final String DEFAULT_COMPARTMENT_NAME = new String("cell");
 		public static final String DEFAULT_GLOBALQ_INITIAL_VALUE = new String("0.0");

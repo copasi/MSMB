@@ -30,22 +30,18 @@ public class Species   implements Serializable{
 	public void setExpression(MultiModel m, String expr) throws Throwable {	
 		if(expr.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		if(expr.length() == 0) return ;
+		boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
 		try {
-		
-			
 			this.expression = expr;	
-		
 			CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
-			boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
 			MainGui.importFromSBMLorCPS = false;
 			this.expression = m.reprintExpression_forceCompressionElements(expression,Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
-			MainGui.importFromSBMLorCPS = oldImportFromSBMLorCPS;
-					
 		} catch (Exception ex) {
 
 			throw ex;
 		} finally {
 			editableExpression = expr;
+			MainGui.importFromSBMLorCPS = oldImportFromSBMLorCPS;
 		}
 	}
 
@@ -77,7 +73,9 @@ public class Species   implements Serializable{
 		return r;
 	}
 	
-	public String getSpeciesName() { return name; }
+	public String getSpeciesName() { 
+				 return name; 
+	}
 	public String getDisplayedName() { 	return getSpeciesName();	} //multistate species override this method
 	public String getName() { return getDisplayedName(); }
 	
@@ -85,7 +83,7 @@ public class Species   implements Serializable{
 		try {
 		this.name = new String(newName.getBytes("UTF-8"),"UTF-8");
 	} catch (UnsupportedEncodingException e) {
-		e.printStackTrace();
+		//e.printStackTrace();
 	}	}
 	
 	public Vector<String> getInitialQuantity() {	

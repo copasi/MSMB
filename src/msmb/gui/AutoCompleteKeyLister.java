@@ -39,7 +39,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 	boolean manuallyTriggered = false;
 	MultiModel multiModel = null;
 	//Timer timer = null;
-	private JTextField source;
+	private JTextComponent source;
 	
 	//public void stopTimerAutocompletion() {	timer.stop();}
 	
@@ -194,7 +194,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 		if(keyCode == KeyEvent.VK_ESCAPE) {
 			return;
 		}
-		source = (JTextField)e.getSource();
+		source = (JTextComponent)e.getSource();
 		
 		if ((e.getModifiers() & InputEvent.CTRL_MASK) != 0 && (keyCode == KeyEvent.VK_H) ) {
 			/*source = (JTextField)e.getSource();
@@ -207,7 +207,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 				
 			}*/
 			manuallyTriggered = true;
-			
+			 System.out.println("manuallyTriggered  "+manuallyTriggered);
 			applyAutocompletion();
 			return;
 		}	
@@ -269,14 +269,14 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 	}
 
 	private void applyAutocompletion() {
-		String testo = source.getText();
+		String text = source.getText();
 		int caret = source.getCaretPosition();
 		
 		if(caret>0) {
 			char prev_char = ' ';
-			if(caret > 0) prev_char = testo.charAt(caret-1);
-			   String prevText = testo.substring(0,caret);
-				/*char trigger = '.';
+			if(caret > 0) prev_char = text.charAt(caret-1);
+			   String prevText = text.substring(0,caret);
+						/*char trigger = '.';
 				if(prev_char==' ') trigger = '%';
 			   
 			   if(!prevText.endsWith(new String()+trigger)) {
@@ -309,12 +309,12 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 						int initialQuotedAt = prevText.lastIndexOf("\"");
 						applyBetweenQuotesCompletion(initialQuotedAt+1, prevText);
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					
 				}
 	} else {
+		 System.out.println("caret 0??");
 		doGenericAutocompletion();
 	}
 	}

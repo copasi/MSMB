@@ -322,6 +322,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 		             	MainGui.cellSelectedRow= row;
 		             	MainGui.cellSelectedCol=col;
 		             	MainGui.cellTableEdited = model.getTableName();
+		   
 		             	highlightCellSelectedRow();
 		             	
 		            	if(model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description) == 0) {
@@ -439,6 +440,19 @@ class CustomJTable_MSMB extends CustomJTable  {
 			         	    // popupMenu.addSeparator();
 				         	//popupMenu.add(customView);
 			         		
+			         	    
+			         	   if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+			         			  JMenuItem textAreaExpression = new JMenuItem("Edit in Text Area");
+			         			 textAreaExpression.addActionListener(new ActionListener() {
+			         				  @Override
+			         				  public void actionPerformed(ActionEvent e) {
+			         					  MainGui.openTextAreaExpression(model.getValueAt(row, col).toString());
+			         				  }
+			         			  });
+			         			  popupMenu.add(textAreaExpression);	
+			         		  
+			         	   }
+			         	     
 			         	   if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
 			         			  JMenuItem goToDefinition = new JMenuItem("Go to Function Definition");
 			         			  goToDefinition.addActionListener(new ActionListener() {
@@ -512,7 +526,8 @@ class CustomJTable_MSMB extends CustomJTable  {
 				             showPopup = true;
 				         }
 			             
-			             if(col == Constants.ReactionsColumns.REACTION.index && !isCellEditable(row, col)) {
+			             if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0
+			            		 && col == Constants.ReactionsColumns.REACTION.index && !isCellEditable(row, col)) {
 		         			  //reaction linked to a complex
 		         			 JMenuItem unlinkReaction = new JMenuItem("Unlink reaction");
 		         			unlinkReaction.addActionListener(new ActionListener() {
@@ -619,6 +634,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 			updateDisabledCell_MSMB(rowIndex, vColIndex);
 			
 		
+		
 			
 			//if(renderer instanceof EditableCellRenderer_2 ) {
 				
@@ -694,7 +710,9 @@ class CustomJTable_MSMB extends CustomJTable  {
 				else if(c instanceof ScientificFormatCellRenderer) ((ScientificFormatCellRenderer)c).setBorder(compound);
 			} 
 			
-			if((isCellWithError(rowIndex,vColIndex))&&isRowSelected(rowIndex)){
+		if((isCellWithError(rowIndex,vColIndex))
+					//&&isRowSelected(rowIndex)
+					){
 				Border compound = null;
 				Border redline = BorderFactory.createLineBorder(GraphicalProperties.color_cell_with_errors,3);
 				compound = BorderFactory.createCompoundBorder(redline, compound);
@@ -730,7 +748,6 @@ class CustomJTable_MSMB extends CustomJTable  {
 				}	else {
 					if(c instanceof EditableCellRenderer_MSMB) ((EditableCellRenderer_MSMB)c).setBorder(null);
 					else if(c instanceof ScientificFormatCellRenderer) ((ScientificFormatCellRenderer)c).setBorder(null);
-					
 				}
 			} 
 			
@@ -752,31 +769,10 @@ class CustomJTable_MSMB extends CustomJTable  {
 		int selRow = -1;
 		if(model.getTableName().compareTo(Constants.MultistateBuilder_QUANTITIES_description)==0) {
      		selRow=MultistateBuilderFrame.row_to_highlight;
-     	} else	/* if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description)==0) { 
-	     		selRow=MainGui.row_to_highlight.get(Constants.TitlesTabs.SPECIES.index);	
-	     	}
-	     	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) { 
-	     		selRow=MainGui.row_to_highlight.get(Constants.TitlesTabs.REACTIONS.index);	
-	     	}
-	     	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) { 
-	     		selRow=MainGui.row_to_highlight.get(Constants.TitlesTabs.GLOBALQ.index);	
-	     	}
-	     	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {
-	     		selRow=MainGui.row_to_highlight.get(Constants.TitlesTabs.FUNCTIONS.index);	
-	     	}
-	     	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.BUILTINFUNCTIONS.description)==0) {
-	     		selRow=MainGui.row_to_highlight.get(Constants.TitlesTabs.BUILTINFUNCTIONS.index);	
-	     	}
-	     	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.EVENTS.description)==0) { 
-	     		selRow=MainGui.row_to_highlight.get(Constants.TitlesTabs.EVENTS.index);	
-	     	}
-	     	else if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) { 
-	     		selRow=MainGui.row_to_highlight.get(Constants.TitlesTabs.COMPARTMENTS.index);	
-	     	}  */
-     		
+     	} else	{
      		selRow = MainGui.row_to_highlight.get(MainGui.jTabGeneral.getSelectedIndex());
-	     	 
-			return row==selRow;
+     	}
+     	return row==selRow;
 	}
 	
 	

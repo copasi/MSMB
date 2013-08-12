@@ -1,5 +1,6 @@
 package msmb.model;
 
+import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +16,9 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import com.google.common.collect.HashBiMap;
 
 import msmb.gui.MainGui;
+import msmb.parsers.multistateSpecies.MR_MultistateSpecies_Parser;
+import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Operator;
+import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
 import msmb.utility.CellParsers;
 import msmb.utility.Constants;
 
@@ -87,11 +91,12 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 	public ComplexSpecies(String complete_string) throws Exception {
 		super(null, complete_string);
 		setType(Constants.SpeciesType.COMPLEX.copasiType);
-	
+		prefixName = new String(complete_string);
 	}
 	
 	public ComplexSpecies(ComplexSpecies c) throws Exception {
-		this(c.getDisplayedName());
+		super(null, c.getDisplayedName());
+		setType(Constants.SpeciesType.COMPLEX.copasiType);
 		components.addAll(c.components);
 		components_multi.putAll(c.components_multi);
 		complex_sitesConfiguration.putAll(c.complex_sitesConfiguration);
@@ -105,6 +110,7 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 		//linkReaction = c.linkReaction;
 		complexSite_emptyTracking_implicitAllStates.addAll(c.complexSite_emptyTracking_implicitAllStates);
 		setCompartment(MainGui.multiModel, c.getCompartment_listString());
+		setInitialQuantity(c.getInitialQuantity_multi());
 	}
 
 	//for now we don't want to allow multiple multistate species with the same name in a complex
@@ -151,11 +157,21 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 		
 		Set<String> keys = components_multi.keySet();
 		for(String k : keys) {
+			MutablePair<String, String> alias = CellParsers.extractAlias(k);
+			k = alias.right;
 			ret += k +"(";
-			Vector<MutablePair<String, String>> sitesList = components_multi.get(k);
+
+			Vector<MutablePair<String, String>> sitesList = null;
+			if(alias.left == null) 	 sitesList = components_multi.get(k);
+			else	{
+				sitesList =  components_multi.get(alias.left+"="+alias.right);
+			}
+		
 			for(MutablePair<String, String> pair : sitesList){
 					ret += pair.left;
-					MutablePair toFind = new MutablePair<String, String>(k,pair.left);
+					MutablePair toFind = null;
+					if(alias.left == null) toFind = new MutablePair<String, String>(k,pair.left);
+					else	toFind = new MutablePair<String, String>(alias.left, pair.left);
 					String siteComplex = complexSite_originSpecies_originSite.inverse().get(toFind);
 					ret += "="+fullComplexName+"."+siteComplex;
 					ret +=";";
@@ -219,19 +235,24 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 	}
 	
 	private String getFullComplexName() {
-		if(customFullName.length() >0) return customFullName;
+		
+		if(customFullName.length() >0) return CellParsers.cleanName(customFullName);
 		
 		String completeDef = prefixName;
 		for(String el : components) {
+			if(el.startsWith("\"")&&el.endsWith("\"")) el = el.substring(1, el.length()-1);
 			if(!(CellParsers.isMultistateSpeciesName(el))) completeDef += "_"+el;
 		}
 		if(complex_sitesConfiguration.keySet().size() > 0) {
 			Set<String> keys = components_multi.keySet();
 			for(String k : keys) {
+				if(k.startsWith("\"")&&k.endsWith("\"")) k = k.substring(1, k.length()-1);
+				MutablePair<String, String> alias = CellParsers.extractAlias(k);
+				k = alias.right;
 				completeDef += "_"+k;
 			}
 		}
-		return completeDef;
+		return CellParsers.cleanName(completeDef);
 	}
 
 	public String getFullComplexDefinition() {
@@ -274,8 +295,15 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 				
 		String currentMultistateSpeciesName = new String();
 		for(Vector<String> react : for_reactions) {
-			complexSite_originSpecies_originSite.put(react.get(0), new MutablePair<String, String>(react.get(1),react.get(2)));
-			currentMultistateSpeciesName = react.get(1);
+			MutablePair<String, String> element = new MutablePair<String, String>(react.get(1),react.get(2));
+			String alias = "";
+			if(complexSite_originSpecies_originSite.containsValue(element)) {
+				alias = getNextAlias(element);
+				element.left = alias;
+			}
+			complexSite_originSpecies_originSite.put(react.get(0), element);
+			if(alias.length() > 0) currentMultistateSpeciesName = alias+"=";
+			currentMultistateSpeciesName += react.get(1);
 		}
 		
 		Iterator<String> it = currentMultistateConfiguration.keySet().iterator();
@@ -325,7 +353,25 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 				components.remove(m.getSpeciesName());
 				components_multi.remove(m.getSpeciesName());
 			} catch (Exception e) {
-				//e.printStackTrace();
+				//cases with implicit track all
+				try{
+					ByteArrayInputStream is = new ByteArrayInputStream(removedComponent.getBytes("UTF-8"));
+					 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+					 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+					 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(null);
+					 start.accept(v);
+					for(Object site : v.getSitesNames()) {
+						MutablePair toFind = new MutablePair<String, String>(v.getSpeciesName(),site.toString());
+						String siteComplex = complexSite_originSpecies_originSite.inverse().get(toFind);
+						complexSite_originSpecies_originSite.remove(siteComplex);
+						complex_sitesConfiguration.remove(siteComplex);
+					}
+					components.remove(v.getSpeciesName());
+					components_multi.remove(v.getSpeciesName());
+				 
+				} catch (Exception e2) {
+					//e2.printStackTrace();
+				}
 			}
 			
 		} 
@@ -590,8 +636,6 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 			
 			linkedReactionIndexes = (MutablePair<Integer, Integer>) serializedInfo.get(8);
 			
-			//linkReaction = ((Boolean) serializedInfo.get(9)).booleanValue();
-		
 		} catch(Throwable e) {
 			e.printStackTrace();
 		}
@@ -608,12 +652,44 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 		ret.add(complexSite_emptyTracking_implicitAllStates);
 		ret.add(new Boolean(returnOnlySpecies));
 		ret.add(linkedReactionIndexes);
-	//	ret.add(new Boolean(linkReaction));
 		return ret;
 	}
+
+
+
+
+	private HashMap<String, String> aliases = new HashMap<String, String>(); 
 	
-
-
-
-
+	public String getNextAlias(MutablePair<String, String> alreadyTrackedMulti) {
+		String alias = "";
+		
+		if(getComponents_multi().containsKey(alreadyTrackedMulti.left)) {
+			alias = new String("A");
+			int  aliasCounter = aliases.size()+1;
+			
+			if(!aliases.containsValue(alreadyTrackedMulti.left)) {
+				String previousElement = complexSite_originSpecies_originSite.inverse().get(alreadyTrackedMulti);
+				String aliasPrevious = alias+aliasCounter++;
+				complexSite_originSpecies_originSite.put(previousElement, new MutablePair<String, String>( aliasPrevious,alreadyTrackedMulti.right));
+				Vector<MutablePair<String,String>> entryPrevious = components_multi.get(alreadyTrackedMulti.left);
+				
+				components_multi.put(aliasPrevious+"="+alreadyTrackedMulti.left, entryPrevious);
+				components_multi.remove(alreadyTrackedMulti.left);
+			//	complexSite_originSpecies_originSite.remove(alreadyTrackedMulti.left);
+				
+				aliases.put(aliasPrevious, alreadyTrackedMulti.left);
+			}
+			
+			while(true) {
+				alias += aliasCounter++;
+				if(!aliases.containsKey(alias)) {
+					aliases.put(alias, null);
+					break;
+				}
+			}
+			System.out.println("aliases now: "+aliases);
+		}
+		return alias;
+	}
+	
 }

@@ -1,6 +1,9 @@
 package msmb.model;
 
 import msmb.gui.MainGui;
+import msmb.utility.CellParsers;
+import msmb.utility.Constants;
+import msmb.utility.MySyntaxException;
 
 import java.util.*;
 
@@ -22,27 +25,28 @@ public class Event {
 	public void setExpandActionVolume(int expandExtension) { this.expandActionVolume = expandExtension; }
 	public int getExpandActionVolume() { return this.expandActionVolume; }
 	
-	
 	public Event(String name) {
-		//if(name.length()<=0) name = "event";
 		this.name = name;
-		
 		if(MainGui.importFromTables) shortCut_recalculateConcentration_changingVolume = true;
 	}
 	
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		//if(name.length()<=0) name = "";
-		this.name = name;
-	}
-	public String getTrigger() {
-		return trigger;
-	}
-	public void setTrigger(String trigger) {
+	public String getName() {		return name;	}
+	public void setName(String name) {	this.name = name;	}
+	public String getTrigger() {		return trigger;	}
+	
+	public void setTrigger(MultiModel m, String trigger) throws Throwable {
+		if(trigger.length()==0) return;
 		this.trigger = trigger;
+		try {
+				CellParsers.parseExpression_getUndefMisused(m, trigger, Constants.TitlesTabs.EVENTS.description,Constants.EventsColumns.TRIGGER.description);
+			} catch (MySyntaxException ex) {
+				throw ex;
+			} catch(Throwable ex) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+				throw new MySyntaxException(Constants.EventsColumns.TRIGGER.index, "Problems parsing the trigger. One of the elements is a misformed mathematical expression.", Constants.TitlesTabs.EVENTS.description); 
+			} 
 	}
+
 	public Vector<String> getActions() {
 		return actions;
 	}
@@ -54,11 +58,31 @@ public class Event {
 		this.notes = notes;
 	}
 	
-	public void setActions(String actions) {
-		StringTokenizer st = new StringTokenizer(actions, ";");
-		while(st.hasMoreTokens())  {
-			this.actions.add(st.nextToken().trim());
+	public void setActions(MultiModel m, String actions) throws Throwable {
+		
+		Vector<String> elements = new Vector<String>();
+		try {
+			elements = CellParsers.extractElementsInList(m,actions, 
+					Constants.TitlesTabs.EVENTS.description, Constants.EventsColumns.ACTIONS.description);
+		}  catch(Throwable ex) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+			throw new MySyntaxException(Constants.EventsColumns.ACTIONS.index, "Problems parsing the list of actions. One of the elements is a misformed mathematical expression.", Constants.TitlesTabs.EVENTS.description); 
+		} 
+		
+		MySyntaxException complete = null; 
+			
+		for(String el : elements) {
+			try {
+				CellParsers.parseExpression_getUndefMisused(m, el, Constants.TitlesTabs.EVENTS.description,Constants.EventsColumns.ACTIONS.description);
+			} catch(Throwable ex) {
+				if(complete == null) complete = new MySyntaxException(Constants.EventsColumns.ACTIONS.index, ex.getMessage(), Constants.TitlesTabs.EVENTS.description);
+				else {
+					complete = new MySyntaxException(complete.getMessage()+System.lineSeparator()+ex.getMessage(), complete);
+				}
+			} 
+			this.actions.add(el.trim());
 		}
+		if(complete != null) throw complete;
 	}
 	
 	public String getActionsAsString() {

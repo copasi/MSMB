@@ -54,8 +54,8 @@ public class MultistateBuilderFrame extends JDialog	 {
 	public MultistateBuilderFrame(MainGui owner) throws Exception {
 		super(owner);
 		initialize();
-		species = new MultistateSpecies(MainGui.multiModel,new String());
 		parentFrame = owner;
+		GraphicalProperties.resetFonts(this);
 	}
 	
 	private void initialize() {
@@ -81,7 +81,24 @@ public class MultistateBuilderFrame extends JDialog	 {
          this.setTabbedPane_enable(false);
         
   }
-
+	
+	@Override
+	public void setVisible(boolean b) {
+		//Fix size elements so they are relative, no x-y and then I can pack and reset font with the rest of the windows
+	//	GraphicalProperties.resetFonts(this);
+	//	pack();
+		setLocationRelativeTo(null);
+		try {
+			if(species==null || species.getName().length()==0) {
+				species = new MultistateSpecies(MainGui.multiModel,new String());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		super.setVisible(true);
+	}
+	
+	
 	
 	private JPanel getJContentPane() {
 		if (jContentPane == null) {
@@ -495,8 +512,8 @@ private void applyChangeSite() {
  			return;
 		}
    	
-		int lower = (Integer)this.spinner_lower.getValue();
-		int upper = (Integer)this.spinner_upper.getValue();
+		Integer lower = (Integer)this.spinner_lower.getValue();
+		Integer upper = (Integer)this.spinner_upper.getValue();
 		
 		if(upper < lower) {
 			  JOptionPane.showMessageDialog(this,"The upper value of the range cannot be smaller than the lower!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -510,10 +527,11 @@ private void applyChangeSite() {
 				this.species.addSite_string(name, this.jTextField_listStates.getText().trim());
 			}
 			else {
-				this.species.addSite_range(name, lower, upper);
+				this.species.addSite_range(name, lower.toString(), upper.toString());
 			}
 		} catch(Exception ex) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				ex.printStackTrace();
 			//problem in parsing species (e.g. cdhBoolWrong(p{TRUE,FALSE,somethingElse}))
 			  JOptionPane.showMessageDialog(this,"Problem parsing the current site. The definition cannot be accepted. Some states are using reserved word.", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
@@ -695,7 +713,8 @@ private void applyChangeSite() {
 					try{
 						updateModel();
 					} catch(Throwable ex) {
-						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
+						//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+							ex.printStackTrace();
 					}
 				}
 			});
@@ -712,8 +731,11 @@ private void applyChangeSite() {
 	
 	public void setMultistateSpecies(MultistateSpecies sp) {
 		this.species =  sp; //new MultistateSpecies(completeDef);
+		String speciesName = this.species.getSpeciesName();
+		 if(speciesName.startsWith("\"")&&speciesName.endsWith("\"")) speciesName = speciesName.substring(1, speciesName.length()-1);
 			
-		this.jTextField_species.setText(this.species.getSpeciesName());
+			
+		this.jTextField_species.setText(speciesName);
 		if(jTextField_species.getText().length() >0) {
 			this.setTabbedPane_enable(true);
 		}

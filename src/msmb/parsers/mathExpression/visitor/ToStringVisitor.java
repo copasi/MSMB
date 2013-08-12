@@ -1,5 +1,6 @@
 package msmb.parsers.mathExpression.visitor;
 
+import msmb.parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 import msmb.parsers.mathExpression.syntaxtree.*;
 
 import java.io.ByteArrayOutputStream;
@@ -17,7 +18,6 @@ public class ToStringVisitor extends DepthFirstVoidVisitor {
 		try {
 		out = new OutputStreamWriter(o, "UTF-8");
 	} catch (UnsupportedEncodingException e) {
-		// TODO Auto-generated catch block
 		e.printStackTrace();
 	} }
 	
@@ -25,20 +25,31 @@ public class ToStringVisitor extends DepthFirstVoidVisitor {
 	public void flushWriter()  { try {
 		out.flush();
 	} catch (IOException e) {
-		// TODO Auto-generated catch block
 		e.printStackTrace();
 	} }
 
 	@Override
-	public void visit(final NodeToken n) {   printToken(n.tokenImage); }
+	public void visit(final NodeToken n) {  
+		printToken(n.tokenImage); 
+	}
 
-	private void printToken(final String s) {	try {
-		out.write(s);
-		out.flush();
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}		
+	private void printToken(final String s) {	
+		try {
+			if(s.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0||
+					s.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.BANG	))==0) {
+				out.write(" ");
+			}
+			out.write(s);
+
+			if(s.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.XOR))==0||
+					s.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.BANG))==0) {
+				out.write(" ");
+			}
+		
+			out.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}		
 	}
 
 	public static String toString(INode element) {
@@ -48,9 +59,25 @@ public class ToStringVisitor extends DepthFirstVoidVisitor {
 		try {
 			return new String(string.toByteArray(),"UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	
+	public static String toBinary(String s) {
+		 byte[] bytes = s.getBytes();
+		  StringBuilder binary = new StringBuilder();
+		  for (byte b : bytes)
+		  {
+		     int val = b;
+		     for (int i = 0; i < 8; i++)
+		     {
+		        binary.append((val & 128) == 0 ? 0 : 1);
+		        val <<= 1;
+		     }
+		     binary.append(' ');
+		  }
+		  return new String(binary);
 	}
 }

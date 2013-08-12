@@ -23,8 +23,10 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import  msmb.parsers.mathExpression.MR_Expression_Parser;
 import  msmb.parsers.mathExpression.syntaxtree.CompleteExpression;
 import  msmb.parsers.mathExpression.syntaxtree.SingleFunctionCall;
+import msmb.parsers.mathExpression.visitor.EvaluateExpressionVisitor;
 import  msmb.parsers.mathExpression.visitor.GetFunctionNameVisitor;
 import  msmb.parsers.mathExpression.visitor.Look4UndefinedMisusedVisitor;
+import msmb.parsers.mathExpression.visitor.ToStringVisitor;
 
 public class ConsistencyChecks {
 
@@ -81,6 +83,12 @@ public class ConsistencyChecks {
 		optionalColumns_Events.add(Constants.EventsColumns.NOTES.index);
 	}
 	
+	private static final HashSet<Integer> suggestedColumns_Events;
+	static {
+		suggestedColumns_Events = new HashSet<Integer>();
+		suggestedColumns_Events.add(Constants.EventsColumns.ACTIONS.index);
+	}
+	
 	public static HashSet<String> emptyFields = new HashSet<String>();
 	public static HashSet<String> emptyNonMandatoryFields = new HashSet<String>();
 	
@@ -105,7 +113,16 @@ public class ConsistencyChecks {
 			}else if(table_name.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) {
 				if(!optionalColumns_Compartments.contains(col)) {	emptyFields.add(key); addedInEmptyFields = true;}
 			}else if(table_name.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) {
-				if(!optionalColumns_Events.contains(col)) {	emptyFields.add(key); addedInEmptyFields = true;}
+				if(!optionalColumns_Events.contains(col)) {	
+					if(suggestedColumns_Events.contains(col)){
+						addedInEmptyNonMandatoryFields = true;
+						emptyNonMandatoryFields.add(key);
+					}
+					else  {
+						emptyFields.add(key); 
+						addedInEmptyFields = true;
+					}
+				}
 			}else if(table_name.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) {
 				if(!optionalColumns_Functions.contains(col)) {	emptyFields.add(key); addedInEmptyFields = true;}
 			}else if(table_name.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) {
@@ -132,7 +149,7 @@ public class ConsistencyChecks {
 			}
 	}
 	
-	public static void remove_EmptyFields(String table_name, Integer row, Integer col) throws Exception {
+	public static void remove_EmptyFields(String table_name, Integer row, Integer col) {
 		emptyFields.remove(table_name+"_"+row+"_"+col);
 		emptyNonMandatoryFields.remove(table_name+"_"+row+"_"+col);
 		MainGui.clear_debugMessages_relatedWith(table_name,DebugConstants.PriorityType.EMPTY.priorityCode,row,col);
@@ -223,7 +240,14 @@ public class ConsistencyChecks {
 					boolean errorAlreadyAdded = false;
 					//String parameterNameInFunction = (String)paramMapping.get(iii);
 					String actualModelParameter = (String)paramMapping.get(iii+1);
+					
+					MutablePair<String, Vector<String>> nameAndPossibleExtensions = CellParsers.extractNameExtensions(actualModelParameter);
+					
+					Vector<String> extensions = nameAndPossibleExtensions.right;
+					actualModelParameter = nameAndPossibleExtensions.left;
+							
 					int role = paramRoles.get(jjj);
+					
 					boolean checkAllRoles = false;
 					int indexRole = 0;
 					if(role==CFunctionParameter.VARIABLE) { checkAllRoles  = true; role= (Integer) roleVector.get(indexRole);}
@@ -241,15 +265,24 @@ public class ConsistencyChecks {
 									if(value == null) {
 										throw new NullPointerException();
 									}
+									if(extensions!= null && extensions.size() > 0) {
+										String kind = CellParsers.extractKindQuantifier_fromExtensions(extensions);
+										if(kind.compareTo(Constants.TitlesTabs.GLOBALQ.description)!=0) throw new NullPointerException();
+									}
 									checkAllRoles = false;
 								}
 								break;
 							case CFunctionParameter.SUBSTRATE: 
 							case CFunctionParameter.PRODUCT:  
 							case CFunctionParameter.MODIFIER:   
+								
 								Species sp = multiModel.getSpecies(actualModelParameter);
 								if(sp == null) {
 									throw new NullPointerException();
+								}
+								if(extensions!= null && extensions.size() > 0) {
+									String kind = CellParsers.extractKindQuantifier_fromExtensions(extensions);
+									if(kind.compareTo(Constants.TitlesTabs.SPECIES.description)!=0) throw new NullPointerException();
 								}
 								checkAllRoles = false;
 								break;
@@ -504,8 +537,30 @@ public class ConsistencyChecks {
 		    dm.setPriority(DebugConstants.PriorityType.DUPLICATES.priorityCode);
 			MainGui.addDebugMessage_ifNotPresent(dm);
 		}
+	}
+	
+	public static boolean isOkEventTriggerExpression(String expression) throws Throwable {
+		
+		/*System.out.println("...........isOkEventTriggerExpression..............");
+		System.out.println(expression);
+		System.out.println(".................................");
+	*/
+		if(expression.trim().length()==0) return true;
+		 boolean ret = false;
+	      ByteArrayInputStream is2 = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+			  MR_Expression_Parser parser = new MR_Expression_Parser(is2,"UTF-8");
+		  	  CompleteExpression start = parser.CompleteExpression();
+		  	 EvaluateExpressionVisitor vis = new EvaluateExpressionVisitor(MainGui.multiModel,false);
+		      start.accept(vis);
+			  if(vis.getExceptions().size() == 0) {
+				  ret  = vis.isBooleanExpression();
+			  } else {
+					throw vis.getExceptions().get(0);
+				}
+			  return ret;
 		
 	}
+
 	
 
 }

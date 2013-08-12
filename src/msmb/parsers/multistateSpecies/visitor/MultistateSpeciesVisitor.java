@@ -28,8 +28,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	
 	 private String speciesName;
  	 private HashMap<String,Vector<String>> site_states;
-	 private HashMap<String, MutablePair<Integer, Integer>> pureRange_sites;
-//	 private HashMap<String, MutablePair<String, String>> pureRangeString_sites;
+	 private HashMap<String, MutablePair<String, String>> pureRange_sites;
 	 private HashSet<String> circular_sites;
     Vector<Exception> exceptions = new Vector<>();
 	public Vector<Exception> getExceptions() { return exceptions; }
@@ -43,6 +42,8 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	
 	 public String getSpeciesName() { return speciesName; }
 	 public Vector<String> getSite_states(String site) {	return site_states.get(site);	}
+	 public Set<String> getSitesNames() {	return site_states.keySet();	}
+	 
 
 	 public String getSiteStates_string(String site_name) {
 			String ret = new String();
@@ -51,14 +52,14 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 			for(String element : states) {
 				ret += element + ",";
 			}
-			if(states.size() > 1) ret = ret.substring(0,ret.length()-1);
+			if(states.size() >= 1) ret = ret.substring(0,ret.length()-1);
 			return ret;
 		}
 	 
 	 public Set<String> getAllSites_names() {	
 		 return site_states.keySet();	
 		 }
-	 public MutablePair<Integer, Integer> getPureRangeLimits(String site) { return pureRange_sites.get(site);	}
+	 public MutablePair<String, String> getPureRangeLimits(String site) { return pureRange_sites.get(site);	}
 	 public MutablePair<String, String> getStringRangeLimits() { return new MutablePair<String, String>(current_lowString, current_highString) ;	}
 		
 	// Vector <Species> singleStateMultiStateSpecies = new Vector<Species>(); //for the expansion
@@ -154,7 +155,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	public void visit(CompleteMultistateSpecies_Operator n) {
 		expandedForm = new Vector<Species>();
 		 site_states = new HashMap<String,Vector<String>>();
-		 pureRange_sites = new HashMap<String, MutablePair<Integer, Integer>> ();
+		 pureRange_sites = new HashMap<String, MutablePair<String, String>> ();
 		 circular_sites = new HashSet<String> ();
 		isRealMultiStateSpecies = n.multistateSpecies_Operator.nodeOptional.present();
 		speciesName = ToStringVisitor.toString(n.multistateSpecies_Operator.multistateSpecies_Name.nodeChoice.choice);
@@ -240,7 +241,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 								}
 							} else { // not the right name, but maybe it is an alias
 								
-								if(aliases_of_reactants.containsKey(transferFrom_extractSpeciesName(transferFrom))) {
+								if(aliases_of_reactants!= null && aliases_of_reactants.containsKey(transferFrom_extractSpeciesName(transferFrom))) {
 									String speciesReferenced = aliases_of_reactants.get(transferFrom_extractSpeciesName(transferFrom));
 									if(CellParsers.extractMultistateName(speciesReferenced).compareTo(react.getSpeciesName()) ==0 ) {
 											String siteFrom = transferFrom_extractSiteName(transferFrom);
@@ -273,10 +274,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 												return;
 											}
 									}	 
-								} else {
-									exceptions.add(new Exception("Problems with the transfer state from "+transferFrom));
-									return;
-								}
+								} 
 								
 							}
 							
@@ -532,7 +530,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	public void visit(msmb.parsers.multistateSpecies.syntaxtree.MultistateSpecies n) {
 		 speciesName = ToStringVisitor.toString(n.multistateSpecies_Name.nodeChoice.choice);
 		 site_states = new HashMap<String,Vector<String>>();
-		 pureRange_sites = new HashMap<String, MutablePair<Integer, Integer>> ();
+		 pureRange_sites = new HashMap<String, MutablePair<String, String>> ();
 		 circular_sites = new HashSet<String> ();
 		 super.visit(n);
 		 if(enforceRangesNumeric) fill_pureRange_sites();
@@ -543,7 +541,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	public void visit(MultistateSpecies_Operator n) {
 		 speciesName = ToStringVisitor.toString(n.multistateSpecies_Name.nodeChoice.choice);
 		 site_states = new HashMap<String,Vector<String>>();
-		 pureRange_sites = new HashMap<String, MutablePair<Integer, Integer>> ();
+		 pureRange_sites = new HashMap<String, MutablePair<String, String>> ();
 		 circular_sites = new HashSet<String> ();
 		 super.visit(n);
 		 if(enforceRangesNumeric) fill_pureRange_sites();
@@ -610,7 +608,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	public void visit(CompleteMultistateSpecies_RangeString n) {
 		  try{
 			  current_lowString = null;
-		current_highString = null;
+			  current_highString = null;
 		
 		if(n.multistateSpecies_SiteSingleElement.nodeOptional.present()) {
 		  current_lowString = ToStringVisitor.toString(n.multistateSpecies_SiteSingleElement.nodeChoice);
@@ -625,7 +623,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	}
 	   
 	  
-	  @Override
+	/*  @Override
 		public void visit(MultistateSpecies_SiteSingleElement_Range n) {
 		  try{
 			  current_low = new Integer(n.nodeToken.tokenImage);
@@ -638,14 +636,42 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 		   }
 		  super.visit(n); 
 	    
-		}
+		}*/
 
-	  
+	@Override
+	public void visit(MultistateSpecies_SiteSingleElement_Range n) {
+	  try{
+		  if(n.multistateSpecies_SiteSingleElement_Range_Limits.nodeChoice.which ==0 &&
+				n.multistateSpecies_SiteSingleElement_Range_Limits1.nodeChoice.which ==0
+				  ) { //both numbers
+			  current_low = new Integer(ToStringVisitor.toString(n.multistateSpecies_SiteSingleElement_Range_Limits));
+			  current_high = new Integer(ToStringVisitor.toString(n.multistateSpecies_SiteSingleElement_Range_Limits1));
+			  current_lowString = current_low.toString();
+			  current_highString = current_high.toString();
+			  
+			  //System.out.println("low = "+current_low+"; high = "+current_high);
+			  if(current_low>=current_high) throw new Exception("Error in \""+ToStringVisitor.toString(n)+"\": lower bound should be < upper bound.");
+	 	  } else {
+	 		  
+	 		 current_lowString = ToStringVisitor.toString(n.multistateSpecies_SiteSingleElement_Range_Limits);
+	 		current_highString = ToStringVisitor.toString(n.multistateSpecies_SiteSingleElement_Range_Limits1);
+			
+	 	  }
+		  
+ 	  } catch(Exception ex) {
+		   ex.printStackTrace();
+		   exceptions.add(ex);
+	   }
+	  super.visit(n); 
+    
+	}
+	
+	
 	  void fill_pureRange_sites() {
 		  Iterator<String> it = site_states.keySet().iterator();
 			  while(it.hasNext()) {
 				  String site = it.next();
-				  if(site_states.get(site).size() == 1) {
+						  if(site != null && site_states != null && site_states.get(site)!= null && site_states.get(site).size() == 1) {
 					  String states = site_states.get(site).get(0);
 					  if(states.contains(MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_ParserConstantsNOQUOTES.RANGE_SEPARATOR))) {
 						  
@@ -654,7 +680,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 					  		MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
 					  		CompleteMultistateSpecies_Range range = react.CompleteMultistateSpecies_Range();
 					  		range.accept(this);
-					  		pureRange_sites.put(site, new MutablePair<Integer,Integer>(current_low,current_high));
+					  		pureRange_sites.put(site, new MutablePair<String,String>(current_lowString,current_highString));
 					  } catch (Exception e) {
 						  //e.printStackTrace();
 						  exceptions.add(new ParseException("Range for site "+site+" used with non-integer values ("+states+")"));

@@ -192,6 +192,20 @@ public class MR_ChemicalReaction_Parser {
       v = new MyVisitor();
       start.accept(v);
       System.out.println("...................................");
+      expression = new String("A(p{2:up-1})  -> ");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+      expression = new String("Cdh1(p{low:up-1}) -> Cdh1(succ(p))");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_ChemicalReaction_Parser(is);
+      start = react.CompleteReaction();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
     }
     catch (Exception e) {
       System.out.println("Oops.");
@@ -288,7 +302,7 @@ TOKEN :
   < IDENTIFIER : <STRING_LITERAL>| ( <LETTER>| <DIGIT>| ";"| "="| "= "| " = "| ","| ", "| " , "| " ,"| <STRING_LITERAL> )* ( <LETTER>| <DIGIT>| <STRING_LITERAL> ) >
 | < #DIGIT : ["0"-"9"] >
 | < #STRING_LITERAL : "\"" ( ( ~["\"", "\\", "\n", "\r"] )| ["\u0370"-"\u03ff"]| ( "\\" ( ["n", "t", "b", "r", "f", "\\", "'", "\""]| ["0"-"7"] ( ["0"-"7"] )?| ["0"-"3"] ["0"-"7"] ["0"-"7"] ) )| " " )* "\"" >
-| < #LETTER : ["A"-"Z", "_", "a"-"z", "'", ".", ":", "<", ">", "|", "&", "!", "?", "@", "#", "$", "%", "^", "~", "`", "[", "]", "(", ")", "{", "}", "\u0370"-"\u03ff"/*,  "\""*/
+| < #LETTER : ["A"-"Z", "_", "a"-"z", "'", ".", ":", "<", ">", "|", "&", "!", "?", "@", "#", "$", "%", "^", "~", "`", "[", "]", "+", "-", "*", "/", "(", ")", "{", "}", "\u0370"-"\u03ff"/*,  "\""*/
   ] >
 }
 

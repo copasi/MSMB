@@ -32,12 +32,6 @@ import msmb.parsers.mathExpression.syntaxtree.*;
 
 public class MR_Expression_Parser {
 
-  /*public final String[] escapable = { ".", ",", ";", ":", "<", ">", "|", "&",
-						"!", "?", "@", "#", "$", "%", "^",
-						"+", "-", "*", "/", "~", "`", 
-						"("  , ")"  ,  "{"  ,  "}", " ", "[", "]", 
-					 	"\\", "\""
-						};		*/
   public static void main(String args[]) {
     try {
       String expression = new String("1*floor(Time/tau)");
@@ -255,13 +249,6 @@ public class MR_Expression_Parser {
       v2 = new MyVisitor();
       start33.accept(v2);
       System.out.println("...................................");
-      expression2 = new String("g\u03b1");
-      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
-      react2 = new MR_Expression_Parser(is2, "UTF-8");
-      start2 = react2.CompleteExpression();
-      v2 = new MyVisitor();
-      start2.accept(v2);
-      System.out.println("...................................");
       expression2 = new String("if(Time<0 xor 24<0,Time-24*ceil(Time/24),Time-24*floor(Time/24))>1");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2, "UTF-8");
@@ -314,6 +301,20 @@ public class MR_Expression_Parser {
       expression2 = new String("ks_spn*heav(CLB2-Jspn)");
       is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
       react2 = new MR_Expression_Parser(is2);
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("g\u03b1\u03b1");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2, "UTF-8");
+      start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+      expression2 = new String("SUM(Cdh1;p{(low+5)*0.5:upper-1})");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+      react2 = new MR_Expression_Parser(is2, "UTF-8");
       start2 = react2.CompleteExpression();
       v2 = new MyVisitor();
       start2.accept(v2);
@@ -374,9 +375,9 @@ SKIP :
 TOKEN :
 {
   < IF : "if" >
-| < THEN : "then" >
-| < ELSE : "else" >
-| < FALSE : <FALSE_1>| <FALSE_2>| <FALSE_3> >
+//| < THEN: "then" >
+  //| < ELSE: "else" >
+  | < FALSE : <FALSE_1>| <FALSE_2>| <FALSE_3> >
 | < TRUE : <TRUE_1>| <TRUE_2>| <TRUE_3> >
 | < #TRUE_1 : "true" >
 | < #TRUE_2 : "True" >
@@ -1779,89 +1780,69 @@ SiteSelector_postFix SiteSelector_postFix() :
   // --- JTB generated node declarations ---
   NodeToken n0 = null;
   Token n1 = null;
-  NodeChoice n2 = null;
-  Name n3 = null;
-  Literal n4 = null;
-  NodeOptional n5 = new NodeOptional();
-  NodeChoice n6 = null;
-  NodeList n7 = null;
-  NodeSequence n8 = null;
-  NodeToken n9 = null;
-  Token n10 = null;
-  NodeChoice n11 = null;
-  Name n12 = null;
-  Literal n13 = null;
-  NodeSequence n14 = null;
-  NodeToken n15 = null;
-  Token n16 = null;
-  NodeChoice n17 = null;
-  Name n18 = null;
-  Literal n19 = null;
-  NodeToken n20 = null;
-  Token n21 = null;
+  Expression n2 = null;
+  NodeOptional n3 = new NodeOptional();
+  NodeChoice n4 = null;
+  NodeList n5 = null;
+  NodeSequence n6 = null;
+  NodeToken n7 = null;
+  Token n8 = null;
+  NodeChoice n9 = null;
+  Name n10 = null;
+  Literal n11 = null;
+  NodeSequence n12 = null;
+  NodeToken n13 = null;
+  Token n14 = null;
+  Expression n15 = null;
+  NodeToken n16 = null;
+  Token n17 = null;
 }
 {
   n1 = < LBRACE >
   { n0 = JTBToolkit.makeNodeToken(n1); }
+  n2 = Expression()
+  //(Name() | Literal())
   (
-    (
-      n3 = Name()
-      { n2 = new NodeChoice(n3, 0, 2); }
-    |
-      n4 = Literal()
-      { n2 = new NodeChoice(n4, 1, 2); }
-    )
-    
-  )
-  (
-    { n7 = new NodeList(); }
+    { n5 = new NodeList(); }
     (
       (
-        { n8 = new NodeSequence(2); }
-        n10 = < COMMA >
-        { n9 = JTBToolkit.makeNodeToken(n10); }
-        { n8.addNode(n9); }
+        { n6 = new NodeSequence(2); }
+        n8 = < COMMA >
+        { n7 = JTBToolkit.makeNodeToken(n8); }
+        { n6.addNode(n7); }
         (
           (
-            n12 = Name()
-            { n11 = new NodeChoice(n12, 0, 2); }
+            n10 = Name()
+            { n9 = new NodeChoice(n10, 0, 2); }
           |
-            n13 = Literal()
-            { n11 = new NodeChoice(n13, 1, 2); }
+            n11 = Literal()
+            { n9 = new NodeChoice(n11, 1, 2); }
           )
           
         )
-        { n8.addNode(n11); }
-        { n7.addNode(n8); }
+        { n6.addNode(n9); }
+        { n5.addNode(n6); }
       )+
-      { n7.nodes.trimToSize(); }
-      { n6 = new NodeChoice(n7, 0, 2); }
+      { n5.nodes.trimToSize(); }
+      { n4 = new NodeChoice(n5, 0, 2); }
     |
       (
-        { n14 = new NodeSequence(2); }
-        n16 = < COLON >
-        { n15 = JTBToolkit.makeNodeToken(n16); }
-        { n14.addNode(n15); }
-        (
-          (
-            n18 = Name()
-            { n17 = new NodeChoice(n18, 0, 2); }
-          |
-            n19 = Literal()
-            { n17 = new NodeChoice(n19, 1, 2); }
-          )
-          
-        )
-        { n14.addNode(n17); }
+        { n12 = new NodeSequence(2); }
+        n14 = < COLON >
+        { n13 = JTBToolkit.makeNodeToken(n14); }
+        { n12.addNode(n13); }
+        n15 = Expression()
+        { n12.addNode(n15); }
         
       )
-      { n6 = new NodeChoice(n14, 1, 2); }
+      { n4 = new NodeChoice(n12, 1, 2); }
     )
-    { n5.addNode(n6); }
+    { n3.addNode(n4); }
+  //(Name() | Literal())
   )?
-  n21 = < RBRACE >
-  { n20 = JTBToolkit.makeNodeToken(n21); }
-  { return new SiteSelector_postFix(n0, n2, n5, n20); }
+  n17 = < RBRACE >
+  { n16 = JTBToolkit.makeNodeToken(n17); }
+  { return new SiteSelector_postFix(n0, n2, n3, n16); }
 }
 
 CoeffFunction_postFix CoeffFunction_postFix() :

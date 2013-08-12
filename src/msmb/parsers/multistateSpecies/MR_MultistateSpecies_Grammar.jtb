@@ -190,6 +190,37 @@ public class MR_MultistateSpecies_Parser
       start.accept(v);
       System.out.println("...................................");*/
 
+ 	expression = new String("Cdh1(p{lower:upper})");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+	expression = new String("Cdh1(p{lower:upper-1})");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+      expression = new String("Cdh1(p{lower+1:(upper+3)*2})");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
+
+ 	 expression = new String("lower +1:(upper+3)*2");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+    CompleteMultistateSpecies_Range range = react.CompleteMultistateSpecies_Range();
+      v = new MyVisitor();
+      range.accept(v);
+      System.out.println("...................................");
  
      }
     catch (Exception e)
@@ -256,9 +287,12 @@ TOKEN : /* KEYWORDS */
 | < MULTI_IDENTIFIER : (["A"-"Z", "_", "a"-"z","'", 
 						"<", ">", "|", "&",
 						"!",  "@", "#", "$", "%", "^",
-						"+", "*", "-", "/", "~", "`", 
+						//"+", "*", "-", "/",
+						"~",
+						"`", 
 						"[", "]","\u0370"-"\u03ff"
 						] |  < NUMBER > | < UNDEFINED_SITE_SYMBOL >)+ >
+|  < MATH_ELEMENT : <MULTI_IDENTIFIER > |  ["+", "*", "-", "/","^"] >
 | < UNDEFINED_SITE_SYMBOL : "?" >
 | < EXTENSION_CONC :  ".conc" >
 | < EXTENSION_PARTICLE :  ".part" >
@@ -342,21 +376,27 @@ void MultistateSpecies_Name() throws ParseException:
 void MultistateSpecies_SiteSingleElement() throws ParseException:
 {}
 {
-     ( < STRING_LITERAL > | (< CIRCULAR_FLAG > | < MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R >  )+)
-   (  (" ")* < RANGE_SEPARATOR > (" ")* ( < STRING_LITERAL > | (< MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R >  )+) )?
+     ( < STRING_LITERAL > | (< CIRCULAR_FLAG > | < MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R > | < MATH_ELEMENT>)+)
+   (  (" ")* < RANGE_SEPARATOR > (" ")* ( < STRING_LITERAL > | (< MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R > | < MATH_ELEMENT> | <  CLOSED_R > )+) )?
 }
 
 void MultistateSpecies_SiteSingleElement_Range() throws ParseException:
 {}
 {
-	< NUMBER > (" ")* < RANGE_SEPARATOR > (" ")* < NUMBER > 
+	//< NUMBER > (" ")* < RANGE_SEPARATOR > (" ")* < NUMBER >
+	MultistateSpecies_SiteSingleElement_Range_Limits() (" ")* < RANGE_SEPARATOR > (" ")* MultistateSpecies_SiteSingleElement_Range_Limits()
 }
 
+void MultistateSpecies_SiteSingleElement_Range_Limits() throws ParseException:
+{}
+{
+  < NUMBER> | < STRING_LITERAL > |
+  (" " | < OPEN_R> | <CLOSED_R> | < MATH_ELEMENT >  | < NUMBER > | < STRING_LITERAL > | < MULTI_IDENTIFIER > )+
+}
 
 
 
-
-void MultistateSpecies_SiteName() throws ParseException:
+void MultistateSpecies_SiteName() throws ParseException:  
 {}
 { 
   < STRING_LITERAL >
