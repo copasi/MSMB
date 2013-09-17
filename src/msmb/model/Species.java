@@ -33,7 +33,15 @@ public class Species   implements Serializable{
 		boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
 		try {
 			this.expression = expr;	
-			CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
+			if(this instanceof MultistateSpecies) {
+				MultistateSpecies ms = (MultistateSpecies)this;
+				Vector<MultistateSpecies> singles = ms.getExpandedSpecies(m, true);
+				for(MultistateSpecies single : singles) {
+					CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description,single);
+				}
+			} else {
+				CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
+			}
 			MainGui.importFromSBMLorCPS = false;
 			this.expression = m.reprintExpression_forceCompressionElements(expression,Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
 		} catch (Exception ex) {
@@ -104,7 +112,7 @@ public class Species   implements Serializable{
 	
 	public void setInitialQuantity(MultiModel m, String initialQ) throws Throwable {	
 		if(m==null) return;
-		if(initialQ.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
+		if(initialQ==null || initialQ.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		if(initialQ.length()==0) return;
 		
 		try{

@@ -358,14 +358,11 @@ public class AutocompleteDB {
 				}
 			}
 
-			System.out.println("definedInTables: before " +definedInTables);
-			System.out.println("element " +element);
-
+	
 			if(definedInTables==null) {
 				definedInTables = multiModel.getWhereNameIsUsed(element);	
 			}
 
-			System.out.println("definedInTables: " +definedInTables);
 			if(definedInTables.size() == 1) {
 				String where = new String();
 				if(definedInTables.get(0).intValue()==Constants.TitlesTabs.SPECIES.index) where =  Constants.TitlesTabs.SPECIES.description;
@@ -391,8 +388,6 @@ public class AutocompleteDB {
 				if(confl_S) conflicts += "_S";
 
 				completions.addAll(completionOptions.get(conflicts));
-				System.out.println("completionOptions: " +completionOptions);
-				System.out.println("conflicts: " +conflicts);
 			}
 			for(int i = 0; i<completions.size(); i++) {
 				if(completions.get(i).startsWith(Character.toString(trigger))) {
@@ -402,7 +397,6 @@ public class AutocompleteDB {
 					//if(excludeFirstChar)
 					tmp_compl= tmp_compl.substring(1); // substring because I have to get rid of the first char that has already been typed to trigger this
 					ret.addCompletion(new BasicCompletion(ret, tmp_compl+" ",shortD, summary)); 
-					System.out.println("addedCompl.= "+ tmp_compl);
 				}
 			}
 		

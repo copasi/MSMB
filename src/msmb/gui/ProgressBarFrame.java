@@ -3,8 +3,12 @@ package msmb.gui;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.Insets;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
@@ -68,6 +72,8 @@ public class ProgressBarFrame extends JFrame implements Runnable {
 		newContentPane.repaint();
 	
 		this.setVisible(true);
+		
+		
 	}
 
 
@@ -106,7 +112,8 @@ public class ProgressBarFrame extends JFrame implements Runnable {
 			this.dispose();
 
 		} catch (InterruptedException e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				e.printStackTrace();
 		}
     }
 

@@ -197,6 +197,13 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       v = new MyVisitor();
       range.accept(v);
       System.out.println("...................................");
+      expression = new String("Cdh1(p{a:c})");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
     }
     catch (Exception e) {
       System.out.println("Oops.");
@@ -680,6 +687,8 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   Token n37 = null;
   NodeToken n38 = null;
   Token n39 = null;
+  NodeToken n40 = null;
+  Token n41 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case STRING_LITERAL:
       n2 = jj_consume_token(STRING_LITERAL);
@@ -794,6 +803,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
           n26 = JTBToolkit.makeNodeToken(n27);
           n25 = new NodeChoice(n26, 0, 2);
         break;
+      case CIRCULAR_FLAG:
       case OPEN_R:
       case CLOSED_R:
       case NUMBER:
@@ -805,27 +815,32 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
           case MULTI_IDENTIFIER:
             n31 = jj_consume_token(MULTI_IDENTIFIER);
               n30 = JTBToolkit.makeNodeToken(n31);
-              n29 = new NodeChoice(n30, 0, 5);
+              n29 = new NodeChoice(n30, 0, 6);
+            break;
+          case CIRCULAR_FLAG:
+            n33 = jj_consume_token(CIRCULAR_FLAG);
+              n32 = JTBToolkit.makeNodeToken(n33);
+              n29 = new NodeChoice(n32, 1, 6);
             break;
           case NUMBER:
-            n33 = jj_consume_token(NUMBER);
-              n32 = JTBToolkit.makeNodeToken(n33);
-              n29 = new NodeChoice(n32, 1, 5);
+            n35 = jj_consume_token(NUMBER);
+              n34 = JTBToolkit.makeNodeToken(n35);
+              n29 = new NodeChoice(n34, 2, 6);
             break;
           case OPEN_R:
-            n35 = jj_consume_token(OPEN_R);
-              n34 = JTBToolkit.makeNodeToken(n35);
-              n29 = new NodeChoice(n34, 2, 5);
+            n37 = jj_consume_token(OPEN_R);
+              n36 = JTBToolkit.makeNodeToken(n37);
+              n29 = new NodeChoice(n36, 3, 6);
             break;
           case MATH_ELEMENT:
-            n37 = jj_consume_token(MATH_ELEMENT);
-              n36 = JTBToolkit.makeNodeToken(n37);
-              n29 = new NodeChoice(n36, 3, 5);
+            n39 = jj_consume_token(MATH_ELEMENT);
+              n38 = JTBToolkit.makeNodeToken(n39);
+              n29 = new NodeChoice(n38, 4, 6);
             break;
           case CLOSED_R:
-            n39 = jj_consume_token(CLOSED_R);
-              n38 = JTBToolkit.makeNodeToken(n39);
-              n29 = new NodeChoice(n38, 4, 5);
+            n41 = jj_consume_token(CLOSED_R);
+              n40 = JTBToolkit.makeNodeToken(n41);
+              n29 = new NodeChoice(n40, 5, 6);
             break;
           default:
             jj_la1[16] = jj_gen;
@@ -834,6 +849,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
           }
             n28.addNode(n29);
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case CIRCULAR_FLAG:
           case OPEN_R:
           case CLOSED_R:
           case NUMBER:
@@ -922,10 +938,10 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   Token n2 = null;
   NodeToken n3 = null;
   Token n4 = null;
-  NodeList n5 = new NodeList();
-  NodeChoice n6 = null;
-  NodeToken n7 = null;
-  Token n8 = null;
+  NodeToken n5 = null;
+  Token n6 = null;
+  NodeList n7 = new NodeList();
+  NodeChoice n8 = null;
   NodeToken n9 = null;
   Token n10 = null;
   NodeToken n11 = null;
@@ -938,16 +954,23 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
   Token n18 = null;
   NodeToken n19 = null;
   Token n20 = null;
+  NodeToken n21 = null;
+  Token n22 = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NUMBER:
       n2 = jj_consume_token(NUMBER);
       n1 = JTBToolkit.makeNodeToken(n2);
-      n0 = new NodeChoice(n1, 0, 3);
+      n0 = new NodeChoice(n1, 0, 4);
       break;
     case STRING_LITERAL:
       n4 = jj_consume_token(STRING_LITERAL);
       n3 = JTBToolkit.makeNodeToken(n4);
-      n0 = new NodeChoice(n3, 1, 3);
+      n0 = new NodeChoice(n3, 1, 4);
+      break;
+    case CIRCULAR_FLAG:
+      n6 = jj_consume_token(CIRCULAR_FLAG);
+      n5 = JTBToolkit.makeNodeToken(n6);
+      n0 = new NodeChoice(n5, 2, 4);
       break;
     case BLANK:
     case OPEN_R:
@@ -958,46 +981,46 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case BLANK:
-          n8 = jj_consume_token(BLANK);
-          n7 = JTBToolkit.makeNodeToken(n8);
-          n6 = new NodeChoice(n7, 0, 7);
+          n10 = jj_consume_token(BLANK);
+          n9 = JTBToolkit.makeNodeToken(n10);
+          n8 = new NodeChoice(n9, 0, 7);
           break;
         case OPEN_R:
-          n10 = jj_consume_token(OPEN_R);
-          n9 = JTBToolkit.makeNodeToken(n10);
-          n6 = new NodeChoice(n9, 1, 7);
+          n12 = jj_consume_token(OPEN_R);
+          n11 = JTBToolkit.makeNodeToken(n12);
+          n8 = new NodeChoice(n11, 1, 7);
           break;
         case CLOSED_R:
-          n12 = jj_consume_token(CLOSED_R);
-          n11 = JTBToolkit.makeNodeToken(n12);
-          n6 = new NodeChoice(n11, 2, 7);
+          n14 = jj_consume_token(CLOSED_R);
+          n13 = JTBToolkit.makeNodeToken(n14);
+          n8 = new NodeChoice(n13, 2, 7);
           break;
         case MATH_ELEMENT:
-          n14 = jj_consume_token(MATH_ELEMENT);
-          n13 = JTBToolkit.makeNodeToken(n14);
-          n6 = new NodeChoice(n13, 3, 7);
+          n16 = jj_consume_token(MATH_ELEMENT);
+          n15 = JTBToolkit.makeNodeToken(n16);
+          n8 = new NodeChoice(n15, 3, 7);
           break;
         case NUMBER:
-          n16 = jj_consume_token(NUMBER);
-          n15 = JTBToolkit.makeNodeToken(n16);
-          n6 = new NodeChoice(n15, 4, 7);
+          n18 = jj_consume_token(NUMBER);
+          n17 = JTBToolkit.makeNodeToken(n18);
+          n8 = new NodeChoice(n17, 4, 7);
           break;
         case STRING_LITERAL:
-          n18 = jj_consume_token(STRING_LITERAL);
-          n17 = JTBToolkit.makeNodeToken(n18);
-          n6 = new NodeChoice(n17, 5, 7);
+          n20 = jj_consume_token(STRING_LITERAL);
+          n19 = JTBToolkit.makeNodeToken(n20);
+          n8 = new NodeChoice(n19, 5, 7);
           break;
         case MULTI_IDENTIFIER:
-          n20 = jj_consume_token(MULTI_IDENTIFIER);
-          n19 = JTBToolkit.makeNodeToken(n20);
-          n6 = new NodeChoice(n19, 6, 7);
+          n22 = jj_consume_token(MULTI_IDENTIFIER);
+          n21 = JTBToolkit.makeNodeToken(n22);
+          n8 = new NodeChoice(n21, 6, 7);
           break;
         default:
           jj_la1[22] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
-        n5.addNode(n6);
+        n7.addNode(n8);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case BLANK:
         case OPEN_R:
@@ -1013,8 +1036,8 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
           break label_12;
         }
       }
-      n5.nodes.trimToSize();
-      n0 = new NodeChoice(n5, 2, 3);
+      n7.nodes.trimToSize();
+      n0 = new NodeChoice(n7, 3, 4);
       break;
     default:
       jj_la1[24] = jj_gen;
@@ -1459,7 +1482,7 @@ public class MR_MultistateSpecies_Parser implements MR_MultistateSpecies_ParserC
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0xf8000000,0xf8000000,0xf8000000,0x100000,0x8000,0x200000,0x2000,0x20000,0x13d2000,0x13d2000,0x17d2000,0x380a000,0x380a000,0x3c0a000,0x4000,0x4000,0x3818000,0x3818000,0x3c18000,0x84000,0x4000,0x4000,0x3c1c000,0x3c1c000,0x3c1c000,0x1048000,0x1048000,0x1448000,0x100000,0x8000,0x1800,0x20000,0x20000,0x1c01800,0x1800,0x17d3800,0x1800000,0x1800000,0x1c00000,0x200000,};
+      jj_la1_0 = new int[] {0xf8000000,0xf8000000,0xf8000000,0x100000,0x8000,0x200000,0x2000,0x20000,0x13d2000,0x13d2000,0x17d2000,0x380a000,0x380a000,0x3c0a000,0x4000,0x4000,0x381a000,0x381a000,0x3c1a000,0x84000,0x4000,0x4000,0x3c1c000,0x3c1c000,0x3c1e000,0x1048000,0x1048000,0x1448000,0x100000,0x8000,0x1800,0x20000,0x20000,0x1c01800,0x1800,0x17d3800,0x1800000,0x1800000,0x1c00000,0x200000,};
    }
    private static void jj_la1_init_1() {
       jj_la1_1 = new int[] {0x3f,0x3f,0x3f,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x40,0x40,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};

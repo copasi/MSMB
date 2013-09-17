@@ -17,10 +17,11 @@ import msmb.parsers.multistateSpecies.visitor.*;
  * ............ .. . #2 ( " " )*<br>
  * ............ .. . #3 ( %0 <STRING_LITERAL><br>
  * ............ .. . .. | %1 ( &0 <MULTI_IDENTIFIER><br>
- * ............ .. . .. . .. | &1 <NUMBER><br>
- * ............ .. . .. . .. | &2 <OPEN_R><br>
- * ............ .. . .. . .. | &3 <MATH_ELEMENT><br>
- * ............ .. . .. . .. | &4 <CLOSED_R> )+ ) )?<br>
+ * ............ .. . .. . .. | &1 <CIRCULAR_FLAG><br>
+ * ............ .. . .. . .. | &2 <NUMBER><br>
+ * ............ .. . .. . .. | &3 <OPEN_R><br>
+ * ............ .. . .. . .. | &4 <MATH_ELEMENT><br>
+ * ............ .. . .. . .. | &5 <CLOSED_R> )+ ) )?<br>
  */
 public class MultistateSpecies_SiteSingleElement implements INode {
 

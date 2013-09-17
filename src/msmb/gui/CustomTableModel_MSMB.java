@@ -404,7 +404,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 			    			 if(errorMenuItem!= null) popupMenu.remove(errorMenuItem);
 			    		 }
 			             
-			             if(MainGui.isCellWithMultipleView(model.getTableName(), row, col) && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
+			             if(MainGui.isCellWithMultipleView(model.getTableName(), row, col) && isCellEditable(row, col)  && !MainGui.isCellWithErrors(model.getTableName(), row, col)) {
 			                
 			            	 MainGui.cellTableEdited = model.getTableName();
 			            	 
@@ -441,12 +441,17 @@ class CustomJTable_MSMB extends CustomJTable  {
 				         	//popupMenu.add(customView);
 			         		
 			         	    
-			         	   if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
-			         			  JMenuItem textAreaExpression = new JMenuItem("Edit in Text Area");
+			         	   if(model.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 ||
+			         		  (model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0 && col == Constants.SpeciesColumns.EXPRESSION.index)	   ||
+			         		 (model.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0 && col == Constants.GlobalQColumns.EXPRESSION.index)	 
+			         		  
+			         			   ) {
+			         			 JMenuItem textAreaExpression = new JMenuItem("Edit in Text Area");
 			         			 textAreaExpression.addActionListener(new ActionListener() {
 			         				  @Override
 			         				  public void actionPerformed(ActionEvent e) {
-			         					  MainGui.openTextAreaExpression(model.getValueAt(row, col).toString());
+			         					 String newExpression = MainGui.openTextAreaExpression(model.getValueAt(row, col).toString());
+			         					 model.setValueAt(newExpression, row, col);
 			         				  }
 			         			  });
 			         			  popupMenu.add(textAreaExpression);	
@@ -561,6 +566,27 @@ class CustomJTable_MSMB extends CustomJTable  {
 			             } else {
 			    			 if(copySignature!= null) popupMenu.remove(copySignature);
 			    		 }
+			             
+			             
+			             
+			             
+			             if(model.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0
+			            		 && col == Constants.SpeciesColumns.EXPRESSION.index && !isCellEditable(row, col)
+			            		 && ((String) MainGui.tableSpeciesmodel.getValueAt(row, Constants.SpeciesColumns.TYPE.index)).compareTo(Constants.SpeciesType.MULTISTATE.description) == 0) {
+		         			 // SUM with indexes from reaction
+			            	 popupMenu.removeAll();
+			            	 JMenuItem textAreaExpression = new JMenuItem("Add dependent SUM");
+		         			 textAreaExpression.addActionListener(new ActionListener() {
+		         				  @Override
+		         				  public void actionPerformed(ActionEvent e) {
+		         					  MainGui.openSUMTextAreaExpression(row);
+		         				  }
+		         			  });
+		         			  popupMenu.add(textAreaExpression);	
+		         			 showPopup = true;
+			             }
+			             
+			             
 			              if(showPopup) {
 			            	 popupMenu.show(e.getComponent(), e.getX(), e.getY());
 				         }

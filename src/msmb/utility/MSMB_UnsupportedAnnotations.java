@@ -2,7 +2,7 @@ package msmb.utility;
 
 public class MSMB_UnsupportedAnnotations {
 
-	public static String xmlns = "http://jigcell.cs.vt.edu";
+	public static String xmlns = "http://www.copasi.org/tiki-index.php?page=MSMB&structure=SoftwareProjects";
 	public static enum MSMB_UnsupportedAnnotations_type {
 		GET_PARTICLE_NUMBER,
 		MULTISTATE_SPECIES,

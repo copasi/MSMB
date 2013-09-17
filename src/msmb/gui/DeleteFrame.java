@@ -4,6 +4,7 @@ package  msmb.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -15,6 +16,7 @@ import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 import javax.swing.JButton;
+import javax.swing.WindowConstants;
 
 import msmb.utility.*;
 
@@ -28,6 +30,7 @@ import org.jdesktop.swingx.treetable.TreeTableNode;
 
 import msmb.debugTab.FoundElement;
 import msmb.debugTab.FoundElementToDelete;
+import msmb.model.MultistateSpecies;
 
 
 import java.awt.event.ActionListener;
@@ -49,6 +52,14 @@ public class DeleteFrame extends JDialog {
 	public String getSpeciesCompleteRow() {return speciesCompleteRow;}
 	public void setSpeciesCompleteRow(String speciesCompleteRow) {this.speciesCompleteRow = speciesCompleteRow;}
 
+	@Override
+	public void setVisible(boolean b) {
+		GraphicalProperties.resetFonts(this);
+		setPreferredSize(new Dimension(45*MainGui.customFont.getSize(), 25*MainGui.customFont.getSize()));
+		pack();
+		setLocationRelativeTo(null);
+		super.setVisible(true);
+	}
 	
 	public DeleteFrame(Pair<FoundElementToDelete, DefaultMutableTreeTableNode> pair) {
 		
@@ -57,7 +68,7 @@ public class DeleteFrame extends JDialog {
 		completeMutableTree = pair.getRight();
 		rootElementToDelete = pair.getLeft();
 		setSpeciesCompleteRow(MainGui.printCompleteRowContent(rootElementToDelete));
-
+		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
@@ -310,7 +321,8 @@ public class DeleteFrame extends JDialog {
 			foundElementTableModel = new TreeTableModel(defaultMutableTreeNode);
 	    	treeTable.setTreeTableModel(foundElementTableModel);
 			
-		
+	    	treeTable.setFont(MainGui.customFont);
+	    	treeTable.getTableHeader().setFont(MainGui.customFont);
 			
 			
 			treeTable.setEditable(true);
@@ -322,7 +334,7 @@ public class DeleteFrame extends JDialog {
 						boolean expanded, boolean leaf, int row,
 						boolean hasFocus) {
 					
-										 
+					setFont(MainGui.customFont);					 
 					if (value instanceof DefaultMutableTreeTableNode) {
 						DefaultMutableTreeTableNode node = (DefaultMutableTreeTableNode) value;
 						if(node.getUserObject() instanceof FoundElement) {

@@ -6,6 +6,11 @@ import java.awt.event.KeyListener;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+
+import org.apache.commons.lang3.tuple.MutablePair;
+
 import java.util.*;
 
 import msmb.commonUtilities.tables.ScientificFormatCellRenderer;
@@ -18,38 +23,47 @@ import java.awt.event.ItemEvent;
 public class MultistateBuilderFrame extends JDialog	 {
 
 	private static final long serialVersionUID = 1L;
+	private int marginSize = 6;
 	protected static int row_to_highlight;
 	private JPanel jContentPane = null;
+	private JPanel upper = null;
+	private JPanel jPanelConcentrationSpecies = null;
+	private JScrollPane jScrollPaneConcentrationSpecies= null;
+	private JPanel panel;
+	
 	private JLabel jLabel = null;
 	private JTextField jTextField_species = null;
-	private JPanel jPanel = null;
 	private JLabel jLabel1 = null;
 	private JTextField jTextField_newSite = null;
-	private JSpinner spinner_lower = null;
-	private JSpinner spinner_upper = null;
+	private JComboBox<String> spinner_lower = null;
+	private JComboBox<String> spinner_upper = null;
 	private JTextField jTextField_listStates = null;
 	private JButton jButton = null;
 	private JScrollPane jScrollPane = null;
 	private JLabel jLabel2 = null;
-	private JLabel jLabel3 = null;
-	private JLabel jLabel3b = null;
 	private MultistateSpecies species; 
 	private MainGui parentFrame;
 	private JButton jButton1 = null;
 	private JButton jButton2 = null;
 	private JButton jButton3 = null;
 	private CustomFocusTraversalPolicy newPolicy;
-	private JPanel upper = null;
 	private JTabbedPane jTabbedPane = null;
-	private JPanel jPanelConcentrationSpecies = null;
-	private JScrollPane jScrollPaneConcentrationSpecies= null;
 	private CustomTableModel_MSMB tableConcentrationSpeciesmodel= null;
 	private CustomJTable_MSMB jTableConcentrationSpecies;
 	private JList<String> jListSite = null;
-	private JPanel panel;
 	private JLabel lblWarning;
 	private JRadioButton jRadioBoolean;
 	private HashMap<String, String> renamed_sites = new HashMap<String, String>();
+	private RendererForErrorsJList rendererJListSite;
+	
+	private JPanel jPanelSitesDetails;
+	private JPanel jPanelSitesDetails_site;
+	private JPanel jPanelSitesDetails_listAndButton;
+	private JPanel jPanelButtons;
+	private JPanel jPanelSiteName;
+	private JPanel jPanelStatesChoices_container;
+	private JPanel jPanelStatesChoices;
+	private JPanel jPanelChoiceRange;
 	
 	public MultistateBuilderFrame(MainGui owner) throws Exception {
 		super(owner);
@@ -60,7 +74,6 @@ public class MultistateBuilderFrame extends JDialog	 {
 	
 	private void initialize() {
 		renamed_sites.clear();
-		this.setSize(407, 400);
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.setContentPane(getJContentPane());
 		this.setTitle("Multistate Builder");
@@ -70,8 +83,9 @@ public class MultistateBuilderFrame extends JDialog	 {
 		Vector<Component> order = new Vector<Component>(7);
         order.add(jTextField_species);
         order.add(jTextField_newSite);
-        order.add(spinner_lower.getEditor().getComponent(0));
-        order.add(spinner_upper.getEditor().getComponent(0));
+        order.add(spinner_lower);
+        order.add(spinner_upper);
+        
         order.add(jTextField_listStates);
         order.add(jButton);
         order.add(jButton3);
@@ -84,9 +98,8 @@ public class MultistateBuilderFrame extends JDialog	 {
 	
 	@Override
 	public void setVisible(boolean b) {
-		//Fix size elements so they are relative, no x-y and then I can pack and reset font with the rest of the windows
-	//	GraphicalProperties.resetFonts(this);
-	//	pack();
+		GraphicalProperties.resetFonts(this);
+		pack();
 		setLocationRelativeTo(null);
 		try {
 			if(species==null || species.getName().length()==0) {
@@ -98,7 +111,16 @@ public class MultistateBuilderFrame extends JDialog	 {
 		super.setVisible(true);
 	}
 	
+	public void setContentLowerUpperRange(Vector<String> existingGlqs) {
 	
+		Collections.sort(existingGlqs);
+		for(String element : existingGlqs) {
+			spinner_lower.addItem(element);
+			spinner_upper.addItem(element);
+		}
+		spinner_lower.setSelectedItem("");
+		spinner_upper.setSelectedItem("");
+	}
 	
 	private JPanel getJContentPane() {
 		if (jContentPane == null) {
@@ -106,6 +128,9 @@ public class MultistateBuilderFrame extends JDialog	 {
 			jContentPane.setLayout(new BorderLayout());
 			jContentPane.add(getUpper(), BorderLayout.NORTH);
 			jContentPane.add(getJTabbedPane(), BorderLayout.CENTER);
+			JPanel jpanelforalignment = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+			jpanelforalignment.add(getJButton3());
+			jContentPane.add(jpanelforalignment, BorderLayout.SOUTH);
 		}
 		return jContentPane;
 	}
@@ -113,9 +138,8 @@ public class MultistateBuilderFrame extends JDialog	 {
 	private JTabbedPane getJTabbedPane() {
 	
 		if (jTabbedPane == null) {
-			
 			jTabbedPane = new JTabbedPane();
-			jTabbedPane.addTab("Site details", null, this.getJPanelSpeciesDetails(), null);
+			jTabbedPane.addTab("Sites' details", null, this.getJPanelSpeciesDetails(), null);
 			jTabbedPane.addTab(Constants.MultistateBuilder_QUANTITIES_description, null, getPanel(), null);
 		}
 		return jTabbedPane;
@@ -125,14 +149,13 @@ public class MultistateBuilderFrame extends JDialog	 {
 	private JPanel getUpper() {
 		if (upper == null) {
 			upper = new JPanel();
+			upper.setLayout(new BorderLayout(marginSize,marginSize));
+			upper.setBorder( new EmptyBorder(marginSize, marginSize, marginSize, marginSize ) );//to add the space around
 			jLabel = new JLabel();
-			jLabel.setText("Species name:");
-			jLabel.setBounds(new Rectangle(11, 11, 84, 16));
-			upper.setLayout(null);
-			upper.setPreferredSize(new Dimension(84, 38));
-			upper.add(jLabel, null);
-			upper.add(getJTextField_species(), null);
-			upper.add(getJButton3(), null);
+			jLabel.setText("Species name: ");
+			upper.add(jLabel, BorderLayout.WEST);
+			upper.add(getJTextField_species(), BorderLayout.CENTER);
+			//upper.add(getJButton3(), BorderLayout.EAST);
 		}
 		return upper;
 	}
@@ -149,10 +172,6 @@ public class MultistateBuilderFrame extends JDialog	 {
 		this.jLabel2.setEnabled(b);
 		lblWarning.setEnabled(b);
 		jRadioBoolean.setEnabled(b);
-		jLabel3.setEnabled(b);
-		jLabel3b.setEnabled(b);
-		//this.jLabel4.setEnabled(b);
-		//this.jTableListSite.setEnabled(b);
 		this.jListSite.setEnabled(b);
 		this.jButton.setEnabled(b);
 		this.jButton1.setEnabled(b);
@@ -195,86 +214,91 @@ public class MultistateBuilderFrame extends JDialog	 {
 	}
 
 	private JPanel getJPanelSpeciesDetails() {
-		if (jPanel == null) {
-			jLabel3 = new JLabel();
-			jLabel3.setEnabled(false);
-			jLabel3.setBounds(new Rectangle(117, 35, 23, 50));
-			jLabel3.setText(" {");
-			jLabel3.setFont(new Font("Arial", Font.PLAIN, 15));
-			jLabel2 = new JLabel();
-			jLabel2.setBounds(new Rectangle(194, 23, 15, 20));
-			jLabel2.setText(" :");
-			jLabel1 = new JLabel();
-			jLabel1.setText("New site:");
-			jLabel1.setBounds(new Rectangle(11, 17, 70, 20));	
-			jPanel = new JPanel();
+		if (jPanelSitesDetails == null) {
+			jPanelSitesDetails = new JPanel();
+			jPanelSitesDetails.setLayout(new BorderLayout(marginSize,marginSize));
+			jPanelSitesDetails.setBorder( new EmptyBorder(marginSize, marginSize, marginSize, marginSize ) );//to add the space around
 			
-			GridBagConstraints gridBagConstraints = new GridBagConstraints();
-			gridBagConstraints.fill = GridBagConstraints.BOTH;
-			gridBagConstraints.gridy = 0;
-			gridBagConstraints.weightx = 1.0;
-			gridBagConstraints.weighty = 1.0;
-			gridBagConstraints.gridx = 0;
-			gridBagConstraints.insets = new Insets(11, 11, 11, 11);
-			GridBagLayout gbl_jPanel = new GridBagLayout();
-			gbl_jPanel.columnWeights = new double[]{1.0};
-			gbl_jPanel.rowWeights = new double[]{1.0};
-			jPanel.setLayout(gbl_jPanel);
+			jPanelSitesDetails_site = new JPanel();
+			jPanelSitesDetails_site.setLayout(new BorderLayout(marginSize,marginSize));
+			jPanelSitesDetails_site.setBorder(BorderFactory.createTitledBorder(null, "Current site information:", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, UIManager.getFont("Label.font"), new Color(51, 51, 51)));
 			
-			JPanel jPanelsites = new JPanel();
 			
-			jPanelsites.setLayout(null);
-			jPanelsites.setPreferredSize(new Dimension(545, 60));
-			jPanelsites.setMinimumSize(new Dimension(545, 60));
-			jPanelsites.setBorder(BorderFactory.createTitledBorder(null, "Sites:", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, UIManager.getFont("Label.font"), new Color(51, 51, 51)));
-			jLabel3b = new JLabel();
-			jLabel3b.setEnabled(false);
-			jLabel3b.setBounds(new Rectangle(280, 35, 15, 50));
-			jLabel3b.setText("} ");
-			jLabel3b.setFont(new Font("Arial", Font.PLAIN, 15));
-			jPanelsites.add(jLabel3b, null);
-			jPanelsites.add(jLabel1, null);
-			jPanelsites.add(getJTextField_newSite(), null);
-			jPanelsites.add(getSpinner_lower(), null);
-			jPanelsites.add(getSpinner_upper(), null);
-			jPanelsites.add(getJTextField_listStates(), null);
-			jPanelsites.add(getJButton(), null);
-			jPanelsites.add(getJScrollPane(), null);
-			jPanelsites.add(jLabel2, null);
-			jPanelsites.add(jLabel3, null);
-			jPanelsites.add(getJButton1(), null);
-			jPanelsites.add(getJButton2(), null);
-			jPanel.add(jPanelsites, gridBagConstraints);
+			jPanelSitesDetails_listAndButton = new JPanel();
+			jPanelSitesDetails_listAndButton.setLayout(new BorderLayout(marginSize,marginSize));
+			jPanelSitesDetails_listAndButton.setBorder(BorderFactory.createTitledBorder(null, "All sites:", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, UIManager.getFont("Label.font"), new Color(51, 51, 51)));
+			
+			jPanelSitesDetails.add(jPanelSitesDetails_site, BorderLayout.CENTER);
+			jPanelSitesDetails.add(jPanelSitesDetails_listAndButton, BorderLayout.SOUTH);
+			
+			jPanelSitesDetails_listAndButton.add(getJScrollPaneJListSite(), BorderLayout.CENTER);
+			jPanelButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			jPanelButtons.add(getJButton1());
+			jPanelButtons.add(getJButton2());
+			jPanelSitesDetails_listAndButton.add(jPanelButtons,BorderLayout.SOUTH);
+			
 			
 			lblWarning = new JLabel("<html><p ALIGN=\"LEFT\">WARNING: any change in the sites' definition will reset all the defined <p ALIGN=\"LEFT\">initial quantities to the default initial value of "+MainGui.species_defaultInitialValue+" </html>");
-			lblWarning.setBounds(11, 110, 339, 30);
-			jPanelsites.add(lblWarning);
+			lblWarning.setBorder( new EmptyBorder(marginSize, marginSize, marginSize, marginSize ) );
+			jPanelSitesDetails_site.add(lblWarning, BorderLayout.SOUTH);
+		
+			jPanelSiteName = new JPanel(new BorderLayout(marginSize,marginSize));
+			jPanelSitesDetails_site.add(jPanelSiteName, BorderLayout.NORTH);
+			jLabel1 = new JLabel();
+			jLabel1.setText("Site name: ");
+			jPanelSiteName.setBorder( new EmptyBorder(marginSize, marginSize, marginSize, marginSize ) );
+			jPanelSiteName.add(jLabel1, BorderLayout.WEST);
+			jTextField_newSite = new JTextField();
+			jPanelSiteName.add(jTextField_newSite, BorderLayout.CENTER);
+			
+			jPanelStatesChoices_container = new JPanel(new BorderLayout());
+			jPanelStatesChoices_container.add(getJButtonAddChange(), BorderLayout.EAST);
+			jPanelSitesDetails_site.add(jPanelStatesChoices_container, BorderLayout.CENTER);
+			
+			jPanelStatesChoices = new JPanel(new GridLayout(3, 1, 0, 0));
+			jPanelStatesChoices.setPreferredSize(new Dimension(10,130));
+			jPanelStatesChoices.setBorder(BorderFactory.createTitledBorder(null, "Alternative site's definition:", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, UIManager.getFont("Label.font"), new Color(51, 51, 51)));
+			jPanelStatesChoices_container.add(jPanelStatesChoices, BorderLayout.CENTER);
+			
+			
+			jPanelChoiceRange = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			jLabel2 = new JLabel();
+			jLabel2.setText(" : ");
+			jPanelChoiceRange.add(getSpinner_lower());
+			jPanelChoiceRange.add(jLabel2);
+			jPanelChoiceRange.add(getSpinner_upper());
+			
+		
+			
+			jPanelStatesChoices.add(jPanelChoiceRange);
 			
 			jRadioBoolean = new JRadioButton("boolean {TRUE, FALSE}c");
+			jRadioBoolean.setBorder(BorderFactory.createEmptyBorder());
 			jRadioBoolean.setEnabled(false);
 			jRadioBoolean.addItemListener(new ItemListener() {
 				public void itemStateChanged(ItemEvent e) {
 					if(jRadioBoolean.isSelected()) {
-						spinner_upper.setValue(0); spinner_upper.revalidate();
-						spinner_lower.setValue(0); spinner_lower.revalidate();
+						spinner_upper.setSelectedItem(""); spinner_upper.revalidate();
+						spinner_lower.setSelectedItem(""); spinner_lower.revalidate();
 						jTextField_listStates.setText(""); jTextField_listStates.revalidate();
+						jRadioBoolean.setSelected(true);
 					}
 				}
 			});
-			jRadioBoolean.setBounds(129, 50, 144, 23);
-			jPanelsites.add(jRadioBoolean);
 			
-						
-			GridBagConstraints gridBagConstraints2 = new GridBagConstraints();
-			gridBagConstraints2.fill = GridBagConstraints.BOTH;
-			gridBagConstraints2.gridy = 1;
-			gridBagConstraints2.weightx = 1.0;
-			gridBagConstraints2.weighty = 1.0;
-			gridBagConstraints2.gridx = 0;
-			//jPanel.add(getJPanelConcentrationSpecies(), gridBagConstraints2);
+			jPanelStatesChoices.add(jRadioBoolean);
+			JPanel jpanelforborder = new JPanel(new BorderLayout());
+			jpanelforborder.setBorder( new EmptyBorder(4,4,4,4 ) );
+			jpanelforborder.add(getJTextField_listStates(), BorderLayout.CENTER);
+			jPanelStatesChoices.add(jpanelforborder);
+			jPanelStatesChoices.add(jpanelforborder);
+			jPanelStatesChoices.add(jpanelforborder);
+			
+			
+	
 			
 		}
-		return jPanel;
+		return jPanelSitesDetails;
 	}
 	
 	private JPanel getJPanelConcentrationSpecies() {
@@ -323,6 +347,13 @@ public class MultistateBuilderFrame extends JDialog	 {
 	private void updateJTableConcentrationSpecies(){
 		
 		Vector<String> col = new Vector<String>();
+		if(!rendererJListSite.isEmptySiteWithProblem()) {
+			tableConcentrationSpeciesmodel.clearData();
+			jTableConcentrationSpecies.revalidate();
+			jTableConcentrationSpecies.setEnabled(false);
+			return;
+		}
+		
 		Set<String> names= this.species.getSitesNames();
 
 	    Iterator<String> iterator = names.iterator();  
@@ -338,6 +369,9 @@ public class MultistateBuilderFrame extends JDialog	 {
 		tableConcentrationSpeciesmodel = new CustomTableModel_MSMB(Constants.MultistateBuilder_QUANTITIES_description,col,new Vector(),this,false,true);
 		
 		jTableConcentrationSpecies = new CustomJTable_MSMB();
+		jTableConcentrationSpecies.setFont(MainGui.customFont);
+		jTableConcentrationSpecies.getTableHeader().setFont(MainGui.customFont);
+		jTableConcentrationSpecies.setEnabled(true);
 		jTableConcentrationSpecies.setModel(tableConcentrationSpeciesmodel);
 		
 		jTableConcentrationSpecies.initializeCustomTable(tableConcentrationSpeciesmodel);
@@ -383,28 +417,20 @@ public class MultistateBuilderFrame extends JDialog	 {
 	    
 	}
 
-	private JTextField getJTextField_newSite() {
-		if (jTextField_newSite == null) {
-			jTextField_newSite = new JTextField();
-			jTextField_newSite.setBounds(new Rectangle(11, 51, 106, 20));
-		}
-		return jTextField_newSite;
-	}
 
-	private JSpinner getSpinner_lower() {
+
+	private JComboBox<String> getSpinner_lower() {
 		if (spinner_lower == null) {
-			spinner_lower = new JSpinner();
-			spinner_lower.setBounds(new Rectangle(133, 23, 60, 20));
-			((SpinnerNumberModel)spinner_lower.getModel()).setMaximum(100);
-			((SpinnerNumberModel)spinner_lower.getModel()).setMinimum(0);
-			spinner_lower.addChangeListener(new javax.swing.event.ChangeListener() {
-				public void stateChanged(javax.swing.event.ChangeEvent e) {
+			spinner_lower = new JComboBox<String>();
+			spinner_lower.setEditable(true);
+			spinner_lower.addItemListener(new ItemListener () {
+				public void itemStateChanged(ItemEvent e) {
 					jTextField_listStates.setText("");
 					jRadioBoolean.setSelected(false);
 					jTextField_listStates.revalidate();
 				}
 			});
-			spinner_lower.addKeyListener(new java.awt.event.KeyAdapter() {
+			spinner_lower.getEditor().getEditorComponent().addKeyListener(new java.awt.event.KeyAdapter() {
 				public void keyTyped(java.awt.event.KeyEvent e) {
 					jTextField_listStates.setText("");
 					jRadioBoolean.setSelected(false);
@@ -415,20 +441,18 @@ public class MultistateBuilderFrame extends JDialog	 {
 		return spinner_lower;
 	}
 
-	private JSpinner getSpinner_upper() {
+	private JComboBox<String> getSpinner_upper() {
 		if (spinner_upper == null) {
-			spinner_upper = new JSpinner();
-			spinner_upper.setBounds(new Rectangle(206, 23, 60, 20));
-			((SpinnerNumberModel)spinner_upper.getModel()).setMaximum(100);
-			((SpinnerNumberModel)spinner_upper.getModel()).setMinimum(0);
-			spinner_upper.addChangeListener(new javax.swing.event.ChangeListener() {
-				public void stateChanged(javax.swing.event.ChangeEvent e) {
+			spinner_upper = new JComboBox<String>();
+			spinner_upper.setEditable(true);
+			spinner_upper.addItemListener(new ItemListener () {
+				public void itemStateChanged(ItemEvent e) {
 					jTextField_listStates.setText("");
 					jRadioBoolean.setSelected(false);
 					jTextField_listStates.revalidate();
 				}
 			});
-			spinner_upper.addKeyListener(new java.awt.event.KeyAdapter() {
+			spinner_upper.getEditor().getEditorComponent().addKeyListener(new java.awt.event.KeyAdapter() {
 				public void keyTyped(java.awt.event.KeyEvent e) {
 					jTextField_listStates.setText("");
 					jRadioBoolean.setSelected(false);
@@ -442,11 +466,10 @@ public class MultistateBuilderFrame extends JDialog	 {
 	private JTextField getJTextField_listStates() {
 		if (jTextField_listStates == null) {
 			jTextField_listStates = new JTextField();
-			jTextField_listStates.setBounds(new Rectangle(133, 79, 133, 20));
 			jTextField_listStates.addKeyListener(new java.awt.event.KeyAdapter() {
 				public void keyTyped(java.awt.event.KeyEvent e) {
-					spinner_upper.setValue(0); spinner_upper.revalidate();
-					spinner_lower.setValue(0); spinner_lower.revalidate();
+					spinner_upper.setSelectedItem(""); spinner_upper.revalidate();
+					spinner_lower.setSelectedItem(""); spinner_lower.revalidate();
 					jRadioBoolean.setSelected(false);
 				}
 			});
@@ -455,11 +478,9 @@ public class MultistateBuilderFrame extends JDialog	 {
 		return jTextField_listStates;
 	}
 
-	private JButton getJButton() {
+	private JButton getJButtonAddChange() {
 		if (jButton == null) {
 			jButton = new JButton();
-			jButton.setBounds(new Rectangle(287, 40, 60, 56));
-			jButton.setMargin(new Insets(11,9,11,11));
 			jButton.setHorizontalAlignment(SwingConstants.CENTER);
 			jButton.setText("<html><p ALIGN=\"CENTER\">Add /<p ALIGN=\"CENTER\">Change</html>");
 			jButton.addActionListener(new java.awt.event.ActionListener() {
@@ -511,14 +532,44 @@ private void applyChangeSite() {
 			JOptionPane.showMessageDialog(null,"The name "+name+" is a reserved word. Please chose a different site name!", "Error", JOptionPane.ERROR_MESSAGE);
  			return;
 		}
-   	
-		Integer lower = (Integer)this.spinner_lower.getValue();
-		Integer upper = (Integer)this.spinner_upper.getValue();
 		
-		if(upper < lower) {
-			  JOptionPane.showMessageDialog(this,"The upper value of the range cannot be smaller than the lower!", "Error", JOptionPane.ERROR_MESSAGE);
-			return;
+		String lowerStr = null;
+		String upperStr = null;
+		Integer lower = null;
+		Integer upper = null;
+		try {
+			lower = new Integer(this.spinner_lower.getSelectedItem().toString());
+		} catch(Exception ex) {
+			try {
+				lowerStr = this.spinner_lower.getSelectedItem().toString(); //even if everything is not ok, we should save it for later
+				lower = CellParsers.evaluateExpression(this.spinner_lower.getSelectedItem().toString());
+			} catch (Throwable e) {
+				e.printStackTrace();
+				//problems in parsing/evaluating the expression: I should just make the site with warning errors but accept it
+			}
 		}
+		
+		try {
+			upper =  new Integer(this.spinner_upper.getSelectedItem().toString());
+		} catch(Exception ex) {
+			try {
+				upperStr = this.spinner_upper.getSelectedItem().toString();
+				upper = CellParsers.evaluateExpression(this.spinner_upper.getSelectedItem().toString());
+			} catch (Throwable e) {
+				e.printStackTrace();
+				//problems in parsing/evaluating the expression: I should just make the site with warning errors but accept it
+			}
+	
+		}
+		if(lower != null && upper != null) {
+			if(upper < lower) {
+				  JOptionPane.showMessageDialog(this,"The upper value of the range cannot be smaller than the lower!", "Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+		}
+		if(lower != null && lowerStr== null) 	lowerStr = lower.toString();
+		if(upper != null && upperStr == null)	upperStr= upper.toString();
+	
 		try {
 			if(jRadioBoolean.isSelected()) {		
 				this.species.addSite_string(name, Constants.BooleanType.TRUE.description + "," +Constants.BooleanType.FALSE.description);
@@ -527,20 +578,17 @@ private void applyChangeSite() {
 				this.species.addSite_string(name, this.jTextField_listStates.getText().trim());
 			}
 			else {
-				this.species.addSite_range(name, lower.toString(), upper.toString());
+				this.species.addSite_range(name, lowerStr, upperStr);
 			}
-		} catch(Exception ex) {
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+		} catch(Throwable ex) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				ex.printStackTrace();
 			//problem in parsing species (e.g. cdhBoolWrong(p{TRUE,FALSE,somethingElse}))
-			  JOptionPane.showMessageDialog(this,"Problem parsing the current site. The definition cannot be accepted. Some states are using reserved word.", "Error", JOptionPane.ERROR_MESSAGE);
-			return;
+			  JOptionPane.showMessageDialog(this,"Problem parsing the current site. \n"+ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+		} finally {
+			this.refreshListSites();
+			this.updateJTableConcentrationSpecies();
 		}
-	
-		this.updateJTableConcentrationSpecies();
-
-		//this.refreshListSitesInTable();
-		this.refreshListSites();
 		
 	}
 	
@@ -571,22 +619,30 @@ private void applyChangeSite() {
 	    Iterator<String> iterator = names.iterator();  
 	    while (iterator.hasNext()) {  
 	       String site_name = iterator.next();
-	       String pr = species.printSite(site_name);//, false);  
-	       //Vector row = new Vector();
-	       //row.add(pr);
-	      // row.add(((Integer)(species.getStartIndexList(site_name))).toString());
+	       String pr = species.printSite(site_name);
+	       rendererJListSite.removeSiteWithProblem(site_name);
 	       model.addElement(pr);
 	    }  
 	    
-	   /* if(names.size()==0){
-	    	 model.addRow(new Vector(Arrays.asList("","")));
-	    }*/
-		
+	    HashMap<String, MutablePair<String, String>> sitesWithProblems = this.species.getSitesRangesWithVariables();
+	   
+	    Iterator<String> iterator2 = sitesWithProblems.keySet().iterator();  
+	    while (iterator2.hasNext()) {  
+	       String site_name = iterator2.next();
+	       if(names.contains(site_name)) continue; //site already printed before
+	       rendererJListSite.addSiteWithProblem(site_name);
+	       String pr = species.printSiteWithUndefinedElements(site_name);
+	       model.addElement(pr);
+	      
+	    }  
+	    
+	    
+	    
 		this.jTextField_newSite.setText("");
 		this.jTextField_listStates.setText("");
 		this.jRadioBoolean.setSelected(false);
-		this.spinner_lower.setValue(0);
-		this.spinner_upper.setValue(0);
+		this.spinner_lower.setSelectedItem("");
+		this.spinner_upper.setSelectedItem("");
 		
 		
 		this.jListSite.revalidate();
@@ -598,10 +654,9 @@ private void applyChangeSite() {
 
 	
 
-	private JScrollPane getJScrollPane() {
+	private JScrollPane getJScrollPaneJListSite() {
 		if (jScrollPane == null) {
 			jScrollPane = new JScrollPane();
-			jScrollPane.setBounds(new Rectangle(10, 150, 354, 86));
 			jScrollPane.setViewportView(getJListSite());
 		}
 		return jScrollPane;
@@ -612,28 +667,8 @@ private void applyChangeSite() {
 			jListSite = new JList<String>();
 			jListSite.setModel(new DefaultListModel<String>());
 			jListSite.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			
-			/*jListSite.getSelectionModel().addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-				public void valueChanged(javax.swing.event.ListSelectionEvent e) {
-					if(jListSite.getSelectedIndex() == -1) return;
-					String site = jListSite.getSelectedValue();
-					if(site.length() == 0) return;
-					String name = site.substring(0,site.indexOf("{"));
-					Vector<?> states = species.getSiteStates(name);
-					String start = (String)states.get(0);
-					String end = (String)states.get(1);
-					String list = (String)states.get(2);
-					boolean bool = (Boolean)states.get(3);
-					
-					if(bool) jRadioBoolean.setSelected(true);
-					else { 
-						jTextField_listStates.setText(list);
-						spinner_upper.setValue(Integer.parseInt(end));
-						spinner_lower.setValue(Integer.parseInt(start));
-					}
-					jTextField_newSite.setText(name);
-				}
-			});*/
+			rendererJListSite = new RendererForErrorsJList();
+			jListSite.setCellRenderer(rendererJListSite);
 		}
 		return jListSite;
 	}
@@ -644,8 +679,6 @@ private void applyChangeSite() {
 	private JButton getJButton1() {
 		if (jButton1 == null) {
 			jButton1 = new JButton();
-			jButton1.setBounds(new Rectangle(11, 243, 70, 30));
-			jButton1.setMargin(new Insets(3,3,3,3));
 			jButton1.setText("Delete site");
 			jButton1.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -659,8 +692,6 @@ private void applyChangeSite() {
 	private JButton getJButton2() {
 		if (jButton2 == null) {
 			jButton2 = new JButton();
-			jButton2.setBounds(new Rectangle(70+11, 243, 70, 30));
-			jButton2.setMargin(new Insets(3,3,3,3));
 			jButton2.setText("Modify site");
 			jButton2.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -688,11 +719,24 @@ private void applyChangeSite() {
 		String list = (String)states.get(2);
 		boolean bool = (Boolean)states.get(3);
 		
-		if(bool) jRadioBoolean.setSelected(true);
+		if(bool) {
+			jRadioBoolean.setSelected(true);
+			spinner_upper.setSelectedItem("");
+			spinner_lower.setSelectedItem("");
+			jTextField_listStates.setText("");
+		}
 		else { 
+			jRadioBoolean.setSelected(false);
+			if(list.compareTo("?")==0) list = "";
 			jTextField_listStates.setText(list);
-			spinner_upper.setValue(Integer.parseInt(end));
-			spinner_lower.setValue(Integer.parseInt(start));
+			if(list.length() == 0) {
+				spinner_upper.setSelectedItem(end);
+				spinner_lower.setSelectedItem(start);
+			} else {
+				spinner_upper.setSelectedItem("");
+				spinner_lower.setSelectedItem("");
+			}
+			
 		}
 		jTextField_newSite.setText(name);
 		name_before = name;
@@ -706,15 +750,13 @@ private void applyChangeSite() {
 	private JButton getJButton3() {
 		if (jButton3 == null) {
 			jButton3 = new JButton();
-			jButton3.setBounds(new Rectangle(291, 6, 100, 26));
 			jButton3.setText("Update Model");
 			jButton3.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					try{
 						updateModel();
 					} catch(Throwable ex) {
-						//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
-							ex.printStackTrace();
+						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex.printStackTrace();
 					}
 				}
 			});
@@ -725,7 +767,11 @@ private void applyChangeSite() {
 	private void updateModel() throws Throwable{
 		this.species.setName(new String(this.jTextField_species.getText()));
 		this.species.setType(Constants.SpeciesType.MULTISTATE.copasiType);
-		this.parentFrame.updateModel_fromMultiBuilder(this.species, renamed_sites);
+		try {
+			this.parentFrame.updateModel_fromMultiBuilder(this.species, renamed_sites);
+		} catch(Throwable ex) {
+			ex.printStackTrace();
+		}
 		dispose();
 	}
 	
@@ -747,7 +793,6 @@ private void applyChangeSite() {
 			try {
 				sp.setCompartment(MainGui.multiModel, MainGui.compartment_default_for_dialog_window);
 			} catch (MySyntaxException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -761,24 +806,19 @@ private void applyChangeSite() {
 		upper = null;
 		jLabel = null;
 		jTextField_species = null;
-		jPanel = null;
-		jLabel1 = null;
 		jTextField_newSite = null;
 		spinner_lower = null;
 		spinner_upper = null;
 		jTextField_listStates = null;
 		jButton = null;
-		//jTableListSite = null;
 		jListSite = null;
 		jScrollPane = null;
 		jLabel2 = null;
-		jLabel3 = null;
-		jLabel3b = null;
 		jButton1 = null;
 		jButton2 = null;
 		jButton3 = null;
 		species = new MultistateSpecies(MainGui.multiModel,new String());
-		
+		jPanelSitesDetails = null;
 		initialize();
 		updateJTableConcentrationSpecies();
 	}
@@ -818,24 +858,51 @@ private void applyChangeSite() {
 
 class CustomFocusTraversalPolicy extends FocusTraversalPolicy {
 Vector<Component> order;
+private int currentIndex = 0;
 
 	public CustomFocusTraversalPolicy(Vector<Component> order) {
 		this.order = new Vector<Component>(order.size());
 		this.order.addAll(order);
+		currentIndex = 0;
 	}
-	
+		
 	public Component getComponentAfter(Container focusCycleRoot, Component aComponent)
 	{
-		int idx = (order.indexOf(aComponent) + 1) % order.size();
-		return order.get(idx);
+		int index = order.indexOf(aComponent);
+		if(index ==-1) {//trick because traversal policy has issues with comboboxes
+			if(currentIndex ==2) {
+				currentIndex = 3;
+				return order.get(3);
+			} else {
+				currentIndex = 4;
+				return order.get(4);
+			}
+		} else {
+			int idx = (order.indexOf(aComponent) + 1) % order.size();
+			currentIndex = idx;
+			return order.get(idx);	
+		}
 	}
 	
 	public Component getComponentBefore(Container focusCycleRoot,
 	                          Component aComponent)
 	{
-		int idx = order.indexOf(aComponent) - 1;
+		
+		int index = order.indexOf(aComponent);
+		if(index ==-1) {//trick because traversal policy has issues with comboboxes
+			if(currentIndex ==2) {
+				currentIndex = 1;
+				return order.get(1);
+			} else {
+				currentIndex = 2;
+				return order.get(2);
+			}
+		}
+			
+		int idx = index - 1;
 		if (idx < 0) {
-		idx = order.size() - 1;
+			currentIndex = idx;
+			idx = order.size() - 1;
 		}
 		return order.get(idx);
 	}
@@ -854,154 +921,53 @@ Vector<Component> order;
 	
 }
 
-
-/*class FilterHistoryJList extends JList {
-
-    private FilterField filterField;
-    private int DEFAULT_FIELD_WIDTH = 20;
-
-    public FilterHistoryJList() {
-        super();
-        setModel (new FilterModel());
-        filterField = new FilterField (DEFAULT_FIELD_WIDTH);
-        filterField.textField.requestFocus();
+class RendererForErrorsJList  extends JLabel implements  ListCellRenderer  {
+	
+	private static final long serialVersionUID = 1L;
+	private HashSet<String> siteNamesWithProblems = new HashSet<String>();
+	public RendererForErrorsJList() {
+		 setOpaque(true);
+		 setFont(MainGui.customFont);
+	}
+	
+	public boolean isEmptySiteWithProblem() {
+		return siteNamesWithProblems.isEmpty();
+	}
+	
+	public void addSiteWithProblem(String site_name) {
+		siteNamesWithProblems.add(site_name);
+	}
+	
+	public void removeSiteWithProblem(String site_name) {
+		siteNamesWithProblems.remove(site_name);
+	}
+	    
+    public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            
+    	String selectedItem = value.toString();
+    	setText(selectedItem);
+    	String site_name = selectedItem.substring(0,selectedItem.indexOf("{"));
+    	
+         if (siteNamesWithProblems.contains(site_name)) {
+          
+          	Border compound = null;
+  			Border redline = BorderFactory.createLineBorder(GraphicalProperties.color_cell_with_errors,2);
+  			compound = BorderFactory.createCompoundBorder(redline, compound);
+  			setBorder(compound);
+         } else {
+        	 setBorder(null);
+         }
+         
+         if(isSelected) {
+        	   setBackground(list.getSelectionBackground());
+               setForeground(list.getSelectionForeground());
+         } else {
+        	   setBackground(list.getBackground());
+               setForeground(list.getForeground());
+         }
+            
+        return this;
     }
 
-    public void setModel (ListModel m) {
-        if (! (m instanceof FilterModel))
-            throw new IllegalArgumentException();
-        super.setModel (m);
-    }
-
-    public void addItem (Object o) {
-        ((FilterModel)getModel()).addElement (o);
-    }
-
-    public FilterField getFilterField() {
-        return filterField;
-    }
-
-    // test filter list
-    public static void main (String[] args) {
-        String[] listItems = {
-            "Chris", "Joshua", "Daniel", "Michael",
-            "Don", "Kimi", "Kelly", "Keagan"
-        };
-        JFrame frame = new JFrame ("FilterHistoryJList");
-        frame.getContentPane().setLayout (new BorderLayout());
-        // populate list
-        FilterHistoryJList list = new FilterHistoryJList();
-        for (int i=0; i<listItems.length; i++)
-            list.addItem (listItems[i]);
-        // add to gui
-        JScrollPane pane =
-            new JScrollPane (list,
-                             ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-                             ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        frame.getContentPane().add (pane, BorderLayout.CENTER);
-        FilterField filterField = list.getFilterField();
-        frame.getContentPane().add (filterField, BorderLayout.NORTH);
-        frame.pack();
-        frame.setVisible(true);
-        filterField.textField.requestFocus();
-    }
-
-    // inner class to provide filtered model
-    class FilterModel extends AbstractListModel {
-        ArrayList items;
-        ArrayList filterItems;
-        public FilterModel() {
-            super();
-            items = new ArrayList();
-            filterItems = new ArrayList();
-        }
-        public Object getElementAt (int index) {
-            if (index < filterItems.size())
-                return filterItems.get (index);
-            else
-                return null;
-        }
-        public int getSize() {
-            return filterItems.size();
-        }
-        
-        public void clear() {
-        	items.clear();
-        	filterItems.clear();
-        	refilter();
-        }
-        public void addElement (Object o) {
-            items.add (o);
-            refilter();
-        }
-        private void refilter() {
-            filterItems.clear();
-            String term = getFilterField().textField.getText();
-            for (int i=0; i<items.size(); i++)
-                if (items.get(i).toString().indexOf(term, 0) != -1)
-                    filterItems.add (items.get(i));
-            fireContentsChanged (this, 0, getSize());
-        }
-    }
-
-    // inner class provides filter-by-keystroke field
-    class FilterField extends JComponent
-        implements DocumentListener, ActionListener {
-        LinkedList prevSearches;
-        JTextField textField;
-        JButton prevSearchButton;
-        JPopupMenu prevSearchMenu;
-        
-        public void setText(String s) {
-        	this.textField.setText(s);
-        }
-        
-        public FilterField (int width) {
-            super();
-            setLayout(new BorderLayout());
-            textField = new JTextField (width);
-            textField.getDocument().addDocumentListener (this);
-            textField.addActionListener (this);
-            prevSearchButton = new JButton (new ImageIcon ("mag-glass.png"));
-            prevSearchButton.setBorder(null);
-            prevSearchButton.addMouseListener (new MouseAdapter() {
-                    public void mousePressed (MouseEvent me) {
-                        popMenu (me.getX(), me.getY());
-                    }
-                });
-            add (prevSearchButton, BorderLayout.WEST);
-            add (textField, BorderLayout.CENTER);
-            prevSearches = new LinkedList ();
-        }
-        public void popMenu (int x, int y) {
-            prevSearchMenu = new JPopupMenu();
-            Iterator it = prevSearches.iterator();
-            while (it.hasNext())
-                prevSearchMenu.add (new PrevSearchAction(it.next().toString()));
-            prevSearchMenu.show (prevSearchButton, x, y);
-        }
-        public void actionPerformed (ActionEvent e) {
-            // called on return/enter, adds term to prevSearches
-            if (e.getSource() == textField) {
-                prevSearches.addFirst (textField.getText());
-                if (prevSearches.size() > 10)
-                    prevSearches.removeLast();
-            }
-        }
-        public void changedUpdate (DocumentEvent e) {((FilterModel)getModel()).refilter(); }
-        public void insertUpdate (DocumentEvent e) {((FilterModel)getModel()).refilter(); }
-        public void removeUpdate (DocumentEvent e) {((FilterModel)getModel()).refilter(); }
-    }
-
-    class PrevSearchAction extends AbstractAction {
-        String term;
-        public PrevSearchAction (String s) {
-            term = s;
-            putValue (Action.NAME, term);
-        }
-        public String toString() { return term; }
-        public void actionPerformed (ActionEvent e) {
-            getFilterField().textField.setText (term);
-          }
-    }
-}*/
+    
+};

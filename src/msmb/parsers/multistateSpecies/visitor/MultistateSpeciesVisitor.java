@@ -622,21 +622,6 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	   }
 	}
 	   
-	  
-	/*  @Override
-		public void visit(MultistateSpecies_SiteSingleElement_Range n) {
-		  try{
-			  current_low = new Integer(n.nodeToken.tokenImage);
-			  current_high = new Integer(n.nodeToken2.tokenImage);
-			  //System.out.println("low = "+current_low+"; high = "+current_high);
-			  if(current_low>=current_high) throw new Exception("Error in \""+ToStringVisitor.toString(n)+"\": lower bound should be < upper bound.");
-		  } catch(Exception ex) {
-			   ex.printStackTrace();
-			   exceptions.add(ex);
-		   }
-		  super.visit(n); 
-	    
-		}*/
 
 	@Override
 	public void visit(MultistateSpecies_SiteSingleElement_Range n) {
@@ -694,7 +679,6 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 	
 	  
 	public HashSet<String> getCircularSites() {
-		//System.out.println("getCircularSites: " +circular_sites);
 		return circular_sites;
 	}
 	

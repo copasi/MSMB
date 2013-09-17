@@ -231,8 +231,6 @@ public class ReactionDB {
 				} else {
 						String site = extensions.get(0).substring(1);
 					
-					System.out.println("qui species name "+speciesName +" and site "+site);
-					
 					for(int j = 0; j < subs.size(); j++){
 						String element1 = subs.get(j);
 						element1 = multiModel.extractName(element1);

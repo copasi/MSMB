@@ -1,5 +1,7 @@
 package msmb.parsers.chemicalReaction.visitor;
 
+import msmb.gui.MainGui;
+import msmb.model.MultistateSpecies;
 import msmb.parsers.chemicalReaction.syntaxtree.*;
 import msmb.utility.CellParsers;
 import java.io.ByteArrayOutputStream;
@@ -18,13 +20,14 @@ public class SubstitutionVisitorReaction extends DepthFirstVoidVisitor {
 		PrintWriter out;
 		ByteArrayOutputStream newExpression = new ByteArrayOutputStream();
 		 
-		 
+		 boolean isVariableIndexMultistate = false;
 		CompleteReaction newCompleteExpression = null;
 	
 	
-	   public SubstitutionVisitorReaction(String originalVar, String replacementExpression)  {
+	   public SubstitutionVisitorReaction(String originalVar, String replacementExpression, boolean isVariableIndexMultistate)  {
 		   originalName = originalVar;
 		   replacementExpr = replacementExpression;
+		   this.isVariableIndexMultistate = isVariableIndexMultistate;
 		   out = new PrintWriter(newExpression, true); 
 	   }
 	   
@@ -70,7 +73,8 @@ public class SubstitutionVisitorReaction extends DepthFirstVoidVisitor {
 					out.print(aliasPair.left+"=");
 				}
 				if(CellParsers.isMultistateSpeciesName(name)) {
-					printNewMultistate(name, originalName, replacementExpr);
+					if(!isVariableIndexMultistate) printNewMultistate(name, originalName, replacementExpr);
+					else printNewMultistate_changeSite(name, originalName, replacementExpr);
 				}
 				else printToken(name);
 			}
@@ -79,7 +83,7 @@ public class SubstitutionVisitorReaction extends DepthFirstVoidVisitor {
 		
 		private void printNewMultistate(String currentSpecies, String originalName,	String replacementExpr) {
 			String onlyNameOriginal = CellParsers.extractMultistateName(originalName);
-			String  onlyNameReplacementExpr = CellParsers.extractMultistateName(replacementExpr);
+			String onlyNameReplacementExpr = CellParsers.extractMultistateName(replacementExpr);
 			String onlyNameCurrentSpecies = CellParsers.extractMultistateName(currentSpecies);
 						
 			try{
@@ -91,6 +95,21 @@ public class SubstitutionVisitorReaction extends DepthFirstVoidVisitor {
 				}
 			} catch(Exception ex) { 
 				//ex.printStackTrace();
+				out.print(currentSpecies);
+				
+			}
+			finally { out.flush();}	
+			}
+		
+		private void printNewMultistate_changeSite(String currentSpecies, String originalName,	String replacementExpr) {
+			try{
+				MultistateSpecies ms = new MultistateSpecies(MainGui.multiModel, currentSpecies,false,false);			
+				if(ms.containsRangeVariable(originalName)) {
+					ms.replaceRangeVariable(originalName, replacementExpr);
+				}
+				out.print(ms.printCompleteDefinition());
+			} catch(Exception ex) { 
+				ex.printStackTrace();
 				out.print(currentSpecies);
 				
 			}

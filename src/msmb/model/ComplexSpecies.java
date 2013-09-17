@@ -88,14 +88,14 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 		setType(Constants.SpeciesType.COMPLEX.copasiType);
 	}
 	
-	public ComplexSpecies(String complete_string) throws Exception {
+	/*public ComplexSpecies(String complete_string) throws Exception {
 		super(null, complete_string);
 		setType(Constants.SpeciesType.COMPLEX.copasiType);
 		prefixName = new String(complete_string);
-	}
+	}*/
 	
-	public ComplexSpecies(ComplexSpecies c) throws Exception {
-		super(null, c.getDisplayedName());
+	public ComplexSpecies(MultiModel m, ComplexSpecies c) throws Exception {
+		super(m, c.getDisplayedName());
 		setType(Constants.SpeciesType.COMPLEX.copasiType);
 		components.addAll(c.components);
 		components_multi.putAll(c.components_multi);
@@ -329,10 +329,6 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 		
 		components_multi.put(currentMultistateSpeciesName, entry);
 			
-		
-	//	System.out.println("complexSite_originSpecies_originSite: "+complexSite_originSpecies_originSite);
-	//	System.out.println("components_multi: "+components_multi);
-		
 		String ret = currentMultistateSpeciesName + "("+sitesFinal+")";
 		
 		return ret;
@@ -471,16 +467,7 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 		Vector<String> componentsNew = newComplex.getComponents();
 		Vector<String> siteNamesUsedNew = newComplex.getSiteNamesUsed();
 		HashMap<String,Vector<MutablePair<String,String>>> components_multiNew = newComplex.getComponents_multi();
-		//HashMap<String,String> complex_sitesConfigurationNew = newComplex.getComplexSitesConfiguration();
-		//HashBiMap<String, MutablePair<String, String>> complexSite_originSpecies_originSiteNew = newComplex.getComplexSite_originSpecies_originSite();
-		//	System.out.println("complex_sitesConfigurationNew "+complex_sitesConfigurationNew.equals(complex_sitesConfiguration));
-		//	System.out.println("complexSite_originSpecies_originSiteNew "+complexSite_originSpecies_originSiteNew.equals(complexSite_originSpecies_originSite));
-
-
-	//	System.out.println("components "+componentsNew.equals(components));
-	//	System.out.println("siteNamesUsedNew "+siteNamesUsedNew.equals(siteNamesUsed) + "\n" + siteNamesUsed +"\n" + siteNamesUsedNew);
-	//	System.out.println("components_multiNew "+components_multiNew.equals(components_multi));
-		
+			
 		everythingElseSame = componentsNew.equals(components) 
 												&& siteNamesUsedNew.equals(this.getSiteNamesUsed()) 
 												&& components_multiNew.equals(components_multi);
@@ -509,10 +496,9 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 			MultistateSpecies mspecies = (MultistateSpecies) m.getSpecies(multiElement);
 			MultistateSpecies tempComplex = null;
 			try {
-				tempComplex = new MultistateSpecies(null, this.getFullComplexDefinition());
+				tempComplex = new MultistateSpecies(multiModel, this.getFullComplexDefinition());
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			for(Vector<String> element : tracked_triplet) {
 				String complex_siteName = element.get(0);
@@ -612,7 +598,7 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 
 
 	public ComplexSpecies(Vector serializedInfo) throws Exception {
-		this("NO_NAME");
+		this(null,"NO_NAME");
 		try{
 			prefixName = (String) serializedInfo.get(0);
 			customFullName = (String) serializedInfo.get(1);
@@ -675,7 +661,6 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 				
 				components_multi.put(aliasPrevious+"="+alreadyTrackedMulti.left, entryPrevious);
 				components_multi.remove(alreadyTrackedMulti.left);
-			//	complexSite_originSpecies_originSite.remove(alreadyTrackedMulti.left);
 				
 				aliases.put(aliasPrevious, alreadyTrackedMulti.left);
 			}
@@ -687,7 +672,7 @@ public class ComplexSpecies extends MultistateSpecies implements Serializable{
 					break;
 				}
 			}
-			System.out.println("aliases now: "+aliases);
+			
 		}
 		return alias;
 	}

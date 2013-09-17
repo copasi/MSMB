@@ -181,10 +181,11 @@ public interface IVoidVisitor {
    * ............ .. . #2 ( " " )*<br>
    * ............ .. . #3 ( %0 <STRING_LITERAL><br>
    * ............ .. . .. | %1 ( &0 <MULTI_IDENTIFIER><br>
-   * ............ .. . .. . .. | &1 <NUMBER><br>
-   * ............ .. . .. . .. | &2 <OPEN_R><br>
-   * ............ .. . .. . .. | &3 <MATH_ELEMENT><br>
-   * ............ .. . .. . .. | &4 <CLOSED_R> )+ ) )?<br>
+   * ............ .. . .. . .. | &1 <CIRCULAR_FLAG><br>
+   * ............ .. . .. . .. | &2 <NUMBER><br>
+   * ............ .. . .. . .. | &3 <OPEN_R><br>
+   * ............ .. . .. . .. | &4 <MATH_ELEMENT><br>
+   * ............ .. . .. . .. | &5 <CLOSED_R> )+ ) )?<br>
    *
    * @param n - the node to visit
    */
@@ -208,7 +209,8 @@ public interface IVoidVisitor {
    * <p>
    * nodeChoice -> . %0 <NUMBER><br>
    * .......... .. | %1 <STRING_LITERAL><br>
-   * .......... .. | %2 ( &0 " "<br>
+   * .......... .. | %2 <CIRCULAR_FLAG><br>
+   * .......... .. | %3 ( &0 " "<br>
    * .......... .. . .. | &1 <OPEN_R><br>
    * .......... .. . .. | &2 <CLOSED_R><br>
    * .......... .. . .. | &3 <MATH_ELEMENT><br>

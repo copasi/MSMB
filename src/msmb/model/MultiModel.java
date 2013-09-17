@@ -74,7 +74,7 @@ public class MultiModel {
 		} else {
 			where = new Vector<Integer>();
 		}
-		where.add(tableIndex);
+		if(!where.contains(tableIndex)) where.add(tableIndex);
 		
 		
 		if(where.size() > 1) {
@@ -401,6 +401,11 @@ public class MultiModel {
 	
 	public void saveSBML(File file) throws Exception {
 		 this.copasiDataModel.exportSBML(file.getAbsolutePath(), true, 3, 1);
+		 
+		 clearCopasiDataModel();
+		 MainGui.clearCopasiFunctions();
+		 System.out.println("saved");System.out.flush();
+		 System.out.println("cleared");System.out.flush();
 	}
 	
 	
@@ -631,7 +636,7 @@ public class MultiModel {
 				//System.out.println("Exporting reaction " + i + " of "+ tableReactionmodel.getRowCount()); System.out.flush();
 				String string_reaction = ((String)tableReactionmodel2.getValueAt(i, 2));
 				if(string_reaction.trim().length() <= 0) continue;
-
+		
 
 				boolean parseErrors = false;
 				Vector metabolites = new Vector();
@@ -698,7 +703,7 @@ public class MultiModel {
 					try{
 						String rateLaw = ((String)tableReactionmodel2.getValueAt(i, Constants.ReactionsColumns.KINETIC_LAW.index)).trim();
 						String kineticType = ((String)tableReactionmodel2.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).trim();
-						
+						addDependentModifier_ifNecessary(expandedReaction);
 						generateKineticLaw(reaction,i, expandedReaction, rateLaw, kineticType,assignedUsage);
 					} catch(Throwable ex) {
 						problemsWithSomeExpression = true; // but I should wait to signal that because some expression can refer to species with assignments, so I will run this loop after the reactions
@@ -757,6 +762,41 @@ public class MultiModel {
 		
 	}
 		
+
+	private void addDependentModifier_ifNecessary(Vector expandedReaction) {
+		//Vector<String> subs = (Vector)expandedReaction.get(0);
+		//Vector<String> prod =(Vector)expandedReaction.get(1);
+		Vector<String> mod = (Vector)expandedReaction.get(2);
+				
+		Vector<Species> species_to_add = new Vector<Species>();
+		for(int i = 0; i < mod.size(); i++) {
+			String current = mod.get(i);
+			String mod_onlyName = CellParsers.extractMultistateName(current);
+			int index_metab;
+			try {
+				index_metab = this.findMetabolite(current,null);
+				if(index_metab == -1) {
+					Species incomplete_mod = this.getSpecies(mod_onlyName);
+					MultistateSpecies newSpecies = new MultistateSpecies(this, current);
+					newSpecies.setExpression(this, CellParsers.evaluateExpressionWithDependentSum( incomplete_mod.getEditableExpression(), newSpecies)); 
+					species_to_add.add(newSpecies);
+					
+				} 
+			} catch (Throwable e) {
+				continue;
+			}
+		}
+		
+		if(species_to_add.size() > 0) {
+			System.out.println("species_to_add : "+species_to_add);
+			try {
+				fillCopasiDataModel_species(species_to_add);
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+			
+		}
+	}
 
 	public Vector<Vector<String>> check_ifSingleFunctionCallOrSingleGlobalQ(boolean massAction, int reaction_row, String reactionName, String equation) {
 		Vector<Vector<String>> ret = new Vector<>();
@@ -1271,9 +1311,7 @@ public class MultiModel {
 			roleVector.add(Constants.SITE_FOR_WEIGHT_IN_SUM);
 			
 			CFunction chosenFun = reaction.getFunction();
-			if(chosenFun.getObjectName().startsWith("Ga_sy")) {
-				System.out.println("qui for debug");
-			}
+			
 			
 			for(int iii = 1, jjj = 0; iii < paramMapping.size(); iii=iii+2,jjj++) {
 				String parameterNameInFunction = (String)paramMapping.get(iii);
@@ -1311,14 +1349,19 @@ public class MultiModel {
 									if(kind.compareTo(Constants.TitlesTabs.GLOBALQ.description)!=0) throw new NullPointerException();
 								}
 								CModelValue modelValue = model.getModelValue(actualModelParameter);
-								reaction.setParameterMapping(findParamIndex_InCFunction(chosenFun, parameterNameInFunction), modelValue.getKey());
+								int index_in_function = findParamIndex_InCFunction(chosenFun, parameterNameInFunction);
+								if(index_in_function == -1) throw new NullPointerException();
+								
+								reaction.setParameterMapping(index_in_function, modelValue.getKey());
 								assignedUsage.put(chosenFun.getObjectName()+"_"+parameterNameInFunction, CFunctionParameter.PARAMETER);
 								checkAllRoles = false;
 							}
 							break;
 						case Constants.ROLE_EXPRESSION:
 							CModelValue modelValue = add_globalQ_4_function(model, reaction, i, jjj, actualModelParameter);
-							reaction.setParameterMapping(findParamIndex_InCFunction(chosenFun, parameterNameInFunction), modelValue.getKey());
+							int index_in_function = findParamIndex_InCFunction(chosenFun, parameterNameInFunction);
+							if(index_in_function == -1) throw new NullPointerException();
+							reaction.setParameterMapping(index_in_function, modelValue.getKey());
 							assignedUsage.put(chosenFun.getObjectName()+"_"+parameterNameInFunction, CFunctionParameter.PARAMETER);
 							checkAllRoles = false;
 							break;
@@ -1353,13 +1396,15 @@ public class MultiModel {
 							}
 							
 							if(index_metab == -1) {
-								//System.out.println("actualModelParameter "+actualModelParameter);
 								throw new NullPointerException();
 							}
 							
 							  
 							CMetab metab = model.getMetabolite(index_metab);
-							int index_in_function = findParamIndex_InCFunction(chosenFun, parameterNameInFunction);
+							index_in_function = findParamIndex_InCFunction(chosenFun, parameterNameInFunction);
+							if(index_in_function == -1) {
+								throw new NullPointerException();
+							}
 							reaction.setParameterMapping(index_in_function, metab.getKey());
 							
 							
@@ -1438,7 +1483,7 @@ public class MultiModel {
 										if(CellParsers.isMultistateSpeciesName(current)) {
 											realMultistate = true;
 										}
-										if(!mod_onlyNames.contains(current)) { index_metab = -1;}
+										if(!mod_onlyNames.contains(CellParsers.extractMultistateName(current))) { index_metab = -1;}
 										
 									}
 								}
@@ -1537,6 +1582,8 @@ public class MultiModel {
 								}
 								
 								
+							} else {
+								throw new NullPointerException();
 							}
 							break;
 						default:
@@ -1747,11 +1794,10 @@ public class MultiModel {
 			ExtractSubProdModVisitor v = new ExtractSubProdModVisitor(this);
 		    start.accept(v);
 			ret = new String(v.getExtractedName_fromSpeciesWithCoefficient().getBytes("UTF-8"),"UTF-8");
-			
+		
 		
 		}catch (Exception e) {
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
-			e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)		e.printStackTrace();
 		}
 		return ret;
 	}
@@ -1809,10 +1855,6 @@ public class MultiModel {
 		
 		
 		modified_species.clear();
-		
-		         
-
-		
 		allNamedElements.clear();
 		speciesDB.clear();
 		reactionDB.clear();
@@ -1878,10 +1920,8 @@ public class MultiModel {
 							try {
 								MutablePair<String, Boolean> pair = buildCopasiExpression(s.getExpression(),true,false);
 								String expr = pair.left;
-								//System.out.println("Expression: "+expr);
 								if(expr.length()==0) throw new Exception("Problems exporting the expression "+s.getExpression());
 								m.setExpression(expr);
-								//m.setInitialExpression(expr);
 							} catch (Throwable e) {
 								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 								species_with_expression_not_added.add(s);
@@ -1892,7 +1932,7 @@ public class MultiModel {
 						if(!MainGui.quantityIsConc)		{
 							try{
 								m.setInitialValue(Double.parseDouble(s.getInitialQuantity().get(ii)));
-							} catch(Throwable ex) { //E' UN'ESPRESSIONE METTERE 0 QUI E INITIAL EXPRESSION COME EXPRESSION
+							} catch(Throwable ex) { 
 								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 								initialExpression = s.getInitialQuantity().get(ii);
 							}
@@ -1921,7 +1961,7 @@ public class MultiModel {
 				} else {
 
 					MultistateSpecies multi = (MultistateSpecies) s;
-
+					
 					Vector<Species> expanded = multi.getExpandedSpecies(this);
 					//expanded = this.speciesDB.assignInitals_expandedMultistateVector(expanded);
 
@@ -1929,6 +1969,7 @@ public class MultiModel {
 
 					for(int j = 0; j < expanded.size(); j++) {
 						Species single = expanded.get(j);
+						
 						String name = single.getDisplayedName();
 						String comp = single.getCompartment_listString();
 						double initial_conc = 0.0;
@@ -1950,7 +1991,7 @@ public class MultiModel {
 						int index_metab = this.findMetabolite(name,null);
 						if(index_metab == -1) m = model.createMetabolite(name, comp , initial_conc,  type);
 						else m = model.getMetabolite(index_metab);
-
+						
 						if(MainGui.quantityIsConc) { 
 							m.setInitialConcentration(initial_conc); 
 							//object = m.getObject(new CCopasiObjectName("Reference=InitialConcentration"));
@@ -1974,14 +2015,13 @@ public class MultiModel {
 						
 						
 						try {
-							MutablePair<String, Boolean> pair = buildCopasiExpression(s.getExpression(),true,false);
+							MutablePair<String, Boolean> pair = buildCopasiExpression(single.getExpression(),true,false);
 							String expr = pair.left;
 							m.setExpression(expr);
 						} catch (Exception e) {
 							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 							species_with_expression_not_added.add(single);
 						}
-						
 						m.setNotes(s.getNotes());
 						
 						MSMB_UnsupportedAnnotations multistate_annotation = new MSMB_UnsupportedAnnotations(MSMB_UnsupportedAnnotations.MSMB_UnsupportedAnnotations_type.MULTISTATE_SPECIES, multi.printCompleteDefinition());
@@ -2019,20 +2059,16 @@ public class MultiModel {
 	private int findParamIndex_InCFunction(CFunction chosenFun, String param) {
 		CFunctionParameters var = chosenFun.getVariables();
 		
-		//if(param.startsWith("\"")&param.endsWith("\"")) param = param.substring(1,param.length()-1);
 		for(int i = 0; i < var.size(); i++) {
 			CFunctionParameter par = var.getParameter(i);
 			if(par.getObjectName().compareTo(param) == 0) return i; 
 		}
-		System.out.println("NON TROVATO "+chosenFun.getObjectDisplayName() + " param "+param);
-		System.out.flush();
 		return -1;
 	}
 	 
 	
 	private CFunctionDB fillCopasiDataModel_functions() {
 		CFunctionDB funDB_copasi = CCopasiRootContainer.getFunctionList();
-		//System.out.println("size 1: " + funDB_copasi.loadedFunctions().size());
 		if(!MainGui.fromInterface) MainGui.clearCopasiFunctions(); //
 		
 		Collection<Function> defFunctions = funDB.getAllFunctions();
@@ -2042,32 +2078,25 @@ public class MultiModel {
 			 if(fun == null) continue;
 			 
 			
-			// try {
-				 CFunction ev =(CFunction)funDB_copasi.findFunction(fun.name);
-				 if(ev == null) {
-		   //throw new Exception(""); //System.out.println(ev);
-			 //} catch(Exception ex) {
-				 //if I get an exception it means that the function is not there so I have to add
-				 //the function in the database. If the function exist no exception are thrown so
-				 //I can simply go on because the function is already there
+				 CFunction function =(CFunction)funDB_copasi.findFunction(fun.name);
+				 if(function == null ) {
+					 //if I get a null pointer it means that the function is not there so I have to add
+				 //the function in the database. 
 			  if(fun.getType()==CFunction.UserDefined ||
 				   (fun.getType() == CFunction.PreDefined && 
 				      (fun.name.contains(CellParsers.cleanName(Constants.DEFAULT_SUFFIX_COPASI_BACKWARD_REACTION))
 				    	||fun.name.contains(CellParsers.cleanName(Constants.DEFAULT_SUFFIX_COPASI_FORWARD_REACTION)) )
 				    )
 				 ) {
-				  //CFunction cf = new CFunction(fun.getCopasiFunction());
-				  //funDB_copasi.add(cf,true);
 				  
 				  String funName = fun.getName();
 				  if(funName.startsWith("\"") || funName.endsWith("\"")) funName = funName.substring(1, funName.length()-1);
-				  CFunction function = (CFunction)funDB_copasi.createFunction(funName,CEvaluationTree.UserDefined);
-				  boolean result = function.setInfix(fun.equation);
+				  function = (CFunction) funDB_copasi.createFunction(funName,CEvaluationTree.UserDefined);
+				  boolean result = function.setInfix(fun.getEquation());
 				  function.setReversible(COPASI.TriFalse);
 				 
 				 // function.setNotes(fun.getNotes());
 				  CFunctionParameters variables = function.getVariables();
-				 
 				  
 				  Vector orderedParameters = fun.getParametersNames();
 				  for(int ord = 0; ord < orderedParameters.size(); ord++) {
@@ -2664,10 +2693,38 @@ public class MultiModel {
 			
 	}
 	
-	private MutablePair<String, Boolean> buildCopasiExpression(String expression, boolean expressionInSpecies, boolean isInitialExpression) throws Exception {
+	//boolean containSUM used to add the unsupported annotation with the compressed version of the expression
+	MutablePair<String, Boolean> buildCopasiExpression(String expression, boolean expressionInSpecies, boolean isInitialExpression) throws Exception {
 		return parseExpressionGlobalQ(expression, MainGui.exportConcentration, expressionInSpecies,isInitialExpression); 
 	}
 	
+	
+	//boolean containSUM used to add the unsupported annotation with the compressed version of the expression
+		MutablePair<String, Boolean> buildCopasiExpression(String expression, MultistateSpecies ms) throws Exception {
+			if(expression.length() == 0) return new MutablePair(new String(), false); 
+			
+			CModel model = this.copasiDataModel.getModel();
+			
+			InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+			MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
+			CompleteExpression root = parser.CompleteExpression();
+			CopasiVisitor vis = new CopasiVisitor(model,this,ms);
+			try{
+				root.accept(vis);
+			} catch (Exception e) {
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			}
+			if(vis.getExceptions().size() == 0) {
+				String copasiExpr  = vis.getCopasiExpression();
+				boolean containsSUM = vis.containsSUM();
+				return new MutablePair(copasiExpr, containsSUM);
+			} else {
+				throw vis.getExceptions().get(0);
+			}
+			
+		}
+		
+		
 	private Vector<String> buildCopasiExpressionAssignment(Vector<String> expression, int expansionActionWithVolume) throws Exception {
 		return parseExpressionAssignment(expression, expansionActionWithVolume);
 	}
@@ -2698,8 +2755,7 @@ public class MultiModel {
 			if(!(sp instanceof MultistateSpecies)) {
 				non_multistate_react.add(species);
 			} else {
-				
-				sp = new MultistateSpecies(null, ((MultistateSpecies)sp).printCompleteDefinition());
+					sp = new MultistateSpecies(this, ((MultistateSpecies)sp).printCompleteDefinition());
 				if(aliases_2 != null && aliases_2.containsKey(i+1)) {
 					sp.setName(aliases_2.get(i+1));
 				}
@@ -2709,42 +2765,36 @@ public class MultiModel {
 				MultistateSpecies msp = new MultistateSpecies(this, sp.getDisplayedName());
 				//msp.setSitesRangesWithVariables(((MultistateSpecies)sp).getSitesRangesWithVariables());
 				MultistateSpecies current = null;
-				try{
-					current = new MultistateSpecies(this, species);
-				} catch(Throwable ex) {
-					//e.g. Cdh1(p) (with no range) is used in the reactant, it cannot be used to build a complete multistate species
-					//
-					 InputStream is;
-						try{
-							is = new ByteArrayInputStream(species.getBytes("UTF-8"));
-							 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
-							 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
-							 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,aliases);
-							 start.accept(v);
-							 String justName = v.getSpeciesName();
-							 String newCompleteMultiForMerging = justName;
-							 Set<String> sites = v.getAllSites_names();
-							 if(sites.size() > 0) 			{
-								 newCompleteMultiForMerging +="(";
-							 }
-							 for(String site : sites) {
-								 if(v.getSiteStates_string(site).length() ==0) {
-									 newCompleteMultiForMerging += site+"{"+msp.getSiteStates_string(site)+"};";
-								 } else newCompleteMultiForMerging += site+"{"+v.getSiteStates_string(site)+"};";
-							 }
-							if(sites.size() > 0) {
-								newCompleteMultiForMerging = newCompleteMultiForMerging.substring(0,newCompleteMultiForMerging.length()-1);
-								 newCompleteMultiForMerging += ")";
-							}
-							 current = new MultistateSpecies(this, newCompleteMultiForMerging);
-					
-						} catch (Exception e1) {
-							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
-							throw e1;
+				//e.g. Cdh1(p) (with no range) is used in the reactant, it cannot be used to build a complete multistate species
+				//
+				 InputStream is;
+					try{
+						is = new ByteArrayInputStream(species.getBytes("UTF-8"));
+						 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+						 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+						 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,aliases);
+						 start.accept(v);
+						 String justName = v.getSpeciesName();
+						 String newCompleteMultiForMerging = justName;
+						 Set<String> sites = v.getAllSites_names();
+						 if(sites.size() > 0) 			{
+							 newCompleteMultiForMerging +="(";
+						 }
+						 for(String site : sites) {
+							 if(v.getSiteStates_string(site).length() ==0) {
+								 newCompleteMultiForMerging += site+"{"+msp.getSiteStates_string(site)+"};";
+							 } else newCompleteMultiForMerging += site+"{"+v.getSiteStates_string(site)+"};";
+						 }
+						if(sites.size() > 0) {
+							newCompleteMultiForMerging = newCompleteMultiForMerging.substring(0,newCompleteMultiForMerging.length()-1);
+							 newCompleteMultiForMerging += ")";
 						}
+						 current = new MultistateSpecies(this, newCompleteMultiForMerging);
+				
+					} catch (Exception e1) {
+						current = new MultistateSpecies(this, species);
 						
-					
-				}
+					}
 				
 				 if(aliases_2 != null  && aliases_2.containsKey(i+1)) {
 					 current.setName(aliases_2.get(i+1));
@@ -2770,12 +2820,14 @@ public class MultiModel {
 				multistate_name_expansion_react.put(current.getSpeciesName(), current.getExpandedSpecies(this));
 			}
 		}
+		
 		for(int i = 0; i < mod.size(); i++) {
 			String species = (String) mod.get(i);
 			Species sp = this.getSpecies(species);
 			if(!(sp instanceof MultistateSpecies)) {
 				non_multistate_mod.add(species);
 			} else {
+				try{//try because modifier can contain transfer state and it will be fixed later
 				//merge the possibly missing sites/states
 				//vv
 				MultistateSpecies msp = new MultistateSpecies(this, sp.getDisplayedName());
@@ -2784,6 +2836,11 @@ public class MultiModel {
 				//^^
 				MultistateSpecies multi = new MultistateSpecies(this, mod_prefix+current);
 				multistate_name_expansion_mod.put(multi.getSpeciesName(), multi.getExpandedSpecies(this));
+				}catch(Throwable e){
+					//e.printStackTrace();
+					continue;
+					
+				}
 			}
 		}
 		
@@ -2808,8 +2865,85 @@ public class MultiModel {
 		}
 		   		    
 	    Set<List<Species>> combination = Sets.cartesianProduct(values);
-	
-	   for (List<Species> single : combination) {
+	    
+	    for (List<Species> single : combination) {
+			  
+			//System.out.println("the combination is "+single);
+			Vector single_reaction_mod_toCombine = new Vector();
+			non_multistate_mod = new Vector();
+			
+			for(int i = 0; i < mod.size(); i++) {
+				String species = (String) mod.get(i);
+				Species sp = this.getSpecies(species);
+				if(!(sp instanceof MultistateSpecies)) {
+					non_multistate_mod.add(species);
+				} else {
+				  try {
+						InputStream is = new ByteArrayInputStream(species.getBytes("UTF-8"));
+						MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+						CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
+						MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(this,single, aliases, sub_prefix);
+						start.accept(v);
+						Vector<Species> expansion = v.getProductExpansion();
+						
+						if(expansion.size() == 0) {
+							
+							try { //check if is a simple multistate species with no operator
+								is = new ByteArrayInputStream(species.getBytes("UTF-8"));
+								react = new MR_MultistateSpecies_Parser(is,"UTF-8");
+								CompleteMultistateSpecies start2 = react.CompleteMultistateSpecies();
+								MultistateSpeciesVisitor v2 = new MultistateSpeciesVisitor(null);
+								start2.accept(v2);
+								non_multistate_mod.add(species); 
+							} catch (Throwable e) {
+								DebugMessage dm = new DebugMessage();
+								dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+								dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
+								dm.setOrigin_row(row+1);
+								Vector elements = new Vector();
+								for(Species s : single) {
+									String speciesName = s.getDisplayedName();
+									 if(speciesName.startsWith(sub_prefix)) {
+										 speciesName = speciesName.substring(sub_prefix.length());
+									 }
+									 elements.add(speciesName);
+								}
+								dm.setProblem("Problem in the expansion of "+species);
+								dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+								MainGui.addDebugMessage_ifNotPresent(dm);
+							
+							}
+							
+							
+						} else {
+							non_multistate_mod.add(expansion.get(0).toString());
+						}
+					} catch(Throwable e) {
+						//e.printStackTrace();
+						DebugMessage dm = new DebugMessage();
+						dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+						dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
+						dm.setOrigin_row(row+1);
+						Vector elements = new Vector();
+						for(Species s : single) {
+							String speciesName = s.getDisplayedName();
+							 if(speciesName.startsWith(sub_prefix)) {
+								 speciesName = speciesName.substring(sub_prefix.length());
+							 }
+							 elements.add(speciesName);
+						}
+						dm.setProblem("Problem in the expansion of "+species);
+						dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+						MainGui.addDebugMessage_ifNotPresent(dm);
+						continue;
+					}
+					
+				}
+			}
+			    
+	    
+	    
+	   //for (List<Species> single : combination) {
 			  
 			//System.out.println("the combination is "+single);
 			Vector single_reaction_prod_toCombine = new Vector();
@@ -2889,6 +3023,8 @@ public class MultiModel {
 			 	Set<Species> values_configurations = Sets.newLinkedHashSet((Vector)single_reaction_prod_toCombine.get(i));
 			    values.add(values_configurations);
 			}
+			
+		
 			   		    
 		    Set<List<Species>> combination2 = Sets.cartesianProduct(values);
 		    
@@ -3215,9 +3351,7 @@ public class MultiModel {
         
         for (int i = 0;i < iMax;i++)
         {
-        	//System.out.println("global q "+i + " of "+iMax);
-			//System.out.flush();
-        	Vector row = new Vector();
+       	Vector row = new Vector();
     		CModelValue val = model.getModelValue(i);
             
     		String expressionFromAnnotation = new String();
@@ -3274,7 +3408,6 @@ public class MultiModel {
         
         for (int i=0; i<iMax; i++)
         {
-        	//System.out.println("event e "+i + " of "+iMax);	System.out.flush();
         	Vector row = new Vector();
         	CEvent val = model.getEvent(i);
     		
@@ -3348,8 +3481,7 @@ public class MultiModel {
         
         for (int i = 0;i < iMax;i++)
         {
-        	//System.out.println("species "+i + " of "+iMax); System.out.flush();
-			
+        	
         	Vector row = new Vector();
             CMetab metab = model.getMetabolite(i);
             
@@ -3528,8 +3660,7 @@ public class MultiModel {
         
         for (int i = 0;i < iMax;i++)
         {
-        	//System.out.println("reaction "+i + " of "+iMax); System.out.flush();
-            CReaction reaction = model.getReaction(i);
+        	CReaction reaction = model.getReaction(i);
             if(reaction.isReversible()) {
             	System.out.println("!!!!!!-----REVERSIBLE REACTION NOT IMPORTED-----");
             	System.out.println(reaction.getObjectName());
@@ -3802,8 +3933,7 @@ public class MultiModel {
         
         for (int i = 0;i < iMax;i++)
         {
-        	//System.out.println("compartment "+i + " of "+iMax); System.out.flush();
-			Vector row = new Vector();
+   		Vector row = new Vector();
          	CCompartment val = model.getCompartment(i);
          	String newName = CellParsers.cleanName(val.getObjectName());
             if(newName!= val.getObjectName()) val.setObjectName(newName);
@@ -4233,8 +4363,9 @@ public class MultiModel {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				ex.printStackTrace();
 		    DebugMessage dm = new DebugMessage();
-			dm.setOrigin_table(ex.getTable());
-		    dm.setOrigin_col(ex.getColumn());
+			dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+		   if(ex.getColumn()!= -1) dm.setOrigin_col(ex.getColumn());
+		   else dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
 		    dm.setOrigin_row(nrow);
 			dm.setProblem(ex.getMessage());
 		    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
@@ -4279,7 +4410,7 @@ public class MultiModel {
 		
 			//checkSimilarityName(name, nrow);
 		} catch(MySyntaxException ex) { // something undefined in the initial quantity/expression of the compartment... but I have to move on with the species definition anyway
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				ex.printStackTrace();
 		    DebugMessage dm = new DebugMessage();
 			dm.setOrigin_table(ex.getTable());
@@ -4709,7 +4840,6 @@ public class MultiModel {
 				String expr = null;
 				if(vis.getExceptions().size() == 0) {
 					expr  = vis.getExpression();
-					//System.out.println("qua - "+tmp);
 				} else {
 					throw vis.getExceptions().get(0);
 				}
@@ -4913,7 +5043,6 @@ public class MultiModel {
 						root.accept(vis);
 						if(vis.getExceptions().size() == 0) {
 							tmp  = vis.getExpression();
-							//System.out.println("qua - "+tmp);
 						} else {
 							throw vis.getExceptions().get(0);
 						}
@@ -5450,13 +5579,13 @@ public Integer getGlobalQIndex(String name) {
 			if(limit == null && element.contains("+") || element.contains("-") || element.contains("*") || element.contains("/")) {
 				//maybe is an expression that need to be evaluated
 				try {
-					String expressionToEvaluate = evaluateExpression(element);
-					System.out.println("expression to evaluate = "+expressionToEvaluate);
+					String expressionToEvaluate = evaluateExpression_justParse(element);
+					//System.out.println("expression to evaluate = "+expressionToEvaluate);
 					Integer ret = CellParsers.evaluateExpression(expressionToEvaluate);
-					System.out.println("Evaluates to = "+ret);
+					//System.out.println("Evaluates to = "+ret);
 					return ret;
 				} catch (Throwable e) {
-					e.printStackTrace();
+					//e.printStackTrace();
 					throw e;
 				}
 			} else {
@@ -5464,20 +5593,23 @@ public Integer getGlobalQIndex(String name) {
 					return null;
 				}
 				if(limit.getType() != Constants.GlobalQType.FIXED.copasiType) {
-						return null;
+					throw new Exception("Global quantity is not fixed.");
 				}
 				try{
 					Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
 					return value.intValue();
 				} catch(Exception ex2) {
-					System.out.println("!!!! in getGlobalQ_integerValue INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
-					return null;
+					 	String expressionToEvaluate = evaluateExpression_justParse(limit.getInitialValue());
+						Integer ret = CellParsers.evaluateExpression(expressionToEvaluate);
+						return ret;
+								
 				}
 			}
 		}
+		
 	}
 
-	private String evaluateExpression(String element) throws Throwable {
+	private String evaluateExpression_justParse(String element) throws Throwable {
 		InputStream isR = new ByteArrayInputStream(element.getBytes("UTF-8"));
 		  MR_Expression_Parser parserR = new MR_Expression_Parser(isR);
 		  CompleteExpression rootR = parserR.CompleteExpression();
@@ -5501,6 +5633,25 @@ public Integer getGlobalQIndex(String name) {
 		} catch(Exception ex) {
 			return null;
 		}
+	}
+
+	public boolean isRangeVariableInMultistate(String species, String elementToSearch ) {
+		
+		if(!CellParsers.isMultistateSpeciesName(species)) {
+			System.out.println("isRangeVariableInMultistate false");
+			return false;
+		}
+		
+		boolean ret = false;
+		try {
+			MultistateSpecies ms = new MultistateSpecies(this, species,false,false);
+			ret = ms.containsRangeVariable(elementToSearch);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("isRangeVariableInMultistate " + ret);
+		return ret;
 	}
 
 	

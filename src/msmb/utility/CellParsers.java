@@ -228,6 +228,33 @@ public class CellParsers {
 		}
 	}
 	
+public static String evaluateExpressionWithDependentSum(String expression, MultistateSpecies multistateForDependentSum) throws Throwable {
+		
+		/*	System.out.println("...........evaluateExpression multistateForDependentSum..............");
+			System.out.println(expression);
+			System.out.println(multistateForDependentSum.printCompleteDefinition());
+			System.out.println(".................................");
+		*/
+			if(expression.trim().length()==0) return null;
+			try {
+			  String ret = null;
+		      ByteArrayInputStream is2 = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+				  MR_Expression_Parser parser = new MR_Expression_Parser(is2,"UTF-8");
+			  	  CompleteExpression start = parser.CompleteExpression();
+			      EvaluateExpressionVisitor vis = new EvaluateExpressionVisitor(MainGui.multiModel, multistateForDependentSum);
+			      start.accept(vis);
+				  if(vis.getExceptions().size() == 0) {
+					  ret  = vis.getExpression();
+				  } else {
+							throw vis.getExceptions().get(0);
+					}
+				  return ret;
+			} catch (Exception e) {
+				//e.printStackTrace();
+				return null;
+			}
+		}
+	
 	public static Integer evaluateExpression(String expression) throws Throwable {
 		
 		//	System.out.println("...........evaluateExpression..............");
@@ -240,7 +267,7 @@ public class CellParsers {
 		      ByteArrayInputStream is2 = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 				  MR_Expression_Parser parser = new MR_Expression_Parser(is2,"UTF-8");
 			  	  CompleteExpression start = parser.CompleteExpression();
-			      EvaluateExpressionVisitor vis = new EvaluateExpressionVisitor(null);
+			      EvaluateExpressionVisitor vis = new EvaluateExpressionVisitor(MainGui.multiModel);
 			      start.accept(vis);
 				  if(vis.getExceptions().size() == 0) {
 					  ret  = vis.evaluateExpression();
@@ -258,20 +285,21 @@ public class CellParsers {
 	
 	
 	
-	public static String replaceVariableInExpression(String original, String find, String replacement) {
+	public static String replaceVariableInExpression(String original, String find, String replacement, boolean isVariableIndexMultistate) {
 		
 		try {
-			//System.out.println(".................................");
+			System.out.println(".................................");
+			System.out.println("original = "+original+"; find = "+find + "; repl = "+replacement);
 			if(find.compareTo(replacement)==0) return original;
 			InputStream is = new ByteArrayInputStream(original.getBytes("UTF-8"));
 			MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
 			CompleteExpression root = parser.CompleteExpression();
-			MR_SubstitutionVisitor mySV= new MR_SubstitutionVisitor(find, replacement);
+			MR_SubstitutionVisitor mySV= new MR_SubstitutionVisitor(find, replacement,isVariableIndexMultistate);
 			root.accept(mySV);
 			String newExpr = mySV.getNewExpression();
 			
-			//System.out.println(newExpr);
-			//System.out.println(".................................");
+			System.out.println("newExpr1 "+newExpr);
+			System.out.println(".................................");
 		
 			InputStream is2 = new ByteArrayInputStream(newExpr.getBytes("UTF-8"));
 			parser = new MR_Expression_Parser_ReducedParserException(is2,"UTF-8");
@@ -289,21 +317,37 @@ public class CellParsers {
 			
 		} catch (Throwable e) {
 			try{
-			InputStream is = new ByteArrayInputStream(original.getBytes("UTF-8"));
-			MR_ChemicalReaction_Parser parser = new MR_ChemicalReaction_Parser(is,"UTF-8");
-			 CompleteReaction root = parser.CompleteReaction();
-			 SubstitutionVisitorReaction mySV= new SubstitutionVisitorReaction(find, replacement);
-			root.accept(mySV);
-			String newExpr = mySV.getNewExpression();
+				InputStream is = new ByteArrayInputStream(original.getBytes("UTF-8"));
+				MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
+				CompleteMultistateSpecies_Operator complete = parser.CompleteMultistateSpecies_Operator();
+				MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(original, find,replacement, isVariableIndexMultistate);
+				complete.accept(mySV);
+				String newExpr = mySV.getNewMultistate();
+				System.out.println("newExpr3 "+newExpr);
+				System.out.println(".................................");
+				return newExpr;
+			}catch (Throwable e22) {
 			
-			return newExpr;
-			}catch (Throwable e2) {
-				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e2.printStackTrace();
-				return null;
-			}
-		}
-			
+				try{
+				InputStream is = new ByteArrayInputStream(original.getBytes("UTF-8"));
+				MR_ChemicalReaction_Parser parser = new MR_ChemicalReaction_Parser(is,"UTF-8");
+				 CompleteReaction root = parser.CompleteReaction();
+				 SubstitutionVisitorReaction mySV= new SubstitutionVisitorReaction(find, replacement, isVariableIndexMultistate);
+				root.accept(mySV);
+				String newExpr = mySV.getNewExpression();
+				
+				System.out.println("newExpr2 "+newExpr);
+				System.out.println(".................................");
 		
+				return newExpr;
+				}catch (Throwable e2) {
+					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e2.printStackTrace();
+					return null;
+				}
+
+			}
+			
+		}
 	 }
 	
 	
@@ -496,7 +540,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		return ret;
 	}
 	
-	public static Vector<Vector<String>> parseExpression_getUndefMisused_2(MultiModel m, String expression, String table_descr, String column_descr) throws MySyntaxException, Exception {
+	public static Vector<Vector<String>> parseExpression_getUndefMisused_2(MultiModel m, String expression, String table_descr, String column_descr, MultistateSpecies multistateForDependentSum) throws MySyntaxException, Exception {
 		 Vector ret = new Vector();
 		 expression = expression.trim();
 		 if(expression.length()==0) return ret;
@@ -519,7 +563,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 				  InputStream is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
 				  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
 				  CompleteExpression root = parser.CompleteExpression();
-				  Look4UndefinedMisusedVisitor undefVisitor = new Look4UndefinedMisusedVisitor(m);
+				  Look4UndefinedMisusedVisitor undefVisitor = new Look4UndefinedMisusedVisitor(m, multistateForDependentSum);
 				  root.accept(undefVisitor);
 				  Vector<String> undef = undefVisitor.getUndefinedElements();
 				  Vector<String> misused = undefVisitor.getMisusedElements();
@@ -550,11 +594,13 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 	}
 		    
 		    
-		    
 	public static Vector<Vector<String>> parseExpression_getUndefMisused(MultiModel m, String expression, String table_descr, String column_descr) throws Throwable {
+		return parseExpression_getUndefMisused(m,expression,table_descr,column_descr,null);
+	}
+	public static Vector<Vector<String>> parseExpression_getUndefMisused(MultiModel m, String expression, String table_descr, String column_descr, MultistateSpecies multistateForDependentSum) throws Throwable {
 		
 		try {
-			return parseExpression_getUndefMisused_2(m, expression,table_descr,column_descr);
+			return parseExpression_getUndefMisused_2(m, expression,table_descr,column_descr, multistateForDependentSum);
 		} catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			if(!(e instanceof MySyntaxException) ){
@@ -795,10 +841,8 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 			return multiStateProd;
 	}
 	
-	public static MutablePair<String, String> parseMultistateSpecies_rangeWithVariables(String states) throws Exception {
+	public static MutablePair<String, String> getMultistateSpecies_rangeWithVariables(String states, boolean evaluate) throws Exception {
 		MutablePair<String, String> lower_upper = new MutablePair<String, String>();
-		//lower_upper.left = "low";
-		//lower_upper.right = "up";
 		
 	  try {  	 
 			  InputStream is = new ByteArrayInputStream(states.getBytes());
@@ -808,18 +852,15 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 			 range.accept(v);
 			
 			 MutablePair<String, String> pair = v.getStringRangeLimits();
-			 System.out.println("in parseMultistateSpecies_rangeWithVariables: "+pair);
+			 if(!evaluate) return pair;
 			 Integer res1 = CellParsers.evaluateExpression(pair.left);
 			 Integer res2 = CellParsers.evaluateExpression(pair.right);
 			 if(res1 != null)	 lower_upper.left = res1.toString();
 			 else lower_upper.left = pair.left;
-			 if(res2 != null)	 lower_upper.right = res1.toString();
+			 if(res2 != null)	 lower_upper.right = res2.toString();
 			 else lower_upper.right = pair.right;
-			 System.out.println("lower_upper.left: "+ lower_upper.left);
-			 System.out.println("lower_upper.right "+ lower_upper.right );
 		  } catch (Throwable e2) {
-			  //if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)  
-				  e2.printStackTrace();
+			  if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)   e2.printStackTrace();
 			  throw new Exception("Something wrong in the states format.");
 		  }
 		
@@ -925,7 +966,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		    subs_prod_mod.addAll(v.getAll_asString());
 		      
 		} catch(Throwable ex) {
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				ex.printStackTrace();
 			
 			 DebugMessage dm = new DebugMessage();
@@ -1371,14 +1412,18 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 			return new MutablePair<String, Vector<String>>(element, new Vector<String>());
 		}
 		
-	
+		Vector<String> extensions = name.getExtensions();
+		String stringExtensions = "";
+		for(String p : extensions){
+			stringExtensions+= p;
+		}
 	
 			String element_name = name.getElementName();
 			if(element_name==null || element_name.length() ==0 ||
-					ToStringVisitor.toBinary(element_name).length()!= ToStringVisitor.toBinary(element).length() ) {
+					ToStringVisitor.toBinary(element_name+stringExtensions).length()!= ToStringVisitor.toBinary(element).length() ) {
 				element_name = element; // for simple numbers and for things that do not look ok because of the encoding
 			}
-			Vector<String> extensions = name.getExtensions();
+		
 			return new MutablePair<String, Vector<String>>(element_name, extensions);
 	
 		
@@ -1447,7 +1492,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		if(isMultistateSpeciesName(name)) {
 			MultistateSpecies ms = null;
 			try {
-				ms = new MultistateSpecies(null, name);
+				ms = new MultistateSpecies(MainGui.multiModel, name);
 			} catch (Exception e) {
 				//e.printStackTrace();
 				 try {
@@ -1458,7 +1503,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 					 start.accept(v);
 					 return v.getSpeciesName(); 
 				 } catch (Throwable ex ){
-					 ex.printStackTrace();
+					 //ex.printStackTrace();
 				 }
 			}
 			ret = ms.getSpeciesName();
@@ -1498,11 +1543,9 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 
 		String alias = name.substring(0,index);
 		alias = alias.trim();
-		System.out.println("alias = "+alias);
 		
 		String restOfName = name.substring(index+1);
 		restOfName = restOfName.trim();
-		System.out.println("restOfName = "+restOfName);
 		
 		ret.left = alias;
 		ret.right = restOfName;

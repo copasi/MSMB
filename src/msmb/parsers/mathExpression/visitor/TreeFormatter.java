@@ -767,7 +767,8 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
    * name -> Name()<br>
    * nodeToken -> <LBRACE><br>
    * nodeChoice -> ( %0 Name()<br>
-   * .......... .. | %1 Literal() )<br>
+   * .......... .. | %1 Literal()<br>
+   * .......... .. | %2 Selector() )<br>
    * nodeToken1 -> <RBRACE><br>
    */
   @Override

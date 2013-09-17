@@ -82,7 +82,7 @@ public class ComplexBuilderFrame extends JDialog {
 	private JSplitPane splitPane;
 	private DynamicTree treePanel;
 
-	protected ComplexSpecies complexSpecies = new ComplexSpecies("NO_NAME");
+	protected ComplexSpecies complexSpecies = null; //new ComplexSpecies("NO_NAME");
 	protected HashMap<String,String> trackableMultistate = new HashMap<String,String>();
 	private DefaultListModel listRegularSpeciesModel;
 	protected ExitOption exitOption;
@@ -146,7 +146,7 @@ public class ComplexBuilderFrame extends JDialog {
 	    }*/
 	    
 	    try {
-			complexSpecies.setCompartment(MainGui.multiModel, MainGui.compartment_default_for_dialog_window);
+			if(complexSpecies.getCompartment_listString().trim().length() ==0) complexSpecies.setCompartment(MainGui.multiModel, MainGui.compartment_default_for_dialog_window);
 		} catch (MySyntaxException e) {
 			e.printStackTrace();
 		}
@@ -491,7 +491,7 @@ public class ComplexBuilderFrame extends JDialog {
 		for(String spName : multistate) {
 			MultistateSpecies sp = null;
 			try {
-				sp = new MultistateSpecies(null, spName);
+				sp = new MultistateSpecies(MainGui.multiModel, spName);
 			} catch (Exception e) {
 			
 				e.printStackTrace();
@@ -564,7 +564,7 @@ public class ComplexBuilderFrame extends JDialog {
 		complexSpecies.removeComponentFromComplex(removedComponent);
 		String multistateNotTracked = trackableMultistate.get(CellParsers.extractMultistateName(removedComponent));
 		try {
-			if(multistateNotTracked!=null) listMultistateSpeciesModel.addElement(new MultistateSpecies(null, multistateNotTracked));
+			if(multistateNotTracked!=null) listMultistateSpeciesModel.addElement(new MultistateSpecies(MainGui.multiModel, multistateNotTracked));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -574,7 +574,7 @@ public class ComplexBuilderFrame extends JDialog {
 	public void clearReferencesTo(String multistateDefinition) {
 		MultistateSpecies m;
 		try {
-			m = new MultistateSpecies(null, multistateDefinition);
+			m = new MultistateSpecies(MainGui.multiModel, multistateDefinition);
 			complexSpecies.removeComponentFromComplex(m.getDisplayedName());
 		} catch (Exception e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
@@ -584,7 +584,7 @@ public class ComplexBuilderFrame extends JDialog {
 				is = new ByteArrayInputStream(multistateDefinition.getBytes("UTF-8"));
 				 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is,"UTF-8");
 				 CompleteMultistateSpecies_Operator start = react.CompleteMultistateSpecies_Operator();
-				 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(null);
+				 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(MainGui.multiModel);
 				 start.accept(v);
 				 String justName = v.getSpeciesName();
 				 complexSpecies.removeComponentFromComplex(justName);
@@ -625,7 +625,7 @@ public class ComplexBuilderFrame extends JDialog {
 
 	public void setComplexSpecies(ComplexSpecies originalComplex, int index) {
 		try {
-			complexSpecies = new ComplexSpecies(originalComplex);
+			complexSpecies = new ComplexSpecies(MainGui.multiModel,originalComplex);
 			renamed_sites.clear();
 			indexCurrentComplex = index; 
 		} catch (Exception e) {
@@ -688,7 +688,7 @@ public class ComplexBuilderFrame extends JDialog {
 		
 		for(String element : sorted) {
 			try {
-					listMultistateSpeciesModel.addElement(new MultistateSpecies(null, trackableMultistate.get(element)));
+					listMultistateSpeciesModel.addElement(new MultistateSpecies(MainGui.multiModel, trackableMultistate.get(element)));
 			} catch (Exception e1) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e1.printStackTrace();
 			}
@@ -704,7 +704,7 @@ public class ComplexBuilderFrame extends JDialog {
 		checkboxAddReactions.setEnabled(true);
 		textField.setText("");
 		try {
-			complexSpecies = new ComplexSpecies("NO_NAME");
+			complexSpecies = new ComplexSpecies(MainGui.multiModel,"NO_NAME");
 		} catch (Exception e) {
 			//e.printStackTrace();
 		}
@@ -714,7 +714,7 @@ public class ComplexBuilderFrame extends JDialog {
 
 	public ComplexSpecies getCurrentComplex() {
 		try {
-			return new ComplexSpecies(complexSpecies);
+			return new ComplexSpecies(MainGui.multiModel,complexSpecies);
 		} catch (Exception e) {
 			//e.printStackTrace();
 		}
@@ -835,7 +835,7 @@ class DynamicTree extends JPanel {
 						parentDialog.fromChangeMenu = true;
 						ComplexSpecies old = parentDialog.getCurrentComplex();
 						parentDialog.clearReferencesTo(multistateTracked);
-						parentDialog.multistateAdd_frame.setMultistateSpecies(new MultistateSpecies(null, multistateTracked), parentDialog.complexSpecies.getSiteNamesUsed());
+						parentDialog.multistateAdd_frame.setMultistateSpecies(new MultistateSpecies(MainGui.multiModel, multistateTracked), parentDialog.complexSpecies.getSiteNamesUsed());
 						parentDialog.multistateAdd_frame.setMultistateTracking(trackedTriplets);
 						parentDialog.multistateAdd_frame.setVisible(true);
 						
@@ -862,7 +862,7 @@ class DynamicTree extends JPanel {
 					 String prefix = "Change ";
 					 String postfix = " alias";
 					 String label = changeMultistate.getText();
-					 System.out.println("changero' l'alias");
+					 System.out.println("TO BE COMPLETED");
 					/* String multistateChosen = label.substring(prefix.length(), label.length()-postfix.length());
 		
 					 String multistateTracked = parentDialog.trackableMultistate.get(CellParsers.extractMultistateName(multistateChosen));
@@ -1032,7 +1032,7 @@ class RendererForErrors extends DefaultTreeCellRenderer {
 
     		if(multi.containsKey(multiName)) {
     			String complete = parent.trackableMultistate.get(multiName);
-    			MultistateSpecies ms = new MultistateSpecies(null, complete);
+    			MultistateSpecies ms = new MultistateSpecies(MainGui.multiModel, complete);
     			Vector<MutablePair<String, String>> element = multi.get(multiName);
     			String tempSpecies = "checkStates(";
     			boolean sitesToCheck = false;
@@ -1055,8 +1055,7 @@ class RendererForErrors extends DefaultTreeCellRenderer {
 
     			tempSpecies = tempSpecies.substring(0,tempSpecies.length()-1);
     			tempSpecies += ")";
-    			MultistateSpecies checkStates = new MultistateSpecies(null, tempSpecies);
-    			//System.out.println("CHECKING STATES OF " + checkStates + " against " + ms );
+    			MultistateSpecies checkStates = new MultistateSpecies(MainGui.multiModel, tempSpecies);
     			Set<String> sitesToCheck_set = checkStates.getSitesNames();
     			for(String site : sitesToCheck_set) {
     				Vector<String> allStates = checkStates.getSiteStates_complete(site);
@@ -1067,13 +1066,7 @@ class RendererForErrors extends DefaultTreeCellRenderer {
     				}
     			}
     		}
-
-
-
-
-
     	} catch (Exception e) {
-    		//e.printStackTrace();
     		return true;
     	}
     	return false;

@@ -1681,7 +1681,7 @@ ArgumentList ArgumentList() :
 }
 {
   (
-    LOOKAHEAD( 4 )
+    LOOKAHEAD( 2 )
     n1 = MultistateSites_list()
     { n0 = new NodeChoice(n1, 0, 2); }
   |

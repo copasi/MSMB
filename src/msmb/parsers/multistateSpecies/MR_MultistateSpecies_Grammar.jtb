@@ -221,6 +221,14 @@ public class MR_MultistateSpecies_Parser
       v = new MyVisitor();
       range.accept(v);
       System.out.println("...................................");
+
+       	expression = new String("Cdh1(p{a:c})");
+      is = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+      react = new MR_MultistateSpecies_Parser(is);
+      start = react.CompleteMultistateSpecies();
+      v = new MyVisitor();
+      start.accept(v);
+      System.out.println("...................................");
  
      }
     catch (Exception e)
@@ -377,7 +385,7 @@ void MultistateSpecies_SiteSingleElement() throws ParseException:
 {}
 {
      ( < STRING_LITERAL > | (< CIRCULAR_FLAG > | < MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R > | < MATH_ELEMENT>)+)
-   (  (" ")* < RANGE_SEPARATOR > (" ")* ( < STRING_LITERAL > | (< MULTI_IDENTIFIER >| < NUMBER > | < OPEN_R > | < MATH_ELEMENT> | <  CLOSED_R > )+) )?
+   (  (" ")* < RANGE_SEPARATOR > (" ")* ( < STRING_LITERAL > | (< MULTI_IDENTIFIER >| < CIRCULAR_FLAG > | < NUMBER > | < OPEN_R > | < MATH_ELEMENT> | <  CLOSED_R > )+) )?
 }
 
 void MultistateSpecies_SiteSingleElement_Range() throws ParseException:
@@ -390,7 +398,7 @@ void MultistateSpecies_SiteSingleElement_Range() throws ParseException:
 void MultistateSpecies_SiteSingleElement_Range_Limits() throws ParseException:
 {}
 {
-  < NUMBER> | < STRING_LITERAL > |
+  < NUMBER> | < STRING_LITERAL > | < CIRCULAR_FLAG > | 
   (" " | < OPEN_R> | <CLOSED_R> | < MATH_ELEMENT >  | < NUMBER > | < STRING_LITERAL > | < MULTI_IDENTIFIER > )+
 }
 

@@ -17,6 +17,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import javax.swing.JButton;
@@ -59,6 +60,7 @@ public class RenamingFrame extends JDialog implements WindowListener{
 	private Vector<MutablePair<String, String>> from_to = new Vector<MutablePair<String,String>>();
 	private Vector<FoundElement> foundElements = new Vector<FoundElement>();
 	private String closingOperation  = new String();
+	private HashSet<Integer> isVariableIndexInMultistate = new HashSet<Integer>();
 
 
 	
@@ -355,7 +357,8 @@ public String getClosingOperation() {
 			if(foundCB.getPreferredSize().width < dim.width) foundCB.setPreferredSize(dim);
 			if(foundCB.getMinimumSize().width < dim.width) foundCB.setMinimumSize(dim);
 			foundCB.addItemListener(new MyItemListener(i,this));
-
+			if(found.get(i).isRangeVariableInMultistate()) isVariableIndexInMultistate.add(new Integer(i)); 
+			
 			foundCB.setText(MainGui.getCellContent(found.get(i)));
 			
 			foundCB.setToolTipText(MainGui.getRowContent(found.get(i)));
@@ -379,21 +382,8 @@ public String getClosingOperation() {
 		revalidate();
 	}
 
-	static String replaceAllWords(String original, String find, String replacement) {
-	   /* StringBuilder result = new StringBuilder(original.length());
-	    String delimiters = "+-*()/, ;{}=";
-	    StringTokenizer st = new StringTokenizer(original, delimiters, true);
-	    while (st.hasMoreTokens()) {
-	        String w = st.nextToken();
-	        if (w.equals(find)) {
-	            result.append(replacement);
-	        } else {
-	            result.append(w);
-	        }
-	    }
-	    return result.toString();*/
-	    
-	    return CellParsers.replaceVariableInExpression(original,find,replacement);
+	static String replaceAllWords(String original, String find, String replacement,boolean isVariableIndexInMultistate) {
+	    return CellParsers.replaceVariableInExpression(original,find,replacement,isVariableIndexInMultistate);
 	}
 	
 	
@@ -402,7 +392,8 @@ public String getClosingOperation() {
 	
 	void updateCurrentText(JCheckBox jCheckBox, int index) {
 		if(from.trim().length() > 0) {
-			updateCurrentText_singleFromTo(jCheckBox);
+			if(isVariableIndexInMultistate.contains(index)) updateCurrentText_singleFromTo(jCheckBox, true);
+			else updateCurrentText_singleFromTo(jCheckBox, false);
 		} else {
 			if(jCheckBox.isSelected()) {
 				jCheckBox.setText(from_to.get(index).right);
@@ -416,15 +407,15 @@ public String getClosingOperation() {
 	
 		
 	
-	private void updateCurrentText_singleFromTo(JCheckBox jCheckBox) {
+	private void updateCurrentText_singleFromTo(JCheckBox jCheckBox, boolean isVariableIndexMultistate) {
 		if(jCheckBox.isSelected()) {
 			String old = jCheckBox.getText();
-			String newS =replaceAllWords(old,from,to);
+			String newS =replaceAllWords(old,from,to,isVariableIndexMultistate);
 			if(newS == null) newS=old;
 			jCheckBox.setText(newS);
 		} else {
 			String old = jCheckBox.getText();
-			String newS = replaceAllWords(old, to, from);
+			String newS = replaceAllWords(old, to, from,isVariableIndexMultistate);
 			jCheckBox.setText(newS);
 		}
 		jPanel.revalidate();

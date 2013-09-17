@@ -44,12 +44,21 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	  public String getCopasiExpression() {return copasiExpression;}
 	  MultiModel multiModel = null;
 	private boolean expressionWithSumMultistate;
+	private MultistateSpecies multistateForDependentSum = null;
 	  
 	public CopasiVisitor(CModel model, MultiModel mm, boolean conc, boolean isInitialExpression2)  { 
 		  this.model = model;
 		  this.conc = conc;
 		  this.isInitialExpression = isInitialExpression2;
 		  multiModel = mm;
+	}
+	
+	public CopasiVisitor(CModel model, MultiModel mm, MultistateSpecies ms)  { 
+		  this.model = model;
+		  this.conc = true;
+		  this.isInitialExpression = false;
+		  multiModel = mm;
+		  multistateForDependentSum  = ms;
 	}
 
 	@Override
@@ -215,7 +224,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 			  InputStream is = new ByteArrayInputStream(element.getBytes("UTF-8"));
 			  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is);
 			  CompleteExpression root = parser.CompleteExpression();
-			  Look4UndefinedMisusedVisitor multistateSum = new Look4UndefinedMisusedVisitor(multiModel);
+			  Look4UndefinedMisusedVisitor multistateSum = new Look4UndefinedMisusedVisitor(multiModel,multistateForDependentSum);
 			  root.accept(multistateSum);
 			  Vector<SumExpansion> sum = multistateSum.getSumExpansions();
 			 for(int i = 0; i < sum.size(); i++) {
@@ -513,7 +522,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 				
 			} catch (Exception e) {
 
-				e.printStackTrace();
+				//e.printStackTrace();
 				exceptions.add(e);
 			}
 		

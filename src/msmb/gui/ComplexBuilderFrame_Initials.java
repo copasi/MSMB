@@ -82,7 +82,7 @@ public class ComplexBuilderFrame_Initials extends JDialog {
 	
 	public void setComplexSpecies(ComplexSpecies complexSpecies) {
 		try {
-			this.species =  new ComplexSpecies(complexSpecies);
+			this.species =  new ComplexSpecies(MainGui.multiModel,complexSpecies);
 	
 		} catch (Exception e) {
 			e.printStackTrace();

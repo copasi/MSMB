@@ -519,10 +519,11 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * ............ .. . #2 ( " " )*<br>
    * ............ .. . #3 ( %0 <STRING_LITERAL><br>
    * ............ .. . .. | %1 ( &0 <MULTI_IDENTIFIER><br>
-   * ............ .. . .. . .. | &1 <NUMBER><br>
-   * ............ .. . .. . .. | &2 <OPEN_R><br>
-   * ............ .. . .. . .. | &3 <MATH_ELEMENT><br>
-   * ............ .. . .. . .. | &4 <CLOSED_R> )+ ) )?<br>
+   * ............ .. . .. . .. | &1 <CIRCULAR_FLAG><br>
+   * ............ .. . .. . .. | &2 <NUMBER><br>
+   * ............ .. . .. . .. | &3 <OPEN_R><br>
+   * ............ .. . .. . .. | &4 <MATH_ELEMENT><br>
+   * ............ .. . .. . .. | &5 <CLOSED_R> )+ ) )?<br>
    *
    * @param n - the node to visit
    * @return the user return information
@@ -590,10 +591,11 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     // ............ .. . #2 ( " " )*
     // ............ .. . #3 ( %0 <STRING_LITERAL>
     // ............ .. . .. | %1 ( &0 <MULTI_IDENTIFIER>
-    // ............ .. . .. . .. | &1 <NUMBER>
-    // ............ .. . .. . .. | &2 <OPEN_R>
-    // ............ .. . .. . .. | &3 <MATH_ELEMENT>
-    // ............ .. . .. . .. | &4 <CLOSED_R> )+ ) )?
+    // ............ .. . .. . .. | &1 <CIRCULAR_FLAG>
+    // ............ .. . .. . .. | &2 <NUMBER>
+    // ............ .. . .. . .. | &3 <OPEN_R>
+    // ............ .. . .. . .. | &4 <MATH_ELEMENT>
+    // ............ .. . .. . .. | &5 <CLOSED_R> )+ ) )?
     final NodeOptional n1 = n.nodeOptional;
     if (n1.present()) {
       final NodeSequence n1S0 = (NodeSequence) n1.node;
@@ -620,10 +622,11 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
       }
       // #3 ( %0 <STRING_LITERAL>
       // .. | %1 ( &0 <MULTI_IDENTIFIER>
-      // .. .. | &1 <NUMBER>
-      // .. .. | &2 <OPEN_R>
-      // .. .. | &3 <MATH_ELEMENT>
-      // .. .. | &4 <CLOSED_R> )+ )
+      // .. .. | &1 <CIRCULAR_FLAG>
+      // .. .. | &2 <NUMBER>
+      // .. .. | &3 <OPEN_R>
+      // .. .. | &4 <MATH_ELEMENT>
+      // .. .. | &5 <CLOSED_R> )+ )
       final INode n1S0A3 = n1S0.elementAt(3);
       final NodeChoice n1S0A3C = (NodeChoice) n1S0A3;
       final INode n1S0A3CH = n1S0A3C.choice;
@@ -634,10 +637,11 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
           break;
         case 1:
           // %1 ( &0 <MULTI_IDENTIFIER>
-          // .. | &1 <NUMBER>
-          // .. | &2 <OPEN_R>
-          // .. | &3 <MATH_ELEMENT>
-          // .. | &4 <CLOSED_R> )+
+          // .. | &1 <CIRCULAR_FLAG>
+          // .. | &2 <NUMBER>
+          // .. | &3 <OPEN_R>
+          // .. | &4 <MATH_ELEMENT>
+          // .. | &5 <CLOSED_R> )+
           final NodeList n1S0A3CHL1 = (NodeList) n1S0A3CH;
           for (int i = 0; i < n1S0A3CHL1.size(); i++) {
             final INode n1S0A3CHL1Ei = n1S0A3CHL1.elementAt(i);
@@ -649,19 +653,23 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
                 nRes = n1S0A3CHL1EiCH.accept(this);
                 break;
               case 1:
-                // &1 <NUMBER>
+                // &1 <CIRCULAR_FLAG>
                 nRes = n1S0A3CHL1EiCH.accept(this);
                 break;
               case 2:
-                // &2 <OPEN_R>
+                // &2 <NUMBER>
                 nRes = n1S0A3CHL1EiCH.accept(this);
                 break;
               case 3:
-                // &3 <MATH_ELEMENT>
+                // &3 <OPEN_R>
                 nRes = n1S0A3CHL1EiCH.accept(this);
                 break;
               case 4:
-                // &4 <CLOSED_R>
+                // &4 <MATH_ELEMENT>
+                nRes = n1S0A3CHL1EiCH.accept(this);
+                break;
+              case 5:
+                // &5 <CLOSED_R>
                 nRes = n1S0A3CHL1EiCH.accept(this);
                 break;
               default:
@@ -725,7 +733,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * <p>
    * nodeChoice -> . %0 <NUMBER><br>
    * .......... .. | %1 <STRING_LITERAL><br>
-   * .......... .. | %2 ( &0 " "<br>
+   * .......... .. | %2 <CIRCULAR_FLAG><br>
+   * .......... .. | %3 ( &0 " "<br>
    * .......... .. . .. | &1 <OPEN_R><br>
    * .......... .. . .. | &2 <CLOSED_R><br>
    * .......... .. . .. | &3 <MATH_ELEMENT><br>
@@ -740,7 +749,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     R nRes = null;
     // nodeChoice -> . %0 <NUMBER>
     // .......... .. | %1 <STRING_LITERAL>
-    // .......... .. | %2 ( &0 " "
+    // .......... .. | %2 <CIRCULAR_FLAG>
+    // .......... .. | %3 ( &0 " "
     // .......... .. . .. | &1 <OPEN_R>
     // .......... .. . .. | &2 <CLOSED_R>
     // .......... .. . .. | &3 <MATH_ELEMENT>
@@ -759,7 +769,11 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
         nRes = n0CH.accept(this);
         break;
       case 2:
-        // %2 ( &0 " "
+        // %2 <CIRCULAR_FLAG>
+        nRes = n0CH.accept(this);
+        break;
+      case 3:
+        // %3 ( &0 " "
         // .. | &1 <OPEN_R>
         // .. | &2 <CLOSED_R>
         // .. | &3 <MATH_ELEMENT>

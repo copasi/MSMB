@@ -3,6 +3,12 @@ package msmb.gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -17,6 +23,7 @@ import org.apache.commons.lang3.tuple.MutablePair;
 
 import msmb.model.ComplexSpecies;
 import msmb.model.MultiModel;
+import msmb.utility.CellParsers;
 import msmb.utility.Constants;
 import msmb.utility.GraphicalProperties;
 import msmb.utility.MySyntaxException;
@@ -26,16 +33,18 @@ public class TextAreaExpressionFrame extends JDialog {
 	private JPanel contentPane;
 	private MultiModel multiModel;
 	private JTextPane textPane;
+	String originalString = null;
+	private JTextField replaceFrom;
+	private JTextField replaceTo;
+	private boolean exitCodeOK = false;
 
-	/**
-	 * Launch the application.
-	 */
+	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					TextAreaExpressionFrame frame = new TextAreaExpressionFrame(null);
-					frame.setVisible(true);
+					frame.showDialog(null);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -43,23 +52,24 @@ public class TextAreaExpressionFrame extends JDialog {
 		});
 	}
 	
-	@Override
-	public void setVisible(boolean b) {
+	
+	public String showDialog(String initialString) {
+		this.originalString = initialString;
+		textPane.setText(initialString);
 		GraphicalProperties.resetFonts(this);
 		pack();
 		setLocationRelativeTo(null);
-		super.setVisible(b);
-	};
-
-	public String showDialog() {
-		GraphicalProperties.resetFonts(this);
-		setLocationRelativeTo(null);
-		pack();
-		super.setVisible(true);
 		
-		String ret = textPane.getText();
+		setVisible(true);
+		
+		String ret = originalString;
+		if(exitCodeOK)	{
+			ret = textPane.getText();
+			ret = ret.replaceAll("[\\n\\r]", "");
+			ret = CellParsers.cleanMathematicalExpression(ret);
+					
+		}
 	    
-	   //POST PROCESS THE TEXT, DELETE NEW LINE, ANYTHING ELSE??
 	    
 	    return ret;
 	}
@@ -74,11 +84,10 @@ public class TextAreaExpressionFrame extends JDialog {
 		setTitle("Expression editor");
 		setModal(true);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		contentPane.setLayout(new BorderLayout(0, 0));
+		contentPane.setLayout(new BorderLayout(4,4));
 		
 		JPanel panel = new JPanel();
 		contentPane.add(panel);
@@ -147,7 +156,85 @@ public class TextAreaExpressionFrame extends JDialog {
 			
 			textPane.addMouseListener(mouseListener);
 		JLabel lblNoteContextAssist = new JLabel("Note: context assist is available while typing (key combination: Ctrl-H)");
-		contentPane.add(lblNoteContextAssist, BorderLayout.NORTH);
+		
+		
+		JPanel buttonsAndLabelPanel = new JPanel();
+		buttonsAndLabelPanel.setLayout(new BorderLayout(10,10));
+		buttonsAndLabelPanel.add(lblNoteContextAssist, BorderLayout.NORTH);
+		contentPane.add(buttonsAndLabelPanel, BorderLayout.NORTH);
+		JPanel buttonsPanel = new JPanel();
+		buttonsPanel.setLayout(new BorderLayout(10,10));
+		buttonsAndLabelPanel.add(buttonsPanel, BorderLayout.CENTER);
+		
+		JButton reset = new JButton("Reset string");
+		buttonsPanel.add(reset, BorderLayout.WEST);
+		reset.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if(originalString!=null) textPane.setText(originalString);
+				else textPane.setText("");
+			}
+		});
+		
+		JPanel replaceAllPanel = new JPanel();
+		replaceAllPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+	
+		JLabel replaceLab = new JLabel("Replace: ", JLabel.CENTER);
+		c.weightx = 0.05;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets= new Insets(0, 4, 0, 4);
+		replaceAllPanel.add(replaceLab, c);
+		
+		
+		replaceFrom = new JTextField();
+		c.weightx = 0.5;
+		c.gridx = 1;
+		c.gridy = 0;
+		replaceAllPanel.add(replaceFrom, c);
+		
+		JLabel with = new JLabel("with: ", JLabel.CENTER);
+		c.weightx = 0.05;
+		c.gridx = 2;
+		c.gridy = 0;
+		replaceAllPanel.add(with, c);
+		
+		 replaceTo = new JTextField();
+		c.weightx = 0.5;
+		c.gridx = 3;
+		c.gridy = 0;
+		replaceAllPanel.add(replaceTo, c);
+		
+		
+		JButton replaceAll = new JButton("Replace all");
+		replaceAll.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if(replaceFrom.getText().trim().length()==0 && replaceTo.getText().trim().length()==0) return;
+					String old = textPane.getText();
+					textPane.setText(old.replaceAll(replaceFrom.getText().trim(), replaceTo.getText().trim()));
+					textPane.revalidate();
+			}
+		});
+		c.weightx = 0.1;
+		c.gridx = 4;
+		c.gridy = 0;
+		replaceAllPanel.add(replaceAll, c);
+		
+		buttonsPanel.add(replaceAllPanel, BorderLayout.CENTER);
+		
+		JButton updateModel = new JButton("Update model");
+		JPanel updateModelPanel = new JPanel();
+		updateModelPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		updateModelPanel.add(updateModel );
+		contentPane.add(updateModelPanel, BorderLayout.SOUTH);
+		
+		updateModel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				exitCodeOK = true;
+				dispose();
+			}
+		});
 	}
 	
 	

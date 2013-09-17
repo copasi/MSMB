@@ -197,17 +197,7 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 		source = (JTextComponent)e.getSource();
 		
 		if ((e.getModifiers() & InputEvent.CTRL_MASK) != 0 && (keyCode == KeyEvent.VK_H) ) {
-			/*source = (JTextField)e.getSource();
-			String testo = source.getText();
-			int caret = source.getCaretPosition();
-			if(caret>=0) {
-				Character prev_char = null;
-				if(caret > 0) prev_char = testo.charAt(caret-1);
-				getFunctionAutocompletion();
-				
-			}*/
 			manuallyTriggered = true;
-			 System.out.println("manuallyTriggered  "+manuallyTriggered);
 			applyAutocompletion();
 			return;
 		}	
@@ -216,15 +206,6 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 	//	timer.stop();
 	//	timer.setInitialDelay(MainGui.delayAutocompletion);
 	//	timer.start();
-		
-		
-		
-		
-	/*	else if ((e.getModifiers() & InputEvent.CTRL_MASK) != 0 && (keyCode == KeyEvent.VK_O) ) {*/
-			
-			
-		//}
-		
 	}
 	
 	
@@ -314,7 +295,6 @@ public class AutoCompleteKeyLister implements KeyListener, ActionListener {
 					
 				}
 	} else {
-		 System.out.println("caret 0??");
 		doGenericAutocompletion();
 	}
 	}

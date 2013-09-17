@@ -24,7 +24,6 @@ public class CustomTableRowSorter extends TableRowSorter<CustomTableModel> {
 	
 	@Override
 	public Comparator<?> getComparator(int column) {
-		System.out.println("comps.get("+column+") = "+comps.get(column));
 		return comps.get(column);
 	}
 	
@@ -73,16 +72,13 @@ class CustomComparator implements Comparator<String> {
 	@Override
 	public int compare(String o1, String o2) {
         if (o1.trim().length() == 0 && o2.trim().length() == 0) {
-        	System.out.println("return 0");
             return 0;
-        }
+       }
         
         if (o1.trim().length() == 0) {
         	if(sort_order == null) {
-        		System.out.println("sort_order == null");
         		return 1;
         	}
-        	System.out.println("o1.trim().length() == 0 "+o2+" "+sort_order.toString());
         	if(sort_order == SortOrder.ASCENDING) return -1;
             else return 1;
         }
@@ -90,15 +86,12 @@ class CustomComparator implements Comparator<String> {
         if (o2.trim().length() == 0) {
         
         	if(sort_order == null) {
-        		System.out.println("sort_order == null");
         		return -1;
         	}
-        	System.out.println("o2.trim().length() == 0 "+o1+" "+sort_order.toString());
         	 if(sort_order == SortOrder.ASCENDING) return 1;
         	   else return -1;
         }
 
-        System.out.println("o1 and o2 not empty but " + o1 + " "+o2);
         
         return  o1.compareTo(o2);
     }

@@ -1,5 +1,6 @@
 package msmb.parsers.mathExpression.visitor;
-import msmb.parsers.mathExpression.MR_Expression_Parser;
+import msmb.model.MultistateSpecies;
+import msmb.parsers.mathExpression.visitor.ToStringVisitor;
 import msmb.parsers.mathExpression.syntaxtree.*;
 import msmb.utility.CellParsers;
 
@@ -11,6 +12,8 @@ import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import org.apache.commons.lang3.tuple.MutablePair;
+
 public class MR_SubstitutionVisitor extends DepthFirstVoidVisitor {
 
 		String originalName = new String();
@@ -21,10 +24,11 @@ public class MR_SubstitutionVisitor extends DepthFirstVoidVisitor {
 		 
 		CompleteExpression newCompleteExpression = null;
 	
-	
-	   public MR_SubstitutionVisitor(String originalVar, String replacementExpression)  {
+		boolean isVariableIndexMultistate = false;
+	   public MR_SubstitutionVisitor(String originalVar, String replacementExpression, boolean isVariableIndexMultistate)  {
 		   originalName = originalVar;
 		   replacementExpr = replacementExpression;
+		   this.isVariableIndexMultistate=isVariableIndexMultistate;
 		   out = new PrintWriter(newExpression, true); 
 	   }
 	   
@@ -70,7 +74,19 @@ public class MR_SubstitutionVisitor extends DepthFirstVoidVisitor {
 					} else {
 						//System.out.println("SPECIES: "+ToStringVisitor.toString(n)); // to print complete "multistate" definition
 						if(name.compareTo(originalName)==0) printToken("("+replacementExpr+")");
-						else super.visit(n);
+						else {
+							MutablePair<String, String> aliasPair = CellParsers.extractAlias(name);
+							if(aliasPair.left != null) {
+								name = aliasPair.right;
+								out.print(aliasPair.left+"=");
+							}
+							if(CellParsers.isMultistateSpeciesName(name)) {
+								if(!isVariableIndexMultistate) printNewMultistate(name, originalName, replacementExpr);
+								else printNewMultistate_changeSite(name, originalName, replacementExpr);
+							}
+							else super.visit(n);
+						}
+						
 					}
 				}
 			} else {
@@ -78,11 +94,46 @@ public class MR_SubstitutionVisitor extends DepthFirstVoidVisitor {
 				if(name.compareTo(originalName)==0) printToken("("+replacementExpr+")");
 				else super.visit(n);
 			}
+			
+			
 
 	}
 	  
 	 
-	  
+		private void printNewMultistate(String currentSpecies, String originalName,	String replacementExpr) {
+			String onlyNameOriginal = CellParsers.extractMultistateName(originalName);
+			String onlyNameReplacementExpr = CellParsers.extractMultistateName(replacementExpr);
+			String onlyNameCurrentSpecies = CellParsers.extractMultistateName(currentSpecies);
+						
+			try{
+				if(onlyNameCurrentSpecies.compareTo(onlyNameOriginal) == 0) {
+					out.print(currentSpecies.replaceFirst(onlyNameOriginal, onlyNameReplacementExpr));
+				} else {
+					out.print(currentSpecies);
+				}
+			} catch(Exception ex) { 
+				//ex.printStackTrace();
+				out.print(currentSpecies);
+				
+			}
+			finally { out.flush();}	
+			}
+		
+		private void printNewMultistate_changeSite(String currentSpecies, String originalName,	String replacementExpr) {
+			try{
+				MultistateSpecies ms = new MultistateSpecies(MainGui.multiModel, currentSpecies);			
+				if(ms.containsRangeVariable(originalName)) {
+					ms.replaceRangeVariable(originalName, replacementExpr);
+				}
+				System.out.println("replaced multistate expr "+ ms.printCompleteDefinition());	
+				out.print(ms.printCompleteDefinition());
+			} catch(Exception ex) { 
+				//ex.printStackTrace();
+				out.print(currentSpecies);
+				
+			}
+			finally { out.flush();}	
+			}
 	 
 
 

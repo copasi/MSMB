@@ -434,7 +434,7 @@ public class Function implements Comparable<Function> {
 				String value = "__"+index+"__";
 			//	System.out.println("name: "+ name);
 			//	System.out.println("value: "+ value);
-				newExpression = CellParsers.replaceVariableInExpression(newExpression,name,value);
+				newExpression = CellParsers.replaceVariableInExpression(newExpression,name,value,false);
 				index++;
 			}
 			
@@ -445,7 +445,7 @@ public class Function implements Comparable<Function> {
 				String value = (String) parameterValues.get(index);
 			//	System.out.println("name: "+ name);
 			//	System.out.println("value: "+ value);
-				newExpression = CellParsers.replaceVariableInExpression(newExpression,name,value);
+				newExpression = CellParsers.replaceVariableInExpression(newExpression,name,value,false);
 			}
 			
 		//	System.out.println("newExpression: "+ newExpression);
@@ -609,6 +609,6 @@ public class Function implements Comparable<Function> {
 		this.parametesRoles.remove(oldName);
 		this.parametesOrder.put(newName, index);
 		this.parametesRoles.put(newName, role);
-		this.equation = CellParsers.replaceVariableInExpression(getEquation(), oldName, newName);
+		this.equation = CellParsers.replaceVariableInExpression(getEquation(), oldName, newName,false);
 	}
 }

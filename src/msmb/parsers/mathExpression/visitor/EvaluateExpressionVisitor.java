@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
+import org.apache.commons.lang3.tuple.MutablePair;
+
 import msmb.model.Function;
 import msmb.model.MultiModel;
 import msmb.model.MultistateSpecies;
@@ -38,6 +40,8 @@ public class EvaluateExpressionVisitor extends DepthFirstVoidVisitor {
 
 	MultiModel multiModel = null;
 
+	private MultistateSpecies multistateForDependentSUM = null;
+
 	
 		//for now only simple mathematical expressions are allowed, no function calls.
 	public EvaluateExpressionVisitor(MultiModel mm, boolean doNotEvaluate)  { 
@@ -46,8 +50,13 @@ public class EvaluateExpressionVisitor extends DepthFirstVoidVisitor {
 	}
 	
 	public EvaluateExpressionVisitor(MultiModel mm)  { 
+		this(mm, null);
+	}
+	
+	public EvaluateExpressionVisitor(MultiModel mm, MultistateSpecies multistateForDependentSUM)  { 
 		  multiModel = mm;
 		  this.doEvaluation = true;
+		  this.multistateForDependentSUM  = multistateForDependentSUM;
 	}
 	
 	//the visitor of the relational operator will set it true if proper relational operator are found
@@ -100,8 +109,10 @@ public class EvaluateExpressionVisitor extends DepthFirstVoidVisitor {
 					exceptions.add(new Exception("Problem in evaluating element: "+element));
 				}
 				expression += elementValue;
+				splittedExpression.add(elementValue.toString());
 			} else {
 				expression += element;
+				splittedExpression.add(element);
 			}
 			
 		} catch (Throwable e) {
@@ -113,10 +124,49 @@ public class EvaluateExpressionVisitor extends DepthFirstVoidVisitor {
 	public Integer generateElement(String element) {
 		if(CellParsers.isKeyword(element)) return null;
 		Integer ret = null;
-		try {
-			ret = multiModel.getGlobalQ_integerValue(element);
-		} catch (Throwable e) {
-			exceptions.add(e);
+		try{
+			Integer simpleEval =  multiModel.getGlobalQ_integerValue(element);
+			if(simpleEval!= null) return simpleEval;
+		} catch(Throwable ex){
+			ex.printStackTrace();
+		}
+		
+		if(multistateForDependentSUM != null) {
+			MutablePair<String, Vector<String>> pair = CellParsers.extractNameExtensions(element);
+			String speciesName = pair.left;
+			if(speciesName.compareTo(multistateForDependentSUM.getSpeciesName())!= 0) {
+				System.err.println("Problems in dependent SUM: references species name != current species name");
+				return ret;
+			}
+			Vector<String> sites = pair.right;
+			if(sites == null || sites.size() != 1) {
+				System.err.println("Problems in dependent SUM: more than one site is listed");
+				return ret;
+			}
+			String site = sites.get(0).substring(1);
+			Vector<String> states = multistateForDependentSUM.getSiteStates_complete(site);
+			
+			if(states == null || states.size() != 1) {
+				System.err.println("Problems in dependent SUM: more than one state value is available");
+				return ret;
+			}
+			
+			String state = states.get(0);
+			try {
+				Integer value = new Integer(state);
+				return value;
+			} catch(Exception ex) {
+				System.err.println("Problems in dependent SUM: non numeric state value");
+				return ret;
+			}
+			
+		}
+		else {
+			try {
+				ret = multiModel.getGlobalQ_integerValue(element);
+			} catch (Throwable e) {
+					exceptions.add(e);
+			}
 		}
 		return ret;
 	}

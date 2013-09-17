@@ -383,12 +383,11 @@ public class ConsistencyChecks {
 					
 					singleConfigurations = multiModel.expandReaction(metabolites,aliases,aliases2,i);
 				} catch(Throwable ex) {
-					System.out.println("PROBLEMS WITH REACTION "+string_reaction);
-					ex.printStackTrace();
+					//System.out.println("PROBLEMS WITH REACTION "+string_reaction);
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex.printStackTrace();
 					 DebugMessage dm = new DebugMessage();
 					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-					dm.setProblem("Problem parsing the reaction string. " + ex.getMessage());
+					dm.setProblem("Problem parsing the reaction string.\n" + ex.getMessage());
 				    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
 					 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
 					 dm.setOrigin_row(i+1);
@@ -454,7 +453,8 @@ public class ConsistencyChecks {
 					
 					for(int i1 = 0; i1 < mod.size(); i1++) {
 						String s = (String)mod.get(i1);
-						s = multiModel.extractName(s);
+						//modifiers can depend on reactant and be calculated with dependent sum (so no explicit states)
+						s = CellParsers.extractMultistateName(s);
 						if(!multiModel.containsSpecies(s))  {
 							DebugMessage dm = new DebugMessage();
 							 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);

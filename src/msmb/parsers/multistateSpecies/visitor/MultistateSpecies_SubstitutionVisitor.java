@@ -19,14 +19,46 @@ public class MultistateSpecies_SubstitutionVisitor  extends DepthFirstVoidVisito
 	PrintWriter out;
 	ByteArrayOutputStream newMultistate = new ByteArrayOutputStream();
 	private HashMap<String, String> aliases = new HashMap<String, String> ();
+	private boolean isVariableRangeMultistate = false;
+	private String replacementVariableIndex;
+	private String fromVariableIndex;
 	 
 	 public String getNewMultistate() {	
-		return newMultistate.toString();
+		if(isVariableRangeMultistate) {
+			String newDefinition =  newMultistate.toString();
+			try {
+				msmb.model.MultistateSpecies ms = new msmb.model.MultistateSpecies(MainGui.multiModel, newDefinition,false,false);
+				if(ms.containsRangeVariable(fromVariableIndex)) {
+					ms.replaceRangeVariable(fromVariableIndex, replacementVariableIndex);
+				}
+				return ms.printCompleteDefinition();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return newMultistate.toString();
+			}
+			
+		}
+		else return newMultistate.toString();
 	 }
 	 
    public MultistateSpecies_SubstitutionVisitor(String originalSpFull, String replacementSpName, HashMap<String, String> sitesName_origRepl)  {
 	   this(originalSpFull,replacementSpName,sitesName_origRepl, false, new HashMap<String, String>());
    }
+   
+   
+	 
+   public MultistateSpecies_SubstitutionVisitor(String originalSpFull, String from, String replacement,  boolean isVariableRangeMultistate)  {
+	   this.isVariableRangeMultistate  = isVariableRangeMultistate;
+	   originalSpeciesFullDefinition = originalSpFull;
+	   replacementVariableIndex = replacement;
+	   fromVariableIndex= from;
+	   replacementSpeciesName = CellParsers.extractMultistateName(originalSpFull);
+	   sitesName_originalReplacement.clear();
+	   out = new PrintWriter(newMultistate, true); 
+	   originalSpeciesTransferAssignment = null;
+	   this.aliases.clear();
+   }
+   
    
     public MultistateSpecies_SubstitutionVisitor(String originalSpFull, String replacementSpName, HashMap<String, String> sitesName_origRepl, boolean replaceElementsAfterTransferAssign, HashMap<String, String> aliases)  {
 	   originalSpeciesFullDefinition = originalSpFull;

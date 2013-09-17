@@ -36,6 +36,7 @@ import msmb.parsers.multistateSpecies.ParseException;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_Range;
 import msmb.parsers.multistateSpecies.syntaxtree.CompleteMultistateSpecies_RangeString;
 import msmb.parsers.multistateSpecies.visitor.MultistateSpeciesVisitor;
+import msmb.utility.CellParsers;
 import msmb.utility.GraphicalProperties;
 import msmb.utility.MySyntaxException;
 import msmb.utility.SwingUtils;
@@ -364,10 +365,11 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 		Vector<String> singleStates = new Vector<String>();
 		
 		 try{
+			 
 				  InputStream is = new ByteArrayInputStream(current.getBytes("UTF-8"));
 				  MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
 				  CompleteListOfExpression root = parser.CompleteListOfExpression();
-				  ExtractElementsVisitor elementsVisitor = new ExtractElementsVisitor(null);
+				  ExtractElementsVisitor elementsVisitor = new ExtractElementsVisitor(MainGui.multiModel);
 				  root.accept(elementsVisitor);
 				  singleStates = elementsVisitor.getElements();
 				  for(String element : singleStates) {
@@ -381,14 +383,17 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 					  InputStream is = new ByteArrayInputStream(current.getBytes());
 	    			 MR_MultistateSpecies_Parser react = new MR_MultistateSpecies_Parser(is);
 	    			 CompleteMultistateSpecies_RangeString range = react.CompleteMultistateSpecies_RangeString();
-	    			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(null);
+	    			 MultistateSpeciesVisitor v = new MultistateSpeciesVisitor(MainGui.multiModel);
 	    			 range.accept(v);
 	    			
 	    			 MutablePair<String, String> pair = v.getStringRangeLimits();
 	    			 from = pair.left;
 	    			 to = pair.right;
-	    			 finalList = from.trim() +":"+ to.trim();
-	    		
+	    			 
+	    		  	finalList = from.trim() +":"+ to.trim();
+	 	    			
+	    				 
+	    				 
 				  } catch (Throwable e2) {
 					  if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)   e2.printStackTrace();
 					  throw new Exception("Something wrong in the states format.");
@@ -414,10 +419,49 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 		if(currentMultistateSpecies.isRange(originalSpeciesSite)) {
 			//original is a range
 			if(from.length() > 0) { //it's a range specification
-				Double original_from = Double.parseDouble(sites.get(0).toString());
-				Double from_d = Double.parseDouble(from);
-				Double original_to = Double.parseDouble(sites.get(sites.size()-1).toString());
-				Double to_d = Double.parseDouble(to);
+				
+				Double original_from = null;
+				try{
+						original_from = Double.parseDouble(sites.get(0).toString());
+				} catch (Exception ex) {
+					try {
+						original_from = new Double(CellParsers.evaluateExpression(sites.get(0).toString()));
+					} catch (Throwable e) {
+						new Exception("Problem parsing string: "+sites.get(0).toString());
+					}
+				}
+				
+				Double from_d = null;
+						try{
+							from_d = Double.parseDouble(from);
+					} catch (Exception ex) {
+						try {
+							from_d = new Double(CellParsers.evaluateExpression(from));
+						} catch (Throwable e) {
+							new Exception("Problem parsing string: "+from);
+						}
+					}
+				Double original_to = null;
+						try{
+							original_to = Double.parseDouble(sites.get(sites.size()-1).toString());
+					} catch (Exception ex) {
+						try {
+							original_to = new Double(CellParsers.evaluateExpression(sites.get(sites.size()-1).toString()));
+						} catch (Throwable e) {
+							throw new Exception("Problem parsing string: "+sites.get(sites.size()-1).toString());
+						}
+					}
+					
+				Double to_d  = null;
+				try{
+					to_d = Double.parseDouble(to);
+			} catch (Exception ex) {
+				try {
+					to_d = new Double(CellParsers.evaluateExpression(to));
+				} catch (Throwable e) {
+					new Exception("Problem parsing string: "+to);
+				}
+			}
 				if(from_d < original_from || from_d >original_to || to_d > original_to || from_d > to_d) {
 					 throw new Exception("Something wrong in the states format: indexes out of range");
 				}
@@ -448,7 +492,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 		siteNameAlreadyUsed.addAll(names);
 		renamed_sites.clear();
 		try {
-			currentMultistateSpecies = new MultistateSpecies(null, selectedValue.toString());
+			currentMultistateSpecies = new MultistateSpecies(MainGui.multiModel, selectedValue.toString());
 		} catch (Exception e) {
 			//e.printStackTrace();
 		}
@@ -587,7 +631,7 @@ class FocusListener_withComboBox implements FocusListener{
 		try {
 			if(site.getSelectedItem().toString().compareTo(ComplexBuilderFrame_MultistateAdd.selectOneString)==0) {
 				throw new Exception("To validate the states you must select a site!");
-			}
+			}	
 			current = parent.fixStatesString(site.getSelectedItem().toString(), current);
 			
 			textField.setBackground(Color.WHITE);

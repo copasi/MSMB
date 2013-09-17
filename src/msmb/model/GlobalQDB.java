@@ -136,7 +136,7 @@ public class GlobalQDB {
 				globalQVector.put(index,c);
 				multiModel.addNamedElement(name, Constants.TitlesTabs.GLOBALQ.index);
 					
-				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.GLOBALQ.description, ind);
+				if(!MainGui.donotCleanDebugMessages && ind!=null) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.GLOBALQ.description, ind);
 				return index;
 			}
 		} catch (MySyntaxException ex) {

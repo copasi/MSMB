@@ -82,11 +82,13 @@ public class SpeciesDB {
 			//if(name.contains("(")) {
 			if(CellParsers.isMultistateSpeciesName(name)) {
 				if(ind == null) {
-					MultistateSpecies s = new MultistateSpecies(multiModel,name);
-					s.setInitialQuantity(initialQuant);
-					s.setCompartment(multiModel,compartment);
-					if(parseExpression == true) s.setExpression(multiModel,expression);
-					else s.setExpression_withoutParsing(expression);
+					MultistateSpecies s = null;
+						s = new MultistateSpecies(multiModel,name);
+						s.setInitialQuantity(initialQuant);
+						s.setCompartment(multiModel,compartment);
+						if(parseExpression == true) s.setExpression(multiModel,expression);
+						else s.setExpression_withoutParsing(expression);
+
 					s.setType(Constants.SpeciesType.MULTISTATE.copasiType);
 					s.setNotes(notes);
 					if(index == -1) { index = speciesVector.size(); }
@@ -327,27 +329,65 @@ public class SpeciesDB {
 	
 	void recalculateSpeciesWithVariableRanges() {
 		for(int ind = 0; ind < speciesVector.size(); ind++) {
-			Species sp = speciesVector.get(ind);
-			if(sp== null) continue;
+			recalculateSpeciesWithVariableRanges(ind);
+		}
+	}
+	
+	void recalculateSpeciesWithVariableRanges(int speciesIndex) {
+			Species sp = speciesVector.get(speciesIndex);
+			if(sp== null) return;
 			String name = sp.getDisplayedName();
+			Vector<MutablePair<Vector<Integer>, Vector<Integer>>> updated_errors = new Vector<MutablePair<Vector<Integer>, Vector<Integer>>>();
 			if(CellParsers.isMultistateSpeciesName(name)) { 
 				try {
 					Species recalculateRangesFromVariable = null;
 					if(sp instanceof ComplexSpecies)  {
-						recalculateRangesFromVariable = new ComplexSpecies((ComplexSpecies)sp);
+						recalculateRangesFromVariable = new ComplexSpecies(multiModel,(ComplexSpecies)sp);
 					}
 					else {
 						recalculateRangesFromVariable = new MultistateSpecies(multiModel, name);
 						recalculateRangesFromVariable.setCompartment(multiModel, sp.getCompartment_listString());
+						recalculateRangesFromVariable.setEditableExpression(multiModel, sp.getEditableExpression());
 						((MultistateSpecies)recalculateRangesFromVariable).setInitialQuantity(((MultistateSpecies)sp).getInitialQuantity_multi());
+						
+						MultistateSpecies old = (MultistateSpecies) sp;
+						int oldExpansion = old.getExpandedSpecies(multiModel).size();
+						int newExpansion = ((MultistateSpecies)recalculateRangesFromVariable).getExpandedSpecies(multiModel).size();
+						
+						if(oldExpansion != newExpansion) {
+								HashMap<String, String> renamed = new HashMap<String, String>();
+								for(String siteName :  old.getSitesNames()) {
+									renamed.put(siteName, siteName);
+								}
+								 updated_errors.add(multiModel.speciesDB.replaceMultistateElementInComplex(((MultistateSpecies)recalculateRangesFromVariable).printCompleteDefinition(), 
+												 (MultistateSpecies) recalculateRangesFromVariable, 
+												 renamed));
+						}
+					
+					
+						
+						for(MutablePair<Vector<Integer>, Vector<Integer>> element : updated_errors) {
+							Vector<Integer> updated = element.left;
+							Vector<Integer> errors = element.right;
+							for(Integer index : updated) {
+								MainGui.updateSpeciesTableFromMultiModel(index);
+							}
+						}
 					}
-					speciesVector.put(ind, recalculateRangesFromVariable);
+					speciesVector.put(speciesIndex, recalculateRangesFromVariable);
 					} catch (Throwable e) {
-						e.printStackTrace();
+						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
+						 DebugMessage dm = new DebugMessage();
+							dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+						    dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
+						    dm.setOrigin_row(speciesIndex);
+							dm.setProblem("Problems with ranges using variables");
+						    dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
+							MainGui.addDebugMessage_ifNotPresent(dm);
 				}
 		
 			}
-		}
+
 	}
 
 
@@ -512,7 +552,8 @@ public class SpeciesDB {
 			MultistateSpecies m = new MultistateSpecies(multiModel,speciesName,isFromReaction);
 			justName = m.getSpeciesName();
 		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				e.printStackTrace();
 			//this function can be used also to check if Cdh1(++(p)) exist... so I have to analyze name with operators too.
 			 InputStream is;
 			try {
@@ -524,7 +565,8 @@ public class SpeciesDB {
 				 justName = v.getSpeciesName();
 				 
 			} catch (Exception e1) {
-				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e1.printStackTrace();
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+					e1.printStackTrace();
 			}
 			
 		} 
@@ -619,7 +661,14 @@ public class SpeciesDB {
 			if(s!=null) {
 				if(s instanceof MultistateSpecies) {
 					MultistateSpecies m = (MultistateSpecies) s;
-					ret.put(m.getSpeciesName(), m.getInitialQuantity_multi());
+					if(m.getExpression().trim().length() > 0) {
+						//is a multistate with dependent SUM, store that instead of the initialquantity
+						HashMap<String, String> name_expression = new HashMap<String,String>();
+						name_expression.put("expressionForMultistateSpecies", m.getExpression());
+						 ret.put(m.getSpeciesName(), name_expression);
+					}
+					else ret.put(m.getSpeciesName(), m.getInitialQuantity_multi());
+					
 				}
 			}
 		}
@@ -634,7 +683,17 @@ public class SpeciesDB {
 				if(s instanceof MultistateSpecies) {
 					MultistateSpecies m = (MultistateSpecies) s;
 					String spName= m.getSpeciesName();
-					m.setInitialQuantity(multistateInitials.get(spName));
+					HashMap<String, String> initialOrExpression = multistateInitials.get(spName);
+					if(initialOrExpression.get("expressionForMultistateSpecies") != null) {
+								try {
+									m.setEditableExpression(multiModel, initialOrExpression.get("expressionForMultistateSpecies") );
+								} catch (Throwable e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+					} else {
+						m.setInitialQuantity(initialOrExpression);
+					}
 				}
 			}
 		}
@@ -734,7 +793,7 @@ public class SpeciesDB {
 			if(speciesVector.get(index)!=null) multiModel.removeNamedElement(speciesVector.get(index).getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
 		}
 		speciesIndexes.put(complex.getSpeciesName(), index);
-		ComplexSpecies newObject = new ComplexSpecies(complex);
+		ComplexSpecies newObject = new ComplexSpecies(multiModel,complex);
 		speciesVector.put(index, newObject);
 		if(!indexesComplexSpecies.contains(index))indexesComplexSpecies.add(index);
 		multiModel.addNamedElement(complex.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
@@ -761,24 +820,27 @@ public class SpeciesDB {
 			speciesIndexes.remove(oldComplex.getSpeciesName());
 		}
 		if(index==-1) index = speciesVector.size();
-		speciesVector.put(index, new ComplexSpecies(newComplex));
+		speciesVector.put(index, new ComplexSpecies(multiModel,newComplex));
 		speciesIndexes.put(newComplex.getSpeciesName(), index);
 		multiModel.addNamedElement(newComplex.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
 		return;
 	}
 
+	
+	
+	
 	public Vector<Integer> replaceElementInComplex(String toSearch, String replace) throws Throwable {
-	Vector<Integer> elementToUpdate = new Vector<Integer>();
-		for(Integer complex_index : indexesComplexSpecies) {
-			ComplexSpecies c = (ComplexSpecies) speciesVector.get(complex_index);
-			boolean replaced = c.replaceElement(toSearch, replace);
-			if(replaced) {
-				elementToUpdate.add(complex_index);
-				updateComplex(complex_index, c);
+		Vector<Integer> elementToUpdate = new Vector<Integer>();
+			for(Integer complex_index : indexesComplexSpecies) {
+				ComplexSpecies c = (ComplexSpecies) speciesVector.get(complex_index);
+				boolean replaced = c.replaceElement(toSearch, replace);
+				if(replaced) {
+					elementToUpdate.add(complex_index);
+					updateComplex(complex_index, c);
+				}
 			}
+			return elementToUpdate;
 		}
-		return elementToUpdate;
-	}
 	
 	public MutablePair<Vector<Integer>, Vector<Integer>> replaceMultistateElementInComplex(String oldMultiSpecies, MultistateSpecies sp,	HashMap<String, String> renamed_sites) {
 		//first vector of integer are the ones that has been changed

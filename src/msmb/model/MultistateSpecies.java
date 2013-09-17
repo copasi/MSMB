@@ -42,6 +42,8 @@ public class MultistateSpecies extends Species implements Serializable {
 	
 	
 	private HashMap<String, String> initialQuantities = new HashMap<String, String>();
+	private boolean evaluateLimits;
+	public boolean definitionHasIssues = false;
 	public HashMap<String, String> getInitialQuantity_multi() {	return this.initialQuantities; }
 	public void setInitialQuantity(HashMap<String,String> initials) { 	if(initials!= null) this.initialQuantities.putAll(initials);	}
 	
@@ -92,6 +94,11 @@ public class MultistateSpecies extends Species implements Serializable {
 			 this.setName(v.getSpeciesName());
 			  initialQuantities = new HashMap<String, String>();
 			  Iterator<String> it = v.getAllSites_names().iterator();
+			  try {
+				  this.setCompartment(multiModel,MainGui.compartment_default_for_dialog_window);
+			  } catch(MySyntaxException ex) {
+				//do nothing?
+			 }
 			  while(it.hasNext()) {
 				  String site_name = it.next();
 				  MutablePair<String, String> pureRangeSite = v.getPureRangeLimits(site_name);
@@ -99,54 +106,59 @@ public class MultistateSpecies extends Species implements Serializable {
 					  try {
 						  this.addSite_range(site_name, pureRangeSite.getLeft(), pureRangeSite.getRight());
 					  } catch(Exception ex) {
-						  //ex.printStackTrace();
-						  //undefied variables
+						 // ex.printStackTrace();
+						  //undefined variables
 						  this.addSite_string(site_name, pureRangeSite.left + ":"+pureRangeSite.right);
 						  this.sites_type.put(name,new SiteType(SiteType.RANGE));
+						  throw new MySyntaxException(-1,"Problems with range limits: "+ex.getMessage(), null);//because other tables/col can call this method, so it's up to them to add the proper debug message
 					  }
 				  } else {
 					  Vector<String> single_states = v.getSite_states(site_name);
-					  this.addSite_vector(site_name, single_states);
+					  if(single_states!=null) this.addSite_vector(site_name, single_states);
+					  else {
+						  this.addSite_vector(site_name, new Vector());
+					  }
 				  }
 				  if(circularSites.contains(site_name))  this.setCircular(site_name, true);
 				  else  this.setCircular(site_name, false);
 			  }
-			  try {
-				  this.setCompartment(multiModel,MainGui.compartment_default_for_dialog_window);
-			  } catch(MySyntaxException ex) {
-				//do nothing?
-			 }
+			
 			  
 		 } catch(MySyntaxException ex) {
 			 //ex.printStackTrace();
-			throw new MySyntaxException(ex.getColumn(),"Problem parsing species:"+ex.getMessage(), Constants.TitlesTabs.SPECIES.description);
+			throw new MySyntaxException(ex.getColumn(),"Problem parsing species:\n"+ex.getMessage(), null);//because other tables/col can call this method, so it's up to them to add the proper debug message
 
 		 } catch (Throwable e) {
-					 //e.printStackTrace();
-					throw new MySyntaxException(Constants.SpeciesColumns.NAME.index,"Problem parsing species: "+e.getMessage(), Constants.TitlesTabs.SPECIES.description);
+					// e.printStackTrace();
+			 		if(evaluateLimits)	throw new MySyntaxException(-1,"Problem parsing species:\n"+e.getMessage(), null); //because other tables/col can call this method, so it's up to them to add the proper debug message
 
 		}
 
 	}
 	
 	public MultistateSpecies(MultiModel m, String complete_string) throws Exception { 
-		this(m,complete_string,false);
+		this(m,complete_string,false,true);
+	}
+	
+	public MultistateSpecies(MultiModel m, String complete_string,boolean isReactantReactionWithPossibleRanges) throws Exception { 
+		this(m,complete_string,isReactantReactionWithPossibleRanges,true);
 	}
 	
 	
-	
-	public MultistateSpecies(MultiModel m, String complete_string, boolean isReactantReactionWithPossibleRanges) throws Exception{
+	public MultistateSpecies(MultiModel m, String complete_string, boolean isReactantReactionWithPossibleRanges,boolean evaluateLimits) throws Exception{
 		multiModel = m;
+		this.evaluateLimits = evaluateLimits;
 		if(complete_string.length() == 0) return;
 		newParser(complete_string,isReactantReactionWithPossibleRanges);
 		this.setType(Constants.SpeciesType.MULTISTATE.copasiType);
+		
 	}
 	
 	
-	public void addSite_range(String name, String start, String end) throws Exception {
+	public void addSite_range(String name, String start, String end) throws Throwable {
 		Vector st = new Vector();
-		int start_bound = -1;
-		int end_bound =-1;
+		Integer start_bound = -1;
+		Integer end_bound =-1;
 		sites_type.put(name,new SiteType(SiteType.RANGE));
 
 		try{
@@ -154,7 +166,7 @@ public class MultistateSpecies extends Species implements Serializable {
 		} catch(Exception ex) {
 			sites_rangesWithVariables.put(name, new MutablePair<String, String>(start, end));
 			//not a number, need to find the numerical value in the model
-			GlobalQ limit = multiModel.getGlobalQ(start);
+			/*GlobalQ limit = multiModel.getGlobalQ(start);
 			if(limit == null || limit.type != Constants.GlobalQType.FIXED.copasiType) {
 				throw new Exception("Lower bound variable "+start+ " is not defined or its type is not fixed.");
 			}
@@ -162,8 +174,15 @@ public class MultistateSpecies extends Species implements Serializable {
 				Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
 				start_bound = value.intValue();
 			} catch(Exception ex2) {
-				System.out.println("!!!! 1 INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
-			}
+				//initial expression to be evaluated
+				try {
+					start_bound = CellParsers.evaluateExpression(limit.getInitialValue());
+				} catch (Throwable ex3) {
+					//e.printStackTrace();
+					throw ex3;
+				}
+			}*/
+			start_bound = multiModel.getGlobalQ_integerValue(start);
 		}
 		
 		try{
@@ -171,7 +190,7 @@ public class MultistateSpecies extends Species implements Serializable {
 		} catch(Exception ex) {
 			sites_rangesWithVariables.put(name, new MutablePair<String, String>(start, end));
 			//not a number, need to find the numerical value in the model
-			GlobalQ limit = multiModel.getGlobalQ(end);
+		/*	GlobalQ limit = multiModel.getGlobalQ(end);
 			if(limit == null || limit.type != Constants.GlobalQType.FIXED.copasiType) {
 				throw new Exception("Upper bound variable "+end+ " is not defined or its type is not fixed.");
 			}
@@ -179,8 +198,21 @@ public class MultistateSpecies extends Species implements Serializable {
 				Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
 				end_bound = value.intValue();
 			} catch(Exception ex2) {
-				System.out.println("!!!! 2 INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
-			}
+				//initial expression to be evaluated
+				try {
+					end_bound = CellParsers.evaluateExpression(limit.getInitialValue());
+				} catch (Throwable e) {
+					//e.printStackTrace();
+					throw e;
+				}
+			}*/
+			end_bound = multiModel.getGlobalQ_integerValue(end);
+		}
+		if(start_bound == null || end_bound == null) {
+			throw new Exception("Problems evaluating one of the indexes ("+start+ ", "+end+")");
+		}
+		if(start_bound > end_bound) {
+			throw new Exception("Lower bound variable "+start+ " > upper bound variable "+end);
 		}
 		for(int i = start_bound; i <= end_bound; i++) { st.add(Integer.toString(i)); }
 		sites.put(name, st);
@@ -213,22 +245,28 @@ public class MultistateSpecies extends Species implements Serializable {
 	
 	
 	public void addSite_string(String name, String states) throws Exception {
-	
-		MutablePair<String, String> possibleRangeWithVariables = CellParsers.parseMultistateSpecies_rangeWithVariables(states);
 		boolean shouldBeRange = false;
-			if(possibleRangeWithVariables.left!=null) {
-				try {
+		
+		
+		try {
+			MutablePair<String, String> possibleRangeWithVariables = CellParsers.getMultistateSpecies_rangeWithVariables(states,true);
+			try {
+					if(possibleRangeWithVariables.left!=null) {
 					addSite_range(name, possibleRangeWithVariables.left, possibleRangeWithVariables.right);
 					return;
-				} catch(Exception ex) {
-					//ex.printStackTrace();
-					//If problems, add the list with the strings;
-					shouldBeRange = true;
 				}
-				
+			} catch(Throwable ex) {
+				//ex.printStackTrace();
+				//If problems, add the list with the strings;
+				shouldBeRange = true;
 			}
-		
-		
+	
+		} catch(Throwable ex) {
+			//ex.printStackTrace();
+			//not a range
+			shouldBeRange = false;
+		}
+	
 		
 		Vector parsedStates = CellParsers.parseMultistateSpecies_states(states);
 		sites.put(name, parsedStates);
@@ -262,7 +300,7 @@ public class MultistateSpecies extends Species implements Serializable {
 		sites.put(name, old);
 	}
 	
-	public Set getSitesNames() {	return this.sites.keySet();	}
+	public Set<String> getSitesNames() {	return this.sites.keySet();	}
 	
 	public Vector getSiteStates_complete(String site_name) {//always unfolded
 		return (Vector)sites.get(site_name);
@@ -296,8 +334,8 @@ public class MultistateSpecies extends Species implements Serializable {
 		//if(this.sites_fromRanges.contains(site_name)) {
 		if(this.sites_type.get(site_name).getType()== SiteType.RANGE) {
 			
-			if(sites_rangesWithVariables.containsKey(name)) {
-				MutablePair<String, String> ranges = sites_rangesWithVariables.get(name);
+			if(sites_rangesWithVariables.containsKey(site_name)) {
+				MutablePair<String, String> ranges = sites_rangesWithVariables.get(site_name);
 				start = ranges.left;
 				end = ranges.right;
 			} else {
@@ -326,8 +364,17 @@ public class MultistateSpecies extends Species implements Serializable {
 	}
 	
 	public String printSite(String name) {
+		
 		return printSite(name, false);
 	}
+	
+	public String printSiteWithUndefinedElements(String site_name) {
+			if(definitionHasIssues==false) definitionHasIssues = true;
+			MutablePair<String, String> element = sites_rangesWithVariables.get(site_name);
+			if(element == null) return new String();
+			return site_name+"{"+element.left + ":"+element.right+"}";
+	}
+	
 	public String printSite(String name,boolean alphabetical ) {
 		return printSite(name, alphabetical, false);
 	}
@@ -340,6 +387,8 @@ public class MultistateSpecies extends Species implements Serializable {
 		String r = new String();
 		Vector values = new Vector();
 		values.addAll((Vector)sites.get(name));
+		if(values.size() ==0) return name;
+		
 		if(alphabetical) Collections.sort(values);
 		if(values == null) return r;
 		
@@ -357,40 +406,56 @@ public class MultistateSpecies extends Species implements Serializable {
 					if(limit == null || limit.type != Constants.GlobalQType.FIXED.copasiType) {
 						//throw new Exception("Lower bound variable "+ranges.left+ " is not defined or its type is not fixed.");
 						r+= ranges.left + ":";
-					}
-					try{
-						Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
-						r+= value.intValue() + ":";
-					} catch(Exception ex2) {
-						System.out.println("!!!! 3 INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
+					} else {
+						try{
+							Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
+							r+= value.intValue() + ":";
+						} catch(Exception ex2) {
+							
+							try {
+								Integer ret = CellParsers.evaluateExpression(limit.getInitialValue());
+								r+= ret + ":";
+							} catch (Throwable e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
 					}
 					limit = multiModel.getGlobalQ(ranges.right);
 					if(limit == null || limit.type != Constants.GlobalQType.FIXED.copasiType) {
 						//throw new Exception("Lower bound variable "+ranges.left+ " is not defined or its type is not fixed.");
 						r+= ranges.right;
+					} else {
+						try{
+							Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
+							r+= value.intValue();
+						} catch(Exception ex2) {
+							
+							try {
+								Integer ret = CellParsers.evaluateExpression(limit.getInitialValue());
+								r+= ret;
+							} catch (Throwable e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 					}
-					try{
-						Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
-						r+= value.intValue();
-					} catch(Exception ex2) {
-						System.out.println("!!!! 4 INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
 					}
 				}
 			}
 			else r+=values.get(0) + ":" + values.get(values.size()-1);
-		//} else if(sites_boolean.contains(name)) {
 		} else if(ty.getType() == SiteType.BOOLEAN) {
 			r+= Constants.BooleanType.TRUE.description + "," + Constants.BooleanType.FALSE.description;
 	    }else {
 			for(int i = 0; i < values.size()-1; i++) {
 				r+= values.get(i) + ",";
 			}
-			r+= values.get(values.size()-1);
+			if(values.size() > 0)r+= values.get(values.size()-1);
 		}
 		
 		
 		r+="}";
 		if(ty.isCircular()) r+="c";
+		
 		return r;
 	}
 
@@ -463,61 +528,67 @@ public class MultistateSpecies extends Species implements Serializable {
 	public String printCompleteDefinition() {
 		String r = this.name; 
 		r = CellParsers.cleanName(r);
-		if(getSitesNames().size() <= 0) return r;
+		Set<String> names = getSitesNames();
+		 HashMap<String, MutablePair<String, String>> sitesWithPossibleProblems = this.getSitesRangesWithVariables();
+			
+		if(names.size() <= 0 && sitesWithPossibleProblems.size() <=0) return r;
 		r += "(";
-		 Iterator iterator = getSitesNames().iterator();  
+		 Iterator iterator = names.iterator();  
 		 int i = 0;
 		 while (iterator.hasNext()) {  
 		       String pr = printSite((String)iterator.next());//, true); 
 		       r+=pr+";";
 	    }
+		 
+		   
+		    Iterator<String> iterator2 = sitesWithPossibleProblems.keySet().iterator();  
+		    while (iterator2.hasNext()) {  
+		       String site_name = iterator2.next();
+		       if(names.contains(site_name)) continue; //site already printed before
+		       String pr = printSiteWithUndefinedElements(site_name);
+		       r+=pr+";";
+		   }  
+		    
+		    
 		 r = r.substring(0,r.length()-1) + ")";
 		return r;
 	}
 	
 	
-	/*public Vector<Species> getExpandedSpecies_Minimum(MultiModel m, String subSpecies) throws Exception {
-		Vector<Species> ret = new Vector<Species>();
+
+	
+	public Vector<MultistateSpecies> getExpandedSpecies(MultiModel m, boolean onlyCombinationSitesStates) throws Throwable {
+		Vector<MultistateSpecies> ret = new Vector<MultistateSpecies>();
 		
 		Set keySet = this.sites.keySet();
-		
-		HashMap<String, Vector<String>> subSpecies_sites_states = something;
 		
 		 List<String> keys = new ArrayList<String>(keySet);
 		 List<Set<String>> values = new Vector<Set<String>>();
 		 Iterator sites_iterator = keySet.iterator();
 		while (sites_iterator.hasNext()) {  
 			String name = sites_iterator.next().toString();  
-			
-			Vector<String> states = null;
-			if(subSpecies_sites_states.containsKey(name)) {
-				states = subSpecies_sites_states.get(name);
-			} else {
-				states = (Vector<String>)this.sites.get(name);
-			}
+		    Vector<String> states = (Vector<String>)this.sites.get(name);
 		 	Set<String> values_site = Sets.newLinkedHashSet(states);
 		     values.add(values_site);
 		}
 		   		    
 		Set<List<String>> product = Sets.cartesianProduct(values);
 		
-	    
+			
 		for (List<String> v : product) {
 			   Vector<String> site_value = new Vector<String>();
 			   for (int i = 0; i < keys.size(); ++i) {
-		    	    String key = (String) keys.get(i);
-		            String value = v.get(i);
+				   String key = keys.get(i).toString();
+				   
+		            String value = v.get(i).toString();
 		            site_value.add(key);
 		            site_value.add(value);
 		        }
-		        Species singleConf = createSingleConfigurationState(m,site_value);
-		        singleConf.setCompartment(multiModel,this.getCompartment());
-		        singleConf.setType(Constants.SpeciesType.REACTIONS.copasiType);
+		        MultistateSpecies singleConf = new MultistateSpecies(m,createSingleConfigurationState(m,site_value).getDisplayedName());
 		        ret.add(singleConf);
 		    }
 		return ret;
-	}*/
-	
+	}
 	
 	public Vector<Species> getExpandedSpecies(MultiModel m) throws Throwable {
 		Vector<Species> ret = new Vector<Species>();
@@ -548,7 +619,13 @@ public class MultistateSpecies extends Species implements Serializable {
 		        }
 		        Species singleConf = createSingleConfigurationState(m,site_value);
 		        singleConf.setCompartment(multiModel,this.getCompartment_listString());
-		        singleConf.setType(Constants.SpeciesType.REACTIONS.copasiType);
+		        if(this.getEditableExpression().trim().length()==0){
+		        	singleConf.setType(Constants.SpeciesType.REACTIONS.copasiType);
+		        } else {
+		          	singleConf.setType(Constants.SpeciesType.ASSIGNMENT.copasiType);
+		    			singleConf.setExpression(multiModel, CellParsers.evaluateExpressionWithDependentSum(this.getExpression(), new MultistateSpecies(m, singleConf.getDisplayedName()))); 
+				}
+		       
 		        ret.add(singleConf);
 		    }
 		return ret;
@@ -684,6 +761,7 @@ public class MultistateSpecies extends Species implements Serializable {
 	
 	private void setCircular(String site, boolean b) {
 		SiteType s = sites_type.get(site);
+		if(s == null) return;
 		s.setCircular(b);
 		sites_type.put(site, s);
 	}
@@ -774,8 +852,14 @@ public class MultistateSpecies extends Species implements Serializable {
 			    						Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
 			    						final_states.add(new Integer(value.intValue()).toString());
 			    					} catch(Exception ex2) {
-			    						ex2.printStackTrace();
-			    						System.out.println("!!!! 5 INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
+			    						//ex2.printStackTrace();
+			    						
+			    						try {
+			    							Integer ret = CellParsers.evaluateExpression(limit.getInitialValue());
+			    							final_states.add(ret.toString());
+			    						} catch (Throwable e) {
+			    							if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
+			    						}
 			    					}
 		    					}
 	    				 	} else { 
@@ -887,6 +971,37 @@ public class MultistateSpecies extends Species implements Serializable {
 		return r;
 	}
 	
+	public boolean containsRangeVariable(String elementToSearch) {
+		Iterator<String> it =sites_rangesWithVariables.keySet().iterator();
+		while(it.hasNext()) {
+			String site = it.next();
+			MutablePair<String, String> pair = sites_rangesWithVariables.get(site);
+			if(pair.left.compareTo(elementToSearch)==0) return true;
+			if(pair.right.compareTo(elementToSearch)==0) return true;
+		}
+		return false;
+	}
+	
+	public void replaceRangeVariable(String elementToSearch, String replacement) {
+		Iterator<String> it =sites_rangesWithVariables.keySet().iterator();
+		while(it.hasNext()) {
+			String site = it.next();
+			MutablePair<String, String> pair = sites_rangesWithVariables.get(site);
+			if(pair.left.compareTo(elementToSearch)==0) {
+				pair.left = replacement;
+			}
+			if(pair.right.compareTo(elementToSearch)==0) {
+				pair.right = replacement;
+			}
+		
+			if(!sites.containsKey(site)) {
+				Vector states = new Vector();
+				states.add(pair.left+":"+pair.right);
+				sites.put(site,states);
+			}
+			sites_rangesWithVariables.put(site, pair);
+		}
+	}
 	
 }
 

@@ -367,7 +367,7 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
       v2 = new MyVisitor();
       start2.accept(v2);
       System.out.println("...................................");
-         } catch(Exception ex)  {
+   } catch(Exception ex)  {
     ex.printStackTrace();  }   	  }}
 
 class MyVisitor extends DepthFirstVoidVisitor
@@ -729,7 +729,7 @@ void BooleanLiteral() :{}
 
 void ArgumentList() :{}
 {
-  LOOKAHEAD(4)
+  LOOKAHEAD(2)
   MultistateSites_list() |
   AdditiveExpression() ( < COMMA > AdditiveExpression() )*
  
@@ -768,7 +768,7 @@ void CoeffFunction_postFix():{}{
 
 void MultistateSite() :{}
 {
-   Name() < LBRACE > (Name() | Literal() )  < RBRACE >}
+   Name() < LBRACE > ( Name() | Literal()  )  < RBRACE >}
 
 void MultistateSites_list() :{}
 {

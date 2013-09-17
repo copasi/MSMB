@@ -6,11 +6,21 @@ public class FoundElement implements Comparable<FoundElement> {
 	String tableDescription;
 	int row = 0;
 	int col = 0;
+	boolean isRangeVariableInMultistate = false;
 	
+	public boolean isRangeVariableInMultistate() {
+		return isRangeVariableInMultistate;
+	}
+
 	public FoundElement(String tableDescr, int row, int col) {
 		tableDescription = new String(tableDescr);
 		this.row = row;
 		this.col = col;
+	}
+	
+	public FoundElement(String tableDescr, int row, int col, boolean isRangeVarMulti) {
+		this(tableDescr,row,col);
+		isRangeVariableInMultistate = isRangeVarMulti;
 	}
 
 	public String getTableDescription() {	return tableDescription; }

@@ -43,6 +43,7 @@ public class JXTreeTableExtended extends JXTreeTable {
 	public void addEditorForCell(int row, int col, TableCellEditor e )
 	{
 		rm.addEditorForCell(row, col, e);
+	
 	}
 	
 	

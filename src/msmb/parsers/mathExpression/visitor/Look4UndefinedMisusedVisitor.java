@@ -32,8 +32,10 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		private boolean getSubName;
 		MultiModel multiModel = null;
 		
-		Vector<String> tempSiteName = new Vector<String>();
 		//used to collect variable associated to the SITE type for function, so that to the multiModel they look as named Element and they will not be flagged as missing. If they are really missing SUM is going to realize that
+		Vector<String> tempSiteName = new Vector<String>();
+		
+		private MultistateSpecies multistateForDependentSum;
 	
 	   public Look4UndefinedMisusedVisitor(MultiModel mm)  {
 		   missing = new Vector<String>();
@@ -41,6 +43,14 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		   usedAs = new Vector<MutablePair<String,String>>();
 		   multiModel = mm;
 	   }
+
+		public Look4UndefinedMisusedVisitor(MultiModel mm,	MultistateSpecies multistateForDependentSum) {
+			   missing = new Vector<String>();
+			   misused = new Vector<String>();
+			   usedAs = new Vector<MutablePair<String,String>>();
+			   multiModel = mm;
+			   this.multistateForDependentSum = multistateForDependentSum;
+	}
 
 		public Vector<String> getMisusedElements() {	return misused;	}
 		public Vector<String> getUndefinedElements() {	return missing;	}
@@ -144,7 +154,6 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 				}
 			}
 		} else {
-			//System.out.println("SPECIES qui: "+ToStringVisitor.toString(n));
 			if(!CellParsers.isKeyword(name)		
 					&& multiModel.getWhereNameIsUsed(name)==null) {
 				if(!missing.contains(name))	{
@@ -237,7 +246,6 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			if(modify)sumExpansion.set(indexSum,se);
 			else sumExpansion.add(se);
 		}
-		//System.out.println("print sumExpansion "+sumExpansion);
 	}
 	
 	
@@ -303,7 +311,6 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					if(!res) break;
 				}
 			}
-			//System.out.println("print sumExpansion inside"+sumExpansion);
 	}
 
 	
@@ -362,21 +369,23 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					try{
 						listedStates.add(multiModel.getGlobalQ_integerValue(stateFirst).toString());
 					} catch(Throwable ex2) {
-						misused.add("\nProblems evaluating element "+stateFirst);
+						if(multistateForDependentSum== null) {
+							misused.add("\nProblems evaluating element "+stateFirst);
+						}
+						else {
+							Integer intVal;
+							try {
+								String evaluatedExpressionWithSum = CellParsers.evaluateExpressionWithDependentSum(stateFirst, multistateForDependentSum);
+								intVal = CellParsers.evaluateExpression(evaluatedExpressionWithSum);
+								listedStates.add(intVal.toString());
+							} catch (Throwable e) {
+								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
+							}
+						
+						}
 						return false;
 					}
-					/*
-					GlobalQ limit = multiModel.getGlobalQ(stateFirst);
-					if(limit == null || limit.getType() != Constants.GlobalQType.FIXED.copasiType) {
-						misused.add("\nLower bound variable "+stateFirst+ " is not defined or its type is not fixed.");
-						return false;
-					}
-					try{
-						Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
-						listedStates.add(value.toString());
-					} catch(Exception ex2) {
-						System.out.println("!!!! 8 INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
-					}*/
+				
 				}
 				
 			}
@@ -403,21 +412,22 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 					try{
 						listedStates.add(multiModel.getGlobalQ_integerValue(stateSecond).toString());
 					} catch(Throwable ex2) {
-						misused.add("\nProblems evaluating element "+stateSecond);
+						if(multistateForDependentSum==null) {
+							misused.add("\nProblems evaluating element "+stateSecond);
+						}
+						else {
+							Integer intVal;
+							try {
+								String evaluatedExpressionWithSum = CellParsers.evaluateExpressionWithDependentSum(stateSecond, multistateForDependentSum);
+								intVal = CellParsers.evaluateExpression(evaluatedExpressionWithSum);
+								listedStates.add(intVal.toString());
+							} catch (Throwable e) {
+								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
+							}
+						}
 						return false;
 					}
-					/*
-					GlobalQ limit = multiModel.getGlobalQ(stateSecond);
-					if(limit == null || limit.getType() != Constants.GlobalQType.FIXED.copasiType) {
-						misused.add("\nLower bound variable "+stateSecond+ " is not defined or its type is not fixed.");
-						return false;
-					}
-					try{
-						Long value = Math.round(Double.parseDouble(limit.getInitialValue()));
-						listedStates.add(value.toString());
-					} catch(Exception ex2) {
-						System.out.println("!!!! 9 INITIAL IS AN EXPRESSION THAT NEED TO BE EVALUATED !!!");
-					}*/
+				
 					
 					
 				}
@@ -427,8 +437,6 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			
 			
 			Vector states = sp.getSiteStates_complete(nameSiteOrFuN);
-		//	System.out.println("listedStates "+listedStates);
-		//	System.out.println("existing  "+states);
 			
 			
 			for(int i1 = 0; i1< listedStates.size(); i1++) {
@@ -878,7 +886,7 @@ class SumExpansion {
 				     String find = element;
 				     String replacement = current.getSiteStates_complete(element).get(0).toString();
 				    		 
-				     ret = CellParsers.replaceVariableInExpression(original,find,replacement);
+				     ret = CellParsers.replaceVariableInExpression(original,find,replacement,false);
 				     //System.out.println("finalExpr "+finalExpr);
 				     
 				}

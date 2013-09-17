@@ -129,7 +129,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			throw e;
 		}
-		//System.out.println("after: "+expression);
 	}
 	  
 	
@@ -212,7 +211,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	public void visit(SpeciesReferenceOrFunctionCall n) {
 		try {
 			String element = ToStringVisitor.toString(n);
-			//super.visit(n);
 			if(isNodeAFunctionCall(n)) {
 				String funName  = new String();
 				try {
@@ -227,7 +225,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 					Function f = multiModel.getFunctionByName(funName);
 					if(listFunctionToCompact.contains(funName)) expression += funName+"(";
 					else{
-						//System.out.println("I WILL EXPAND element:" + element);
 						 generateFunctionCall(element);
 						 return;
 					}
@@ -297,7 +294,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 			} else {
 				expression += generateElement(element);
 			}
-			//super.visit(n);
 			
 		} catch (Throwable e) {
 			exceptions.add(e);
@@ -549,7 +545,6 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 				}
 				else {
 					element_newView += element_kind_quantifier;
-					//System.out.println("WHEEEEEEEEEEERE > 1... SEE WHAT TO DO...");
 				}
 			}
 
