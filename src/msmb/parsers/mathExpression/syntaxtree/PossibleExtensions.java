@@ -17,7 +17,8 @@ import msmb.parsers.mathExpression.visitor.*;
  * .......... .. | %08 <EXTENSION_FUNCTION><br>
  * .......... .. | %09 <EXTENSION_REACTION><br>
  * .......... .. | %10 <EXTENSION_FLUX><br>
- * .......... .. | %11 <MY_SPECIAL_EXTENSION> )<br>
+ * .......... .. | %11 <MY_SPECIAL_EXTENSION><br>
+ * .......... .. | %12 #0 "." #1 <IDENTIFIER> )<br>
  * nodeListOptional -> ( PossibleExtensions() )*<br>
  */
 public class PossibleExtensions implements INode {

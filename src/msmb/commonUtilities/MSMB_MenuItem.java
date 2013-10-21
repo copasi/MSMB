@@ -23,17 +23,18 @@ public enum MSMB_MenuItem
 		EXIT("Exit"),	
 
 	EDIT("Edit"),
-		SHOW_EXPANDED_EXPR("Show expanded expression in table..."),
+	DELETE_ELEMENT("Delete element..."),
+	SHOW_EXPANDED_EXPR("Show expanded expression in table..."),
 			REACTIONS(Constants.TitlesTabs.REACTIONS.description),
 			SPECIES(Constants.TitlesTabs.SPECIES.description),
 			GLOBALQ(Constants.TitlesTabs.GLOBALQ.description),
 			COMPARTMENTS(Constants.TitlesTabs.COMPARTMENTS.description),
 			EVENTS(Constants.TitlesTabs.EVENTS.description),
 		ADD_REVERSE_REACTION("Add reverse reaction"),
-		DELETE_ELEMENT("Delete element..."),
 		VALIDATE("Validate model"),
 		MULTISTATE_BUILDER("Multistate builder..."),
-		COMPLEX_BUILDER("Complex builder...");
+		COMPLEX_BUILDER("Complex builder..."),
+		IMPORT_ANNOTATIONS("Import annotations...");
 	
 	private final String menuString;
 	

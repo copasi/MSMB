@@ -1,6 +1,5 @@
 package msmb.parsers.chemicalReaction.visitor;
 
-import msmb.parsers.chemicalReaction.MR_ChemicalReaction_ParserConstants;
 import msmb.parsers.chemicalReaction.syntaxtree.*;
 import msmb.parsers.mathExpression.MR_Expression_ParserConstants;
 import msmb.utility.CellParsers;
@@ -10,7 +9,6 @@ import java.util.*;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import msmb.model.MultiModel;
-import msmb.model.MultistateSpecies;
 
 
 
@@ -23,7 +21,7 @@ public class ExtractNamesSpeciesUsedVisitor extends DepthFirstVoidVisitor {
 		   multiModel = m;
 	   }
 
-		Vector<Exception> exceptions = new Vector<>();
+		Vector<Exception> exceptions = new Vector<Exception>();
 		public Vector<Exception> getExceptions() { return exceptions; }
 	   
 		public Vector<String> getNamesSpeciesUsed() {

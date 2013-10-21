@@ -145,6 +145,9 @@ public void setRowSelectionInterval(int index0, int index1) {
 };
 		
 		
+
+	public boolean isCellUneditable(int row, int col) { return this.model.disabledCell.contains(row+"_"+col);}
+
 	public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int vColIndex) {
 		Component c = null;
 		try{
@@ -159,7 +162,7 @@ public void setRowSelectionInterval(int index0, int index1) {
 			
 			
 			
-			if(this.model.disabledCell.contains(rowIndex+"_"+vColIndex)) {
+			if(isCellUneditable(rowIndex,vColIndex)) {
 				c.setBackground(Constants.vt_blues_1);
 			}else {
 				if(isCellWithError(rowIndex,vColIndex)) {

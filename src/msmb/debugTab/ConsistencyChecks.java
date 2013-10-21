@@ -240,7 +240,7 @@ public class ConsistencyChecks {
 					boolean errorAlreadyAdded = false;
 					//String parameterNameInFunction = (String)paramMapping.get(iii);
 					String actualModelParameter = (String)paramMapping.get(iii+1);
-					
+					String actualModelParameterWithExtensions = new String(actualModelParameter);
 					MutablePair<String, Vector<String>> nameAndPossibleExtensions = CellParsers.extractNameExtensions(actualModelParameter);
 					
 					Vector<String> extensions = nameAndPossibleExtensions.right;
@@ -307,24 +307,18 @@ public class ConsistencyChecks {
 								checkAllRoles = false;
 								break;
 							case Constants.SITE_FOR_WEIGHT_IN_SUM:
-								if(multiModel.checkUsageOfSiteType(rowIndex, actualModelParameter)) {
+								if(multiModel.checkUsageOfSiteType(rowIndex, actualModelParameterWithExtensions,checkAllRoles)) {
 									checkAllRoles = false; 
 								} else {
-									DebugMessage dm = new DebugMessage();
-									 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
-									 dm.setProblem("Missing site definition or non-numeric site value: " + actualModelParameter);
-									 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
-									 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
-									 dm.setOrigin_row(rowIndex+1);
-									 MainGui.addDebugMessage_ifNotPresent(dm);
-									 missingParameters.add(actualModelParameter);
+									if(!checkAllRoles) { //error already added by subroutine
+										errorAlreadyAdded = true;
 										MainGui.updateDebugTab();
-									 errorAlreadyAdded = true;
+										missingParameters.add(actualModelParameter);
+									}
 									throw new NullPointerException();
 								}
 								break;
 							default: 
-								
 								//System.out.println("missing parameter role in function, for actual value " + actualModelParameter);
 								throw new NullPointerException();
 							}

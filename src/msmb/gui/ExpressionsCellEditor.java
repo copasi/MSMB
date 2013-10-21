@@ -95,7 +95,9 @@ public class ExpressionsCellEditor  extends DefaultCellEditor {
 			@Override
 			public void mouseEntered(MouseEvent e) {}
 			@Override
-			public void mouseClicked(final MouseEvent e) {	  
+			public void mouseClicked(final MouseEvent e) {	 
+				if(MainGui.displayTablesUneditable) return;
+                
 				if (e.isPopupTrigger()) {
 	        		showPopUpPaste(e);
 				} else {

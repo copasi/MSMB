@@ -106,7 +106,7 @@ class ExportMultistateFormat {
 				data.add(singleTable);
 			}
 			
-			MutablePair<Vector<Vector<Vector<String>>>,HashMap<String, HashMap<String, String>>> tables_multistateInitials = new MutablePair<>();
+			MutablePair<Vector<Vector<Vector<String>>>,HashMap<String, HashMap<String, String>>> tables_multistateInitials = new MutablePair();
 			tables_multistateInitials.left = data;
 			
 			

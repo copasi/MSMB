@@ -17,10 +17,10 @@ public interface MSMB_Interface {
 	public JTabbedPane getMSMB_MainTabPanel();
 	public JMenuBar getMSMB_MenuBar();
 	
-	public void loadFromCopasiKey(String copasiKey)  throws Exception;
-	public boolean saveToCopasiKey(String copasiKey) ;
+	public void loadFromCopasiKey(String copasiKey, boolean displayUneditable)  throws Exception;
+	public boolean saveToCopasiKey(String copasiKey);
 	
-	public void loadFromMSMB(byte[] msmbByteArray);
+	public void loadFromMSMB(byte[] msmbByteArray, boolean displayUneditable);
 	public byte[]  saveToMSMB();
 	
 	

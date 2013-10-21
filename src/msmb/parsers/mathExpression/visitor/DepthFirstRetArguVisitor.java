@@ -1370,7 +1370,8 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
    * .......... .. | %08 <EXTENSION_FUNCTION><br>
    * .......... .. | %09 <EXTENSION_REACTION><br>
    * .......... .. | %10 <EXTENSION_FLUX><br>
-   * .......... .. | %11 <MY_SPECIAL_EXTENSION> )<br>
+   * .......... .. | %11 <MY_SPECIAL_EXTENSION><br>
+   * .......... .. | %12 #0 "." #1 <IDENTIFIER> )<br>
    * nodeListOptional -> ( PossibleExtensions() )*<br>
    *
    * @param n - the node to visit
@@ -1390,7 +1391,8 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
     // .......... .. | %08 <EXTENSION_FUNCTION>
     // .......... .. | %09 <EXTENSION_REACTION>
     // .......... .. | %10 <EXTENSION_FLUX>
-    // .......... .. | %11 <MY_SPECIAL_EXTENSION> )
+    // .......... .. | %11 <MY_SPECIAL_EXTENSION>
+    // .......... .. | %12 #0 "." #1 <IDENTIFIER> )
     final NodeChoice n0 = n.nodeChoice;
     final NodeChoice n0C = n0;
     final INode n0CH = n0C.choice;
@@ -1442,6 +1444,16 @@ public class DepthFirstRetArguVisitor<R, A> implements IRetArguVisitor<R, A> {
       case 11:
         // %11 <MY_SPECIAL_EXTENSION>
         nRes = n0CH.accept(this, argu);
+        break;
+      case 12:
+        // %12 #0 "." #1 <IDENTIFIER>
+        final NodeSequence n0CHS0 = (NodeSequence) n0CH;
+        // #0 "."
+        final INode n0CHS012A0 = n0CHS0.elementAt(0);
+        nRes = n0CHS012A0.accept(this, argu);
+        // #1 <IDENTIFIER>
+        final INode n0CHS012A1 = n0CHS0.elementAt(1);
+        nRes = n0CHS012A1.accept(this, argu);
         break;
       default:
         // should not occur !!!

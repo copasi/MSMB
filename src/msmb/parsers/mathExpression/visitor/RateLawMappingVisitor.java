@@ -26,7 +26,7 @@ public class RateLawMappingVisitor extends DepthFirstVoidVisitor {
 
 	  protected int row = -1;
 	  protected String equation = new String();
-	  Vector<Throwable> exceptions = new Vector<>();
+	  Vector<Throwable> exceptions = new Vector<Throwable>();
 	 public Vector<Throwable> getExceptions() { return exceptions; }
 	   MultiModel multiModel = null;
 	  Vector<String> actualsGlobalQ_PARtype = new Vector<String>();

@@ -33,7 +33,7 @@ public class ExpressionVisitor extends DepthFirstVoidVisitor {
 	private PrintWriter out;
 	private boolean conc = false;
 	private boolean isInitialExpression = false;
-	Vector<Throwable> exceptions = new Vector<>();
+	Vector<Throwable> exceptions = new Vector<Throwable>();
 	public Vector<Throwable> getExceptions() { return exceptions; }
 		
 	private String expression = new String();

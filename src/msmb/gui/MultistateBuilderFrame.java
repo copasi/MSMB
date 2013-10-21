@@ -78,7 +78,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 		this.setContentPane(getJContentPane());
 		this.setTitle("Multistate Builder");
 		this.setLocationRelativeTo(parentFrame);
-		this.setResizable(false);
+		this.setResizable(true);
 		
 		Vector<Component> order = new Vector<Component>(7);
         order.add(jTextField_species);
@@ -946,6 +946,7 @@ class RendererForErrorsJList  extends JLabel implements  ListCellRenderer  {
             
     	String selectedItem = value.toString();
     	setText(selectedItem);
+    	if(selectedItem.indexOf("{")==-1) return this;
     	String site_name = selectedItem.substring(0,selectedItem.indexOf("{"));
     	
          if (siteNamesWithProblems.contains(site_name)) {

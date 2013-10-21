@@ -394,17 +394,17 @@ TOKEN :
 | < TYPE_SITE : "SITE" >
 | < TYPE_VOL : "VOL" >
 | < TYPE_TIME : "TIME" >
-| < EXTENSION_CONC : ".c" >
-| < EXTENSION_PARTICLE : ".p" >
-| < EXTENSION_TRANS : ".t" >
-| < EXTENSION_INIT : ".i" >
-| < EXTENSION_RATE : ".r" >
+| < EXTENSION_CONC : ".cnc" >
+| < EXTENSION_PARTICLE : ".prt" >
+| < EXTENSION_TRANS : ".trns" >
+| < EXTENSION_INIT : ".init" >
+| < EXTENSION_RATE : ".rate" >
 | < EXTENSION_SPECIES : ".spc" >
 | < EXTENSION_GLOBALQ : ".glq" >
 | < EXTENSION_COMPARTMENT : ".cmp" >
 | < EXTENSION_REACTION : ".rct" >
 | < EXTENSION_FUNCTION : ".fnc" >
-| < EXTENSION_FLUX : ".f" >
+| < EXTENSION_FLUX : ".flx" >
 | < MY_SPECIAL_EXTENSION : ".*MY*SPECIAL*EXTENSION" >
 | < SUM : "SUM" >
 | < DELAY : "delay" >
@@ -1553,69 +1553,83 @@ PossibleExtensions PossibleExtensions() :
   Token n22 = null;
   NodeToken n23 = null;
   Token n24 = null;
-  NodeListOptional n25 = new NodeListOptional();
-  PossibleExtensions n26 = null;
+  NodeSequence n25 = null;
+  NodeToken n26 = null;
+  Token n27 = null;
+  NodeToken n28 = null;
+  Token n29 = null;
+  NodeListOptional n30 = new NodeListOptional();
+  PossibleExtensions n31 = null;
 }
 {
   (
     (
       n2 = < EXTENSION_CONC >
       { n1 = JTBToolkit.makeNodeToken(n2); }
-      { n0 = new NodeChoice(n1, 0, 12); }
+      { n0 = new NodeChoice(n1, 0, 13); }
     |
       n4 = < EXTENSION_COMPARTMENT >
       { n3 = JTBToolkit.makeNodeToken(n4); }
-      { n0 = new NodeChoice(n3, 1, 12); }
+      { n0 = new NodeChoice(n3, 1, 13); }
     |
       n6 = < EXTENSION_PARTICLE >
       { n5 = JTBToolkit.makeNodeToken(n6); }
-      { n0 = new NodeChoice(n5, 2, 12); }
+      { n0 = new NodeChoice(n5, 2, 13); }
     |
       n8 = < EXTENSION_TRANS >
       { n7 = JTBToolkit.makeNodeToken(n8); }
-      { n0 = new NodeChoice(n7, 3, 12); }
+      { n0 = new NodeChoice(n7, 3, 13); }
     |
       n10 = < EXTENSION_INIT >
       { n9 = JTBToolkit.makeNodeToken(n10); }
-      { n0 = new NodeChoice(n9, 4, 12); }
+      { n0 = new NodeChoice(n9, 4, 13); }
     |
       n12 = < EXTENSION_RATE >
       { n11 = JTBToolkit.makeNodeToken(n12); }
-      { n0 = new NodeChoice(n11, 5, 12); }
+      { n0 = new NodeChoice(n11, 5, 13); }
     |
       n14 = < EXTENSION_SPECIES >
       { n13 = JTBToolkit.makeNodeToken(n14); }
-      { n0 = new NodeChoice(n13, 6, 12); }
+      { n0 = new NodeChoice(n13, 6, 13); }
     |
       n16 = < EXTENSION_GLOBALQ >
       { n15 = JTBToolkit.makeNodeToken(n16); }
-      { n0 = new NodeChoice(n15, 7, 12); }
+      { n0 = new NodeChoice(n15, 7, 13); }
     |
       n18 = < EXTENSION_FUNCTION >
       { n17 = JTBToolkit.makeNodeToken(n18); }
-      { n0 = new NodeChoice(n17, 8, 12); }
+      { n0 = new NodeChoice(n17, 8, 13); }
     |
       n20 = < EXTENSION_REACTION >
       { n19 = JTBToolkit.makeNodeToken(n20); }
-      { n0 = new NodeChoice(n19, 9, 12); }
+      { n0 = new NodeChoice(n19, 9, 13); }
     |
       n22 = < EXTENSION_FLUX >
       { n21 = JTBToolkit.makeNodeToken(n22); }
-      { n0 = new NodeChoice(n21, 10, 12); }
+      { n0 = new NodeChoice(n21, 10, 13); }
     |
       n24 = < MY_SPECIAL_EXTENSION >
       { n23 = JTBToolkit.makeNodeToken(n24); }
-      { n0 = new NodeChoice(n23, 11, 12); }
+      { n0 = new NodeChoice(n23, 11, 13); }
+    |
+      { n25 = new NodeSequence(2); }
+      n27 = "."
+      { n26 = JTBToolkit.makeNodeToken(n27); }
+      { n25.addNode(n26); }
+      n29 = < IDENTIFIER >
+      { n28 = JTBToolkit.makeNodeToken(n29); }
+      { n25.addNode(n28); }
+      { n0 = new NodeChoice(n25, 12, 13); }
     )
     
   )
   (
     LOOKAHEAD( 2 )
-    n26 = PossibleExtensions()
-    { n25.addNode(n26); }
+    n31 = PossibleExtensions()
+    { n30.addNode(n31); }
   )*
-  { n25.nodes.trimToSize(); }
-  { return new PossibleExtensions(n0, n25); }
+  { n30.nodes.trimToSize(); }
+  { return new PossibleExtensions(n0, n30); }
 }
 
 Literal Literal() :

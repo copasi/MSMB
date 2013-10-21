@@ -363,7 +363,7 @@ Reaction Reaction() :
   Blank n5 = null;
   NodeToken n6 = null;
   Token n7 = null;
-  NodeListOptional n8 = new NodeListOptional();
+  NodeOptional n8 = new NodeOptional();
   NodeSequence n9 = null;
   NodeSequence n10 = null;
   NodeToken n11 = null;
@@ -416,32 +416,33 @@ Reaction Reaction() :
     { n6 = JTBToolkit.makeNodeToken(n7); }
     { n1.addNode(n6); }
     (
-      LOOKAHEAD( 2 )
       { n13 = new NodeListOptional(); }
       { n15 = new NodeOptional(); }
-      { n9 = new NodeSequence(3); }
       (
-        { n10 = new NodeSequence(1); }
-        n12 = " "
-        { n11 = JTBToolkit.makeNodeToken(n12); }
-        { n10.addNode(n11); }
+        { n9 = new NodeSequence(3); }
+        (
+          { n10 = new NodeSequence(1); }
+          n12 = " "
+          { n11 = JTBToolkit.makeNodeToken(n12); }
+          { n10.addNode(n11); }
+          
+        )
+        { n9.addNode(n10); }
+        (
+          n14 = Blank()
+          { n13.addNode(n14); }
+        )*
+        { n13.nodes.trimToSize(); }
+        { n9.addNode(n13); }
+        (
+          n16 = AdditiveExpression()
+          { n15.addNode(n16); }
+        )?
+        { n9.addNode(n15); }
         
       )
-      { n9.addNode(n10); }
-      (
-        n14 = Blank()
-        { n13.addNode(n14); }
-      )*
-      { n13.nodes.trimToSize(); }
-      { n9.addNode(n13); }
-      (
-        n16 = AdditiveExpression()
-        { n15.addNode(n16); }
-      )?
-      { n9.addNode(n15); }
       { n8.addNode(n9); }
-    )*
-    { n8.nodes.trimToSize(); }
+    )?
     { n1.addNode(n8); }
     (
       { n19 = new NodeListOptional(); }

@@ -37,7 +37,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	  private CModel model = null;
 	  private boolean conc = false;
 	  private boolean isInitialExpression = false;
-	  Vector<Exception> exceptions = new Vector<>();
+	  Vector<Exception> exceptions = new Vector<Exception>();
 		 public Vector<Exception> getExceptions() { return exceptions; }
 		
 	  private String copasiExpression = new String();

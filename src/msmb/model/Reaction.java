@@ -32,7 +32,7 @@ public class Reaction {
 	
 	
 	public Vector<String> getSubstrates(MultiModel m) {
-		Vector ret = new Vector<>();
+		Vector ret = new Vector<String>();
 		Vector metabolites;
 		try {
 			metabolites = getSubProdMod(m);
@@ -47,7 +47,7 @@ public class Reaction {
 	}
 	
 	public Vector<String> getProducts(MultiModel m) {
-		Vector ret = new Vector<>();
+		Vector ret = new Vector<String>();
 		Vector metabolites;
 		try {
 			metabolites = getSubProdMod(m);
@@ -63,7 +63,7 @@ public class Reaction {
 	
 	
 	public Vector<String> getModifiers(MultiModel m) {
-		Vector ret = new Vector<>();
+		Vector<String> ret = new Vector<String>();
 		Vector metabolites;
 		try {
 			metabolites = getSubProdMod(m);
@@ -78,7 +78,7 @@ public class Reaction {
 	}
 	
 	private Vector getSubProdMod(MultiModel m) throws Throwable {
-		Vector metabolites = new Vector<>();
+		Vector metabolites = new Vector<Object>();
 
 		InputStream is = new ByteArrayInputStream(reactionString.getBytes("UTF-8"));
 		MR_ChemicalReaction_Parser react = new MR_ChemicalReaction_Parser(is,"UTF-8");

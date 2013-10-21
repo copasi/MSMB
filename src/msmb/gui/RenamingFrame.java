@@ -132,7 +132,7 @@ public class RenamingFrame extends JDialog implements WindowListener{
 						  }
 						  return;
 					  } 
-					  Vector<Object> selected = new Vector<>();
+					  Vector<Object> selected = new Vector<Object>();
 					  for(int i = 0; i < comps.length; i++ ){
 						  Component c = comps[i];
 						  if(c instanceof JCheckBox) {

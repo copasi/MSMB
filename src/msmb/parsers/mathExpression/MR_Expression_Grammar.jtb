@@ -406,17 +406,17 @@ TOKEN :
 | < TYPE_SITE :  "SITE" >
 | < TYPE_VOL :  "VOL" >
 | < TYPE_TIME :  "TIME" >
-| < EXTENSION_CONC :  ".c" >
-| < EXTENSION_PARTICLE :  ".p" >
-| < EXTENSION_TRANS :  ".t" >
-| < EXTENSION_INIT :  ".i" >
-| < EXTENSION_RATE :  ".r" >
+| < EXTENSION_CONC :  ".cnc" >
+| < EXTENSION_PARTICLE :  ".prt" >
+| < EXTENSION_TRANS :  ".trns" >
+| < EXTENSION_INIT :  ".init" >
+| < EXTENSION_RATE :  ".rate" >
 | < EXTENSION_SPECIES :  ".spc" >
 | < EXTENSION_GLOBALQ :  ".glq" >
 | < EXTENSION_COMPARTMENT :  ".cmp" >
 | < EXTENSION_REACTION :  ".rct" >
 | < EXTENSION_FUNCTION :  ".fnc" >
-| < EXTENSION_FLUX :  ".f" >
+| < EXTENSION_FLUX :  ".flx" >
 | < MY_SPECIAL_EXTENSION :  ".*MY*SPECIAL*EXTENSION" >
 | < SUM: "SUM">
 | < DELAY: "delay">
@@ -710,6 +710,7 @@ void PossibleExtensions() :{}
   	| < EXTENSION_FUNCTION > | < EXTENSION_REACTION >
 	| < EXTENSION_FLUX >
   	| < MY_SPECIAL_EXTENSION >
+  	| "."< IDENTIFIER >
 	) (LOOKAHEAD(2)PossibleExtensions())* }
 
 void Literal() :{}

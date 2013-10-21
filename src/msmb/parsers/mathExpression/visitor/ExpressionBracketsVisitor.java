@@ -17,7 +17,7 @@ import msmb.model.MultiModel;
 public class ExpressionBracketsVisitor extends DepthFirstVoidVisitor
 {
   
-	Vector<Exception> exceptions = new Vector<>();
+	Vector<Exception> exceptions = new Vector<Exception>();
 	public Vector<Exception> getExceptions() { return exceptions; }
 
 	private Vector<String> splittedExpression = new Vector<String>();

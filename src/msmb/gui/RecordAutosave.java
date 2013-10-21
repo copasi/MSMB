@@ -31,6 +31,7 @@ public class RecordAutosave {
 	
 	
 	public void startAutosave() {
+		if(myGlobalTimer != null) return;
 		if(myGlobalTimer == null) myGlobalTimer = new Timer();
 		path = mainGui.getAutosaveDirectory();
 		baseName = mainGui.getAutosaveBaseName();

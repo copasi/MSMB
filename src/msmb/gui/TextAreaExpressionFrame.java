@@ -142,6 +142,8 @@ public class TextAreaExpressionFrame extends JDialog {
 				public void mouseEntered(MouseEvent e) {}
 				@Override
 				public void mouseClicked(final MouseEvent e) {	  
+					if(MainGui.displayTablesUneditable) return;
+	                
 					SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {

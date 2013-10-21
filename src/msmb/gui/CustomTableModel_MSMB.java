@@ -152,6 +152,10 @@ public class CustomTableModel_MSMB extends CustomTableModel{
 	    {
 			MainGui.modelHasBeenModified = true;
 	        setValueAt(value, row, column, true);
+	        MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(MSMB_Element.SOMETHING_CHANGED);
+			changeToReport.setElementBefore(null);
+			changeToReport.setElementAfter(null);
+			MainGui.setChangeToReport(changeToReport);
 	    }
 
 		  public void setValueAt_withoutUpdate(Object value, int row, int col) {
@@ -349,6 +353,8 @@ class CustomJTable_MSMB extends CustomJTable  {
 		        }
 		        
 		        private void showPopup(MouseEvent e) {
+		        	if(MainGui.displayTablesUneditable) return;
+	                
 		        	if (e.isPopupTrigger()) {
 		        		if (isEditing()){ getCellEditor().stopCellEditing(); }
 		        		
@@ -575,11 +581,11 @@ class CustomJTable_MSMB extends CustomJTable  {
 			            		 && ((String) MainGui.tableSpeciesmodel.getValueAt(row, Constants.SpeciesColumns.TYPE.index)).compareTo(Constants.SpeciesType.MULTISTATE.description) == 0) {
 		         			 // SUM with indexes from reaction
 			            	 popupMenu.removeAll();
-			            	 JMenuItem textAreaExpression = new JMenuItem("Add dependent SUM");
+			            	 JMenuItem textAreaExpression = new JMenuItem("Edit in Text Area");
 		         			 textAreaExpression.addActionListener(new ActionListener() {
 		         				  @Override
 		         				  public void actionPerformed(ActionEvent e) {
-		         					  MainGui.openSUMTextAreaExpression(row);
+		         					  MainGui.openTextAreaExpression(row);
 		         				  }
 		         			  });
 		         			  popupMenu.add(textAreaExpression);	
@@ -708,6 +714,8 @@ class CustomJTable_MSMB extends CustomJTable  {
 				
 		//	}
 			
+			
+				
 			if(this.model.disabledCell.contains(rowIndex+"_"+vColIndex)) {
 				c.setBackground(Color.LIGHT_GRAY);
 				
@@ -727,6 +735,7 @@ class CustomJTable_MSMB extends CustomJTable  {
 				c.setForeground(getForeground());
 			}
 			
+	
 			
 			if(isCellWithDefaults(rowIndex,vColIndex) && !(this.model.disabledCell.contains(rowIndex+"_"+vColIndex))){
 				Border compound = null;
@@ -778,6 +787,14 @@ class CustomJTable_MSMB extends CustomJTable  {
 			} 
 			
 	
+			
+			if(MainGui.displayTablesUneditable) {
+				c.setBackground(Color.LIGHT_GRAY);
+				if(this.isRowSelected(rowIndex)) {
+					c.setForeground(GraphicalProperties.color_cell_to_highlight);
+				}
+			}
+				
 			return c;
 			
 		} catch(Exception ex) {
@@ -801,9 +818,16 @@ class CustomJTable_MSMB extends CustomJTable  {
      	return row==selRow;
 	}
 	
+	@Override
+	public boolean isCellEditable(int row, int column) {
+		if(MainGui.displayTablesUneditable) return false;
+		return super.isCellEditable(row, column);
+	}
+	
 	
 
 	private void updateDisabledCell_MSMB(int row, int col) {
+		if(MainGui.displayTablesUneditable) return;
 		CustomTableModel_MSMB model = (CustomTableModel_MSMB) this.model;
 		if(model.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
 				if(model.getValueAt(row, Constants.GlobalQColumns.TYPE.index).toString().compareTo(Constants.GlobalQType.ASSIGNMENT.description)==0) {

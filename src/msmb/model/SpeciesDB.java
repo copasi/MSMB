@@ -43,6 +43,7 @@ public class SpeciesDB {
 	}
 	
 	public int addChangeSpecies(int index, String sbmlID, String name, HashMap<String, String> initialQuant, int type, String compartment, String expression, boolean fromMultistateBuilder, String notes, boolean autoMergeSpecies,boolean parseExpression) throws Throwable {
+	
 		if(indexesComplexSpecies.contains(index) ||
 				type == Constants.SpeciesType.COMPLEX.copasiType) {
 			if(!indexesComplexSpecies.contains(index)) {
@@ -53,7 +54,13 @@ public class SpeciesDB {
 		
 		Integer ind;
 		if(CellParsers.isMultistateSpeciesName(name)) {
-			ind = speciesIndexes.get(new MultistateSpecies(multiModel,name).getSpeciesName());
+			MultistateSpecies  ms = null;
+			try{
+				 ms = new MultistateSpecies(multiModel,name,true, false);
+			} catch(Exception ex) {//if multistate with undefined variable ranges, it still need to be added!
+				ex.printStackTrace();
+			}
+			ind = speciesIndexes.get(ms.getSpeciesName());
 		} else {
 			ind = speciesIndexes.get(name);
 		}
@@ -83,15 +90,21 @@ public class SpeciesDB {
 			if(CellParsers.isMultistateSpeciesName(name)) {
 				if(ind == null) {
 					MultistateSpecies s = null;
-						s = new MultistateSpecies(multiModel,name);
-						s.setInitialQuantity(initialQuant);
-						s.setCompartment(multiModel,compartment);
-						if(parseExpression == true) s.setExpression(multiModel,expression);
-						else s.setExpression_withoutParsing(expression);
+					//---
+					if(index == -1) { index = speciesVector.size(); }
+					s = new MultistateSpecies(multiModel,name,true, false); //because it can have undefined variable ranges, but we want to save the index in the species vector
+					speciesIndexes.put(s.getSpeciesName(), index);
+					speciesVector.put(index,null);
+					//---
+					
+					s = new MultistateSpecies(multiModel,name);
+					s.setInitialQuantity(initialQuant);
+					s.setCompartment(multiModel,compartment);
+					if(parseExpression == true) s.setExpression(multiModel,expression);
+					else s.setExpression_withoutParsing(expression);
 
 					s.setType(Constants.SpeciesType.MULTISTATE.copasiType);
 					s.setNotes(notes);
-					if(index == -1) { index = speciesVector.size(); }
 					speciesIndexes.put(s.getSpeciesName(), index);
 					speciesVector.put(index,s);
 					multiModel.addNamedElement(s.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
@@ -547,6 +560,7 @@ public class SpeciesDB {
 	
 
 	public boolean containsSpecies(String speciesName, boolean isFromReaction) {
+		
 		String justName = new String();
 		try{
 			MultistateSpecies m = new MultistateSpecies(multiModel,speciesName,isFromReaction);
@@ -654,7 +668,7 @@ public class SpeciesDB {
 
 
 	public HashMap<String, HashMap<String, String>> getMultistateInitials() {
-		HashMap<String, HashMap<String, String>> ret = new HashMap<>();
+		HashMap<String, HashMap<String, String>> ret = new HashMap();
 		
 		for(int i = 0; i < speciesVector.size(); i++) {
 			Species s = speciesVector.get(i);
@@ -805,7 +819,7 @@ public class SpeciesDB {
 			index = speciesVector.size();
 		}	
 		
-		speciesIndexes.put("justTajeSpotInDB", index);
+		speciesIndexes.put("justTakeSpotInDB", index);
 		speciesVector.put(index, null);
 		if(!indexesComplexSpecies.contains(index)) {
 			indexesComplexSpecies.add(index);
@@ -885,7 +899,7 @@ public class SpeciesDB {
 	
 
 	public Vector getAllComplexSpeciesSerialized() {
-		Vector ret = new Vector<>();
+		Vector ret = new Vector<Object>();
 		for(Integer ind : indexesComplexSpecies){
 			if(((ComplexSpecies)speciesVector.get(ind)!=null)) {
 				ret.add(new Integer(ind));

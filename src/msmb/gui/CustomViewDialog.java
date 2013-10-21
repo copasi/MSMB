@@ -57,7 +57,7 @@ public class CustomViewDialog extends JDialog {
 		}
 		visitor.toString(CellParsers.parser.getTopNode());
 		Vector<String> v = visitor.getFunctionsInTheExpression();*/
-		Vector<String> v = new Vector<>();
+		Vector<String> v = new Vector<String>();
 		v.add("TODO: add list of functions used in the expression");
 		v.add("TODO: add list of functions used in the expression");
 		v.add("TODO: add list of functions used in the expression");

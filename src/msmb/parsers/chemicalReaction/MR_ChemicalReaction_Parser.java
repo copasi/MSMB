@@ -237,7 +237,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   Blank n5 = null;
   NodeToken n6 = null;
   Token n7 = null;
-  NodeListOptional n8 = new NodeListOptional();
+  NodeOptional n8 = new NodeOptional();
   NodeSequence n9 = null;
   NodeSequence n10 = null;
   NodeToken n11 = null;
@@ -308,22 +308,17 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       n7 = jj_consume_token(ARROW);
       n6 = JTBToolkit.makeNodeToken(n7);
       n1.addNode(n6);
-      label_2:
-      while (true) {
-        if (jj_2_1(2)) {
-          ;
-        } else {
-          break label_2;
-        }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 18:
         n13 = new NodeListOptional();
         n15 = new NodeOptional();
-        n9 = new NodeSequence(3);
-          n10 = new NodeSequence(1);
+          n9 = new NodeSequence(3);
+            n10 = new NodeSequence(1);
         n12 = jj_consume_token(18);
-          n11 = JTBToolkit.makeNodeToken(n12);
-          n10.addNode(n11);
-        n9.addNode(n10);
-        label_3:
+            n11 = JTBToolkit.makeNodeToken(n12);
+            n10.addNode(n11);
+          n9.addNode(n10);
+        label_2:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case 18:
@@ -331,28 +326,31 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
             break;
           default:
             jj_la1[2] = jj_gen;
-            break label_3;
+            break label_2;
           }
           n14 = Blank();
-          n13.addNode(n14);
+            n13.addNode(n14);
         }
-        n13.nodes.trimToSize();
-        n9.addNode(n13);
+          n13.nodes.trimToSize();
+          n9.addNode(n13);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case INTEGER_LITERAL:
         case FLOATING_POINT_LITERAL:
         case IDENTIFIER:
           n16 = AdditiveExpression();
-          n15.addNode(n16);
+            n15.addNode(n16);
           break;
         default:
           jj_la1[3] = jj_gen;
           ;
         }
-        n9.addNode(n15);
+          n9.addNode(n15);
         n8.addNode(n9);
+        break;
+      default:
+        jj_la1[4] = jj_gen;
+        ;
       }
-      n8.nodes.trimToSize();
       n1.addNode(n8);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 18:
@@ -360,15 +358,15 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         n19 = new NodeListOptional();
         n23 = new NodeListOptional();
         n18 = new NodeSequence(4);
-        label_4:
+        label_3:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case 18:
             ;
             break;
           default:
-            jj_la1[4] = jj_gen;
-            break label_4;
+            jj_la1[5] = jj_gen;
+            break label_3;
           }
           n20 = Blank();
           n19.addNode(n20);
@@ -378,15 +376,15 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         n22 = jj_consume_token(19);
         n21 = JTBToolkit.makeNodeToken(n22);
         n18.addNode(n21);
-        label_5:
+        label_4:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case 18:
             ;
             break;
           default:
-            jj_la1[5] = jj_gen;
-            break label_5;
+            jj_la1[6] = jj_gen;
+            break label_4;
           }
           n24 = Blank();
           n23.addNode(n24);
@@ -398,7 +396,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         n17.addNode(n18);
         break;
       default:
-        jj_la1[6] = jj_gen;
+        jj_la1[7] = jj_gen;
         ;
       }
       n1.addNode(n17);
@@ -409,15 +407,15 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       n28 = jj_consume_token(ARROW2);
       n27 = JTBToolkit.makeNodeToken(n28);
       n26.addNode(n27);
-      label_6:
+      label_5:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case 18:
           ;
           break;
         default:
-          jj_la1[7] = jj_gen;
-          break label_6;
+          jj_la1[8] = jj_gen;
+          break label_5;
         }
         n30 = Blank();
         n29.addNode(n30);
@@ -432,7 +430,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         n31.addNode(n32);
         break;
       default:
-        jj_la1[8] = jj_gen;
+        jj_la1[9] = jj_gen;
         ;
       }
       n26.addNode(n31);
@@ -442,15 +440,15 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         n35 = new NodeListOptional();
         n39 = new NodeListOptional();
         n34 = new NodeSequence(4);
-        label_7:
+        label_6:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case 18:
             ;
             break;
           default:
-            jj_la1[9] = jj_gen;
-            break label_7;
+            jj_la1[10] = jj_gen;
+            break label_6;
           }
           n36 = Blank();
           n35.addNode(n36);
@@ -460,15 +458,15 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         n38 = jj_consume_token(19);
         n37 = JTBToolkit.makeNodeToken(n38);
         n34.addNode(n37);
-        label_8:
+        label_7:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case 18:
             ;
             break;
           default:
-            jj_la1[10] = jj_gen;
-            break label_8;
+            jj_la1[11] = jj_gen;
+            break label_7;
           }
           n40 = Blank();
           n39.addNode(n40);
@@ -480,14 +478,14 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
         n33.addNode(n34);
         break;
       default:
-        jj_la1[11] = jj_gen;
+        jj_la1[12] = jj_gen;
         ;
       }
       n26.addNode(n33);
       n0 = new NodeChoice(n26, 1, 2);
       break;
     default:
-      jj_la1[12] = jj_gen;
+      jj_la1[13] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -508,25 +506,25 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   Blank n8 = null;
   SpeciesWithCoeff n9 = null;
     n0 = SpeciesWithCoeff();
-    label_9:
+    label_8:
     while (true) {
-      if (jj_2_2(2)) {
+      if (jj_2_1(2)) {
         ;
       } else {
-        break label_9;
+        break label_8;
       }
       n3 = new NodeListOptional();
       n7 = new NodeListOptional();
       n2 = new NodeSequence(4);
-      label_10:
+      label_9:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case 18:
           ;
           break;
         default:
-          jj_la1[13] = jj_gen;
-          break label_10;
+          jj_la1[14] = jj_gen;
+          break label_9;
         }
         n4 = Blank();
         n3.addNode(n4);
@@ -536,15 +534,15 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       n6 = jj_consume_token(20);
       n5 = JTBToolkit.makeNodeToken(n6);
       n2.addNode(n5);
-      label_11:
+      label_10:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case 18:
           ;
           break;
         default:
-          jj_la1[14] = jj_gen;
-          break label_11;
+          jj_la1[15] = jj_gen;
+          break label_10;
         }
         n8 = Blank();
         n7.addNode(n8);
@@ -580,12 +578,12 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       n1 = new NodeSequence(4);
       n2 = Stoichiometry();
       n1.addNode(n2);
-      label_12:
+      label_11:
       while (true) {
-        if (jj_2_3(2)) {
+        if (jj_2_2(2)) {
           ;
         } else {
-          break label_12;
+          break label_11;
         }
         n4 = Blank();
         n3.addNode(n4);
@@ -595,15 +593,15 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       n6 = jj_consume_token(21);
       n5 = JTBToolkit.makeNodeToken(n6);
       n1.addNode(n5);
-      label_13:
+      label_12:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case 18:
           ;
           break;
         default:
-          jj_la1[15] = jj_gen;
-          break label_13;
+          jj_la1[16] = jj_gen;
+          break label_12;
         }
         n8 = Blank();
         n7.addNode(n8);
@@ -613,7 +611,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       n0.addNode(n1);
       break;
     default:
-      jj_la1[16] = jj_gen;
+      jj_la1[17] = jj_gen;
       ;
     }
     n9 = Species();
@@ -640,19 +638,19 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   Blank n4 = null;
   Species n5 = null;
     n0 = Species();
-    label_14:
+    label_13:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 18:
         ;
         break;
       default:
-        jj_la1[17] = jj_gen;
-        break label_14;
+        jj_la1[18] = jj_gen;
+        break label_13;
       }
       n3 = new NodeList();
       n2 = new NodeSequence(2);
-      label_15:
+      label_14:
       while (true) {
         n4 = Blank();
         n3.addNode(n4);
@@ -661,8 +659,8 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
           ;
           break;
         default:
-          jj_la1[18] = jj_gen;
-          break label_15;
+          jj_la1[19] = jj_gen;
+          break label_14;
         }
       }
       n3.nodes.trimToSize();
@@ -685,15 +683,15 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   Token n4 = null;
     n1 = jj_consume_token(IDENTIFIER);
     n0 = JTBToolkit.makeNodeToken(n1);
-    label_16:
+    label_15:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case IDENTIFIER:
         ;
         break;
       default:
-        jj_la1[19] = jj_gen;
-        break label_16;
+        jj_la1[20] = jj_gen;
+        break label_15;
       }
       n4 = jj_consume_token(IDENTIFIER);
       n3 = JTBToolkit.makeNodeToken(n4);
@@ -723,7 +721,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       n0 = new NodeChoice(n3, 1, 2);
       break;
     default:
-      jj_la1[20] = jj_gen;
+      jj_la1[21] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -745,110 +743,76 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     finally { jj_save(1, xla); }
   }
 
-  private boolean jj_2_3(int xla) {
-    jj_la = xla; jj_lastpos = jj_scanpos = token;
-    try { return !jj_3_3(); }
-    catch(LookaheadSuccess ls) { return true; }
-    finally { jj_save(2, xla); }
-  }
-
-  private boolean jj_3R_28() {
+  private boolean jj_3R_24() {
     if (jj_scan_token(FLOATING_POINT_LITERAL)) return true;
     return false;
   }
 
+  private boolean jj_3R_16() {
+    if (jj_3R_19()) return true;
+    return false;
+  }
+
   private boolean jj_3R_19() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_22() {
     if (jj_scan_token(18)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_27() {
-    if (jj_scan_token(INTEGER_LITERAL)) return true;
-    return false;
-  }
-
-  private boolean jj_3_3() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_25() {
-    if (jj_scan_token(IDENTIFIER)) return true;
-    return false;
-  }
-
-  private boolean jj_3_1() {
-    if (jj_scan_token(18)) return true;
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_17()) { jj_scanpos = xsp; break; }
-    }
-    xsp = jj_scanpos;
-    if (jj_3R_18()) jj_scanpos = xsp;
-    return false;
-  }
-
-  private boolean jj_3R_26() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_27()) {
-    jj_scanpos = xsp;
-    if (jj_3R_28()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3R_18() {
-    if (jj_3R_23()) return true;
-    return false;
-  }
-
-  private boolean jj_3_2() {
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_19()) { jj_scanpos = xsp; break; }
-    }
-    if (jj_scan_token(20)) return true;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_20()) { jj_scanpos = xsp; break; }
-    }
-    if (jj_3R_21()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_24() {
-    if (jj_3R_26()) return true;
     return false;
   }
 
   private boolean jj_3R_23() {
-    if (jj_3R_21()) return true;
+    if (jj_scan_token(INTEGER_LITERAL)) return true;
     return false;
   }
 
-  private boolean jj_3R_17() {
-    if (jj_3R_22()) return true;
+  private boolean jj_3_2() {
+    if (jj_3R_19()) return true;
     return false;
   }
 
   private boolean jj_3R_21() {
+    if (jj_scan_token(IDENTIFIER)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_22() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_24()) jj_scanpos = xsp;
-    if (jj_3R_25()) return true;
+    if (jj_3R_23()) {
+    jj_scanpos = xsp;
+    if (jj_3R_24()) return true;
+    }
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    Token xsp;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_16()) { jj_scanpos = xsp; break; }
+    }
+    if (jj_scan_token(20)) return true;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_17()) { jj_scanpos = xsp; break; }
+    }
+    if (jj_3R_18()) return true;
     return false;
   }
 
   private boolean jj_3R_20() {
     if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_18() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_20()) jj_scanpos = xsp;
+    if (jj_3R_21()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_17() {
+    if (jj_3R_19()) return true;
     return false;
   }
 
@@ -863,15 +827,15 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
   private Token jj_scanpos, jj_lastpos;
   private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[21];
+  final private int[] jj_la1 = new int[22];
   static private int[] jj_la1_0;
   static {
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x10c0,0x40000,0x40000,0x10c0,0x40000,0x40000,0xc0000,0x40000,0x10c0,0x40000,0x40000,0xc0000,0x710c0,0x40000,0x40000,0x40000,0xc0,0x40000,0x40000,0x1000,0xc0,};
+      jj_la1_0 = new int[] {0x10c0,0x40000,0x40000,0x10c0,0x40000,0x40000,0x40000,0xc0000,0x40000,0x10c0,0x40000,0x40000,0xc0000,0x710c0,0x40000,0x40000,0x40000,0xc0,0x40000,0x40000,0x1000,0xc0,};
    }
-  final private JJCalls[] jj_2_rtns = new JJCalls[3];
+  final private JJCalls[] jj_2_rtns = new JJCalls[2];
   private boolean jj_rescan = false;
   private int jj_gc = 0;
 
@@ -886,7 +850,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -901,7 +865,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -912,7 +876,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -923,7 +887,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -933,7 +897,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -943,7 +907,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 22; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1060,7 +1024,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 21; i++) {
+    for (int i = 0; i < 22; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1096,7 +1060,7 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
 
   private void jj_rescan_token() {
     jj_rescan = true;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
     try {
       JJCalls p = jj_2_rtns[i];
       do {
@@ -1105,7 +1069,6 @@ public class MR_ChemicalReaction_Parser implements MR_ChemicalReaction_ParserCon
           switch (i) {
             case 0: jj_3_1(); break;
             case 1: jj_3_2(); break;
-            case 2: jj_3_3(); break;
           }
         }
         p = p.next;

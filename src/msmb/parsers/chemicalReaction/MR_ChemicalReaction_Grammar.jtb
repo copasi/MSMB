@@ -219,7 +219,8 @@ public class MR_ChemicalReaction_Parser{  public static void main(String args 
       start.accept(v);
       System.out.println("...................................");
 
-    }
+
+     }
     catch (Exception e)
     {
       System.out.println("Oops.");
@@ -335,7 +336,7 @@ void Reaction() :{}
 { 
  
 (AdditiveExpression())? (Blank())*
-	 < ARROW > (LOOKAHEAD(2)(" ")(Blank())* (AdditiveExpression())?)* 
+	 < ARROW > ((LOOKAHEAD(2)(" ")(Blank())* (AdditiveExpression())?))?
 	 ((Blank())*";"(Blank())* ListModifiers())?
  | < ARROW2 > (Blank())* (AdditiveExpression())? ((Blank())*";"(Blank())* ListModifiers())?
   

@@ -295,7 +295,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 	
 				 
 		
-		Vector ret = new Vector<>();
+		Vector ret = new Vector();
 		ret.add(first_entry);
 		ret.add(second_entry);
 		ret.add(third_entry);

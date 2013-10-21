@@ -33,7 +33,7 @@ public class ExtractSubProdModVisitor extends DepthFirstVoidVisitor {
 		   multiModel = m;
 	   }
 
-		Vector<Exception> exceptions = new Vector<>();
+		Vector<Exception> exceptions = new Vector<Exception>();
 		 public Vector<Exception> getExceptions() { return exceptions; }
 	   
 		public Vector<Vector<MutablePair<Double,String>>> getAll() {	

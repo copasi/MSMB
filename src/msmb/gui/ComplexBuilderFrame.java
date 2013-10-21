@@ -425,7 +425,7 @@ public class ComplexBuilderFrame extends JDialog {
 		
 	
 			public void actionPerformed(ActionEvent e) {
-				if(MainGui.multiModel.speciesDB.getSpeciesIndex(complexSpecies.getSpeciesName()) !=
+				if(MainGui.multiModel.speciesDB.getSpeciesIndex(complexSpecies.getSpeciesName())!=null && MainGui.multiModel.speciesDB.getSpeciesIndex(complexSpecies.getSpeciesName()) !=
 						indexCurrentComplex)		{
 					JOptionPane.showMessageDialog(null, "A Species with name "+complexSpecies.getSpeciesName()+ " already exists.\n Please provide a different name for the complex.", "Error",JOptionPane.ERROR_MESSAGE);
 					return;
@@ -473,8 +473,8 @@ public class ComplexBuilderFrame extends JDialog {
 		trackableMultistate.clear();
 		treePanel.clear();
 		
-		Vector<String> simpleSpecies = new Vector<>();
-		Vector<String> multistate = new Vector<>();
+		Vector<String> simpleSpecies = new Vector<String>();
+		Vector<String> multistate = new Vector<String>();
 		for(Species sp : modelSpecies) {
 			if(sp==null) continue;
 			String spName = sp.getDisplayedName();

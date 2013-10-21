@@ -321,7 +321,7 @@ public class FunctionParameterFrame extends JDialog {
 		}
 		
 		
-		Vector ret = new Vector<>();
+		Vector ret = new Vector();
 		ret.add(ret_entry1);
 		ret.add(ret_entry2);
 		return ret;

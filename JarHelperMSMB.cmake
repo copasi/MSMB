@@ -5,8 +5,42 @@
 function(create_jar _TARGET_NAME)
     set(_JAVA_SOURCE_FILES ${ARGN})
 	
+	#######################
+	## TEST MESSAGES to check if the OS/Arch detection works 
+	#######################
 	
+	message("Compiling on OS: " ${CMAKE_HOST_SYSTEM_NAME})
+	 #message("CMAKE_HOST_SYSTEM_VERSION "${CMAKE_HOST_SYSTEM_VERSION})
+	message("CMAKE_HOST_SYSTEM_PROCESSOR: " ${CMAKE_HOST_SYSTEM_PROCESSOR})
+	 #message("CMAKE_HOST_SYSTEM" ${CMAKE_HOST_SYSTEM})
+
+	message("PROCESSOR_ARCHITEW6432: " $ENV{PROCESSOR_ARCHITEW6432})
+	message("PROCESSOR_ARCHITECTURE: " $ENV{PROCESSOR_ARCHITECTURE})
+
+	if($ENV{PROCESSOR_ARCHITEW6432} MATCHES "64")
+		message("64!!")
+		set(COPASI_DIR_ARCH 64)
+	elseif($ENV{PROCESSOR_ARCHITEW6432} MATCHES "64")
+		message("32!!")
+		set(COPASI_DIR_ARCH 32)
+	endif( $ENV{PROCESSOR_ARCHITEW6432} MATCHES "64")
+
+	if("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Windows")
+		 message("Windows detected!!")
+		 set(COPASI_DIR_OS "win")
+	endif("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Windows")
 	
+	if("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Linux")
+		 message("Linux detected!!")
+		 
+	endif("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Linux")
+	
+	if("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Darwin")
+		 message("Darwin detected!!")
+	endif("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Darwin")
+	
+	#######################
+	 
     if (NOT DEFINED CMAKE_JAVA_TARGET_OUTPUT_DIR)
       set(CMAKE_JAVA_TARGET_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
     endif(NOT DEFINED CMAKE_JAVA_TARGET_OUTPUT_DIR)
@@ -17,9 +51,11 @@ function(create_jar _TARGET_NAME)
 	#Copy the correct COPASI library in the directory where the jar is
 	#!! FOR NOW ONLY THIS DLL IS AVAILABLE
 	#!! When other OS/Architecture will be available, we will need to take the appropriate file according to OS/Arch
-	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/copasi35_java6_win64/CopasiJava.dll DESTINATION 
+	
+	
+	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/${COPASI_DIR_OS}${COPASI_DIR_ARCH}/CopasiJava.dll DESTINATION 
                              ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/libs)	
-	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/copasi35_java6_win64/copasi.jar DESTINATION 
+	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/${COPASI_DIR_OS}${COPASI_DIR_ARCH}/copasi.jar DESTINATION 
                              ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/libs)	
 							 
 	file(GLOB MY_JARS "${CMAKE_JAVA_TARGET_OUTPUT_DIR}/libs/*.jar") 
@@ -124,9 +160,11 @@ function(create_jar _TARGET_NAME)
     if (NOT EXISTS ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_class_filelist)
         file(WRITE ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_class_filelist "")
     endif()
-    if (_JAVA_COMPILE_FILES)
+	
+	 
+	if (_JAVA_COMPILE_FILES)
         # Compile the java files and create a list of class files
-        add_custom_command(
+		add_custom_command(
             # NOTE: this command generates an artificial dependency file
             OUTPUT ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_compiled_${_TARGET_NAME}
             COMMAND ${Java_JAVAC_EXECUTABLE}
@@ -148,6 +186,7 @@ function(create_jar _TARGET_NAME)
             DEPENDS ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_compiled_${_TARGET_NAME}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
+		else (_JAVA_EXT MATCHES ".java")
     endif (_JAVA_COMPILE_FILES)
 	#Copy the version file in the LIBS path in the same path as the finaly .jar, because that is the setup for the web installation using IzPack
 	

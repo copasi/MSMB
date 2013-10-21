@@ -174,7 +174,7 @@ public class FunctionFromExpressionDialog extends JDialog {
 			JTextField textfield = (JTextField) subPanel.getComponent(0);
 			
 			Vector element = elementsToDefine.get(i);
-			Vector newElement = new Vector<>();
+			Vector newElement = new Vector();
 			newElement.add(element.get(0));
 			newElement.add(textfield.getText().trim());
 			newElement.add(element.get(2));
@@ -188,7 +188,7 @@ public class FunctionFromExpressionDialog extends JDialog {
 			JTextField txtFunctionreaction = (JTextField) element.get(1);
 			JLabel lblNewLabel_2 = (JLabel) element.get(2);
 			
-			Vector newElement = new Vector<>();
+			Vector newElement = new Vector();
 			newElement.add(element.get(0));
 			newElement.add(txtFunctionreaction.getText().trim());
 			newElement.add(lblNewLabel_2.getText().trim());
@@ -236,7 +236,7 @@ public class FunctionFromExpressionDialog extends JDialog {
 				txtFunctionreaction.setColumns(10);
 				panel_2.add(lblNewLabel_2);
 				
-				/*Vector newElement = new Vector<>();
+				/*Vector newElement = new Vector();
 				newElement.add(element.get(0));
 				newElement.add(txtFunctionreaction);
 				newElement.add(lblNewLabel_2);

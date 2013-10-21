@@ -30,7 +30,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
  	 private HashMap<String,Vector<String>> site_states;
 	 private HashMap<String, MutablePair<String, String>> pureRange_sites;
 	 private HashSet<String> circular_sites;
-    Vector<Exception> exceptions = new Vector<>();
+    Vector<Exception> exceptions = new Vector<Exception>();
 	public Vector<Exception> getExceptions() { return exceptions; }
 	   
 	 private String current_site = null;
@@ -224,7 +224,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 											if(succState!=null) {
 												states.add(succState);
 											} else {
-												System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
+												//System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
 												return;
 											}
 										}
@@ -258,7 +258,7 @@ public class MultistateSpeciesVisitor extends DepthFirstVoidVisitor
 														if(succState!=null) {
 															states.add(succState);
 														} else {
-															System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
+															//System.out.println("SOMETHING WRONG WITH THE TRANSFER SITES, RAISE EXCEPTION");
 															return;
 														}
 													}
