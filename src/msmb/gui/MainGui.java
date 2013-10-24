@@ -71,6 +71,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		try {
 			loadCopasiDataModel_fromKey(copasiKey);
 			displayTablesUneditable = displayUneditable;
+			GraphicalProperties.setEnabledFlag(jPanelDebug, !displayTablesUneditable);
+			GraphicalProperties.setEnabledFlag(jPanelEquations, !displayTablesUneditable);
 		} catch (Throwable e) {
 				e.printStackTrace();
 		}	
@@ -122,6 +124,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		modelName = new String(newModelName);
 		textFieldModelName.setText(MainGui.modelName);
 	};
+	
+	public String getModelName() {
+		return modelName;
+	};
+	
 	
 	
 	public void loadFromMSMB(byte[] msmbByteArray, boolean displayUneditable) {
@@ -210,8 +217,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	public String getDefault_GlobalQInitialQuantity() { return globalQ_defaultValue_for_dialog_window; }
 	
 	
-//	public JTable getSpeciesJTable() { 	return this.jTableSpecies; 	}
-//	public JTable getGlobalQJTable() { 	return this.jTableGlobalQ; 	}
 	
 	
 	public void highlightElement(MSMB_Element element, String name){
@@ -2553,8 +2558,22 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	            		for(String name : sp_names) {
 	            			element_type.add(new MutablePair<String, String>(name, Constants.TitlesTabs.SPECIES.description));
 	            		}
+	            		
+	            		Vector<String> react_names = multiModel.getAllReaction_names();
+	            		for(String name : react_names) {
+	            			element_type.add(new MutablePair<String, String>(name, Constants.TitlesTabs.REACTIONS.description));
+	            		}
+	            		
+	            		Vector<String> glq_names = multiModel.getAllGlobalQuantities_names();
+	            		for(String name : glq_names) {
+	            			element_type.add(new MutablePair<String, String>(name, Constants.TitlesTabs.GLOBALQ.description));
+	            		}
+	            		
 	            		frame.addMSMBelements(element_type);
-	            		frame.showDialog();
+	            		
+	            		
+	            		Vector<Vector<MutablePair<String, String>>> annotationToSave = frame.showDialog();
+	            		multiModel.saveAnnotations(annotationToSave);
 	            }
 			});
 			menuEdit.add(menu_importAnnotations);
@@ -8515,6 +8534,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			jContentPane.add(statusBar, BorderLayout.SOUTH);
 			if(customFont!=null) jTabGeneral.setFont(customFont);	
 			if(customFont!=null) statusBar.setFont(customFont);
+			GraphicalProperties.setEnabledFlag(jPanelDebug, !displayTablesUneditable);
+			GraphicalProperties.setEnabledFlag(jPanelEquations, !displayTablesUneditable);
 		}
 		return jContentPane;
 	}

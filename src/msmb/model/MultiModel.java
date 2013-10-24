@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.*;
+
 import msmb.utility.*;
 
 import org.COPASI.*;
@@ -1834,6 +1835,7 @@ public class MultiModel {
 		speciesToBeExported = species.size();
 		
 		CModel model = this.copasiDataModel.getModel();
+		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.SPECIES.description);
 		
 		Vector<Species> species_with_expression_not_added = new Vector<Species>();
 		
@@ -1913,11 +1915,14 @@ public class MultiModel {
 						} else {
 							m.setInitialConcentration(initial_conc);
 						}					
-						//if(!MainGui.quantityIsConc) object = m.getObject(new CCopasiObjectName("Reference=InitialParticleNumber"));
-						//else object = m.getObject(new CCopasiObjectName("Reference=InitialConcentration"));
 						m.setNotes(s.getNotes());
+						if(annotations.get(name) != null) {
+							String annotString = annotations.get(name);
+							annotString = fixAnnotation(annotString, m.getKey());
+							m.setMiriamAnnotation(annotString, m.getKey(), m.getKey());
+						}
 					}
-					//changedObjects.add(object);
+				
 				} else {
 
 					MultistateSpecies multi = (MultistateSpecies) s;
@@ -1983,6 +1988,12 @@ public class MultiModel {
 							species_with_expression_not_added.add(single);
 						}
 						m.setNotes(s.getNotes());
+						String nameForAnnotation = CellParsers.extractMultistateName(name);
+						if(annotations.get(nameForAnnotation) != null) {
+							String annotString = annotations.get(nameForAnnotation);
+							annotString = fixAnnotation(annotString, m.getKey());
+							m.setMiriamAnnotation(annotString, m.getKey(), m.getKey());
+						}
 						
 						MSMB_UnsupportedAnnotations multistate_annotation = new MSMB_UnsupportedAnnotations(MSMB_UnsupportedAnnotations.MSMB_UnsupportedAnnotations_type.MULTISTATE_SPECIES, multi.printCompleteDefinition());
 						m.addUnsupportedAnnotation(multistate_annotation.getName(), multistate_annotation.getAnnotation());
@@ -2101,7 +2112,7 @@ public class MultiModel {
 	private Vector<GlobalQ> fillCopasiDataModel_globalQ_fixed(Vector<GlobalQ> globalQuantities) {
 		CModel model = this.copasiDataModel.getModel();
 		Vector<GlobalQ> ret = new Vector<GlobalQ>();
-
+		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.GLOBALQ.description);
 		for(int i = 0; i< globalQuantities.size(); i++) {
 			GlobalQ g = globalQuantities.get(i);
 			if(g== null) continue;
@@ -2141,11 +2152,13 @@ public class MultiModel {
 			}	
 			
 			modelValue.setNotes(g.getNotes());
-			//CCopasiObject object = modelValue.getObject(new CCopasiObjectName("Reference=InitialValue"));
-			//changedObjects.add(object);
+			if(annotations.get(name) != null) {
+				String annotString = annotations.get(name);
+				annotString = fixAnnotation(annotString, modelValue.getKey());
+				modelValue.setMiriamAnnotation(annotString, modelValue.getKey(), modelValue.getKey());
+			}
 		}
 		
-	//	model.compileIfNecessary();
 		
 		return ret;
 	
@@ -2214,6 +2227,7 @@ public class MultiModel {
 		CModel model = this.copasiDataModel.getModel();
 		
 		Vector<Compartment> comp_with_expression_not_added = new Vector<Compartment>();
+		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.COMPARTMENTS.description);
 		
 		for(int i = 0; i < compartments.size(); i++) {
 			Compartment c = compartments.get(i);
@@ -2263,12 +2277,14 @@ public class MultiModel {
 			}
 			
 			comp.setNotes(c.getNotes());
-			//CCopasiObject object = comp.getObject(new CCopasiObjectName("Reference=InitialVolume"));
-			//changedObjects.add(object);
+			if(annotations.get(name) != null) {
+				String annotString = annotations.get(name);
+				annotString = fixAnnotation(annotString, comp.getKey());
+				comp.setMiriamAnnotation(annotString, comp.getKey(), comp.getKey());
+			}
+	
 		}
-		
 
-		//model.compileIfNecessary();
 		return comp_with_expression_not_added;
 	}
 	
@@ -2282,6 +2298,7 @@ public class MultiModel {
 		Iterator it = globalQ.iterator();
 		
 		Vector<GlobalQ> globalQ_with_expression_not_added = new Vector<GlobalQ>();
+		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.GLOBALQ.description);
 		
 		while(it.hasNext()) {
 			
@@ -2335,7 +2352,11 @@ public class MultiModel {
 		
 			modelValue.setNotes(g.getNotes());
 		
-		  
+			if(annotations.get(g.getName()) != null) {
+				String annotString = annotations.get(g.getName());
+				annotString = fixAnnotation(annotString, modelValue.getKey());
+				modelValue.setMiriamAnnotation(annotString, modelValue.getKey(), modelValue.getKey());
+			}
 		}
 		
 	
@@ -5408,6 +5429,10 @@ public Integer getGlobalQIndex(String name) {
 	public Vector<String> getAllCompartments_names() {
 		return compDB.getAllNames();
 	}
+	
+	public Vector<String> getAllReaction_names() {
+		return reactionDB.getAllNames();
+	}
 
 	public String getModelName() {
 		return copasiDataModel.getModel().getObjectName();
@@ -5606,10 +5631,45 @@ public Integer getGlobalQIndex(String name) {
 			e.printStackTrace();
 		}
 		
-		System.out.println("isRangeVariableInMultistate " + ret);
+		//System.out.println("isRangeVariableInMultistate " + ret);
 		return ret;
 	}
 
+	
+	HashMap<String, HashMap<String, String>> listOfAnnotations = new HashMap<String, HashMap<String, String>>();
+	
+	public void saveAnnotations(Vector<Vector<MutablePair<String, String>>> annotationToSave) {
+		Vector<MutablePair<String, String>> elements = annotationToSave.get(0); //species
+		String type = Constants.TitlesTabs.SPECIES.description;
+		HashMap<String, String> group = new HashMap<String, String>();
+		for(MutablePair<String, String> el : elements) {	group.put(el.left, el.right); }
+		listOfAnnotations.put(type, group);
+		
+		elements = annotationToSave.get(1); //reaction
+		type = Constants.TitlesTabs.REACTIONS.description;
+		group = new HashMap<String, String>();
+		for(MutablePair<String, String> el : elements) {	group.put(el.left, el.right);	}
+		listOfAnnotations.put(type, group);
+		
+		elements = annotationToSave.get(2); //global quantities
+		type = Constants.TitlesTabs.GLOBALQ.description;
+		group = new HashMap<String, String>();
+		for(MutablePair<String, String> el : elements) {	group.put(el.left, el.right);	}
+		listOfAnnotations.put(type, group);
+		
+	}
+
+	
+	private String fixAnnotation(String annotation, String newId) {
+		if(annotation == null || annotation.length() == 0) return null;
+		
+		String delimiter = "rdf:about=";
+		int indexAbout = annotation.indexOf(delimiter);
+		int start  = indexAbout+delimiter.length()+1+1; //+1 quote, +1 hashsign
+		String oldId = annotation.substring(start, annotation.indexOf("\"",start))	;
+		String ret = annotation.replaceAll(oldId, newId);
+		return ret;
+	}
 	
 	
 	

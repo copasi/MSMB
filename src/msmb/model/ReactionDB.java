@@ -277,5 +277,20 @@ public class ReactionDB {
 			
 			return true;
 	}
+
+	public Vector<String> getAllNames() {
+		Vector n = new Vector();
+		for(int i = 0; i < reactionVector.size(); i++) {
+			Reaction s = reactionVector.get(i);
+			if(s!= null) {
+				String name = s.getName();
+				if(name == null || name.length() == 0){
+					name = "#reaction#"+i;
+				}
+				n.add(name);
+			}
+		}
+		return n;
+	}
 		
 }

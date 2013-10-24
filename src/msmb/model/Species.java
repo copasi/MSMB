@@ -264,7 +264,4 @@ public class Species   implements Serializable{
 		invisibleSpecies = b;		
 	}
 
-
-
-	
 }

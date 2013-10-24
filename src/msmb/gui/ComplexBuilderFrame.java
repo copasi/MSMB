@@ -164,7 +164,7 @@ public class ComplexBuilderFrame extends JDialog {
 	public ComplexBuilderFrame() throws Exception {
 		setTitle("Complex Builder");
 		setModal(true);
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));

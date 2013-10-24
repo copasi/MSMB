@@ -1,7 +1,9 @@
 package msmb.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.EventQueue;
+import java.awt.GraphicsEnvironment;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -9,29 +11,25 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.DefaultListModel;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.JRootPane;
 import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JButton;
-import javax.swing.JList;
 import javax.swing.ListSelectionModel;
-import javax.swing.AbstractListModel;
 
-import msmb.model.ComplexSpecies;
+import msmb.utility.CellParsers;
 import msmb.utility.Constants;
 import msmb.utility.GraphicalProperties;
-import msmb.utility.MySyntaxException;
-
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JLabel;
@@ -42,20 +40,24 @@ import org.COPASI.CCopasiDataModel;
 import org.COPASI.CCopasiRootContainer;
 import org.COPASI.CMetab;
 import org.COPASI.CModel;
+import org.COPASI.CModelValue;
+import org.COPASI.CReaction;
 import org.apache.commons.lang3.tuple.MutablePair;
+import org.jdesktop.swingx.JXList;
+import java.awt.FlowLayout;
 
-public class ImportAnnotationsFrame extends JFrame {
+public class ImportAnnotationsFrame extends JDialog {
 
 	private JPanel contentPane;
 	private DefaultListModel listImported_unmatched_model;
 	private DefaultListModel list_matched_model;
-	private JList listMSMB_unmatched;
-	private JList list_matched;
+	private JXList listMSMB_unmatched;
+	private JXList list_matched;
 	private DefaultListModel listMSMB_unmatched_model;
-	private JList listImported_unmatched;
+	private JXList listImported_unmatched;
 	private JTextField textFieldFileName;
 	private JTextArea txtrXmlAnnotationCode;
-
+	ExitOption exitOption = ExitOption.CANCEL;
 
 	public static void main(String[] args) {
 		 
@@ -88,14 +90,43 @@ public class ImportAnnotationsFrame extends JFrame {
 	    }  
 	}
 	
-	void showDialog() {
+	Vector<Vector<MutablePair<String, String>>> showDialog() {
+		exitOption = ExitOption.CANCEL;
+		
 		GraphicalProperties.resetFonts(this);
 		pack();
 		setLocationRelativeTo(null);
 		setVisible(true);
-	  
+		if(exitOption == ExitOption.CANCEL) return null;
 		
-	    return;
+		Vector<Vector<MutablePair<String, String>>> spc_rct_glq_model = new Vector<Vector<MutablePair<String, String>>>();
+		Vector<MutablePair<String, String>> species  = new Vector<MutablePair<String, String>>();
+		Vector<MutablePair<String, String>> reactions  = new Vector<MutablePair<String, String>>();
+		Vector<MutablePair<String, String>> globalQuanties  = new Vector<MutablePair<String, String>>();
+		Vector<MutablePair<String, String>> model  = new Vector<MutablePair<String, String>>();
+		
+		for(int i = 0; i < list_matched.getElementCount(); i++) {
+			AnnotationAssociation element = (AnnotationAssociation) list_matched.getElementAt(i);
+			MSMBelement msmbElement = element.getSpeciesMSMB();
+			SBMLelementWithAnnotation sbmlElement = element.getSpeciesImport();
+			MutablePair<String, String> toStore = new MutablePair<String, String>(msmbElement.getName(), sbmlElement.getAnnotation());
+			if(msmbElement.elementType.equals(Constants.TitlesTabs.SPECIES.description)) {		
+				toStore.left = CellParsers.extractMultistateName(toStore.left);
+				species.add(toStore);
+			}
+			else if(msmbElement.elementType.equals(Constants.TitlesTabs.REACTIONS.description)) {		reactions.add(toStore);	}
+			else if(msmbElement.elementType.equals(Constants.TitlesTabs.GLOBALQ.description)) {		globalQuanties.add(toStore);	}
+			else if(msmbElement.elementType.equals(Constants.TitlesTabs.DEBUG.description)) {		model.add(toStore);	}
+			else { System.err.println("Element type not supported: "+msmbElement.elementName);}
+		}
+		
+		spc_rct_glq_model.add(species);
+		spc_rct_glq_model.add(reactions);
+		spc_rct_glq_model.add(globalQuanties);
+		spc_rct_glq_model.add(model);
+		
+		
+	    return spc_rct_glq_model;
 	}
 	
 
@@ -127,13 +158,12 @@ public class ImportAnnotationsFrame extends JFrame {
 					listMSMB_unmatched_model.removeElement(MSMB.get(name));
 			}
 		}
-		
+			
 		Collections.sort(items);
 		 for(AnnotationAssociation i : items){
 			 list_matched_model.addElement(i);
 	    }  
-		
-		
+
 		
 	}
 
@@ -142,7 +172,8 @@ public class ImportAnnotationsFrame extends JFrame {
 	public ImportAnnotationsFrame() {
 		// to display xml nicely in tree: http://www.javalobby.org/java/forums/t19666.html
 		setTitle("Import annotations");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setModal(true);
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -169,37 +200,14 @@ public class ImportAnnotationsFrame extends JFrame {
 		JButton btnNewButton = new JButton("Delete selected associations");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				List<AnnotationAssociation> selected = list_matched.getSelectedValuesList();
-				for(AnnotationAssociation element : selected) {
-					listMSMB_unmatched_model.addElement(element.getSpeciesMSMB());
-					listImported_unmatched_model.addElement(element.getSpeciesImport());
+				Object[] selected = (Object[]) list_matched.getSelectedValues();
+				for(Object element : selected) {
+					AnnotationAssociation annotation = (AnnotationAssociation) element;
+					listMSMB_unmatched_model.addElement(annotation.getSpeciesMSMB());
+					listImported_unmatched_model.addElement(annotation.getSpeciesImport());
 					list_matched_model.removeElement(element);
 				}
-				Vector<MSMBelement> items = new Vector<MSMBelement>();
-				Enumeration<MSMBelement> e = listMSMB_unmatched_model.elements();
-				while(e.hasMoreElements()) {
-					items.add(e.nextElement());
-				}
-				Collections.sort(items);
 			
-				listMSMB_unmatched_model.clear();
-				for(Object i : items){
-					 listMSMB_unmatched_model.addElement(i);
-			    }  
-				 
-				Vector<SBMLelementWithAnnotation> items2 = new Vector<SBMLelementWithAnnotation>();
-				Enumeration<SBMLelementWithAnnotation> e2 = listImported_unmatched_model.elements();
-					while(e2.hasMoreElements()) {
-						items2.add(e2.nextElement());
-					}
-					listImported_unmatched_model.clear();
-								Collections.sort(items2);
-					 for(Object i : items2){
-						 listImported_unmatched_model.addElement(i);
-				    }  
-				 
-				 
-				
 			}
 		});
 		panel.add(btnNewButton);
@@ -208,16 +216,20 @@ public class ImportAnnotationsFrame extends JFrame {
 	
 		JScrollPane scrollPane_jlistMatched = new JScrollPane();
 		panel_matched.add(scrollPane_jlistMatched, BorderLayout.CENTER);
-	
-		list_matched = new JList(list_matched_model);
+		list_matched = new JXList(list_matched_model);
+		list_matched.setAutoCreateRowSorter(true);
+		list_matched.toggleSortOrder();
+		
 		scrollPane_jlistMatched.setViewportView(list_matched);
 			
 		list_matched.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			 public void valueChanged(ListSelectionEvent e) {
-				int firstIndex = list_matched.getSelectedIndex();
-				if(firstIndex != -1) {
-					txtrXmlAnnotationCode.setText(
+				int firstIndexView = list_matched.getSelectedIndex();
+				
+				if(firstIndexView != -1) {
+					int firstIndex = list_matched.convertIndexToModel(firstIndexView);
+						txtrXmlAnnotationCode.setText(
 							((AnnotationAssociation)list_matched_model.getElementAt(firstIndex)).getAnnotation());
 					txtrXmlAnnotationCode.revalidate();
 			    }
@@ -236,8 +248,11 @@ public class ImportAnnotationsFrame extends JFrame {
 		JButton btnAddAssociation = new JButton("Add association");
 		btnAddAssociation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				int selMSMB = listMSMB_unmatched.getSelectedIndex();
-				int selImport =  listImported_unmatched.getSelectedIndex();
+				int selMSMBView = listMSMB_unmatched.getSelectedIndex();
+				if(selMSMBView==-1) return;
+				int selMSMB = listMSMB_unmatched.convertIndexToModel(selMSMBView);
+				int selImportView =  listImported_unmatched.getSelectedIndex();
+				int selImport = listMSMB_unmatched.convertIndexToModel(selImportView);
 				if(selMSMB == -1 || selImport == -1) {
 					JOptionPane.showMessageDialog(new JButton(),"No element is selected in the list of elements \nfrom the model and/or from the imported file.", "Missing selection", JOptionPane.ERROR_MESSAGE);
 					return;
@@ -245,9 +260,10 @@ public class ImportAnnotationsFrame extends JFrame {
 				AnnotationAssociation aa = new AnnotationAssociation(
 						(MSMBelement) listMSMB_unmatched.getSelectedValue(), (SBMLelementWithAnnotation) listImported_unmatched.getSelectedValue());
 				list_matched_model.addElement(aa);
-				listMSMB_unmatched_model.removeElementAt(selMSMB);
-				listImported_unmatched_model.removeElementAt(selImport);
-				
+				listMSMB_unmatched_model.remove(selMSMB);
+				listImported_unmatched_model.remove(selImport);
+				listMSMB_unmatched.revalidate();
+				listImported_unmatched.revalidate();
 				
 			}
 		});
@@ -258,15 +274,28 @@ public class ImportAnnotationsFrame extends JFrame {
 		panel_unmatched.add(splitPane_2, BorderLayout.CENTER);
 		
 		listMSMB_unmatched_model = new DefaultListModel();
-		listMSMB_unmatched = new JList(listMSMB_unmatched_model);
+		
+		listMSMB_unmatched = new JXList(listMSMB_unmatched_model);
+		listMSMB_unmatched.setAutoCreateRowSorter(true);
+		listMSMB_unmatched.toggleSortOrder();
+		
 		JScrollPane scrollPane_jlistMSMB_unmatched = new JScrollPane();
 		scrollPane_jlistMSMB_unmatched.setViewportView(listMSMB_unmatched);
 		
 		listMSMB_unmatched.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		splitPane_2.setLeftComponent(scrollPane_jlistMSMB_unmatched);
+		JPanel splitPane_lower_left = new JPanel();
+		splitPane_lower_left.setLayout(new BorderLayout(4, 4));
+		JLabel unmatched = new JLabel(" Model elements unmatched");
+		splitPane_lower_left.add(unmatched, BorderLayout.NORTH);
+		splitPane_lower_left.add(scrollPane_jlistMSMB_unmatched, BorderLayout.CENTER);
+		splitPane_2.setLeftComponent(splitPane_lower_left);
+		
 		
 		listImported_unmatched_model = new DefaultListModel();
-		 listImported_unmatched = new JList(listImported_unmatched_model);
+		 
+		 listImported_unmatched = new JXList(listImported_unmatched_model);
+		 listImported_unmatched.setAutoCreateRowSorter(true);
+		 listImported_unmatched.toggleSortOrder();
 		
 		listImported_unmatched.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
@@ -276,16 +305,24 @@ public class ImportAnnotationsFrame extends JFrame {
 		listImported_unmatched.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			 public void valueChanged(ListSelectionEvent e) {
-				int firstIndex = listImported_unmatched.getSelectedIndex();
-				if(firstIndex!=-1) {
-					txtrXmlAnnotationCode.setText(
+				int firstIndexView = listImported_unmatched.getSelectedIndex();
+				
+				if(firstIndexView!=-1) {
+					int firstIndex = listImported_unmatched.convertIndexToModel(firstIndexView);
+							txtrXmlAnnotationCode.setText(
 							((SBMLelementWithAnnotation)listImported_unmatched_model.getElementAt(firstIndex)).getAnnotation());
 					txtrXmlAnnotationCode.revalidate();
 				    }
 				}	
 		});
 		
-		splitPane_2.setRightComponent(scrollPane_listImported_unmatched);
+		
+		JPanel splitPane_lower_right = new JPanel();
+		splitPane_lower_right.setLayout(new BorderLayout(4, 4));
+		JLabel unmatched2 = new JLabel(" Imported elements unmatched");
+		splitPane_lower_right.add(unmatched2, BorderLayout.NORTH);
+		splitPane_lower_right.add(scrollPane_listImported_unmatched, BorderLayout.CENTER);
+		splitPane_2.setRightComponent(splitPane_lower_right);
 		
 		JScrollPane scrollPane_xmlAnnotation = new JScrollPane();
 		splitPane.setRightComponent(scrollPane_xmlAnnotation);
@@ -298,7 +335,7 @@ public class ImportAnnotationsFrame extends JFrame {
 		contentPane.add(panel_2, BorderLayout.NORTH);
 		panel_2.setLayout(new BorderLayout(4, 4));
 		
-		JLabel lblNewLabel = new JLabel("Import annotations from file: ");
+		JLabel lblNewLabel = new JLabel(" Import annotations from file: ");
 		panel_2.add(lblNewLabel, BorderLayout.WEST);
 		
 		textFieldFileName = new JTextField();
@@ -308,41 +345,132 @@ public class ImportAnnotationsFrame extends JFrame {
 		JButton btnNewButton_1 = new JButton("Browse...");
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				JFileChooser fileChooser = new JFileChooser("C:\\Users\\alida\\Dropbox\\__VT\\MENDES_mRNA_model\\0-Initial material");
-				int returnVal = fileChooser.showSaveDialog(null);
+				JFileChooser fileChooser = new JFileChooser();
+				int returnVal = fileChooser.showOpenDialog(null);
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		            File file = fileChooser.getSelectedFile();
-		            assert CCopasiRootContainer.getRoot() != null;
+		            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			    	assert CCopasiRootContainer.getRoot() != null;
 		            CCopasiDataModel dataModel = CCopasiRootContainer.addDatamodel();
 		            assert CCopasiRootContainer.getDatamodelList().size() == 1;
 		            textFieldFileName.setText(file.getAbsolutePath());
-		            try {
-						dataModel.importSBML(file.getAbsolutePath());
+		         	try {
+			    	    	 dataModel.importSBML(file.getAbsolutePath());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 		            CModel model = dataModel.getModel();
-		            
+		            model.convert2NonReversible();
+		        	setCursor(null);
+		        	
 		            int iMax = (int)model.getMetabolites().size();
-		            
 		            for (int i = 0;i < iMax;i++)
 		            {
 		                CMetab metab = model.getMetabolite(i);
 		                
-		                SBMLelementWithAnnotation element = new SBMLelementWithAnnotation(metab.getObjectName(), 
+		                String annotation = metab.getMiriamAnnotation(); 
+		                String processedAnnotation = processAnnotation(annotation,true);
+		                if(processedAnnotation != null) {
+		                	SBMLelementWithAnnotation element = new SBMLelementWithAnnotation(metab.getObjectName(), 
 		                																Constants.TitlesTabs.SPECIES.description,
-		                																metab.getMiriamAnnotation());
-		                listImported_unmatched_model.addElement(element);
+		                																processedAnnotation);
+		                	listImported_unmatched_model.addElement(element);
+		                }
 		            }
+		          
+		            
+		             iMax = (int)model.getReactions().size();
+		            for (int i = 0;i < iMax;i++)
+		            {
+		                CReaction model_element = model.getReaction(i);
+		               
+		                String annotation = model_element.getMiriamAnnotation(); 
+		                String processedAnnotation = processAnnotation(annotation,false);
+		                if(processedAnnotation != null) {
+		                	SBMLelementWithAnnotation element = new SBMLelementWithAnnotation(model_element.getObjectName(), 
+		                																Constants.TitlesTabs.REACTIONS.description,
+		                																processedAnnotation);
+		                	listImported_unmatched_model.addElement(element);
+		                }
+		            }
+		            
+		            iMax = (int)model.getModelValues().size();
+		            for (int i = 0;i < iMax;i++)
+		            {
+		                CModelValue model_element = model.getModelValue(i);
+		               
+		                String annotation = model_element.getMiriamAnnotation(); 
+		                String processedAnnotation = processAnnotation(annotation,false);
+		                if(processedAnnotation != null) {
+		                	SBMLelementWithAnnotation element = new SBMLelementWithAnnotation(model_element.getObjectName(), 
+		                																Constants.TitlesTabs.GLOBALQ.description,
+		                																processedAnnotation);
+		                	listImported_unmatched_model.addElement(element);
+		                }
+		            }
+		          
 		            
 		            automaticMatching();
 		            
 		        } 
 			}
+
 		});
 		panel_2.add(btnNewButton_1, BorderLayout.EAST);
 		
+		JPanel panel_3 = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) panel_3.getLayout();
+		flowLayout.setAlignment(FlowLayout.RIGHT);
+		contentPane.add(panel_3, BorderLayout.SOUTH);
+		
+		JButton btnUpdateModel = new JButton("Update model");
+		btnUpdateModel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				exitOption = ExitOption.OK;
+					dispose();
+			}
+		});
+		panel_3.add(btnUpdateModel);
+		
+		JButton btnCancel = new JButton("Cancel");
+		btnCancel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				exitOption = ExitOption.CANCEL;
+					dispose();
+			}
+		});
+		panel_3.add(btnCancel);
+		
 		pack();
+	}
+	
+	HashSet<Vector<String>> uniqueAnnotations = new HashSet<Vector<String>>();
+
+	private String processAnnotation(String annotation, boolean listOnlyUniqueAnnotationElements) {
+		if(annotation == null || annotation.length() == 0) return null;
+		String resourceDelimiter = "rdf:resource=";
+		Vector<String> listIDs = new Vector<String>();
+		String[] splitString = annotation.split(resourceDelimiter);
+		for (int i = 0; i < splitString.length; ++i) {
+			String piece = splitString[i];
+			if(piece.startsWith("\"")) {
+				listIDs.add(piece.substring(1, piece.indexOf("\"",1)));
+			}
+		}
+		
+		Collections.sort(listIDs);
+		
+		if(listOnlyUniqueAnnotationElements) {
+			if(uniqueAnnotations.contains(listIDs)) {
+				//System.out.println("---------duplicate");
+				return null;
+			} else {
+				uniqueAnnotations.add(listIDs);
+				return annotation;
+			}
+		} else {
+			return annotation;
+		}
 	}
 
 }

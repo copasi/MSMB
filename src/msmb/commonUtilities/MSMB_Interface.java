@@ -55,6 +55,7 @@ public interface MSMB_Interface {
 	
 	
 	public void setModelName(String newModelName);
+	public String getModelName();
 	
 	public void highlightElement(MSMB_Element element, String name);
 
