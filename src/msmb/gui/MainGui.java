@@ -134,6 +134,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	public void loadFromMSMB(byte[] msmbByteArray, boolean displayUneditable) {
 		importTablesMultistateFormat_fromInterface(msmbByteArray);
 		displayTablesUneditable = displayUneditable;
+		GraphicalProperties.setEnabledFlag(jPanelDebug, !displayTablesUneditable);
+		GraphicalProperties.setEnabledFlag(jPanelEquations, !displayTablesUneditable);
 	}
 	
 	public byte[] saveToMSMB() {
