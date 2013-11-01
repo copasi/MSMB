@@ -65,11 +65,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	public JTabbedPane getMSMB_MainTabPanel() {	return jTabGeneral; }
 	public JMenuBar getMSMB_MenuBar() {	return jMenuBar;}
 	
-	public void loadFromCopasiKey(String copasiKey, boolean displayUneditable) throws Exception  {	
+	public void loadFromCopasiModelName(String copasiModelName, boolean displayUneditable) throws Exception  {	
 		fromInterface = true;	
 		MainGui.cleanUpModel();
 		try {
-			loadCopasiDataModel_fromKey(copasiKey);
+			loadCopasiDataModel_fromModelName(copasiModelName);
 			displayTablesUneditable = displayUneditable;
 			GraphicalProperties.setEnabledFlag(jPanelDebug, !displayTablesUneditable);
 			GraphicalProperties.setEnabledFlag(jPanelEquations, !displayTablesUneditable);
@@ -79,12 +79,14 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 	}
 	
-	public boolean saveToCopasiKey(String copasiKey)  {
+	public boolean saveToCopasiModelName(String modelName)  {
 		try {
 			fromInterface = true;	
 			//System.out.println("parameter : " +copasiKey);
-			multiModel.setCopasiKey(copasiKey);
+			multiModel.setCopasiModelName(modelName);
+			
 			String savedIn = saveCPS(null, true);
+		
 			//System.out.println("savedIn : " +savedIn);
 			return true;
 		} catch (Throwable e) {
@@ -7396,13 +7398,13 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		}
 	}
 	
-	public void loadCopasiDataModel_fromKey(String copasiDataModel_key) throws Throwable {
+	public void loadCopasiDataModel_fromModelName(String copasiDataModel_modelName) throws Throwable {
 		MainGui.autocompleteWithDefaults = false;
 		importFromSBMLorCPS = true;
 		try{
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			clearAllTables();
-			multiModel.loadCopasiDataModel_fromKey(copasiDataModel_key);
+			multiModel.loadCopasiDataModel_fromModelName(copasiDataModel_modelName);
 			updateGUIFromMultimodel();
 			multiModel.setTableReactionModel(tableReactionmodel);
 			validateMultiModel(false,false);

@@ -148,6 +148,9 @@ public class MultiModel {
 	public CCopasiDataModel copasiDataModel;
 	private String copasiDataModel_key = new String("");
 	private HashMap<Integer, String> modified_species = new HashMap();
+
+
+	private String copasiDataModel_modelName;
 	
 	//public static long indexCopasiDataModel = -1;
 	
@@ -409,8 +412,7 @@ public class MultiModel {
 				 			
 		 
 		 progress(progressBarFrame,Constants.ProgressBar.COMPILING_CPS.progress);
-			
-		 this.copasiDataModel.getModel().compile();
+		copasiDataModel.getModel().compile();
 		 System.out.println("compiled"); System.out.flush();
 			
 		// progress(progressBarFrame,Constants.ProgressBar.UPDATING_CPS.progress);
@@ -540,6 +542,7 @@ public class MultiModel {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	ex.printStackTrace();
 			}
 			
+			
 			try {
 				if(progressBarFrame!=null) progress(progressBarFrame,Constants.ProgressBar.LOADING_SPECIES_CPS.progress);
 				Vector<Species> allSpecies = this.speciesDB.getAllSpecies();
@@ -547,8 +550,7 @@ public class MultiModel {
 				//System.out.println("....species"); System.out.flush();
 			} catch(Exception ex) {
 				problemsWithSomeExpression = true; // but I should wait to signal that because some expression can refer to reaction fluxes, so I will run this loop after the reactions
-				//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	
-					ex.printStackTrace();
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	ex.printStackTrace();
 
 			}
 			
@@ -580,7 +582,7 @@ public class MultiModel {
 			int remainingGlQ = remainingGlobalQ.size();
 			int remainingComp = remainingCompartments.size();
 			int counter = 20;
-		
+
 			while(remainingSpecies.size()!=0 || remainingGlobalQ.size() != 0 || remainingCompartments.size() !=0) {
 				//System.out.println("counter: "+counter +": Problems exporting "+remainingCompartments.size()+" compartments, "+remainingSpecies.size()+" species and " + remainingGlobalQ.size() +" parameters");
 				//System.out.flush();
@@ -609,7 +611,7 @@ public class MultiModel {
 		
 		//CFunctionVectorN allFunctions = funDB.loadedFunctions();
 		CModel model = copasiDataModel.getModel();
-		
+
 		if(progressBarFrame!=null) progress(progressBarFrame,Constants.ProgressBar.LOADING_REACTIONS_CPS.progress);
 		counterExpandedReactions = 0;
 		if(tableReactionmodel2!= null) {
@@ -743,7 +745,7 @@ public class MultiModel {
 		//if(MainGui.modelName.trim().length() ==0) MainGui.modelName = Constants.DEFAULT_MODEL_NAME;
 		//model.setObjectName(MainGui.modelName);
 		
-		
+
 		
 		
 	}
@@ -1110,12 +1112,14 @@ public class MultiModel {
 		modelValue.setStatus(CModelValue.ASSIGNMENT);
 		
 		try {
-			MutablePair<String, Boolean> pair = buildCopasiExpression(actualModelParameterExpression,false,false);
+				MutablePair<String, Boolean> pair = buildCopasiExpression(actualModelParameterExpression,false,false);
 			String expr = pair.left;
+			System.out.println("qui: "+actualModelParameterExpression + ";expr = "+expr);
 			modelValue.setExpression(expr);
 
 		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+				e.printStackTrace();
 		}
 	
 		//CCopasiObject object = modelValue.getObject(new CCopasiObjectName("Reference=InitialValue"));
@@ -1916,7 +1920,7 @@ public class MultiModel {
 							m.setInitialConcentration(initial_conc);
 						}					
 						m.setNotes(s.getNotes());
-						if(annotations.get(name) != null) {
+						if(annotations!= null && annotations.get(name) != null) {
 							String annotString = annotations.get(name);
 							annotString = fixAnnotation(annotString, m.getKey());
 							m.setMiriamAnnotation(annotString, m.getKey(), m.getKey());
@@ -1989,7 +1993,7 @@ public class MultiModel {
 						}
 						m.setNotes(s.getNotes());
 						String nameForAnnotation = CellParsers.extractMultistateName(name);
-						if(annotations.get(nameForAnnotation) != null) {
+						if(annotations!= null && annotations.get(nameForAnnotation) != null) {
 							String annotString = annotations.get(nameForAnnotation);
 							annotString = fixAnnotation(annotString, m.getKey());
 							m.setMiriamAnnotation(annotString, m.getKey(), m.getKey());
@@ -2152,7 +2156,7 @@ public class MultiModel {
 			}	
 			
 			modelValue.setNotes(g.getNotes());
-			if(annotations.get(name) != null) {
+			if(annotations!= null && annotations.get(name) != null) {
 				String annotString = annotations.get(name);
 				annotString = fixAnnotation(annotString, modelValue.getKey());
 				modelValue.setMiriamAnnotation(annotString, modelValue.getKey(), modelValue.getKey());
@@ -2222,8 +2226,6 @@ public class MultiModel {
 	private Vector<Compartment> fillCopasiDataModel_compartments(Vector<Compartment> compartments) throws Exception {
 		if(compartments.size() == 0) return new Vector<Compartment>();
 		
-		CCopasiObject object = null;
-		
 		CModel model = this.copasiDataModel.getModel();
 		
 		Vector<Compartment> comp_with_expression_not_added = new Vector<Compartment>();
@@ -2277,7 +2279,7 @@ public class MultiModel {
 			}
 			
 			comp.setNotes(c.getNotes());
-			if(annotations.get(name) != null) {
+			if(annotations!= null && annotations.get(name) != null) {
 				String annotString = annotations.get(name);
 				annotString = fixAnnotation(annotString, comp.getKey());
 				comp.setMiriamAnnotation(annotString, comp.getKey(), comp.getKey());
@@ -2292,7 +2294,6 @@ public class MultiModel {
 	
 	private Vector<GlobalQ> fillCopasiDataModel_globalQ_assignment_ode(Vector<GlobalQ> globalQ) throws Exception {
 		CModel model = this.copasiDataModel.getModel();
-		model.compile();
 		
 		int globalQToBeExported = globalQ.size();
 		Iterator it = globalQ.iterator();
@@ -3149,27 +3150,50 @@ public class MultiModel {
 			copasiDataModel_key = new String(copasiDataModel.getModel().getKey());
 		}
 		
-		loadCopasiDataModel_fromKey(copasiDataModel_key);
+		loadCopasiDataModel_fromModelName(copasiDataModel_modelName);
 		
 		
 		
 		if(MainGui.fromMainGuiTest||deleteOldDataCopasiDataModel) {
 			try {
-					if(MainGui.fromInterface) {
-						/*CModel model = copasiDataModel.getModel();
-						model.getMetabolites().clear();
-						model.getModelValues().clear();
-						model.getEvents().clear();
-						model.getReactions().clear();*/
-					} else {
-						copasiDataModel.newModel();
-					}
-					copasiDataModel.deleteOldData();
-					copasiDataModel.getModel().setTimeUnit(MainGui.timeUnit);
-					copasiDataModel.getModel().setVolumeUnit(MainGui.volumeUnit);
-					copasiDataModel.getModel().setQuantityUnit(MainGui.quantityUnit);
-					copasiDataModel.getModel().setObjectName(MainGui.modelName);
+					/*if(MainGui.fromInterface) {
+						CModel model = copasiDataModel.getModel();
+						model.getMetabolites().clear(); // this is WRONG, it does not clear all the datastructure/lists
+						
+						long total = model.getEvents().size();
+						for (long i = total-1; i >= 0; i--)	{
+							CEvent  m = (CEvent) model.getEvents().get(i);
+							model.removeEvent(m, true);
+						}		
 					
+						total = model.getMetabolites().size();
+						for (long i = total-1; i >= 0; i--)	{
+							CMetab  m = (CMetab) model.getMetabolites().get(i);
+							model.removeMetabolite(m, true);
+						}		
+						
+						total = model.getReactions().size();
+						for (long i = total-1; i >= 0; i--)	{
+							CReaction  m = (CReaction) model.getReactions().get(i);
+							model.removeReaction(m, true);
+						}		
+						
+						total = model.getModelValues().size();
+						for (long i = total-1; i >= 0; i--)	{
+							CModelValue  m = (CModelValue) model.getModelValues().get(i);
+							model.removeModelValue(m, true);
+						}		
+			
+					} else {*/
+						copasiDataModel.newModel();
+				//	}
+						copasiDataModel.deleteOldData();
+						copasiDataModel.getModel().setTimeUnit(MainGui.timeUnit);
+						copasiDataModel.getModel().setVolumeUnit(MainGui.volumeUnit);
+						copasiDataModel.getModel().setQuantityUnit(MainGui.quantityUnit);
+						copasiDataModel.getModel().setObjectName(MainGui.modelName);
+
+										
 			} catch (Exception e) {
 					e.printStackTrace();
 			}
@@ -3211,7 +3235,8 @@ public class MultiModel {
 			copasiDataModel_key = new String(copasiDataModel.getModel().getKey());
 		}
 		else {
-			loadCopasiDataModel_fromKey(copasiDataModel_key);
+			//loadCopasiDataModel_fromKey(copasiDataModel_key);
+			loadCopasiDataModel_fromModelName(copasiDataModel_modelName);
 		}
 		
 	     try{
@@ -3244,11 +3269,12 @@ public class MultiModel {
 	 }
 	
 	
-	public void loadCopasiDataModel_fromKey(String copasiDataModel_key) {
-		if(copasiDataModel_key== null){
+	public void loadCopasiDataModel_fromModelName(String copasiDataModel_modelName) {
+		if(copasiDataModel_modelName== null){
 			return;
 		}
-		 for (long s = 0; s < CCopasiRootContainer.getDatamodelList().size(); s++) 
+		
+		/*for (long s = 0; s < CCopasiRootContainer.getDatamodelList().size(); s++) 
 		   {
 			 copasiDataModel = CCopasiRootContainer.get(s); //CCopasiRootContainer.getDatamodel(s);// 
 			 CModel model = copasiDataModel.getModel();
@@ -3270,7 +3296,28 @@ public class MultiModel {
 	    				} 
 	    			}
 	    		}
-		   }
+		   }*/
+		
+		try{
+			if(copasiDataModel_modelName!= null) {
+				 if(copasiDataModel == null) {
+					 copasiDataModel = CCopasiRootContainer.get(0); 
+				 }
+		
+				 String searchFor = "CN=Root,Model="+copasiDataModel_modelName;
+				CObjectInterface whatsit = copasiDataModel.getObject(new CCopasiObjectName(searchFor));
+				if (whatsit == null) {
+								System.out.println("dont have a: " + searchFor);
+				} else	{
+							CModel mod = (CModel)whatsit.toObject();
+							 CModel model = copasiDataModel.getModel();
+							this.copasiDataModel_key = model.getKey();
+				}
+			}
+		}catch(Throwable t) {
+			t.printStackTrace();
+		}
+		
 	}
 
 	public CModel getCurrentCModel() {
@@ -3305,7 +3352,8 @@ public class MultiModel {
 			copasiDataModel_key = new String(copasiDataModel.getModel().getKey());
 		}
 		else {
-			loadCopasiDataModel_fromKey(copasiDataModel_key);
+			//loadCopasiDataModel_fromKey(copasiDataModel_key);
+			loadCopasiDataModel_fromModelName(copasiDataModel_modelName);
 		}
 		
 		
@@ -5473,6 +5521,10 @@ public Integer getGlobalQIndex(String name) {
 
 	public void setCopasiKey(String copasiKey) {
 		this.copasiDataModel_key = copasiKey;
+	}
+	
+	public void setCopasiModelName(String copasiModelName) {
+		this.copasiDataModel_modelName = copasiModelName;
 	}
 
 	public void addInvisibleSpecies(String name, String initialQuantity,
