@@ -3268,6 +3268,25 @@ public class MultiModel {
 	   
 	 }
 	
+	public CCopasiDataModel getCopasiModelFromModelName(String dataModelName) {
+		String searchFor = "CN=Root,Model="+dataModelName;
+	 
+		DataModelVector modelList = CCopasiRootContainer.getDatamodelList();
+		CCopasiDataModel model = null;
+		for(long index = 0; index < modelList.size(); index++)
+		{
+			model = CCopasiRootContainer.get(index);
+			//System.out.println("model cn: " + model.getModel().getCN().getString());
+			CObjectInterface whatsit = model.getObject(new CCopasiObjectName(searchFor));
+			if (whatsit == null) {
+							//System.out.println("dont have a: " + searchFor);
+			} else {
+				return model;
+			}
+		}
+		
+		return null;
+	}
 	
 	public void loadCopasiDataModel_fromModelName(String copasiDataModel_modelName) {
 		if(copasiDataModel_modelName== null){
@@ -3300,11 +3319,13 @@ public class MultiModel {
 		
 		try{
 			if(copasiDataModel_modelName!= null) {
-				 if(copasiDataModel == null) {
-					 copasiDataModel = CCopasiRootContainer.get(0); 
-				 }
-		
-				 String searchFor = "CN=Root,Model="+copasiDataModel_modelName;
+				copasiDataModel = getCopasiModelFromModelName(copasiDataModel_modelName);
+				if(copasiDataModel==null) {
+					copasiDataModel = CCopasiRootContainer.addDatamodel();
+					copasiDataModel_key = new String(copasiDataModel.getModel().getKey());
+					copasiDataModel_modelName = copasiDataModel_key;
+				}
+				String searchFor = "CN=Root,Model="+copasiDataModel_modelName;
 				CObjectInterface whatsit = copasiDataModel.getObject(new CCopasiObjectName(searchFor));
 				if (whatsit == null) {
 								System.out.println("dont have a: " + searchFor);
