@@ -6,33 +6,40 @@ function(create_jar _TARGET_NAME)
     set(_JAVA_SOURCE_FILES ${ARGN})
 	
 	#######################
-	## TEST MESSAGES to check if the OS/Arch detection works 
+	## Different variable to detect different OS/Architecture 
 	#######################
 	
-	message("Compiling on OS: " ${CMAKE_HOST_SYSTEM_NAME})
-	 #message("CMAKE_HOST_SYSTEM_VERSION "${CMAKE_HOST_SYSTEM_VERSION})
-	message("CMAKE_HOST_SYSTEM_PROCESSOR: " ${CMAKE_HOST_SYSTEM_PROCESSOR})
-	 #message("CMAKE_HOST_SYSTEM" ${CMAKE_HOST_SYSTEM})
-
-	message("PROCESSOR_ARCHITEW6432: " $ENV{PROCESSOR_ARCHITEW6432})
-	message("PROCESSOR_ARCHITECTURE: " $ENV{PROCESSOR_ARCHITECTURE})
-
-	if($ENV{PROCESSOR_ARCHITEW6432} MATCHES "64")
-		message("64!!")
-		set(COPASI_DIR_ARCH 64)
-	elseif($ENV{PROCESSOR_ARCHITEW6432} MATCHES "64")
-		message("32!!")
-		set(COPASI_DIR_ARCH 32)
-	endif( $ENV{PROCESSOR_ARCHITEW6432} MATCHES "64")
-
+	#message("Compiling on OS: " ${CMAKE_HOST_SYSTEM_NAME})
+	#message("CMAKE_HOST_SYSTEM_VERSION "${CMAKE_HOST_SYSTEM_VERSION})
+	#message("CMAKE_HOST_SYSTEM_PROCESSOR: " ${CMAKE_HOST_SYSTEM_PROCESSOR})
+	#message("CMAKE_HOST_SYSTEM" ${CMAKE_HOST_SYSTEM})
+	#message("PROCESSOR_ARCHITEW6432: " $ENV{PROCESSOR_ARCHITEW6432})
+	#message("PROCESSOR_ARCHITECTURE: " $ENV{PROCESSOR_ARCHITECTURE})
+	
 	if("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Windows")
+		set(COPASI_LIBRARY_NAME "CopasiJava.dll")
 		 message("Windows detected!!")
 		 set(COPASI_DIR_OS "win")
+		 if($ENV{PROCESSOR_ARCHITEW6432} MATCHES "64")
+				message("64!!")
+				set(COPASI_DIR_ARCH 64)
+		elseif($ENV{PROCESSOR_ARCHITEW6432} MATCHES "64")
+				message("32!!")
+				set(COPASI_DIR_ARCH 32)
+		endif( $ENV{PROCESSOR_ARCHITEW6432} MATCHES "64")
 	endif("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Windows")
 	
 	if("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Linux")
+		set(COPASI_LIBRARY_NAME "libCopasiJava.so")
 		 message("Linux detected!!")
-		 
+		 set(COPASI_DIR_OS "linux")
+		 if("${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "64")
+			message("64!!")
+			set(COPASI_DIR_ARCH 64)
+		else ("${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "64")
+				message("32!!")
+				set(COPASI_DIR_ARCH 32)
+		endif("${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "64")	
 	endif("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Linux")
 	
 	if("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Darwin")
@@ -45,15 +52,11 @@ function(create_jar _TARGET_NAME)
       set(CMAKE_JAVA_TARGET_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
     endif(NOT DEFINED CMAKE_JAVA_TARGET_OUTPUT_DIR)
 
-	
 	file(COPY ${MSMB_SOURCE_DIR}/libs DESTINATION 
                              ${CMAKE_JAVA_TARGET_OUTPUT_DIR})
 	#Copy the correct COPASI library in the directory where the jar is
-	#!! FOR NOW ONLY THIS DLL IS AVAILABLE
-	#!! When other OS/Architecture will be available, we will need to take the appropriate file according to OS/Arch
-	
-	
-	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/${COPASI_DIR_OS}${COPASI_DIR_ARCH}/CopasiJava.dll DESTINATION 
+		
+	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/${COPASI_DIR_OS}${COPASI_DIR_ARCH}/${COPASI_LIBRARY_NAME} DESTINATION 
                              ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/libs)	
 	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/${COPASI_DIR_OS}${COPASI_DIR_ARCH}/copasi.jar DESTINATION 
                              ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/libs)	
@@ -154,8 +157,11 @@ function(create_jar _TARGET_NAME)
 	#Copy the version file in the OUTPUT path
 	 file(COPY ${MSMB_SOURCE_DIR}/version.txt DESTINATION 
                              ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/msmb/gui/images)
+
 	
 	
+
+
     # create an empty java_class_filelist
     if (NOT EXISTS ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_class_filelist)
         file(WRITE ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_class_filelist "")
@@ -295,5 +301,16 @@ Main-Class: msmb.gui.MainGui
             CLASSDIR
                 ${CMAKE_JAVA_CLASS_OUTPUT_PATH}
     )
+
+# on linux, for unknown reasons, the addLibrary from inside the MSMB does not seem to work
+# so we need to explicitly set the library path to the libs folder.
+# We created a "launcher" script that set the path according to the compilation setup.
+# If the final directory is moved, it is the user responsibility to change the parameter in the script accordingly.
+ 
+if(${COPASI_DIR_OS} MATCHES "linux")
+              execute_process(COMMAND echo "export LD_LIBRARY_PATH=./libs:$LD_LIBRARY_PATH \njava -jar" ${_TARGET_NAME}.jar
+WORKING_DIRECTORY ${CMAKE_JAVA_TARGET_OUTPUT_DIR}
+OUTPUT_FILE "${_TARGET_NAME}_launcher.sh")
+        endif(${COPASI_DIR_OS} MATCHES "linux")
 
 endfunction(create_jar)

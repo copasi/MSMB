@@ -760,9 +760,11 @@ public class MultiModel {
 		for(int i = 0; i < mod.size(); i++) {
 			String current = mod.get(i);
 			String mod_onlyName = CellParsers.extractMultistateName(current);
+			String cmp = CellParsers.extractCompartmentLabel(current);
+			if(cmp.length()==0) cmp = null;
 			int index_metab;
 			try {
-				index_metab = this.findMetabolite(current,null);
+				index_metab = this.findMetabolite(mod_onlyName,cmp);
 				if(index_metab == -1) {
 					Species incomplete_mod = this.getSpecies(mod_onlyName);
 					MultistateSpecies newSpecies = new MultistateSpecies(this, current);
@@ -1852,8 +1854,7 @@ public class MultiModel {
 					String compartmentList = s.getCompartment_listString();
 					//FOR NOW ALL in different compartments HAVE THE SAME INITIAL CONCENTRATION/EXPRESSION... NEEEEEEEEEED TO BE FIIIIIIIIIIIIXED
 					Vector<String> compNames = CellParsers.extractNamesInList(this,compartmentList, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.description);
-					
-					
+										
 					for(int ii = 0; ii < compNames.size(); ii++) {
 						//double initial_conc = s.getInitialConcentration().doubleValue();
 						String comp = compNames.get(ii);
@@ -2302,7 +2303,7 @@ public class MultiModel {
 		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.GLOBALQ.description);
 		
 		while(it.hasNext()) {
-			
+			 
 			GlobalQ g = (GlobalQ) it.next();
 			if(g == null || g.getName().trim().length() == 0) {	continue;	}
 			CModelValue modelValue = null;
@@ -2353,7 +2354,7 @@ public class MultiModel {
 		
 			modelValue.setNotes(g.getNotes());
 		
-			if(annotations.get(g.getName()) != null) {
+			if(annotations!= null && annotations.get(g.getName()) != null) {
 				String annotString = annotations.get(g.getName());
 				annotString = fixAnnotation(annotString, modelValue.getKey());
 				modelValue.setMiriamAnnotation(annotString, modelValue.getKey(), modelValue.getKey());
@@ -3154,7 +3155,7 @@ public class MultiModel {
 		
 		
 		
-		if(MainGui.fromMainGuiTest||deleteOldDataCopasiDataModel) {
+		if((MainGui.fromMainGuiTest||deleteOldDataCopasiDataModel) && copasiDataModel!= null) {
 			try {
 					/*if(MainGui.fromInterface) {
 						CModel model = copasiDataModel.getModel();
@@ -3262,7 +3263,8 @@ public class MultiModel {
 	     catch (java.lang.Exception ex)
        {
            System.err.println("Error while loading the model from file named \"" + f.getAbsolutePath() + "\".");
-           if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)    ex.printStackTrace();
+           //if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)    
+        	   ex.printStackTrace();
            return;
        }
 	   
@@ -3290,7 +3292,11 @@ public class MultiModel {
 	
 	public void loadCopasiDataModel_fromModelName(String copasiDataModel_modelName) {
 		if(copasiDataModel_modelName== null){
-			return;
+			if(copasiDataModel==null && MainGui.fromMainGuiTest) {
+				copasiDataModel = CCopasiRootContainer.get(0);
+				copasiDataModel_key = new String(copasiDataModel.getModel().getKey());
+				copasiDataModel_modelName = copasiDataModel_key;
+			}
 		}
 		
 		/*for (long s = 0; s < CCopasiRootContainer.getDatamodelList().size(); s++) 
@@ -3328,7 +3334,7 @@ public class MultiModel {
 				String searchFor = "CN=Root,Model="+copasiDataModel_modelName;
 				CObjectInterface whatsit = copasiDataModel.getObject(new CCopasiObjectName(searchFor));
 				if (whatsit == null) {
-								System.out.println("dont have a: " + searchFor);
+								//System.out.println("dont have a: " + searchFor);
 				} else	{
 							CModel mod = (CModel)whatsit.toObject();
 							 CModel model = copasiDataModel.getModel();
@@ -3380,7 +3386,7 @@ public class MultiModel {
 		
 		try{
 	    	 copasiDataModel.importSBML(f.getAbsolutePath());
-	     }
+	       }
 	     catch (java.lang.Exception ex)
       {
           System.err.println("Error while loading the model from file named \"" + f.getAbsolutePath() + "\".");
@@ -3855,7 +3861,7 @@ public class MultiModel {
         	   String irrFunName = reaction.getFunction().getObjectName();
         	   irrFunName = irrFunName.replace(" (reversible)",  " (irreversible)");
         	   CFunction val = (CFunction)copasiFunDB.findFunction(irrFunName);
-				reaction.setFunction(val);
+				if(val!= null)reaction.setFunction(val);
            }
            
            if(kineticLawFromAnnotation.trim().length() > 0) {
@@ -4187,6 +4193,7 @@ public class MultiModel {
 			if(vis.getExceptions().size() == 0) {
 				ret  = vis.getExpression();
 				ret  = CellParsers.reprintExpression_brackets(ret, MainGui.FULL_BRACKET_EXPRESSION); 
+				
 			} else {
 				throw vis.getExceptions().get(0);
 			}
@@ -5229,29 +5236,21 @@ public class MultiModel {
 	        		
 	        		if(message.getType()==CCopasiMessage.ERROR) {
 	        			String text = message.getText();
-	        			if(text.contains("could not be split into two irreversible")) {
-	        				StringTokenizer st = new StringTokenizer(text, "'");
-	        				st.nextToken();
-	        				String reactionName = st.nextToken();
-
+	        			int indexOf = text.indexOf("could not be split into two irreversible");
+	        			if(indexOf != -1) {
+	        				int firstQuote = text.indexOf("'");
+	        				String reactionName = text.substring(firstQuote+1, indexOf-2).trim();
 	        				index = findReaction(reactionName);
 	        				ret.add(reactionName);
-	        			//	System.out.println("reversible that could not be split index = "+index);
 	        				if(index != -1) {
 	        					CReaction r = model.getReaction(index);
 	        					r.setReversible(false);
-	        					//r.getFunction().geto
-	        					
-	        					//model.compile();
 	        				}
 	        				index = -1;
-		        			
-	        			}
-	        			
+		        		}
 	        		}
 	        		i++;
 	        	}
-	        	
 	        	converted = model.convert2NonReversible();
 	        	if(!converted) {
 	        		System.out.println("!!!!!!----- PROBLEMS IN convert2NonReversible-----");

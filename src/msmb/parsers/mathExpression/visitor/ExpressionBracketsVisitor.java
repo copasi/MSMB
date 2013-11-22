@@ -162,8 +162,8 @@ public class ExpressionBracketsVisitor extends DepthFirstVoidVisitor
 			String ret = new String();
 			ReversePolishNotation rpn = new ReversePolishNotation(functions_nameNumArguments );
 			String[] output = rpn.infixToRPN(splittedExpression.toArray());
-			//System.out.println("splitted: "+splittedExpression);
-	        /*System.out.println("RPN:");
+		/*	System.out.println("splitted: "+splittedExpression);
+	        System.out.println("RPN:");
 	        for (String token : output) {
 	            System.out.print(token + " ");
 	        }

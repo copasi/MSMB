@@ -133,7 +133,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	
 	
-	public void loadFromMSMB(byte[] msmbByteArray, boolean displayUneditable) {
+	public void loadFromMSMB(byte[] msmbByteArray,  boolean displayUneditable) {
+		
 		importTablesMultistateFormat_fromInterface(msmbByteArray);
 		displayTablesUneditable = displayUneditable;
 		GraphicalProperties.setEnabledFlag(jPanelDebug, !displayTablesUneditable);
@@ -7498,11 +7499,18 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			//it will be revalidated later
 		}
 		
-		System.out.println("-- Loading global quantities...");
-		System.out.flush();
-		loadGlobalQTable();
-		System.out.println("-- done...");
-		System.out.flush();
+		try{ 
+			System.out.println("-- Loading global quantities...");
+			System.out.flush();
+			loadGlobalQTable();
+			System.out.println("-- done...");
+			System.out.flush();
+		}
+		catch(Exception ex) {
+			ex.printStackTrace();
+			//some globalQ can refer to species  not yet loaded... it's ok to go on with the exceptions
+			//it will be revalidated later
+		}
 		
 		System.out.println("-- Loading reactions...");
 		System.out.flush();
@@ -8936,11 +8944,18 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	public static void main(String[] args) {
 		try {
-			
-		  addLibraryPath("..\\libs");
-		  addLibraryPath("..\\..\\libs");
-		  addLibraryPath(".\\libs");
-	     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			 String basePath = MainGui.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+			 String  currentPath = basePath+ "..\\libs"; 
+			  addLibraryPath(currentPath);
+			  currentPath = basePath+ "..\\..\\libs"; 
+			  addLibraryPath(currentPath);
+			  currentPath = basePath+ ".\\libs"; 
+			  addLibraryPath(currentPath);
+					 	
+		  //addLibraryPath("..\\libs");
+		//  addLibraryPath("..\\..\\libs");
+		//  addLibraryPath(".\\libs");
+		  UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		  
 		  final SplashScreen splash = SplashScreen.getSplashScreen();
 		  if (splash == null) {

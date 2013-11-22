@@ -10,7 +10,7 @@ import org.COPASI.*;
 
 public class BiomodelTest {
 	static boolean alsoNonCurated = false;
-	static boolean deleteFilesAfterProcessing = true;
+	static boolean deleteFilesAfterProcessing = false;
 	static boolean collectStatisticsMode = false;
 	static 	String subdirectoryTests = "tests/BiomodelTests/";
 	static String collectStatisticsFile = new String(subdirectoryTests+"BioModels_statistics.txt");
@@ -40,11 +40,7 @@ public class BiomodelTest {
 	public static final Vector<String> models_with_known_problems;
 	static {
 		models_with_known_problems = new Vector<String>();
-		models_with_known_problems.add("BIOMD0000000451"); //issue in COPASI gui, association of parameters - possible problems also in reversible reactions
-		models_with_known_problems.add("BIOMD0000000450"); //issue in COPASI gui, not loading 
-		models_with_known_problems.add("BIOMD0000000392"); // COPASI issue, not imported in gui
-		models_with_known_problems.add("BIOMD0000000393"); // COPASI gui crash
-	
+		
 		//non-splittable reversible reactions cannot be interpreted as irreversible (simulation results are different)
 		models_with_known_problems.add("BIOMD0000000051");
 		models_with_known_problems.add("BIOMD0000000075");
@@ -67,6 +63,10 @@ public class BiomodelTest {
 		models_with_known_problems.add("BIOMD0000000268");
 		models_with_known_problems.add("BIOMD0000000273");
 		models_with_known_problems.add("BIOMD0000000327");
+		models_with_known_problems.add("BIOMD0000000392"); 
+		models_with_known_problems.add("BIOMD0000000393");
+		models_with_known_problems.add("BIOMD0000000450"); 
+		models_with_known_problems.add("BIOMD0000000480");
 		models_with_known_problems.add("BIOMD0000000404");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
 		  //if I make them all irreversible is ok at export, but I get an error in simulation (simultaneous events) that is probably caused by the "force to be irreversible" change
 			models_with_known_problems.add("BIOMD0000000408");//not all the  reversible reactions that can be split because they use functions with parameter and the - is in the parameters, so is wrong to change them manually as irreversible
@@ -227,10 +227,9 @@ public class BiomodelTest {
 		//indices.add(new Integer(266)); //2 glucose in different compartments, one with ODE the other fixed, we don't allow that in MSMB but we rename the second species at import and everything works fine
 		*/
 			
-		/*	indices.clear();
-			indices.add(new Integer(143)); 
-		*/
-			 
+		
+			/*indices.clear();
+			indices.add(new Integer(469));*/
 							
 			boolean simulate255 = false;
 			
@@ -238,8 +237,8 @@ public class BiomodelTest {
 				Integer index = indices.get(i);
 				if(index == 0) continue;
 				String sbmlID = curatedIDs.get(index-1);
-				if(models_with_known_problems.contains(sbmlID)&&!collectStatisticsMode){
-					System.out.println("Model with known problems. We are working to solve them :)");
+				if(models_with_known_problems.contains(sbmlID)){
+					System.out.println(sbmlID+": Model with known problems. We are working to solve them :)");
 					outProgressLog.println(sbmlID + ", parseErrors , "+ formatDate.format(new Date()));
 					outProgressLog.flush();
 					continue;
@@ -264,8 +263,8 @@ public class BiomodelTest {
 				if(simulate255==false && sbmlID.compareTo("BIOMD0000000255")==0) {
 					System.out.println("Very big model, we will load it after all the other models");
 					System.out.flush();
-					//indices.add(255);
-					//simulate255 = true;
+					indices.add(255);
+					simulate255 = true;
 					continue;		
 				}
 				

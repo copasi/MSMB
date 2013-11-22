@@ -223,7 +223,7 @@ public class CellParsers {
 				}
 			  return ret;
 		} catch (Exception e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -748,6 +748,13 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 					objectName.indexOf('=')!=-1 ||
 					objectName.indexOf('[')!=-1 ||
 					objectName.indexOf(']')!=-1 ||
+					objectName.indexOf('&')!=-1 ||
+					objectName.indexOf('|')!=-1 ||
+					objectName.indexOf('<')!=-1 ||
+					objectName.indexOf('>')!=-1 ||
+					objectName.indexOf('=')!=-1 ||
+					objectName.indexOf('@')!=-1 ||
+
 					objectName.indexOf('^')!=-1) {
 				return "\""+objectName+"\"";
 			}
@@ -1383,7 +1390,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		String ret = new String();
 
 		if(isMultistateSpeciesName(cleanName)) {
-			//ret = "ADD_COMPARTMENT_TO_MULTISTATE_SPECIEEEEEEEEEEEEEEEES";
+			//ret = "ADD_COMPARTMENT_TO_MULTISTATE_SPECIES";
 			ret = cleanName;
 		} else {
 			ret = cleanName + 
@@ -1474,7 +1481,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		String ret = new String();
 
 		/*if(isMultistateSpeciesName(name)) { extract compartment from "real" classic multistate species
-			ret = "EXTRACT_COMPARTMENT_FROM_MULTISTATE_SPECIEEEEEEEEEEEEEEEES";
+			ret = "EXTRACT_COMPARTMENT_FROM_MULTISTATE_SPECIES";
 		} else {*/
 			String prefix = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.EXTENSION_COMPARTMENT).substring(1)+MR_MultistateSpecies_ParserConstantsNOQUOTES.getTokenImage(MR_MultistateSpecies_Parser.OPEN_C);
 			int index_cmp_label = name.indexOf(prefix);

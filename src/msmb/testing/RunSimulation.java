@@ -61,7 +61,7 @@ public class RunSimulation {
 	 
 	
 	static String MYCOMPSEPARATOR = ":MYCOMPSEPARATOR:";
-	static String MYELEMENTS_SEPARATOR = "@";
+	static String MYELEMENTS_SEPARATOR = "%";
 	static boolean MYADDCOMPNAME = true;
 	
 	static boolean customFileOutputLocation = false;
@@ -87,9 +87,8 @@ public class RunSimulation {
 	         String newtext = oldtext.replaceAll("-1.#IND", "NaN");
 	         newtext = newtext.replaceAll("1.#INF", "Inf");
 	         newtext = newtext.replaceAll("1.#QNAN", "NaN");
-	         
-	         
-		         StringTokenizer st = new StringTokenizer(firstLine,MYELEMENTS_SEPARATOR);
+	         firstLine = firstLine.replaceAll("@", "_");
+	             StringTokenizer st = new StringTokenizer(firstLine,MYELEMENTS_SEPARATOR);
 	         String finalFirstLine = new String();
 	         while(st.hasMoreElements()){
 	        	 String tok = st.nextToken();
@@ -148,6 +147,8 @@ public class RunSimulation {
 	         newtext2 = newtext2.replaceAll("1.#INF", "Inf");
 	         newtext2 = newtext2.replaceAll("1.#QNAN", "NaN");
 	         
+	         firstLine2 = firstLine2.replaceAll("@", "_");
+		      
 	          StringTokenizer st2 = new StringTokenizer(firstLine2,MYELEMENTS_SEPARATOR);
 	         String finalFirstLine2 = new String();
 	         while(st2.hasMoreElements()){
