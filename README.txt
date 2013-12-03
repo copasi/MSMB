@@ -1,10 +1,6 @@
 Multi-State Model Builder (MSMB)
 ==
 
-!!! WARNING !!!
-Compiling only on WIN64 because the updated Copasi language bindings for the other systems has not be distributed yet 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 ----
 System requirements:
 - CMake (2.8.6 or newer)
