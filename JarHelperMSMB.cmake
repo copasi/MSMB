@@ -6,7 +6,8 @@ function(create_jar _TARGET_NAME)
     set(_JAVA_SOURCE_FILES ${ARGN})
 	
 	#######################
-	## Different variable to detect different OS/Architecture 
+	## Different variables to detect different OS/Architecture 
+	## !!! MISSING TEST: MAC OS
 	#######################
 	
 	#message("Compiling on OS: " ${CMAKE_HOST_SYSTEM_NAME})

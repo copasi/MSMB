@@ -1,4 +1,7 @@
 libs/copasi.jar
+libs/*.dll
+libs/*.jnilib
+libs/*.so
 build/
 MultiStateModelBuilder_dist/
 version.txt

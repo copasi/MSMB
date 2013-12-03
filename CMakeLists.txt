@@ -38,8 +38,8 @@ execute_process(COMMAND ${git_cmd} ${git_arg1} ${git_arg2}
 )
 
 file(WRITE version.txt "commit=${git_ver}\n")
-file(APPEND version.txt "major=0\n")
-file(APPEND version.txt "minor=1\n")
+file(APPEND version.txt "major=1\n")
+file(APPEND version.txt "minor=0\n")
 
 
 # create an executable jar
