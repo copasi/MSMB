@@ -38,12 +38,12 @@ public class Event {
 		if(trigger.length()==0) return;
 		this.trigger = trigger;
 		try {
-				CellParsers.parseExpression_getUndefMisused(m, trigger, Constants.TitlesTabs.EVENTS.description,Constants.EventsColumns.TRIGGER.description);
+				CellParsers.parseExpression_getUndefMisused(m, trigger, Constants.TitlesTabs.EVENTS.getDescription(),Constants.EventsColumns.TRIGGER.getDescription());
 			} catch (MySyntaxException ex) {
 				throw ex;
 			} catch(Throwable ex) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-				throw new MySyntaxException(Constants.EventsColumns.TRIGGER.index, "Problems parsing the trigger. One of the elements is a misformed mathematical expression.", Constants.TitlesTabs.EVENTS.description); 
+				throw new MySyntaxException(Constants.EventsColumns.TRIGGER.index, "Problems parsing the trigger. One of the elements is a misformed mathematical expression.", Constants.TitlesTabs.EVENTS.getDescription()); 
 			} 
 	}
 
@@ -63,21 +63,21 @@ public class Event {
 		Vector<String> elements = new Vector<String>();
 		try {
 			elements = CellParsers.extractElementsInList(m,actions, 
-					Constants.TitlesTabs.EVENTS.description, Constants.EventsColumns.ACTIONS.description);
+					Constants.TitlesTabs.EVENTS.getDescription(), Constants.EventsColumns.ACTIONS.getDescription());
 		}  catch(Throwable ex) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
-			throw new MySyntaxException(Constants.EventsColumns.ACTIONS.index, "Problems parsing the list of actions. One of the elements is a misformed mathematical expression.", Constants.TitlesTabs.EVENTS.description); 
+			throw new MySyntaxException(Constants.EventsColumns.ACTIONS.index, "Problems parsing the list of actions. One of the elements is a misformed mathematical expression.", Constants.TitlesTabs.EVENTS.getDescription()); 
 		} 
 		
 		MySyntaxException complete = null; 
 			
 		for(String el : elements) {
 			try {
-				CellParsers.parseExpression_getUndefMisused(m, el, Constants.TitlesTabs.EVENTS.description,Constants.EventsColumns.ACTIONS.description);
+				CellParsers.parseExpression_getUndefMisused(m, el, Constants.TitlesTabs.EVENTS.getDescription(),Constants.EventsColumns.ACTIONS.getDescription());
 			} catch(Throwable ex) {
-				if(complete == null) complete = new MySyntaxException(Constants.EventsColumns.ACTIONS.index, ex.getMessage(), Constants.TitlesTabs.EVENTS.description);
+				if(complete == null) complete = new MySyntaxException(Constants.EventsColumns.ACTIONS.index, ex.getMessage(), Constants.TitlesTabs.EVENTS.getDescription());
 				else {
-					complete = new MySyntaxException(complete.getMessage()+System.lineSeparator()+ex.getMessage(), complete);
+					complete = new MySyntaxException(complete.getMessage()+"\n"+ex.getMessage(), complete);
 				}
 			} 
 			this.actions.add(el.trim());

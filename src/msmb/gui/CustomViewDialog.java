@@ -3,6 +3,7 @@ package  msmb.gui;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.SystemColor;
+import java.util.Arrays;
 import java.util.Vector;
 
 import javax.swing.JButton;
@@ -30,9 +31,9 @@ public class CustomViewDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
 	private String compressedExpression = new String();
-	public DefaultListModel<String> listModel = new DefaultListModel<String>();
+	public DefaultListModel listModel = new DefaultListModel();
 	private JTextPane txtpnSelectTheFunctions;
-	private JList<String> list;
+	private JList list;
 	MultiModel multiModel;
 
 	public String getCompressedExpression() {		return compressedExpression;	}
@@ -107,7 +108,7 @@ public class CustomViewDialog extends JDialog {
 			JScrollPane scrollPane = new JScrollPane();
 			contentPanel.add(scrollPane, BorderLayout.CENTER);
 			{
-				list = new JList<String>(listModel);
+				list = new JList(listModel);
 				scrollPane.setViewportView(list);
 			}
 		}
@@ -156,7 +157,7 @@ public class CustomViewDialog extends JDialog {
 	}
 
 	public String getReturnString() throws Exception {
-		if(list.getSelectedValuesList().size() == 0) throw new Exception("No functions to expand");
+		if(list.getSelectedValues().length == 0) throw new Exception("No functions to expand");
 	/*	CellParsers.parser.parseExpression(compressedExpression);
 		OdeExpressionVisitor_DELETE_oldParser visitor = new OdeExpressionVisitor_DELETE_oldParser(true, list.getSelectedValuesList());
 		if(CellParsers.parser.getErrorInfo()!= null) {
@@ -174,7 +175,7 @@ public class CustomViewDialog extends JDialog {
 			InputStream is = new ByteArrayInputStream(compressedExpression.getBytes("UTF-8"));
 			MR_Expression_Parser parser = new MR_Expression_Parser(is);
 			CompleteExpression root = parser.CompleteExpression();
-			ExpressionVisitor vis = new ExpressionVisitor(list.getSelectedValuesList(),multiModel,false);
+			ExpressionVisitor vis = new ExpressionVisitor(Arrays.asList(list.getSelectedValues()),multiModel,false);
 			root.accept(vis);
 			if(vis.getExceptions().size() == 0) {
 				tmp  = vis.getExpression();

@@ -8,14 +8,10 @@ import javax.swing.JButton;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.lang3.tuple.MutablePair;
-
-import com.sun.mail.handlers.multipart_mixed;
-
 import msmb.debugTab.DebugMessage;
 
 import msmb.model.ComplexSpecies;
 import msmb.model.Function;
-import msmb.model.MultiModel;
 import msmb.model.MultistateSpecies;
 import msmb.model.Species;
 import msmb.utility.CellParsers;
@@ -85,16 +81,16 @@ class ExportMultistateFormat {
 		    		for(int j = 0; j < tablemodel.getColumnCount(); j++) {
 		    			if(tablemodel.getValueAt(i, j)==null) continue;
 		    			String value = tablemodel.getValueAt(i, j).toString();
-		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && j == Constants.FunctionsColumns.EQUATION.index && value.trim().length() < 1) {
+		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription())==0 && j == Constants.FunctionsColumns.EQUATION.index && value.trim().length() < 1) {
 		    				JOptionPane.showMessageDialog(new JButton(),"Empty EQUATION field at export!!", "Problem at export!", JOptionPane.ERROR_MESSAGE);
 		    			}
-		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0 && j == Constants.CompartmentsColumns.NAME.index && value.trim().length() == 0) {row=null; break;}
-		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.EVENTS.description)==0 && j == Constants.EventsColumns.TRIGGER.index && value.trim().length() == 0) {row=null; break;}
-		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 && j == Constants.FunctionsColumns.NAME.index && value.trim().length() == 0) {row=null; break;}
-		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0 && j == Constants.GlobalQColumns.NAME.index && value.trim().length() == 0) {
+		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())==0 && j == Constants.CompartmentsColumns.NAME.index && value.trim().length() == 0) {row=null; break;}
+		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.EVENTS.getDescription())==0 && j == Constants.EventsColumns.TRIGGER.index && value.trim().length() == 0) {row=null; break;}
+		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription())==0 && j == Constants.FunctionsColumns.NAME.index && value.trim().length() == 0) {row=null; break;}
+		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())==0 && j == Constants.GlobalQColumns.NAME.index && value.trim().length() == 0) {
 		    				row=null; break;}
-		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && j == Constants.ReactionsColumns.REACTION.index && value.trim().length() == 0) {row=null; break;}
-		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0 && j == Constants.SpeciesColumns.NAME.index && value.trim().length() == 0)  {
+		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0 && j == Constants.ReactionsColumns.REACTION.index && value.trim().length() == 0) {row=null; break;}
+		    			if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.SPECIES.getDescription())==0 && j == Constants.SpeciesColumns.NAME.index && value.trim().length() == 0)  {
 		    				row=null; break;
 		    				}
 				    	if(value.length() <=0) value = " ";
@@ -122,7 +118,7 @@ class ExportMultistateFormat {
 			
 			
 			Vector<String> modelProperties = new Vector<String>();
-			modelProperties.add(MainGui.modelName);
+			modelProperties.add(MainGui.multiModel.getModelName());
 			modelProperties.add(new Integer(MainGui.volumeUnit).toString());
 			modelProperties.add(new Integer(MainGui.timeUnit).toString());
 			modelProperties.add(new Integer(MainGui.quantityUnit).toString());
@@ -131,14 +127,17 @@ class ExportMultistateFormat {
 			
 			out.writeObject(modelProperties);
 			
-		//	Vector invisibleSpecies = MainGui.multiModel.getAllInvisibleSpecies();
-		//	out.writeObject(invisibleSpecies);
 			out.flush();
 					
 			Vector<Vector> complexSpecies = new Vector();
 			complexSpecies.addAll(MainGui.multiModel.getAllComplexSpeciesSerialized());
 			out.writeObject(complexSpecies);
 			out.flush();
+	
+			/*HashMap<String, HashMap<Object, AttributeMap>> mutantsGraph =  MainGui.runManager.getMutantsGraphToSave();
+			out.writeObject(mutantsGraph);
+			out.flush();
+		*/
 			
 			out.close();
 			if(mainW!=null)mainW.progress(100);
@@ -201,30 +200,32 @@ class ExportMultistateFormat {
 			
 			//Vector<Vector<Vector<String>>>  tables = (Vector<Vector<Vector<String>>>) in.readObject();
 			Vector<Vector<String>> data = tables.get(Constants.TitlesTabs.REACTIONS.index);
-			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.REACTIONS.description);
+			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.REACTIONS.getDescription());
 			data = tables.get(Constants.TitlesTabs.SPECIES.index);
-			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.SPECIES.description);
+			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.SPECIES.getDescription());
 			data = tables.get(Constants.TitlesTabs.COMPARTMENTS.index);
-			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.COMPARTMENTS.description);
+			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.COMPARTMENTS.getDescription());
 			data = tables.get(Constants.TitlesTabs.EVENTS.index);
-			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.EVENTS.description);
+			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.EVENTS.getDescription());
 			data = tables.get(Constants.TitlesTabs.FUNCTIONS.index);
-			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.FUNCTIONS.description);
+			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.FUNCTIONS.getDescription());
 			data = tables.get(Constants.TitlesTabs.GLOBALQ.index);
-			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.GLOBALQ.description);
+			mainW.resetJTable(new Vector<Vector<String>>(data), Constants.TitlesTabs.GLOBALQ.getDescription());
+			
 			
 			
 			HashMap<String, DebugMessage> debugMessages = (HashMap<String, DebugMessage>) in.readObject();
 			MainGui.debugMessages.putAll(debugMessages);
-			
-		
 			
 			multistateInitials = tables_multistateInitials.right;
 			
 					
 			Vector<String> modelProperties = (Vector<String>)in.readObject();
 			
-			MainGui.modelName = modelProperties.get(0);
+
+		
+			
+			MainGui.multiModel.setModelName(modelProperties.get(0));
 			MainGui.volumeUnit = Integer.parseInt(modelProperties.get(1));
 			MainGui.timeUnit = Integer.parseInt(modelProperties.get(2));
 			MainGui.quantityUnit = Integer.parseInt(modelProperties.get(3));
@@ -246,22 +247,21 @@ class ExportMultistateFormat {
 	
 	
 			
-			/*try{
-					Vector<Species> invisibleSpecies = (Vector<Species>)in.readObject();
-					if(invisibleSpecies!=null) {
-						for(Species sp : invisibleSpecies) {
-							mainW.addInvisibleSpecies(sp.getSpeciesName(), sp.getInitialQuantity_listString(), sp.getCompartment_listString());
-						}
-					}	
+			try{
+			/*	HashMap<String, HashMap<Object, AttributeMap>> mutantsGraph =  (HashMap<String, HashMap<Object, AttributeMap>>) in.readObject();
+				if(mutantsGraph!=null) {
+					MainGui.runManager.initializeMutantsGraph_fromSavedMSMB(mutantsGraph);
+				}*/	
+			
 			} catch(Exception e) {
-				//problems reading the invisibleSpecies, it's ok for old msmb files
-				//e.printStackTrace();
+				//problems reading mutantsDB, it's ok for old msmb files
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	 e.printStackTrace();
 			}
-			*/
+			
 			
 			in.close();
 		} catch (Exception e) {
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				e.printStackTrace();
 		}
 		

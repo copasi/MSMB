@@ -179,7 +179,7 @@ public class FunctionsDB {
 				mappings.put(row_reaction, new_mapping_vector);
 			/*	if(!mapping_vector.equals(new_mapping_vector)) {
 					DebugMessage dm = new DebugMessage();
-					dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+					dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 					dm.setProblem("The signature of function " + f.getName() + " has been modified. \nThe new mapping of reaction at row " + row+ " is " + new_mapping_vector.subList(1, new_mapping_vector.size()));
 					dm.setPriority(DebugConstants.PriorityType.MINOR.priorityCode);
 					dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
@@ -187,7 +187,7 @@ public class FunctionsDB {
 					MainGui.addDebugMessage_ifNotPresent(dm);
 				} else {
 					try {
-						MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.description, DebugConstants.PriorityType.MINOR.priorityCode, row_reaction+1, Constants.ReactionsColumns.KINETIC_LAW.index);
+						MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.REACTIONS.getDescription(), DebugConstants.PriorityType.MINOR.priorityCode, row_reaction+1, Constants.ReactionsColumns.KINETIC_LAW.index);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -196,7 +196,7 @@ public class FunctionsDB {
 			}
 		} else {
 			try {
-				MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.REACTIONS.description, 
+				MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.REACTIONS.getDescription(), 
 						Constants.ReactionsColumns.KINETIC_LAW.index,DebugConstants.PriorityType.MINOR.priorityCode);
 			} catch (Throwable e) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
@@ -250,7 +250,7 @@ public class FunctionsDB {
 		  
 		} catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
-			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, e.getMessage(),Constants.TitlesTabs.FUNCTIONS.description);
+			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, e.getMessage(),Constants.TitlesTabs.FUNCTIONS.getDescription());
 			//throw e;
 		}
 		return ret;
@@ -309,11 +309,11 @@ public class FunctionsDB {
 				if(misused.size() != 0) {
 					String message = new String();
 					if(misused.size() > 0) message += "The following elements are misused: " +misused.toString();
-					//throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description);
-					ret.add(0,new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description));
+					//throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.getDescription());
+					ret.add(0,new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.getDescription()));
 				}
 				Vector<String> PARs = new Vector();
-				if(type.compareTo(Constants.ReactionType.MASS_ACTION.description)!=0) {
+				if(type.compareTo(Constants.ReactionType.MASS_ACTION.getDescription())!=0) {
 					InputStream is1 = new ByteArrayInputStream(equation.getBytes("UTF-8"));
 					MR_Expression_Parser parser1 = new MR_Expression_Parser(is1,"UTF-8");
 					CompleteExpression root1 = parser1.CompleteExpression();
@@ -338,8 +338,8 @@ public class FunctionsDB {
 					}
 				}
 				if(found_non_PAR_missing) {
-					//throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description);
-					ret.add(new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.description));
+					//throw new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.getDescription());
+					ret.add(new MySyntaxException(Constants.ReactionsColumns.KINETIC_LAW.index, message,Constants.TitlesTabs.REACTIONS.getDescription()));
 					
 				}
 			/*else if(found_non_PAR_missing && MainGui.autocompleteWithDefaults) {

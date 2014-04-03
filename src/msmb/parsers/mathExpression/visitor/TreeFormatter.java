@@ -651,7 +651,9 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
    * .......... .. | %08 <EXTENSION_FUNCTION><br>
    * .......... .. | %09 <EXTENSION_REACTION><br>
    * .......... .. | %10 <EXTENSION_FLUX><br>
-   * .......... .. | %11 <MY_SPECIAL_EXTENSION> )<br>
+   * .......... .. | %11 <MY_SPECIAL_EXTENSION><br>
+   * .......... .. | %12 #0 "." #1 <IDENTIFIER><br>
+   * .......... .. | %13 #0 <MUTANT_PARENT_SEPARATOR> #1 <IDENTIFIER> )<br>
    * nodeListOptional -> ( PossibleExtensions() )*<br>
    */
   @Override
@@ -767,8 +769,7 @@ public class TreeFormatter extends DepthFirstVoidVisitor {
    * name -> Name()<br>
    * nodeToken -> <LBRACE><br>
    * nodeChoice -> ( %0 Name()<br>
-   * .......... .. | %1 Literal()<br>
-   * .......... .. | %2 Selector() )<br>
+   * .......... .. | %1 Literal() )<br>
    * nodeToken1 -> <RBRACE><br>
    */
   @Override

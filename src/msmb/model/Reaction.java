@@ -103,7 +103,7 @@ public class Reaction {
 		this.rateLaw = expr;	
 		if(expr.length() == 0) return ;
 		try {
-			CellParsers.parseExpression_getUndefMisused(m,rateLaw, Constants.TitlesTabs.REACTIONS.description,Constants.ReactionsColumns.KINETIC_LAW.description);
+			CellParsers.parseExpression_getUndefMisused(m,rateLaw, Constants.TitlesTabs.REACTIONS.getDescription(),Constants.ReactionsColumns.KINETIC_LAW.getDescription());
 		} catch (Exception ex) {
 			if(ex instanceof MySyntaxException){ 
 				Vector metabolites;
@@ -156,7 +156,7 @@ public class Reaction {
 										if(real_undef.size() >0) {
 											 message += "Missing element definition: " + real_undef.toString();
 										}
-										if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
+										if(misused.size() > 0) message += "\n" + "The following elements are misused: " +misused.toString();
 										throw new MySyntaxException(((MySyntaxException) ex).getColumn(), message,((MySyntaxException) ex).getTable());
 								  } 
 									

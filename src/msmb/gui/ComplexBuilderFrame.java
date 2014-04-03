@@ -44,6 +44,7 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -147,7 +148,7 @@ public class ComplexBuilderFrame extends JDialog {
 	    
 	    try {
 			if(complexSpecies.getCompartment_listString().trim().length() ==0) complexSpecies.setCompartment(MainGui.multiModel, MainGui.compartment_default_for_dialog_window);
-		} catch (MySyntaxException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	    
@@ -235,9 +236,9 @@ public class ComplexBuilderFrame extends JDialog {
 		btnAddToCurrent.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
-				if(listRegularSpecies.getSelectedValuesList().size() > 0) {
-					List<String> regularSpecies = listRegularSpecies.getSelectedValuesList();
-					complexSpecies.addAll_regularSpecies(regularSpecies);
+				if(listRegularSpecies.getSelectedValues().length > 0) {
+					String[] regularSpecies = (String[]) listRegularSpecies.getSelectedValues();
+					complexSpecies.addAll_regularSpecies(Arrays.asList(regularSpecies));
 					for(String e : regularSpecies) {
 					  treePanel.addObject(null, e);
 					}
@@ -694,7 +695,7 @@ public class ComplexBuilderFrame extends JDialog {
 			}
 		}
 		
-		revalidate();
+		//revalidate();
 	}
 
 

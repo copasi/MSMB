@@ -35,8 +35,8 @@ public class MultistateBuilderFrame extends JDialog	 {
 	private JTextField jTextField_species = null;
 	private JLabel jLabel1 = null;
 	private JTextField jTextField_newSite = null;
-	private JComboBox<String> spinner_lower = null;
-	private JComboBox<String> spinner_upper = null;
+	private JComboBox spinner_lower = null;
+	private JComboBox spinner_upper = null;
 	private JTextField jTextField_listStates = null;
 	private JButton jButton = null;
 	private JScrollPane jScrollPane = null;
@@ -50,7 +50,7 @@ public class MultistateBuilderFrame extends JDialog	 {
 	private JTabbedPane jTabbedPane = null;
 	private CustomTableModel_MSMB tableConcentrationSpeciesmodel= null;
 	private CustomJTable_MSMB jTableConcentrationSpecies;
-	private JList<String> jListSite = null;
+	private JList jListSite = null;
 	private JLabel lblWarning;
 	private JRadioButton jRadioBoolean;
 	private HashMap<String, String> renamed_sites = new HashMap<String, String>();
@@ -419,9 +419,9 @@ public class MultistateBuilderFrame extends JDialog	 {
 
 
 
-	private JComboBox<String> getSpinner_lower() {
+	private JComboBox getSpinner_lower() {
 		if (spinner_lower == null) {
-			spinner_lower = new JComboBox<String>();
+			spinner_lower = new JComboBox();
 			spinner_lower.setEditable(true);
 			spinner_lower.addItemListener(new ItemListener () {
 				public void itemStateChanged(ItemEvent e) {
@@ -441,9 +441,9 @@ public class MultistateBuilderFrame extends JDialog	 {
 		return spinner_lower;
 	}
 
-	private JComboBox<String> getSpinner_upper() {
+	private JComboBox getSpinner_upper() {
 		if (spinner_upper == null) {
-			spinner_upper = new JComboBox<String>();
+			spinner_upper = new JComboBox();
 			spinner_upper.setEditable(true);
 			spinner_upper.addItemListener(new ItemListener () {
 				public void itemStateChanged(ItemEvent e) {
@@ -597,7 +597,7 @@ private void applyChangeSite() {
 		int selected = this.jListSite.getSelectedIndex();//this.jTableListSite.getSelectedRow();
 		if(selected == -1) return;
 		//String site = (String) (this.jTableListSite.getModel().getValueAt(selected, 0));
-		String site = this.jListSite.getSelectedValue();
+		String site = (String) this.jListSite.getSelectedValue();
 		if(site.length() == 0 ) return;
 		this.species.deleteSite(site.substring(0, site.indexOf("{")));
 		this.refreshListSites();
@@ -610,7 +610,7 @@ private void applyChangeSite() {
 	
 	
 	private void refreshListSites() {
-		DefaultListModel<String> model = (DefaultListModel<String>)this.jListSite.getModel();
+		DefaultListModel model = (DefaultListModel)this.jListSite.getModel();
 		model.clear();
 		
 		
@@ -662,10 +662,10 @@ private void applyChangeSite() {
 		return jScrollPane;
 	}
 
-	private JList<String> getJListSite() {
+	private JList getJListSite() {
 		if (jListSite == null) {
-			jListSite = new JList<String>();
-			jListSite.setModel(new DefaultListModel<String>());
+			jListSite = new JList();
+			jListSite.setModel(new DefaultListModel());
 			jListSite.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			rendererJListSite = new RendererForErrorsJList();
 			jListSite.setCellRenderer(rendererJListSite);
@@ -710,7 +710,7 @@ private void applyChangeSite() {
 		
 		if(jListSite.getSelectedIndex() == -1) return;
 		
-		String site = jListSite.getSelectedValue();
+		String site = (String) jListSite.getSelectedValue();
 		if(site.length() == 0) return;
 		String name = site.substring(0,site.indexOf("{"));
 		Vector<?> states = species.getSiteStates(name);
@@ -792,7 +792,7 @@ private void applyChangeSite() {
 		if(sp.getCompartments().size() == 0) {
 			try {
 				sp.setCompartment(MainGui.multiModel, MainGui.compartment_default_for_dialog_window);
-			} catch (MySyntaxException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

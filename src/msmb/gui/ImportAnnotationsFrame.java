@@ -110,13 +110,13 @@ public class ImportAnnotationsFrame extends JDialog {
 			MSMBelement msmbElement = element.getSpeciesMSMB();
 			SBMLelementWithAnnotation sbmlElement = element.getSpeciesImport();
 			MutablePair<String, String> toStore = new MutablePair<String, String>(msmbElement.getName(), sbmlElement.getAnnotation());
-			if(msmbElement.elementType.equals(Constants.TitlesTabs.SPECIES.description)) {		
+			if(msmbElement.elementType.equals(Constants.TitlesTabs.SPECIES.getDescription())) {		
 				toStore.left = CellParsers.extractMultistateName(toStore.left);
 				species.add(toStore);
 			}
-			else if(msmbElement.elementType.equals(Constants.TitlesTabs.REACTIONS.description)) {		reactions.add(toStore);	}
-			else if(msmbElement.elementType.equals(Constants.TitlesTabs.GLOBALQ.description)) {		globalQuanties.add(toStore);	}
-			else if(msmbElement.elementType.equals(Constants.TitlesTabs.DEBUG.description)) {		model.add(toStore);	}
+			else if(msmbElement.elementType.equals(Constants.TitlesTabs.REACTIONS.getDescription())) {		reactions.add(toStore);	}
+			else if(msmbElement.elementType.equals(Constants.TitlesTabs.GLOBALQ.getDescription())) {		globalQuanties.add(toStore);	}
+			else if(msmbElement.elementType.equals(Constants.TitlesTabs.DEBUG.getDescription())) {		model.add(toStore);	}
 			else { System.err.println("Element type not supported: "+msmbElement.elementName);}
 		}
 		
@@ -372,7 +372,7 @@ public class ImportAnnotationsFrame extends JDialog {
 		                String processedAnnotation = processAnnotation(annotation,true);
 		                if(processedAnnotation != null) {
 		                	SBMLelementWithAnnotation element = new SBMLelementWithAnnotation(metab.getObjectName(), 
-		                																Constants.TitlesTabs.SPECIES.description,
+		                																Constants.TitlesTabs.SPECIES.getDescription(),
 		                																processedAnnotation);
 		                	listImported_unmatched_model.addElement(element);
 		                }
@@ -388,7 +388,7 @@ public class ImportAnnotationsFrame extends JDialog {
 		                String processedAnnotation = processAnnotation(annotation,false);
 		                if(processedAnnotation != null) {
 		                	SBMLelementWithAnnotation element = new SBMLelementWithAnnotation(model_element.getObjectName(), 
-		                																Constants.TitlesTabs.REACTIONS.description,
+		                																Constants.TitlesTabs.REACTIONS.getDescription(),
 		                																processedAnnotation);
 		                	listImported_unmatched_model.addElement(element);
 		                }
@@ -403,7 +403,7 @@ public class ImportAnnotationsFrame extends JDialog {
 		                String processedAnnotation = processAnnotation(annotation,false);
 		                if(processedAnnotation != null) {
 		                	SBMLelementWithAnnotation element = new SBMLelementWithAnnotation(model_element.getObjectName(), 
-		                																Constants.TitlesTabs.GLOBALQ.description,
+		                																Constants.TitlesTabs.GLOBALQ.getDescription(),
 		                																processedAnnotation);
 		                	listImported_unmatched_model.addElement(element);
 		                }

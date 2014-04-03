@@ -118,7 +118,7 @@ public class Function implements Comparable<Function> {
 		root.accept(nameV);
 		String funName  = nameV.getFunctionName();
 		if(funName.length()==0) {
-			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong function definition", Constants.TitlesTabs.FUNCTIONS.description);
+			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong function definition", Constants.TitlesTabs.FUNCTIONS.getDescription());
 		}
 		
 		int start = stringName.indexOf(funName)+funName.length();
@@ -167,7 +167,7 @@ public class Function implements Comparable<Function> {
 
 				int role = Constants.FunctionParamType.getCopasiTypeFromSignatureType(type);
 				if(role == Constants.FunctionParamType.MISSING.copasiType){
-					throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Role \""+type+"\" is not an available type. Choose between TOOOOOODOOOOOOOOO.", Constants.TitlesTabs.FUNCTIONS.description);
+					throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Role \""+type+"\" is not an available type. Choose between TOOOOOODOOOOOOOOO.", Constants.TitlesTabs.FUNCTIONS.getDescription());
 				}
 				else this.parametesRoles.put(param, role);
 
@@ -175,7 +175,7 @@ public class Function implements Comparable<Function> {
 			} catch(Exception ex) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 					ex.printStackTrace();
-				throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong signature syntax.",Constants.TitlesTabs.FUNCTIONS.description);
+				throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong signature syntax.",Constants.TitlesTabs.FUNCTIONS.getDescription());
 			}
 		}
 	}
@@ -552,13 +552,13 @@ public class Function implements Comparable<Function> {
 		root.accept(nameV);
 		String funName  = nameV.getFunctionName();
 		if(funName.length()==0) {
-			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong function definition", Constants.TitlesTabs.FUNCTIONS.description);
+			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong function definition", Constants.TitlesTabs.FUNCTIONS.getDescription());
 		}
 		
 		int start = newName.indexOf(funName)+funName.length();
 		int end = newName.length()-1;
 		if(start < end) {
-			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong function definition: this method is used to set only the pure name of the function", Constants.TitlesTabs.FUNCTIONS.description);
+			throw new MySyntaxException(Constants.FunctionsColumns.NAME.index, "Wrong function definition: this method is used to set only the pure name of the function", Constants.TitlesTabs.FUNCTIONS.getDescription());
 		}
 			
 		this.name = new String(funName);

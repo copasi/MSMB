@@ -27,6 +27,7 @@ public class CustomJTable extends JTable  {
 	
 	MutablePair<Integer, Integer> cell_to_highlight = null;
 	public MutablePair<Integer, Integer> getCell_to_highlight() {return cell_to_highlight;}
+	
 	public void setCell_to_highlight(MutablePair<Integer, Integer> cell_to_highlight) {
 		this.cell_to_highlight = cell_to_highlight;
 	}
@@ -146,7 +147,8 @@ public void setRowSelectionInterval(int index0, int index1) {
 		
 		
 
-	public boolean isCellUneditable(int row, int col) { return this.model.disabledCell.contains(row+"_"+col);}
+	public boolean isCellUneditable(int row, int col) { 
+		return this.model.disabledCell.contains(row+"_"+col);}
 
 	public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int vColIndex) {
 		Component c = null;

@@ -5,11 +5,6 @@
 function(create_jar _TARGET_NAME)
     set(_JAVA_SOURCE_FILES ${ARGN})
 	
-	#######################
-	## Different variables to detect different OS/Architecture 
-	## !!! MISSING TEST: MAC OS
-	#######################
-	
 	#message("Compiling on OS: " ${CMAKE_HOST_SYSTEM_NAME})
 	#message("CMAKE_HOST_SYSTEM_VERSION "${CMAKE_HOST_SYSTEM_VERSION})
 	#message("CMAKE_HOST_SYSTEM_PROCESSOR: " ${CMAKE_HOST_SYSTEM_PROCESSOR})
@@ -45,6 +40,7 @@ function(create_jar _TARGET_NAME)
 	
 	if("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Darwin")
 		 message("Darwin detected!!")
+		 set(COPASI_DIR_OS "mac_universal")
 	endif("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Darwin")
 	
 	#######################
@@ -312,6 +308,13 @@ if(${COPASI_DIR_OS} MATCHES "linux")
               execute_process(COMMAND echo "export LD_LIBRARY_PATH=./libs:$LD_LIBRARY_PATH \njava -jar" ${_TARGET_NAME}.jar
 WORKING_DIRECTORY ${CMAKE_JAVA_TARGET_OUTPUT_DIR}
 OUTPUT_FILE "${_TARGET_NAME}_launcher.sh")
-        endif(${COPASI_DIR_OS} MATCHES "linux")
+endif(${COPASI_DIR_OS} MATCHES "linux")
+
+if(${COPASI_DIR_OS} MATCHES "Darwin")
+      execute_process(COMMAND echo `
+	  `SOURCE="${BASH_SOURCE[0]}"\nwhile [ -h "$SOURCE" ]; do \nDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"\nSOURCE="$(readlink "$SOURCE")"\n  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"\ndone\nDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"\ncd "$DIR"\njava -Djava.library.path=./libs -jar\n` ${_TARGET_NAME}.jar
+WORKING_DIRECTORY ${CMAKE_JAVA_TARGET_OUTPUT_DIR}
+OUTPUT_FILE "${_TARGET_NAME}_launcher.command")
+endif(${COPASI_DIR_OS} MATCHES "Darwin")
 
 endfunction(create_jar)

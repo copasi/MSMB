@@ -56,7 +56,12 @@ public interface MSMB_Interface {
 	public void setModelName(String newModelName);
 	public String getModelName();
 	
+	public void setModelDefinition(String newModelDefinition);
+	public String getModelDefinition();
+	
 	public void highlightElement(MSMB_Element element, String name);
-
+	
+	//0 = OK, 1 = major issues, 2 = minor issues	
+	public int validateMSMB();
 	
 }

@@ -1048,6 +1048,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * .......... .. | %36 <EXP><br>
    * .......... .. | %37 <NAN1><br>
    * .......... .. | %38 <NAN2><br>
+   * .......... .. | %39 #0 <MUTANT_PARENT_SEPARATOR> #1 <IDENTIFIER><br>
    *
    * @param n - the node to visit
    * @return the user return information
@@ -1093,6 +1094,7 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     // .......... .. | %36 <EXP>
     // .......... .. | %37 <NAN1>
     // .......... .. | %38 <NAN2>
+    // .......... .. | %39 #0 <MUTANT_PARENT_SEPARATOR> #1 <IDENTIFIER>
     final NodeChoice n0C = n.nodeChoice;
     final INode n0CH = n0C.choice;
     switch (n0C.which) {
@@ -1252,6 +1254,16 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
         // %38 <NAN2>
         nRes = n0CH.accept(this);
         break;
+      case 39:
+        // %39 #0 <MUTANT_PARENT_SEPARATOR> #1 <IDENTIFIER>
+        final NodeSequence n0CHS0 = (NodeSequence) n0CH;
+        // #0 <MUTANT_PARENT_SEPARATOR>
+        final INode n0CHS039A0 = n0CHS0.elementAt(0);
+        nRes = n0CHS039A0.accept(this);
+        // #1 <IDENTIFIER>
+        final INode n0CHS039A1 = n0CHS0.elementAt(1);
+        nRes = n0CHS039A1.accept(this);
+        break;
       default:
         // should not occur !!!
         break;
@@ -1337,7 +1349,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
    * .......... .. | %09 <EXTENSION_REACTION><br>
    * .......... .. | %10 <EXTENSION_FLUX><br>
    * .......... .. | %11 <MY_SPECIAL_EXTENSION><br>
-   * .......... .. | %12 #0 "." #1 <IDENTIFIER> )<br>
+   * .......... .. | %12 #0 "." #1 <IDENTIFIER><br>
+   * .......... .. | %13 #0 <MUTANT_PARENT_SEPARATOR> #1 <IDENTIFIER> )<br>
    * nodeListOptional -> ( PossibleExtensions() )*<br>
    *
    * @param n - the node to visit
@@ -1357,7 +1370,8 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
     // .......... .. | %09 <EXTENSION_REACTION>
     // .......... .. | %10 <EXTENSION_FLUX>
     // .......... .. | %11 <MY_SPECIAL_EXTENSION>
-    // .......... .. | %12 #0 "." #1 <IDENTIFIER> )
+    // .......... .. | %12 #0 "." #1 <IDENTIFIER>
+    // .......... .. | %13 #0 <MUTANT_PARENT_SEPARATOR> #1 <IDENTIFIER> )
     final NodeChoice n0 = n.nodeChoice;
     final NodeChoice n0C = n0;
     final INode n0CH = n0C.choice;
@@ -1419,6 +1433,16 @@ public class DepthFirstRetVisitor<R> implements IRetVisitor<R> {
         // #1 <IDENTIFIER>
         final INode n0CHS012A1 = n0CHS0.elementAt(1);
         nRes = n0CHS012A1.accept(this);
+        break;
+      case 13:
+        // %13 #0 <MUTANT_PARENT_SEPARATOR> #1 <IDENTIFIER>
+        final NodeSequence n0CHS1 = (NodeSequence) n0CH;
+        // #0 <MUTANT_PARENT_SEPARATOR>
+        final INode n0CHS113A0 = n0CHS1.elementAt(0);
+        nRes = n0CHS113A0.accept(this);
+        // #1 <IDENTIFIER>
+        final INode n0CHS113A1 = n0CHS1.elementAt(1);
+        nRes = n0CHS113A1.accept(this);
         break;
       default:
         // should not occur !!!

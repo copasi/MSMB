@@ -232,7 +232,7 @@ public class MultistateSpecies extends Species implements Serializable {
 			}
 		}
 		if((foundFalse||foundTrue) && states.size()>2) {
-			throw new Exception("Boolean keyword used in a list different from \""+BooleanType.TRUE.description+","+BooleanType.FALSE.description+"\"");
+			throw new Exception("Boolean keyword used in a list different from \""+BooleanType.TRUE.getDescription()+","+BooleanType.FALSE.getDescription()+"\"");
 		}
 		
 		sites.put(name, states);
@@ -351,7 +351,7 @@ public class MultistateSpecies extends Species implements Serializable {
 				}
 				list +=(String)states.get(states.size()-1);
 		/*	} else {
-				list += Constants.BooleanType.TRUE.description + "," + Constants.BooleanType.FALSE.description;
+				list += Constants.BooleanType.TRUE.getDescription() + "," + Constants.BooleanType.FALSE.getDescription();
 			}*/
 		}
 		
@@ -444,7 +444,7 @@ public class MultistateSpecies extends Species implements Serializable {
 			}
 			else r+=values.get(0) + ":" + values.get(values.size()-1);
 		} else if(ty.getType() == SiteType.BOOLEAN) {
-			r+= Constants.BooleanType.TRUE.description + "," + Constants.BooleanType.FALSE.description;
+			r+= Constants.BooleanType.TRUE.getDescription() + "," + Constants.BooleanType.FALSE.getDescription();
 	    }else {
 			for(int i = 0; i < values.size()-1; i++) {
 				r+= values.get(i) + ",";
@@ -476,7 +476,7 @@ public class MultistateSpecies extends Species implements Serializable {
 			SiteType mergedType = merged.sites_type.get(key);
 			
 			if((thisType.circular != mergedType.circular) || thisType.type != mergedType.type) {
-				throw new MySyntaxException(Constants.SpeciesColumns.NAME.index, "Inconsistent site type during merging.", Constants.TitlesTabs.SPECIES.description);
+				throw new MySyntaxException(Constants.SpeciesColumns.NAME.index, "Inconsistent site type during merging.", Constants.TitlesTabs.SPECIES.getDescription());
 			}
 			if(thisType.getType() == SiteType.BOOLEAN) {
 				continue;
@@ -491,7 +491,7 @@ public class MultistateSpecies extends Species implements Serializable {
 			    	} catch(Exception ex) {
 			    		if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 			    			ex.printStackTrace();
-			    		throw new MySyntaxException(Constants.SpeciesColumns.NAME.index, "Site type range with states no numbers", Constants.TitlesTabs.SPECIES.description);
+			    		throw new MySyntaxException(Constants.SpeciesColumns.NAME.index, "Site type range with states no numbers", Constants.TitlesTabs.SPECIES.getDescription());
 			    	}
 			    }
 			   

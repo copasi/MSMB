@@ -213,13 +213,15 @@ public interface MR_Expression_ParserConstants {
   /** RegularExpression Id. */
   int AND = 107;
   /** RegularExpression Id. */
-  int IDENTIFIER = 108;
+  int MUTANT_PARENT_SEPARATOR = 108;
   /** RegularExpression Id. */
-  int LETTER = 109;
+  int IDENTIFIER = 109;
   /** RegularExpression Id. */
-  int DIGIT = 110;
+  int LETTER = 110;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 111;
+  int DIGIT = 111;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 112;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -334,6 +336,7 @@ public interface MR_Expression_ParserConstants {
     "\"||\"",
     "\"xor\"",
     "\"&&\"",
+    "\"@\"",
     "<IDENTIFIER>",
     "<LETTER>",
     "<DIGIT>",

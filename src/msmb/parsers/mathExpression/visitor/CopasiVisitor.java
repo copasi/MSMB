@@ -29,6 +29,7 @@ import org.COPASI.CMetab;
 import org.COPASI.CModel;
 import org.COPASI.CModelValue;
 import org.COPASI.CReaction;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 
 public class CopasiVisitor extends DepthFirstVoidVisitor {
@@ -75,10 +76,29 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 		super.visit(n);
 	}
 	
-		
+	private boolean fromRunManager = false;
+	private boolean referenceToParent = false;
+	private String currentElementNameForRM = null;
+	Vector<MutablePair<String, String>> parentsRefs = new Vector<MutablePair<String,String>>();
+	
+	
+	
 	@Override
 	public void visit(PossibleExtensions n) {
-		//nothing it will be taken care of by generateElement
+		//nothing it will be taken care of by generateElement, unless is from RM
+		
+		if(fromRunManager) {
+			String ext = ToStringVisitor.toString(n);
+			if(ext.startsWith(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR))) {
+				String parent = ext.substring(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR).length());
+				parentsRefs.add(new MutablePair<String, String>(currentElementNameForRM, parent));
+				referenceToParent = true;
+			} else {
+				referenceToParent = false;
+			}
+		} else {
+			referenceToParent = false;
+		}
 	}
 	
 	@Override
@@ -90,9 +110,14 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	}
 	
 	boolean nodeIsAFunctionCall = false;
+	
+	
 	@Override
 	public void visit(SpeciesReferenceOrFunctionCall_prefix n) {
 		String name = ToStringVisitor.toString(n.name.nodeChoice.choice);
+		if(fromRunManager){
+			currentElementNameForRM = new String(name);
+		}
 		String fun = new String();
 		if(n.nodeOptional.present())  {
 			NodeOptional nodeOptional = (NodeOptional) ((NodeSequence) n.nodeOptional.node).nodes.get(1);
@@ -117,6 +142,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 		}
 		
 	}
+	
 	  
 	@Override
 	public void visit(SpeciesReferenceOrFunctionCall n) {
@@ -316,6 +342,7 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	
 	public void generateCopasiElement(String element) {
 		String element_copasiTerm = new String();
+	
 		if(element.compareTo(MR_Expression_ParserConstants.tokenImage[MR_Expression_ParserConstantsNOQUOTES.TIME]) ==0 
 			|| element.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.TIME)) ==0) {
 			if(!isInitialExpression)	element_copasiTerm = model.getObject(new CCopasiObjectName(Constants.COPASI_STRING_TIME)).getCN().getString();
@@ -398,6 +425,16 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 
 					}
 				} else {
+					if(fromRunManager && referenceToParent) {
+						System.out.println("element: "+element );
+						int indexOfSeparator = element.indexOf(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR));
+						copasiExpression+=element.substring(0, indexOfSeparator) 
+								+ MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES) 
+								+MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR)
+								+element.substring(indexOfSeparator+1);
+						return;
+					}
+					
 					if(element_quantity_quantifier == null && element_timing_quantifier == null) {
 						if(!conc) element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialParticleNumber")).getCN().getString();
 						else element_copasiTerm = metab.getObject(new CCopasiObjectName("Reference=InitialConcentration")).getCN().getString();
@@ -428,6 +465,15 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 						else if(element_timing_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_RATE))==0) element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
 						else element_copasiTerm = null;
 					} else {
+						if(fromRunManager && referenceToParent) {
+							System.out.println("element: "+element );
+							int indexOfSeparator = element.indexOf(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR));
+							copasiExpression+=element.substring(0, indexOfSeparator) 
+									+ MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ) 
+									+MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR)
+									+element.substring(indexOfSeparator+1);
+							return;
+						}
 						if(element_timing_quantifier==null) element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=InitialValue")).getCN().getString();
 						else if(element_timing_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_INIT))==0) element_copasiTerm = m.getObject(new CCopasiObjectName("Reference=InitialValue")).getCN().getString();
 						else element_copasiTerm = null;
@@ -445,6 +491,15 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 							else if(element_timing_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_RATE))==0) element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=Rate")).getCN().getString();
 							else element_copasiTerm = null;
 						} else {
+							if(fromRunManager && referenceToParent) {
+								System.out.println("element: "+element );
+								int indexOfSeparator = element.indexOf(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR));
+								copasiExpression+=element.substring(0, indexOfSeparator) 
+										+ MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT) 
+										+MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR)
+										+element.substring(indexOfSeparator+1);
+								return;
+							}
 							if(element_timing_quantifier==null) element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=InitialVolume")).getCN().getString();
 							else if(element_timing_quantifier.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_INIT))==0) element_copasiTerm = comp.getObject(new CCopasiObjectName("Reference=InitialVolume")).getCN().getString();
 							else element_copasiTerm = null;
@@ -652,6 +707,16 @@ public class CopasiVisitor extends DepthFirstVoidVisitor {
 	public boolean containsSUM() {
 		return expressionWithSumMultistate;
 	}
+
+	public void setFromRunManagerVisit(boolean b) {
+		fromRunManager  = b;
+	}
+
+	public Vector<MutablePair<String, String>> getParentsReferences() {
+		return parentsRefs;
+	}
+
+	
 	
 	/*public MultistateSpecies extract_object_of_SUM(String element) throws Exception {
 		*String weightFunctionString = extract_weightFunction_in_SUM(element);

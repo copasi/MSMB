@@ -42,6 +42,12 @@ public class EvaluateExpressionVisitor extends DepthFirstVoidVisitor {
 
 	private MultistateSpecies multistateForDependentSUM = null;
 
+	private boolean fromRunManager = false;
+	Vector<String> parentsRefs = new Vector<String>();
+	
+	public void setFromRunManager(boolean b) {fromRunManager = b;}
+	
+
 	
 		//for now only simple mathematical expressions are allowed, no function calls.
 	public EvaluateExpressionVisitor(MultiModel mm, boolean doNotEvaluate)  { 
@@ -111,6 +117,13 @@ public class EvaluateExpressionVisitor extends DepthFirstVoidVisitor {
 				expression += elementValue;
 				splittedExpression.add(elementValue.toString());
 			} else {
+				if(fromRunManager) {
+					String name = ToStringVisitor.toString(n);
+					if(name.startsWith(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR))) {
+						String parent = name.substring(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR).length());
+						parentsRefs.add(parent);
+					}
+				} 
 				expression += element;
 				splittedExpression.add(element);
 			}
@@ -174,6 +187,27 @@ public class EvaluateExpressionVisitor extends DepthFirstVoidVisitor {
 	
 	public Integer evaluateExpression() {
 		
+	/*	ReversePolishNotation rpn = new ReversePolishNotation(new HashMap<String,Integer>());
+		double r;
+		try {
+			String[] output = rpn.infixToRPN(splittedExpression.toArray());
+			r = rpn.evaluateRPN(output);
+		} catch (Exception e) {
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
+			return null;
+		}*/
+	    //System.out.println("Evaluated expression: "+r);
+	    Integer ret = new Long(Math.round(evaluateExpression_notTruncated())).intValue();
+	    //System.out.println("Rounded to: "+ret);
+		return ret;
+	}
+	
+	
+	
+public Double evaluateExpression_notTruncated() {
+	
+	
+	
 		ReversePolishNotation rpn = new ReversePolishNotation(new HashMap<String,Integer>());
 		double r;
 		try {
@@ -183,11 +217,14 @@ public class EvaluateExpressionVisitor extends DepthFirstVoidVisitor {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
 			return null;
 		}
-	    //System.out.println("Evaluated expression: "+r);
-	    Integer ret = new Long(Math.round(r)).intValue();
-	    //System.out.println("Rounded to: "+ret);
-		return ret;
+	   
+		return new Double(r);
 	}
+
+public Vector<String> getParentsReferences() {
+	return parentsRefs;
+}
+
 
 	
 

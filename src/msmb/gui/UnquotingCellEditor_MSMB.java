@@ -23,7 +23,7 @@ public class UnquotingCellEditor_MSMB extends  UnquotingCellEditor{
 	    
 	  String tableModelName = ((CustomTableModel)(table.getModel())).getTableName();
        if(MainGui.cellTableEdited.compareTo(tableModelName) !=0) MainGui.resetViewsInExpressions();
-       if(tableModelName.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0 && table.getRowCount() > row+1) {
+       if(tableModelName.compareTo(Constants.TitlesTabs.REACTIONS.getDescription()) == 0 && table.getRowCount() > row+1) {
 			try {
 				MainGui.setView(Constants.Views.EDITABLE.index,tableModelName,row,Constants.ReactionsColumns.KINETIC_LAW.index);
 			} catch (Throwable e) {

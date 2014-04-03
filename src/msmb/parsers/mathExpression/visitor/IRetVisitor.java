@@ -405,6 +405,7 @@ public interface IRetVisitor<R> {
    * .......... .. | %36 <EXP><br>
    * .......... .. | %37 <NAN1><br>
    * .......... .. | %38 <NAN2><br>
+   * .......... .. | %39 #0 <MUTANT_PARENT_SEPARATOR> #1 <IDENTIFIER><br>
    *
    * @param n - the node to visit
    * @return the user return information
@@ -450,7 +451,8 @@ public interface IRetVisitor<R> {
    * .......... .. | %09 <EXTENSION_REACTION><br>
    * .......... .. | %10 <EXTENSION_FLUX><br>
    * .......... .. | %11 <MY_SPECIAL_EXTENSION><br>
-   * .......... .. | %12 #0 "." #1 <IDENTIFIER> )<br>
+   * .......... .. | %12 #0 "." #1 <IDENTIFIER><br>
+   * .......... .. | %13 #0 <MUTANT_PARENT_SEPARATOR> #1 <IDENTIFIER> )<br>
    * nodeListOptional -> ( PossibleExtensions() )*<br>
    *
    * @param n - the node to visit

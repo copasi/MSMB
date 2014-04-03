@@ -3,6 +3,7 @@ package msmb.utility;
 import java.awt.Color;
 import java.util.Vector;
 
+import javax.swing.Icon;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
@@ -18,6 +19,7 @@ import org.COPASI.CModelValue;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 
+import msmb.gui.MainGui;
 import  msmb.parsers.mathExpression.MR_Expression_ParserConstants;
 import  msmb.parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
 
@@ -201,6 +203,10 @@ public class Constants {
 				    }
 				   return new String();
 			   }
+
+			public String getDescription() {
+				return description;
+			}
 		};
 		
 		
@@ -269,6 +275,10 @@ public class Constants {
 					    }
 					   return -100;
 				   }
+
+			public String getDescription() {
+				return description;
+			}
 		};
 		
 		
@@ -327,6 +337,10 @@ public class Constants {
 				    }
 				   return new String();
 			   }
+
+			public String getDescription() {
+				return description;
+			}
 		};
 		
 		
@@ -392,6 +406,10 @@ public class Constants {
 					    }
 					   return -100;
 				   }
+
+			public String getDescription() {
+				return description;
+			}
 		};
 		
 		public static final Vector<String> globalQTypes;
@@ -499,6 +517,10 @@ public class Constants {
 				    }
 				   return new String();
 			   }
+
+			public String getDescription() {
+				return description;
+			}
 		};
 		
 		
@@ -565,6 +587,10 @@ public class Constants {
 					    }
 					   return -100;
 				   }
+
+			public String getDescription() {
+					return description;
+			}
 		};
 		
 		public static final Vector<String> reactionTypes;
@@ -697,6 +723,11 @@ public class Constants {
 				    }
 				   return new String();
 			   }
+
+			public String getDescription() {
+				
+				return description;
+			}
 		};
 		
 		public static final Vector<String> deleteActions;
@@ -751,6 +782,11 @@ public class Constants {
 				    }
 				   return new String();
 			   }
+
+			public String getDescription() {
+			
+				return description;
+			}
 			   
 			   
 		};
@@ -884,6 +920,10 @@ public class Constants {
 				if(test.compareTo(string)==0) return true;
 				return false;
 			}
+
+			public String getDescription() {
+				return description;
+			}
 		};
 		
 		public static enum SpeciesType {
@@ -951,6 +991,10 @@ public class Constants {
 					    }
 					   return -100;
 				   }
+
+			public String getDescription() {
+				return description;
+			}
 		};
 		
 		public static final Vector<String> speciesTypes;
@@ -1013,6 +1057,10 @@ public class Constants {
 				    }
 				   return new String();
 			   }
+
+			public String getDescription() {
+				return description;
+			}
 		};
 		
 		
@@ -1228,6 +1276,14 @@ public class Constants {
 		}
 		
 		public static enum UnitTypeVolume {
+			/*FL("fl", CUnit.fl), 
+			ML("ml", CUnit.ml),
+			PL("pl", CUnit.pl),
+			NL("nl", CUnit.nl),
+			MICROL("ml", CUnit.microl),
+			L("l", CUnit.l),
+			M3("m3",CUnit.m3),
+			DIMENSIONLESS_VOL("dimensionlessVol", CUnit.dimensionlessVolume);*/
 			FL("fl", CModel.fl), 
 			ML("ml", CModel.ml),
 			PL("pl", CModel.pl),
@@ -1269,6 +1325,16 @@ public class Constants {
 		
 			
 		public static enum UnitTypeTime {	
+			/*FS("fs", CUnit.fs), 
+			MS("ms", CUnit.ms),
+			PS("ps", CUnit.ps),
+			NS("ns", CUnit.ns),
+			MICROS("micros", CUnit.micros),
+			S("s", CUnit.s),
+			MIN("min",CUnit.min),
+			H("h",CUnit.h),
+			D("d",CUnit.d),
+			DIMENSIONLESS_TIME("dimensionlessTime", CUnit.dimensionlessTime);*/
 			FS("fs", CModel.fs), 
 			MS("ms", CModel.ms),
 			PS("ps", CModel.ps),
@@ -1311,6 +1377,14 @@ public class Constants {
 		
 		
 		public static enum UnitTypeQuantity {
+			/*NUMBER("#", CUnit.number), 
+			FMOL("fmol", CUnit.fMol), 
+			MMOL("mmol", CUnit.mMol),
+			PMOL("pmol", CUnit.pMol),
+			NMOL("nmol", CUnit.nMol),
+			MICROMOL("micromol", CUnit.microMol),
+			MOL("mol", CUnit.Mol),
+			DIMENSIONLESS_QUANTITY("dimensionlessQuantity", CUnit.dimensionlessQuantity);*/
 			NUMBER("#", CModel.number), 
 			FMOL("fmol", CModel.fMol), 
 			MMOL("mmol", CModel.mMol),
@@ -1386,7 +1460,8 @@ public class Constants {
 				 
 			   private final static int numTabMSMB = 8;
 				
-			   public final String description;
+			   private final String descriptionAC = "Module variables";
+			   private final String description;
 			   public final int index;
 			   
 			   TitlesTabs(String descr, int index) {
@@ -1394,12 +1469,18 @@ public class Constants {
 			         this.index = index;
 			   }
 			   
+			   public String getDescription() {
+				   if(MainGui.fromInterface && description.equals(GLOBALQ.description)) return descriptionAC;
+				   else return description;
+			   }
+			   
 			   public static int getIndexFromDescription(String descr){
 				   if (descr != null) {
-					      for (TitlesTabs b : TitlesTabs.values()) {
-					        if (descr.compareTo(b.description)==0) {
-					          return b.index;
-					      }
+					   	      for (TitlesTabs b : TitlesTabs.values()) {
+					        	if (descr.compareTo(b.getDescription())==0) {
+					        			return b.index;
+					        	} 
+					     
 					    }
 				   } 
 				   return -1;
@@ -1409,7 +1490,7 @@ public class Constants {
 			   public static String getDescriptionFromIndex(int index){
 				        for (TitlesTabs b : TitlesTabs.values()) {
 					        if (index == b.index) {
-					          return new String(b.description);
+					          return new String(b.getDescription());
 					      }
 					} 
 				   return new String();
@@ -1471,6 +1552,11 @@ public class Constants {
 				   } 
 				   return null;
 			   }
+
+			public String getDescription() {
+			
+				return description;
+			}
 				   
 		}
 		
@@ -1551,6 +1637,11 @@ public class Constants {
 			Preferences(String descr) {
 				   this.description = descr;
 		   }
+
+			public String getDescription() {
+				
+				return description;
+			}
 		};
 		
 		     // A DefaultCompletionProvider is the simplest concrete implementation

@@ -50,7 +50,6 @@ public class GraphicalProperties {
 		 while(it.hasNext()) {
 			 JButton current = it.next();
 			 current.setFont(MainGui.customFont);
-			 
 		 }
 		 
 		 List<JTextPane> textPanes = SwingUtils.getDescendantsOfClass(JTextPane.class, container);
@@ -165,7 +164,7 @@ public class GraphicalProperties {
 				 current.setFont(customFont);
 			 }
 
-		 container.revalidate();
+		// container.revalidate();
 		 SwingUtilities.updateComponentTreeUI(container);
 		
 	}
@@ -291,7 +290,7 @@ public class GraphicalProperties {
 				 current.setEnabled(enabled);
 			 }
 
-		 container.revalidate();
+		// container.revalidate();
 		 SwingUtilities.updateComponentTreeUI(container);
 		
 	}

@@ -29,7 +29,7 @@ public class Compartment {
 		if(expr.length()==0) return;
 		this.expression = expr;
 		try {
-				CellParsers.parseExpression_getUndefMisused(m, expr, Constants.TitlesTabs.COMPARTMENTS.description,Constants.CompartmentsColumns.EXPRESSION.description);
+				CellParsers.parseExpression_getUndefMisused(m, expr, Constants.TitlesTabs.COMPARTMENTS.getDescription(),Constants.CompartmentsColumns.EXPRESSION.getDescription());
 			} catch (MySyntaxException ex) {
 				throw ex;
 			}
@@ -71,7 +71,7 @@ public class Compartment {
 		} catch (Exception e) {// not a number, expression... so let's try to parse it
 			if(initialVolume.length() == 0) return ;
 			try {
-				CellParsers.parseExpression_getUndefMisused(m, initialVolume, Constants.TitlesTabs.COMPARTMENTS.description,Constants.CompartmentsColumns.INITIAL_SIZE.description);
+				CellParsers.parseExpression_getUndefMisused(m, initialVolume, Constants.TitlesTabs.COMPARTMENTS.getDescription(),Constants.CompartmentsColumns.INITIAL_SIZE.getDescription());
 			} catch (Exception ex) {
 				throw ex;
 			}

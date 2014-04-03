@@ -96,12 +96,12 @@ public class PrintTablesToPDF {
         		table.getDefaultCell().setBackgroundColor(BaseColor.LIGHT_GRAY);
 
         		Vector<String> header = null;
-        		if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.SPECIES.description)==0) header = new Vector(Constants.species_columns);
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) header = new Vector(Constants.compartments_columns);
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.EVENTS.description)==0) header = new Vector(Constants.events_columns);
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) header = new Vector(Constants.functions_columns);
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) header = new Vector(Constants.globalQ_columns);
-        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.description)==0) header = new Vector(Constants.reactions_columns);
+        		if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.SPECIES.getDescription())==0) header = new Vector(Constants.species_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())==0) header = new Vector(Constants.compartments_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.EVENTS.getDescription())==0) header = new Vector(Constants.events_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription())==0) header = new Vector(Constants.functions_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())==0) header = new Vector(Constants.globalQ_columns);
+        		else if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) header = new Vector(Constants.reactions_columns);
         		else if(tablemodel.getTableName().compareTo(Constants.MULTISTATE_TITLE_TABLE_PDF)==0) {
         			header = new Vector<String>();
         			header.add("Single state of Multistate Species");
@@ -127,7 +127,7 @@ public class PrintTablesToPDF {
         				String value = tablemodel.getValueAt(i1, j).toString();
         				if(value.length() <=0) value = " ";
         				Chunk ch = new Chunk(value);
-        				if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0 &&
+        				if(tablemodel.getTableName().compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription())==0 &&
         						j==Constants.FunctionsColumns.NAME.index) {
         					ch.setSplitCharacter(new CommaSplitCharacter() );
         				}
@@ -187,7 +187,7 @@ public class PrintTablesToPDF {
      	element = tablesAndLastTabInfo.get(i);
         i++;
         String interpretation0 = new String();
-        if((boolean) element) interpretation0 = "Concentration";
+        if(Boolean.parseBoolean(element.toString())) interpretation0 = "Concentration";
         else interpretation0 = "Particle Number";
      	p = new Chunk("If no reference is specified, in expressions the "+interpretation0 +" is used for calculations", font);
      	chapter2.add(p);
@@ -198,7 +198,7 @@ public class PrintTablesToPDF {
      	element = tablesAndLastTabInfo.get(i);
         i++;
         String interpretation = new String();
-        if((boolean) element) interpretation = "Concentration";
+        if(Boolean.parseBoolean(element.toString())) interpretation = "Concentration";
         else interpretation = "Particle Number";
      	p = new Chunk("Quantity column for initial value is interpreted as "+interpretation, font);
      	chapter2.add(p);
@@ -234,7 +234,7 @@ public class PrintTablesToPDF {
 		
 	    ArrayList<Double> w = null;
 	    
-	    if(tableName.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
+	    if(tableName.compareTo(Constants.TitlesTabs.SPECIES.getDescription())==0) {
 	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.species_columns.size()+1] ));
 	    	w.set(0, new Double(0.05F));
 	    	w.set(Constants.SpeciesColumns.NAME.index, new Double(0.25F));
@@ -243,7 +243,7 @@ public class PrintTablesToPDF {
 	    	w.set(Constants.SpeciesColumns.INITIAL_QUANTITY.index, new Double(0.2F));
 	    	w.set(Constants.SpeciesColumns.NOTES.index, new Double(0.1F));
 	    	w.set(Constants.SpeciesColumns.TYPE.index, new Double(0.15F));
-	    } else if(tableName.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
+	    } else if(tableName.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())==0) {
 	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.globalQ_columns.size()+1] ));
 	    	w.set(0, new Double(0.05F));
 	    	w.set(Constants.GlobalQColumns.NAME.index, new Double(0.2F));
@@ -251,7 +251,7 @@ public class PrintTablesToPDF {
 	    	w.set(Constants.GlobalQColumns.VALUE.index, new Double(0.3F));
 	    	w.set(Constants.GlobalQColumns.NOTES.index, new Double(0.1F));
 	    	w.set(Constants.GlobalQColumns.TYPE.index, new Double(0.15F));
-	    } else if(tableName.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {
+	    } else if(tableName.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())==0) {
 	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.compartments_columns.size()+1] ));
 	    	w.set(0, new Double(0.05F));
 	    	w.set(Constants.CompartmentsColumns.NAME.index, new Double(0.2F));
@@ -259,7 +259,7 @@ public class PrintTablesToPDF {
 	    	w.set(Constants.CompartmentsColumns.INITIAL_SIZE.index, new Double(0.3F));
 	    	w.set(Constants.CompartmentsColumns.NOTES.index, new Double(0.1F));
 	    	w.set(Constants.CompartmentsColumns.TYPE.index, new Double(0.15F));
-	    } else if(tableName.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+	    } else if(tableName.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) {
 	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.reactions_columns.size()+1] )); 
 	    	w.set(0, new Double(0.05F));
 	    	w.set(Constants.ReactionsColumns.NAME.index, new Double(0.1F));
@@ -268,14 +268,14 @@ public class PrintTablesToPDF {
 	    	w.set(Constants.ReactionsColumns.EXPANDED.index, new Double(0.0F)); //not printing the columns with the buttons
 	    	w.set(Constants.ReactionsColumns.NOTES.index, new Double(0.1F));
 	    	w.set(Constants.ReactionsColumns.TYPE.index, new Double(0.15F));
-	    } else if(tableName.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {
+	    } else if(tableName.compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription())==0) {
 	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.functions_columns.size()+1] )); 
 	    	w.set(0, new Double(0.05F));
 	    	w.set(Constants.FunctionsColumns.NAME.index, new Double(0.4F));
 	    	w.set(Constants.FunctionsColumns.EQUATION.index, new Double(0.4F));
 	    	w.set(Constants.FunctionsColumns.PARAMETER_ROLES.index, new Double(0.0F)); //not printing the columns with the buttons
 	    	w.set(Constants.FunctionsColumns.NOTES.index, new Double(0.1F));
-	    } else if(tableName.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {
+	    } else if(tableName.compareTo(Constants.TitlesTabs.EVENTS.getDescription())==0) {
 	    	w = new ArrayList<Double>(Arrays.asList( new Double[Constants.events_columns.size()+1] )); 
 	    	w.set(0, new Double(0.05F));
 	    	w.set(Constants.EventsColumns.NAME.index, new Double(0.1F));
@@ -298,16 +298,16 @@ public class PrintTablesToPDF {
 	private void printDebugMessages(Chapter chapter, HashMap<String, DebugMessage> debugMessages) {
     		Font font = new Font(FontFamily.HELVETICA, 12, Font.NORMAL, BaseColor.BLACK);
 		Vector<String> priorities = new Vector<String>();
-		priorities.add(DebugConstants.PriorityType.MAJOR.description);
-		priorities.add(DebugConstants.PriorityType.PARSING.description);
-		priorities.add(DebugConstants.PriorityType.INCONSISTENCIES.description);
-		priorities.add(DebugConstants.PriorityType.MISSING.description);
-		priorities.add(DebugConstants.PriorityType.EMPTY.description);
-		priorities.add(DebugConstants.PriorityType.DEFAULTS.description);
-		priorities.add(DebugConstants.PriorityType.MINOR.description);
-		priorities.add(DebugConstants.PriorityType.MINOR_IMPORT_ISSUES.description);
-		priorities.add(DebugConstants.PriorityType.MINOR_EMPTY.description);
-		//priorities.add(DebugConstants.PriorityType.SIMILARITY.description);
+		priorities.add(DebugConstants.PriorityType.MAJOR.getDescription());
+		priorities.add(DebugConstants.PriorityType.PARSING.getDescription());
+		priorities.add(DebugConstants.PriorityType.INCONSISTENCIES.getDescription());
+		priorities.add(DebugConstants.PriorityType.MISSING.getDescription());
+		priorities.add(DebugConstants.PriorityType.EMPTY.getDescription());
+		priorities.add(DebugConstants.PriorityType.DEFAULTS.getDescription());
+		priorities.add(DebugConstants.PriorityType.MINOR.getDescription());
+		priorities.add(DebugConstants.PriorityType.MINOR_IMPORT_ISSUES.getDescription());
+		priorities.add(DebugConstants.PriorityType.MINOR_EMPTY.getDescription());
+		//priorities.add(DebugConstants.PriorityType.SIMILARITY.getDescription());
 			
 		for(String priorityDescr : priorities) {
 			Paragraph title = new Paragraph("Priority: "+priorityDescr);

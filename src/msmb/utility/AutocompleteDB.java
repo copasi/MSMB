@@ -117,7 +117,7 @@ public class AutocompleteDB {
 		completionOptions.put(condition, element);
 		
 		
-		condition = Constants.TitlesTabs.SPECIES.description + initial;
+		condition = Constants.TitlesTabs.SPECIES.getDescription() + initial;
 		element = new Vector();	
 		 completion = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES);
 		element.add(completion);
@@ -130,7 +130,7 @@ public class AutocompleteDB {
 		completionOptions.put(condition, element);
 		
 		
-		condition = Constants.TitlesTabs.SPECIES.description;
+		condition = Constants.TitlesTabs.SPECIES.getDescription();
 		element = new Vector();	
 		completion = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES);
 		element.add(completion);
@@ -146,7 +146,7 @@ public class AutocompleteDB {
 		element.add(completion);	
 		completionOptions.put(condition, element);
 		
-		condition = Constants.TitlesTabs.COMPARTMENTS.description + initial;
+		condition = Constants.TitlesTabs.COMPARTMENTS.getDescription() + initial;
 		element = new Vector();	
 		completion = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT);
 		element.add(completion);
@@ -154,7 +154,7 @@ public class AutocompleteDB {
 		element.add(completion);	
 		completionOptions.put(condition, element);
 		
-		condition = Constants.TitlesTabs.COMPARTMENTS.description;
+		condition = Constants.TitlesTabs.COMPARTMENTS.getDescription();
 		element = new Vector();	
 		completion = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT);
 		element.add(completion);
@@ -168,7 +168,7 @@ public class AutocompleteDB {
 		
 		
 		
-		condition = Constants.TitlesTabs.GLOBALQ.description + initial;
+		condition = Constants.TitlesTabs.GLOBALQ.getDescription() + initial;
 		element = new Vector();	
 		completion = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ);
 		element.add(completion);
@@ -177,7 +177,7 @@ public class AutocompleteDB {
 		completionOptions.put(condition, element);
 		
 		
-		condition = Constants.TitlesTabs.GLOBALQ.description;
+		condition = Constants.TitlesTabs.GLOBALQ.getDescription();
 		element = new Vector();	
 		completion = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ);
 		element.add(completion);
@@ -365,9 +365,9 @@ public class AutocompleteDB {
 
 			if(definedInTables.size() == 1) {
 				String where = new String();
-				if(definedInTables.get(0).intValue()==Constants.TitlesTabs.SPECIES.index) where =  Constants.TitlesTabs.SPECIES.description;
-				else if(definedInTables.get(0).intValue()==Constants.TitlesTabs.COMPARTMENTS.index) where =  Constants.TitlesTabs.COMPARTMENTS.description;
-				else if(definedInTables.get(0).intValue()==Constants.TitlesTabs.GLOBALQ.index) where =  Constants.TitlesTabs.GLOBALQ.description;
+				if(definedInTables.get(0).intValue()==Constants.TitlesTabs.SPECIES.index) where =  Constants.TitlesTabs.SPECIES.getDescription();
+				else if(definedInTables.get(0).intValue()==Constants.TitlesTabs.COMPARTMENTS.index) where =  Constants.TitlesTabs.COMPARTMENTS.getDescription();
+				else if(definedInTables.get(0).intValue()==Constants.TitlesTabs.GLOBALQ.index) where =  Constants.TitlesTabs.GLOBALQ.getDescription();
 				if(isInitialExpression) where += initial;
 				completions.addAll(completionOptions.get(where));
 			}
@@ -432,17 +432,17 @@ public class AutocompleteDB {
 			return getAllNamedElements();
 		}
 		else if(MainGui.autocompletionContext==Constants.FunctionParamType.SUBSTRATE.copasiType) {
-			 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+			 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) {
 				 return MainGui.getSubstratesSelectedReaction();
 			} else return new Vector<Vector<String>>();
 		}
 		else if(MainGui.autocompletionContext==Constants.FunctionParamType.MODIFIER.copasiType) {
-			 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+			 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) {
 				 return MainGui.getModifiersSelectedReaction();
 			} else return new Vector<Vector<String>>();
 		}
 		else if(MainGui.autocompletionContext==Constants.FunctionParamType.PRODUCT.copasiType) {
-			 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+			 if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) {
 				 return MainGui.getModifiersSelectedReaction();
 			} else return new Vector<Vector<String>>();
 		}
@@ -566,7 +566,7 @@ public class AutocompleteDB {
 	}
 	
 	public Vector<Vector<String>> getAllDefinedFunctions() {
-		if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+		if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) {
 			return getAllDefinedFunctions(true);
 		} else {
 			return  getAllDefinedFunctions(false);

@@ -367,6 +367,22 @@ expression2 = new String("if(24 < 0 xor Time < 0,Time-24*ceil(Time/24),Time-24*f
       v2 = new MyVisitor();
       start2.accept(v2);
       System.out.println("...................................");
+
+        expression2 = new String("k1@M1 + k1@M2");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2, "UTF-8");
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
+
+        expression2 = new String("@M1 + @M2");
+      is2 = new ByteArrayInputStream(expression2.getBytes("UTF-8"));
+	  react2 = new MR_Expression_Parser(is2, "UTF-8");
+  	  start2 = react2.CompleteExpression();
+      v2 = new MyVisitor();
+      start2.accept(v2);
+      System.out.println("...................................");
    } catch(Exception ex)  {
     ex.printStackTrace();  }   	  }}
 
@@ -517,6 +533,7 @@ TOKEN :
 | < OR: "||" >
 | < XOR: "xor" >
 | < AND: "&&" >
+| < MUTANT_PARENT_SEPARATOR: "@" >
 }
 
 /* IDENTIFIERS */
@@ -688,8 +705,9 @@ void Name() : {}
 	| < ASIN > | < ACOS > | < ATAN > | < TAN > | < TANH > | < COSH > | < LOG10 >|< ABS> | < COS > | < SIN >
 	|  < SEC>| < CSC >| < COT >| < SINH>| < ARCSEC  >| < ARCCSC>
 	| < ARCCOT>| < ARCSINH>| < ARCCOSH>| < ARCTANH>| < ARCSECH>
-|	 < ARCCSCH>| < ARCCOTH> | < MIN > | < MAX >
+    | < ARCCSCH>| < ARCCOTH> | < MIN > | < MAX >
 	| < LOG > | < EXP > | < NAN1 > | < NAN2 >// | < NAN3 >
+	| < MUTANT_PARENT_SEPARATOR > < IDENTIFIER >
 }
 
 void SpeciesReferenceOrFunctionCall_prefix() :{}
@@ -711,6 +729,7 @@ void PossibleExtensions() :{}
 	| < EXTENSION_FLUX >
   	| < MY_SPECIAL_EXTENSION >
   	| "."< IDENTIFIER >
+  	| < MUTANT_PARENT_SEPARATOR > < IDENTIFIER >
 	) (LOOKAHEAD(2)PossibleExtensions())* }
 
 void Literal() :{}

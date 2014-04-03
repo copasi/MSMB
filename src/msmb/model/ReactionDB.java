@@ -7,6 +7,7 @@ import msmb.gui.MainGui;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Vector;
 
@@ -70,7 +71,7 @@ public class ReactionDB {
 				reactionVector.set(index,oldR);
 				multiModel.addNamedElement(name, Constants.TitlesTabs.REACTIONS.index);
 				
-				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.REACTIONS.description, index);
+				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.REACTIONS.getDescription(), index);
 				return index;
 			}
 		} catch (MySyntaxException ex) {
@@ -127,7 +128,7 @@ public class ReactionDB {
 			c.setNotes(notes);
 			c.setType(type);
 			reactionVector.set(index, c);
-			if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.REACTIONS.description, index);
+			if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.REACTIONS.getDescription(), index);
 			return index;
 		}
 			
@@ -241,7 +242,7 @@ public class ReactionDB {
 						if(speciesName.compareTo(element1_justName_ifMultistate) == 0) {
 							if(!(multiModel.getSpecies(element1_justName_ifMultistate) instanceof MultistateSpecies)) {
 								DebugMessage dm = new DebugMessage();
-								dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+								dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 							    dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
 							    dm.setOrigin_row(row+1);
 								dm.setProblem("Site not available for a non-multistate Species!");
@@ -292,5 +293,9 @@ public class ReactionDB {
 		}
 		return n;
 	}
-		
+
+
+	public Vector<Reaction> getAllReactions() {
+			return new Vector(this.reactionVector);
+	}
 }

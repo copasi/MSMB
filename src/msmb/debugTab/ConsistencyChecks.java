@@ -46,6 +46,12 @@ public class ConsistencyChecks {
 		suggestedColumns_Reactions.add(Constants.ReactionsColumns.TYPE.index);
 	}
 	
+	private static final HashSet<Integer> suggestedColumns_Species;
+	static {
+		suggestedColumns_Species  = new HashSet<Integer>();
+		suggestedColumns_Species.add(Constants.SpeciesColumns.INITIAL_QUANTITY.index);
+	}
+	
 	private static final HashSet<Integer> optionalColumns_Species;
 	static {
 		optionalColumns_Species = new HashSet<Integer>();
@@ -58,6 +64,12 @@ public class ConsistencyChecks {
 		optionalColumns_GlobalQ = new HashSet<Integer>();
 		optionalColumns_GlobalQ.add(Constants.GlobalQColumns.EXPRESSION.index);
 		optionalColumns_GlobalQ.add(Constants.GlobalQColumns.NOTES.index);
+	}
+	
+	private static final HashSet<Integer> suggestedColumns_GlobalQ;
+	static {
+		suggestedColumns_GlobalQ  = new HashSet<Integer>();
+		suggestedColumns_GlobalQ.add(Constants.GlobalQColumns.VALUE.index);
 	}
 	
 	private static final HashSet<Integer> optionalColumns_Functions;
@@ -96,7 +108,7 @@ public class ConsistencyChecks {
 			String key = table_name+"_"+row+"_"+col;
 			boolean addedInEmptyFields = false;
 			boolean addedInEmptyNonMandatoryFields = false;
-			if(table_name.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) {
+			if(table_name.compareTo(Constants.TitlesTabs.REACTIONS.getDescription()) == 0) {
 				if(!optionalColumns_Reactions.contains(col)) {	
 					if(suggestedColumns_Reactions.contains(col)){
 						addedInEmptyNonMandatoryFields = true;
@@ -108,11 +120,21 @@ public class ConsistencyChecks {
 					}
 				}
 			
-			} else if(table_name.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) {
-				if(!optionalColumns_Species.contains(col)) {	emptyFields.add(key); addedInEmptyFields = true;} 
-			}else if(table_name.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) {
+			} else if(table_name.compareTo(Constants.TitlesTabs.SPECIES.getDescription()) == 0) {
+				if(!optionalColumns_Species.contains(col)) {	
+					if(suggestedColumns_Species.contains(col)){
+						addedInEmptyNonMandatoryFields = true;
+						emptyNonMandatoryFields.add(key);
+					}
+					else  {
+						emptyFields.add(key); 
+						addedInEmptyFields = true;
+					}
+				}
+				//if(!optionalColumns_Species.contains(col)) {	emptyFields.add(key); addedInEmptyFields = true;} 
+			}else if(table_name.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription()) == 0) {
 				if(!optionalColumns_Compartments.contains(col)) {	emptyFields.add(key); addedInEmptyFields = true;}
-			}else if(table_name.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) {
+			}else if(table_name.compareTo(Constants.TitlesTabs.EVENTS.getDescription()) == 0) {
 				if(!optionalColumns_Events.contains(col)) {	
 					if(suggestedColumns_Events.contains(col)){
 						addedInEmptyNonMandatoryFields = true;
@@ -123,10 +145,20 @@ public class ConsistencyChecks {
 						addedInEmptyFields = true;
 					}
 				}
-			}else if(table_name.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) {
+			}else if(table_name.compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription()) == 0) {
 				if(!optionalColumns_Functions.contains(col)) {	emptyFields.add(key); addedInEmptyFields = true;}
-			}else if(table_name.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) {
-				if(!optionalColumns_GlobalQ.contains(col)) {	emptyFields.add(key); addedInEmptyFields = true;}
+			}else if(table_name.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription()) == 0) {
+				if(!optionalColumns_GlobalQ.contains(col)) {	
+					if(suggestedColumns_GlobalQ.contains(col)){
+						addedInEmptyNonMandatoryFields = true;
+						emptyNonMandatoryFields.add(key);
+					}
+					else  {
+						emptyFields.add(key); 
+						addedInEmptyFields = true;
+					}
+				}
+				//if(!optionalColumns_GlobalQ.contains(col)) {	emptyFields.add(key); addedInEmptyFields = true;}
 			}
 			
 			if(addedInEmptyFields) {
@@ -180,7 +212,7 @@ public class ConsistencyChecks {
 				root.accept(vis);
 				ret.add(vis.getFunctionName());
 				DebugMessage dm = new DebugMessage();
-				 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+				 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 				 dm.setProblem("Missing function definition: " + vis.getFunctionName());
 				 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
 				 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
@@ -203,7 +235,7 @@ public class ConsistencyChecks {
 				String currentName = vis.getFunctionName();
 				if(currentName.compareTo(funName)!=0) {
 					DebugMessage dm = new DebugMessage();
-					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 					 dm.setProblem("Missing function definition: " + vis.getFunctionName());
 					 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
 					 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
@@ -267,7 +299,7 @@ public class ConsistencyChecks {
 									}
 									if(extensions!= null && extensions.size() > 0) {
 										String kind = CellParsers.extractKindQuantifier_fromExtensions(extensions);
-										if(kind.compareTo(Constants.TitlesTabs.GLOBALQ.description)!=0) throw new NullPointerException();
+										if(kind.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())!=0) throw new NullPointerException();
 									}
 									checkAllRoles = false;
 								}
@@ -282,7 +314,7 @@ public class ConsistencyChecks {
 								}
 								if(extensions!= null && extensions.size() > 0) {
 									String kind = CellParsers.extractKindQuantifier_fromExtensions(extensions);
-									if(kind.compareTo(Constants.TitlesTabs.SPECIES.description)!=0) throw new NullPointerException();
+									if(kind.compareTo(Constants.TitlesTabs.SPECIES.getDescription())!=0) throw new NullPointerException();
 								}
 								checkAllRoles = false;
 								break;
@@ -332,7 +364,7 @@ public class ConsistencyChecks {
 								if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex2.printStackTrace();
 								if(!errorAlreadyAdded) {
 									DebugMessage dm = new DebugMessage();
-									 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+									 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 									 dm.setProblem("Missing element definition: " + actualModelParameter);
 									 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
 									 dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
@@ -380,7 +412,7 @@ public class ConsistencyChecks {
 					//System.out.println("PROBLEMS WITH REACTION "+string_reaction);
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	ex.printStackTrace();
 					 DebugMessage dm = new DebugMessage();
-					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+					 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 					dm.setProblem("Problem parsing the reaction string.\n" + ex.getMessage());
 				    dm.setPriority(DebugConstants.PriorityType.PARSING.priorityCode);
 					 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
@@ -403,7 +435,7 @@ public class ConsistencyChecks {
 						s = multiModel.extractName(s);
 						if(!multiModel.containsSpecies(s))  {
 							 DebugMessage dm = new DebugMessage();
-							 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+							 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 							 dm.setProblem("Missing species definition: " + s);
 							 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
 							 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
@@ -416,7 +448,7 @@ public class ConsistencyChecks {
 								MultistateSpecies m = (MultistateSpecies)sp;
 								if(!m.containsSpecificConfiguration(s)) {
 									DebugMessage dm = new DebugMessage();
-									 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+									 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 									 dm.setProblem("Missing species definition: " + s);
 									 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
 									 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
@@ -435,7 +467,7 @@ public class ConsistencyChecks {
 						s = multiModel.extractName(s);
 						if(!multiModel.containsSpecies(s))  {
 							DebugMessage dm = new DebugMessage();
-							 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+							 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 							 dm.setProblem("Missing species definition: " + s);
 							 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
 							 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
@@ -451,7 +483,7 @@ public class ConsistencyChecks {
 						s = CellParsers.extractMultistateName(s);
 						if(!multiModel.containsSpecies(s))  {
 							DebugMessage dm = new DebugMessage();
-							 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+							 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 							 dm.setProblem("Missing species definition: " + s);
 							 dm.setPriority(DebugConstants.PriorityType.MISSING.priorityCode);
 							 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
@@ -496,12 +528,12 @@ public class ConsistencyChecks {
 		      if(element.length() ==0) continue;
 		      if(!colData.containsKey(element)) {
 		    	  Vector<FoundElement> foundAt = new Vector<FoundElement>();
-		    	  FoundElement fe = new FoundElement(Constants.TitlesTabs.REACTIONS.description, i+1, Constants.ReactionsColumns.REACTION.index);
+		    	  FoundElement fe = new FoundElement(Constants.TitlesTabs.REACTIONS.getDescription(), i+1, Constants.ReactionsColumns.REACTION.index);
 		    	  foundAt.add(fe);
 		    	  colData.put(element, foundAt);
 		      } else {
 		    	  Vector<FoundElement> foundAt = colData.get(element);
-		     	  FoundElement fe = new FoundElement(Constants.TitlesTabs.REACTIONS.description, i+1, Constants.ReactionsColumns.REACTION.index);
+		     	  FoundElement fe = new FoundElement(Constants.TitlesTabs.REACTIONS.getDescription(), i+1, Constants.ReactionsColumns.REACTION.index);
 		    	  foundAt.add(fe);
 		    	  colData.put(element, foundAt);
 		    	  keyToReturn.add(element);

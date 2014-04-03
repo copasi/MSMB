@@ -10,9 +10,14 @@ import java.io.PrintWriter;
 import java.util.*;
 
 import msmb.utility.*;
+import msmb.utility.Constants.GlobalQType;
+import msmb.utility.Constants.SpeciesType;
 
 import org.COPASI.*;
 import org.apache.commons.lang3.tuple.MutablePair;
+import org.jgraph.graph.AttributeMap;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.ListenableDirectedGraph;
 
 import com.google.common.collect.Sets;
 
@@ -72,11 +77,11 @@ public class MultiModel {
 				 dm.setPriority(DebugConstants.PriorityType.DUPLICATES.priorityCode);
 				 dm.setOrigin_col(MainGui.getMainElementColumn(descr)); 
 				 Integer nrow= -1;
-				if(descr.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) { nrow = reactionDB.getReactionIndex(name);	}
-				else if(descr.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) { nrow = speciesDB.getSpeciesIndex(name);}
-				else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) {  nrow = compDB.getCompIndex(name);	}
-				else if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) { nrow = funDB.getFunctionIndex(name);	}
-				else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) {  nrow = globalqDB.getGlobalQIndex(name);}
+				if(descr.compareTo(Constants.TitlesTabs.REACTIONS.getDescription()) == 0) { nrow = reactionDB.getReactionIndex(name);	}
+				else if(descr.compareTo(Constants.TitlesTabs.SPECIES.getDescription()) == 0) { nrow = speciesDB.getSpeciesIndex(name);}
+				else if(descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription()) == 0) {  nrow = compDB.getCompIndex(name);	}
+				else if(descr.compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription()) == 0) { nrow = funDB.getFunctionIndex(name);	}
+				else if(descr.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription()) == 0) {  nrow = globalqDB.getGlobalQIndex(name);}
 				if(nrow!= null && nrow!= -1) {
 					 MainGui.addDebugMessage_ifNotPresent(dm,false);
 					dm.setOrigin_row(nrow.intValue());
@@ -135,7 +140,6 @@ public class MultiModel {
 	private int counterExpandedReactions;
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
-		
 	public SpeciesDB speciesDB = new SpeciesDB(this);
 	private ReactionDB reactionDB = new ReactionDB(this);
 	private CompartmentsDB compDB = new CompartmentsDB(this);
@@ -143,22 +147,55 @@ public class MultiModel {
 	private EventsDB eventsDB = new EventsDB(this);
 	public FunctionsDB funDB = new FunctionsDB(this);
 	
-	//ObjectStdVector changedObjects = new ObjectStdVector();
 	
 	public CCopasiDataModel copasiDataModel;
 	private String copasiDataModel_key = new String("");
 	private HashMap<Integer, String> modified_species = new HashMap();
 
-
-	private String copasiDataModel_modelName;
+	private String copasiDataModel_modelName = new String(Constants.DEFAULT_MODEL_NAME);
+	private String copasiDataModel_modelDefinition = new String(Constants.DEFAULT_MODEL_NAME);
 	
-	//public static long indexCopasiDataModel = -1;
 	
 	public MultiModel() {}
 	
 	public void addGlobalQ(int index,String name, String value, String type, String expression, String notes) throws Throwable {
 		this.globalqDB.addChangeGlobalQ(index,name, value, type, expression, notes);
 	}
+	
+	public boolean changeGlobalQ(String name, String value) throws Throwable {
+		//used to change GLQ from the Run Manager for internal evaluations
+		int index = this.globalqDB.getGlobalQIndex(name);
+		if(index == -1) return false;
+		else {
+			GlobalQ g = globalqDB.getGlobalQ(name);
+			this.globalqDB.addChangeGlobalQ(index,name, value, GlobalQType.getDescriptionFromCopasiType(g.getType()), g.getExpression(), g.getNotes());
+			return true;
+		}
+	}
+	public boolean changeSpecies(String name, String value) throws Throwable {
+		//used to change SPC from the Run Manager for internal evaluations
+		int index = this.speciesDB.getSpeciesIndex(name);
+		if(index == -1) return false;
+		else {
+			Species g = speciesDB.getSpecies(name);
+			HashMap<String, String> entry_q = new HashMap<String, String>();
+			entry_q.put(name,value);
+			this.speciesDB.addChangeSpecies(index,new String(),name,entry_q ,g.getType(), g.getCompartment_listString(), g.getExpression(),false, g.getNotes(), false, false);
+			return true;
+		}
+	}
+	
+	public boolean changeCompartment(String name, String value) throws Throwable {
+		//used to change CMP from the Run Manager for internal evaluations
+		int index = this.compDB.getCompIndex(name);
+		if(index == -1) return false;
+		else {
+			Compartment g = compDB.getComp(name);
+			this.compDB.addChangeComp(index, name, Constants.CompartmentsType.getDescriptionFromCopasiType(g.getType()), value, g.getExpression(), g.getNotes());
+			return true;
+		}
+	}
+	
 	
 	public GlobalQ getGlobalQ(String name) {
 		if(this.globalqDB.getGlobalQ(name) == null) return null;
@@ -343,7 +380,7 @@ public class MultiModel {
 	                SimilarityStrings.damlev(current, name) <= level_similarity) {
 	         		DebugMessage dm = new DebugMessage();
 	        	//	dm.setOrigin_cause("Similarity strings <= "+level_similarity);
-	        		dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+	        		dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 	        		dm.setProblem("Species "+ name + " and " + current + " have a degree of similarity lower than "+level_similarity+"\n. Two species have been added but maybe a misstype has occurred in the definition of the two species.");
 	        		dm.setPriority(DebugConstants.PriorityType.SIMILARITY.priorityCode);
 	        		dm.setOrigin_col(1);
@@ -398,11 +435,13 @@ public class MultiModel {
 	}
 	
 	
-	public String saveCPS(File file, 
-						CustomTableModel_MSMB tableReactionmodel, ProgressBarFrame progressBarFrame) throws Throwable {
+	public String saveCPS(
+						boolean clearOldData,
+						File file, 
+						CustomTableModel_MSMB tableReactionmodel, 
+						ProgressBarFrame progressBarFrame) throws Throwable {
 		
-		 
-		
+		clearCopasiDataModel(clearOldData);
 		
 		 progress(progressBarFrame,Constants.ProgressBar.LOADING_CPS.progress);
 		 	
@@ -444,14 +483,7 @@ public class MultiModel {
 	
 	
 	public String exportXPP(File file, CustomTableModel_MSMB tableReactionmodel2, ProgressBarFrame progressBarFrame) throws Throwable {
-				/* Vector warnings = checkConsistency();
-		
-		
-		if(warnings.size() > 0) {
-		 //FINESTRA CON ELENCO WARNINGS E CHIEDI SE VUOLE ESPORTARE CMQ O VUOLE TORNARE INDIETRO E CORREGGERLI
-		//TOOOOOOOOOOOO BEEEEEEEEEEEEE FIXED
-		}*/
-
+				
 		progress(progressBarFrame,Constants.ProgressBar.LOADING_CPS.progress);
 
 		fillCopasiDataModel(tableReactionmodel2, progressBarFrame);
@@ -511,7 +543,8 @@ public class MultiModel {
 	private void fillCopasiDataModel(CustomTableModel_MSMB tableReactionmodel2, ProgressBarFrame progressBarFrame) throws Throwable {
 		
 		
-		clearCopasiDataModel(true);
+		
+		
 		
 		CFunctionDB copasiFunDB = null;
 		boolean problemsWithSomeExpression = false;
@@ -826,13 +859,13 @@ public class MultiModel {
 		  			root2.accept(v);
 		  			if(v.isComplexExpression()) {
 		  			/*	Vector elementGlq = new Vector();
-		  				elementGlq.add(Constants.TitlesTabs.GLOBALQ.description);
+		  				elementGlq.add(Constants.TitlesTabs.GLOBALQ.getDescription());
 		  				elementGlq.add(getName_globalQ_4_reaction(reactionName, reaction_row)+"_"+(i+1));
 		  				elementGlq.add(param.get(i));
 		  				elementGlq.add(i);
 		  				ret.add(elementGlq);*/
 		  				Vector element = new Vector();
-		  				element.add(Constants.TitlesTabs.FUNCTIONS.description);
+		  				element.add(Constants.TitlesTabs.FUNCTIONS.getDescription());
 		  				element.add(getName_function_4_reaction(reactionName, reaction_row));
 		  				element.add(equation);
 		  				ret.add(element);
@@ -846,7 +879,7 @@ public class MultiModel {
 			} catch (Throwable e) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 				Vector element =  new Vector();
-				element.add(Constants.TitlesTabs.FUNCTIONS.description);
+				element.add(Constants.TitlesTabs.FUNCTIONS.getDescription());
 				element.add(getName_function_4_reaction(reactionName, reaction_row));
 				element.add(equation);
   				ret.add(element);
@@ -863,7 +896,7 @@ public class MultiModel {
 	  			root.accept(v);
 	  			if(v.isComplexExpression()) {
 	  				Vector elementGlq = new Vector();
-	  				elementGlq.add(Constants.TitlesTabs.GLOBALQ.description);
+	  				elementGlq.add(Constants.TitlesTabs.GLOBALQ.getDescription());
 	  				elementGlq.add(getName_globalQ_4_reaction(reactionName, reaction_row));
 	  				elementGlq.add(equation);
 	  				ret.add(elementGlq);
@@ -967,7 +1000,7 @@ public class MultiModel {
 				functionCall_globalQDef.right = globalQ + " = " + rateLaw;
 				
 				
-				updateGlobalQ(getNumGlobalQ()+1, globalQ, "0.0", Constants.GlobalQType.ASSIGNMENT.description, rateLaw, new String());
+				updateGlobalQ(getNumGlobalQ()+1, globalQ, "0.0", Constants.GlobalQType.ASSIGNMENT.getDescription(), rateLaw, new String());
 				
 		} catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)
@@ -1006,7 +1039,7 @@ public class MultiModel {
 				//funDB.addChangeFunction(funDB.userDefinedFun.size(), f);	
 				funDB.addChangeFunction(-1, f);	
 				funDB.correctRoles(f);
-				Vector<Object> paramInEquation = funDB.addMapping(reaction_nrow-1, functionCall, Constants.ReactionType.USER_DEFINED.description);
+				Vector<Object> paramInEquation = funDB.addMapping(reaction_nrow-1, functionCall, Constants.ReactionType.USER_DEFINED.getDescription());
 				for (Object element : paramInEquation) {
 					if(element instanceof Exception) throw ((Exception)element);
 				}
@@ -1085,7 +1118,7 @@ public class MultiModel {
 			//	funDB.addChangeFunction(funDB.userDefinedFun.size(), f);	
 				funDB.addChangeFunction(-1, f);	
 				funDB.correctRoles(f);
-				Vector<Object> paramInEquation = funDB.addMapping(i, functionCall, Constants.ReactionType.USER_DEFINED.description);
+				Vector<Object> paramInEquation = funDB.addMapping(i, functionCall, Constants.ReactionType.USER_DEFINED.getDescription());
 				for (Object element : paramInEquation) {
 					if(element instanceof Exception) throw ((Exception)element);
 				}
@@ -1236,9 +1269,9 @@ public class MultiModel {
 		boolean foundMassAction = false;
 		
 
-		if(kineticType.compareTo(Constants.ReactionType.USER_DEFINED.description)==0) { foundUserDefFunction = true; }
-		else if(kineticType.compareTo(Constants.ReactionType.PRE_DEFINED.description)==0) { foundPredefinedFunction = true; }
-		else if(kineticType.compareTo(Constants.ReactionType.MASS_ACTION.description)==0) {  foundMassAction = true;    	 }
+		if(kineticType.compareTo(Constants.ReactionType.USER_DEFINED.getDescription())==0) { foundUserDefFunction = true; }
+		else if(kineticType.compareTo(Constants.ReactionType.PRE_DEFINED.getDescription())==0) { foundPredefinedFunction = true; }
+		else if(kineticType.compareTo(Constants.ReactionType.MASS_ACTION.getDescription())==0) {  foundMassAction = true;    	 }
 
 		CFunctionDB copasiFunDB = CCopasiRootContainer.getFunctionList();
 		boolean singleFunctionCall = false;
@@ -1340,7 +1373,7 @@ public class MultiModel {
 								
 								if(extensions!= null && extensions.size() > 0) {
 									String kind = CellParsers.extractKindQuantifier_fromExtensions(extensions);
-									if(kind.compareTo(Constants.TitlesTabs.GLOBALQ.description)!=0) throw new NullPointerException();
+									if(kind.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())!=0) throw new NullPointerException();
 								}
 								CModelValue modelValue = model.getModelValue(actualModelParameter);
 								int index_in_function = findParamIndex_InCFunction(chosenFun, parameterNameInFunction);
@@ -1841,7 +1874,7 @@ public class MultiModel {
 		speciesToBeExported = species.size();
 		
 		CModel model = this.copasiDataModel.getModel();
-		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.SPECIES.description);
+		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.SPECIES.getDescription());
 		
 		Vector<Species> species_with_expression_not_added = new Vector<Species>();
 		
@@ -1853,7 +1886,7 @@ public class MultiModel {
 					if(name.trim().length()== 0) continue;
 					String compartmentList = s.getCompartment_listString();
 					//FOR NOW ALL in different compartments HAVE THE SAME INITIAL CONCENTRATION/EXPRESSION... NEEEEEEEEEED TO BE FIIIIIIIIIIIIXED
-					Vector<String> compNames = CellParsers.extractNamesInList(this,compartmentList, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.description);
+					Vector<String> compNames = CellParsers.extractNamesInList(this,compartmentList, Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.COMPARTMENT.getDescription());
 										
 					for(int ii = 0; ii < compNames.size(); ii++) {
 						//double initial_conc = s.getInitialConcentration().doubleValue();
@@ -2070,7 +2103,7 @@ public class MultiModel {
 				  function = (CFunction) funDB_copasi.createFunction(funName,CEvaluationTree.UserDefined);
 				  boolean result = function.setInfix(fun.getEquation());
 				  function.setReversible(COPASI.TriFalse);
-				 
+				 function.compile();
 				 // function.setNotes(fun.getNotes());
 				  CFunctionParameters variables = function.getVariables();
 				  
@@ -2104,6 +2137,7 @@ public class MultiModel {
 					  
 					
 					  parame.setUsage(usage);
+				
 				 }
 				  
 			  }
@@ -2117,7 +2151,7 @@ public class MultiModel {
 	private Vector<GlobalQ> fillCopasiDataModel_globalQ_fixed(Vector<GlobalQ> globalQuantities) {
 		CModel model = this.copasiDataModel.getModel();
 		Vector<GlobalQ> ret = new Vector<GlobalQ>();
-		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.GLOBALQ.description);
+		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.GLOBALQ.getDescription());
 		for(int i = 0; i< globalQuantities.size(); i++) {
 			GlobalQ g = globalQuantities.get(i);
 			if(g== null) continue;
@@ -2230,7 +2264,7 @@ public class MultiModel {
 		CModel model = this.copasiDataModel.getModel();
 		
 		Vector<Compartment> comp_with_expression_not_added = new Vector<Compartment>();
-		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.COMPARTMENTS.description);
+		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.COMPARTMENTS.getDescription());
 		
 		for(int i = 0; i < compartments.size(); i++) {
 			Compartment c = compartments.get(i);
@@ -2300,7 +2334,7 @@ public class MultiModel {
 		Iterator it = globalQ.iterator();
 		
 		Vector<GlobalQ> globalQ_with_expression_not_added = new Vector<GlobalQ>();
-		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.GLOBALQ.description);
+		HashMap<String, String> annotations = listOfAnnotations.get(Constants.TitlesTabs.GLOBALQ.getDescription());
 		
 		while(it.hasNext()) {
 			 
@@ -2454,7 +2488,7 @@ public class MultiModel {
 	static int testcount = 0;
 	
 	
-	public MutablePair<String,Boolean> parseExpressionGlobalQ(String expression, boolean conc, boolean expressionInSpecies, boolean isInitialExpression) throws Exception {
+	MutablePair<String,Boolean> parseExpressionGlobalQ(String expression, boolean conc, boolean expressionInSpecies, boolean isInitialExpression) throws Exception {
 		if(expression.length() == 0) return new MutablePair(new String(), false); 
 		
 		
@@ -2677,7 +2711,7 @@ public class MultiModel {
 	}
 	
 	//boolean containSUM used to add the unsupported annotation with the compressed version of the expression
-	MutablePair<String, Boolean> buildCopasiExpression(String expression, boolean expressionInSpecies, boolean isInitialExpression) throws Exception {
+	public MutablePair<String, Boolean> buildCopasiExpression(String expression, boolean expressionInSpecies, boolean isInitialExpression) throws Exception {
 		return parseExpressionGlobalQ(expression, MainGui.exportConcentration, expressionInSpecies,isInitialExpression); 
 	}
 	
@@ -2880,7 +2914,7 @@ public class MultiModel {
 								non_multistate_mod.add(species); 
 							} catch (Throwable e) {
 								DebugMessage dm = new DebugMessage();
-								dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+								dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 								dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
 								dm.setOrigin_row(row+1);
 								Vector elements = new Vector();
@@ -2904,7 +2938,7 @@ public class MultiModel {
 					} catch(Throwable e) {
 						//e.printStackTrace();
 						DebugMessage dm = new DebugMessage();
-						dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+						dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 						dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
 						dm.setOrigin_row(row+1);
 						Vector elements = new Vector();
@@ -2956,7 +2990,7 @@ public class MultiModel {
 							 	 non_multistate_prod.add(species); 
 							} catch (Throwable e) {
 								DebugMessage dm = new DebugMessage();
-								dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+								dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 								dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
 								dm.setOrigin_row(row+1);
 								Vector elements = new Vector();
@@ -2980,7 +3014,7 @@ public class MultiModel {
 					} catch(Throwable e) {
 						//e.printStackTrace();
 						DebugMessage dm = new DebugMessage();
-						dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+						dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 						dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
 						dm.setOrigin_row(row+1);
 						Vector elements = new Vector();
@@ -3128,7 +3162,7 @@ public class MultiModel {
        		   debugTab.SimilarityStrings.damlev(current, name) <= level_similarity) {
        			DebugMessage dm = new DebugMessage();
        			//dm.setOrigin_cause("Similarity strings <= "+level_similarity);
-       			dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+       			dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
        			dm.setProblem("Species "+ name + " and " + current + " have a degree of similarity lower than "+level_similarity+"\n. Two species have been added but maybe a misstype has occurred in the definition of the two species.");
        			dm.setPriority(DebugConstants.PriorityType.SIMILARITY.priorityCode);
        			dm.setOrigin_col(1);
@@ -3152,7 +3186,6 @@ public class MultiModel {
 		}
 		
 		loadCopasiDataModel_fromModelName(copasiDataModel_modelName);
-		
 		
 		
 		if((MainGui.fromMainGuiTest||deleteOldDataCopasiDataModel) && copasiDataModel!= null) {
@@ -3185,14 +3218,15 @@ public class MultiModel {
 							model.removeModelValue(m, true);
 						}		
 			
-					} else {*/
-						copasiDataModel.newModel();
-				//	}
+					} */
+				
+				if(!MainGui.fromInterface) copasiDataModel.newModel();
+				
 						copasiDataModel.deleteOldData();
 						copasiDataModel.getModel().setTimeUnit(MainGui.timeUnit);
 						copasiDataModel.getModel().setVolumeUnit(MainGui.volumeUnit);
 						copasiDataModel.getModel().setQuantityUnit(MainGui.quantityUnit);
-						copasiDataModel.getModel().setObjectName(MainGui.modelName);
+						copasiDataModel.getModel().setObjectName(copasiDataModel_modelName);
 
 										
 			} catch (Exception e) {
@@ -3263,7 +3297,7 @@ public class MultiModel {
 	     catch (java.lang.Exception ex)
        {
            System.err.println("Error while loading the model from file named \"" + f.getAbsolutePath() + "\".");
-           //if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)    
+           if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)    
         	   ex.printStackTrace();
            return;
        }
@@ -3383,7 +3417,6 @@ public class MultiModel {
 			loadCopasiDataModel_fromModelName(copasiDataModel_modelName);
 		}
 		
-		
 		try{
 	    	 copasiDataModel.importSBML(f.getAbsolutePath());
 	       }
@@ -3394,6 +3427,151 @@ public class MultiModel {
           return;
       }
 		
+	}
+	
+	public Vector loadGlobalQTable_fromMultimodel() {
+		Vector rows = new Vector();
+		Vector<GlobalQ> glqs = getAllGlobalQ();
+        for (int i = 0;i < glqs.size();i++)
+        {
+        	Vector row = new Vector();
+    		GlobalQ val = glqs.get(i);
+    		if(val==null) continue;
+           String newName = val.getName();
+            row.add(newName);
+//------------------------------------------------------------------
+            row.add(val.getInitialValue());
+//------------------------------------------------------------------
+            row.add(Constants.GlobalQType.getDescriptionFromCopasiType(val.getType()));
+//------------------------------------------------------------------
+           row.add(val.getExpression());
+//------------------------------------------------------------------
+            row.add(val.getNotes());
+            rows.add(row);
+        }
+        return rows;
+	}
+	
+	public Vector loadReactionsTable_fromMultimodel() {
+		Vector rows = new Vector();
+		Vector<Reaction> elements = getAllReactions();
+        for (int i = 0;i < elements.size();i++)
+        {
+        	Vector row = new Vector();
+    		Reaction val = elements.get(i);
+    		if(val==null) continue;
+           String newName = val.getName();
+            row.add(newName);
+//------------------------------------------------------------------
+            row.add(val.getReactionString());
+//------------------------------------------------------------------
+            row.add(Constants.ReactionType.getDescriptionFromCopasiType(val.getType()));
+//------------------------------------------------------------------
+            row.add(val.getRateLaw());
+          //------------------------------------------------------------------
+            row.add(val.getNotes());
+            rows.add(row);
+        }
+        return rows;
+	}
+	
+
+	
+	public Vector loadFunctionsTable_fromMultimodel() {
+		Vector rows = new Vector();
+		Vector<Function> elements = getAllUserDefinedFunctins();
+        for (int i = 0;i < elements.size();i++)
+        {
+        	Vector row = new Vector();
+        	Function val = elements.get(i);
+    		if(val==null) continue;
+           String newName = val.getName();
+            row.add(newName);
+//------------------------------------------------------------------
+            row.add(val.getEquation());
+//------------------------------------------------------------------
+            row.add(val.getNotes());
+            rows.add(row);
+        }
+        return rows;
+	}
+	
+	
+	public Vector loadEventsTable_fromMultimodel() {
+		Vector rows = new Vector();
+		Vector<Event> elements = getAllEvents();
+        for (int i = 0;i < elements.size();i++)
+        {
+        	Vector row = new Vector();
+        	Event val = elements.get(i);
+    		if(val==null) continue;
+           String newName = val.getName();
+            row.add(newName);
+		//------------------------------------------------------------------
+		    row.add(val.getTrigger());
+		  //------------------------------------------------------------------
+		 row.add(val.getActionsAsString());
+           //------------------------------------------------------------------
+		    row.add(val.getDelay());
+	            //------------------------------------------------------------------
+		row.add(new Boolean(val.delayAfterCalculation).toString()); 
+		//------------------------------------------------------------------
+		row.add(val.getNotes()); 
+		//------------------------------------------------------------------
+		    row.add(new Boolean(val.expandActionVolume==-1).toString());
+		  rows.add(row);
+                  }
+        
+        return rows;
+	}
+	
+	
+	public Vector loadSpeciesTable_fromMultimodel() {
+		Vector rows = new Vector();
+		Vector<Species> elements = getAllSpecies();
+        for (int i = 0;i < elements.size();i++)
+        {
+        	Vector row = new Vector();
+    		Species val = elements.get(i);
+    		if(val==null) continue;
+           String newName = val.getName();
+            row.add(newName);
+//------------------------------------------------------------------
+            row.add(val.getInitialQuantity_listString());
+//------------------------------------------------------------------
+            row.add(Constants.SpeciesType.getDescriptionFromCopasiType(val.getType()));
+//------------------------------------------------------------------
+            row.add(val.getCompartment_listString());
+          //------------------------------------------------------------------
+           row.add(val.getExpression());
+//------------------------------------------------------------------
+            row.add(val.getNotes());
+            rows.add(row);
+        }
+        return rows;
+	}
+	
+	public Vector loadCompartmentsTable_fromMultimodel() {
+		Vector rows = new Vector();
+		Vector<Compartment> elements = getAllCompartments();
+        for (int i = 0;i < elements.size();i++)
+        {
+        	Vector row = new Vector();
+        	Compartment val = elements.get(i);
+    		if(val==null) continue;
+           String newName = val.getName();
+            row.add(newName);
+//------------------------------------------------------------------
+            row.add(Constants.CompartmentsType.getDescriptionFromCopasiType(val.getType()));
+//------------------------------------------------------------------
+            row.add(val.getInitialVolume());
+//------------------------------------------------------------------
+             row.add(val.getExpression());
+//------------------------------------------------------------------
+            row.add(val.getNotes());
+            rows.add(row);
+        }
+        return rows;
 	}
 	
 	
@@ -3524,7 +3702,7 @@ public class MultiModel {
 		MainGui.timeUnit = model.getTimeUnitEnum();
 		MainGui.volumeUnit = model.getVolumeUnitEnum();
 		MainGui.quantityUnit = model.getQuantityUnitEnum();
-		MainGui.modelName = model.getObjectName();
+		setModelName(model.getObjectName());
 		
 		model.setTimeUnit(Constants.UnitTypeTime.DIMENSIONLESS_TIME.copasiType);
 		model.setVolumeUnit(Constants.UnitTypeVolume.DIMENSIONLESS_VOL.copasiType);
@@ -3576,7 +3754,7 @@ public class MultiModel {
 	        	   row.set(row.size()-1, buildMRExpression_fromCopasiExpr(metab.getInitialExpression()));
 	           }
 	            
-	           if(CellParsers.isMultistateSpeciesName(cleanName)) row.add(Constants.SpeciesType.MULTISTATE.description);
+	           if(CellParsers.isMultistateSpeciesName(cleanName)) row.add(Constants.SpeciesType.MULTISTATE.getDescription());
 	           else row.add(Constants.SpeciesType.getDescriptionFromCopasiType(metab.getStatus()));
 	            
 	            
@@ -4187,7 +4365,7 @@ public class MultiModel {
 			CompleteExpression root = parser.CompleteExpression();
 			MainGui.jListFunctionToCompact.setSelectionInterval(0, MainGui.listModel_FunctionToCompact.size()-1);
 			
-			ExpressionVisitor vis = new ExpressionVisitor(MainGui.jListFunctionToCompact.getSelectedValuesList(),this,forceExpansion_elements);
+			ExpressionVisitor vis = new ExpressionVisitor(Arrays.asList(MainGui.jListFunctionToCompact.getSelectedValues()),this,forceExpansion_elements);
 			
 			root.accept(vis);
 			if(vis.getExceptions().size() == 0) {
@@ -4238,8 +4416,8 @@ public class MultiModel {
 				CompleteExpression root = parser.CompleteExpression();
 				MainGui.jListFunctionToCompact.setSelectionInterval(0, MainGui.listModel_FunctionToCompact.size()-1);
 
-				ArrayList<String> list = new ArrayList<String>();
-				list.addAll(MainGui.jListFunctionToCompact.getSelectedValuesList());
+				ArrayList list = new ArrayList();
+				list.addAll(Arrays.asList(MainGui.jListFunctionToCompact.getSelectedValues()));
 				list.add("SUM");
 				ExpressionVisitor vis = new ExpressionVisitor(list, this,false);
 
@@ -4351,7 +4529,7 @@ public class MultiModel {
 		} catch(MySyntaxException ex) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 		    DebugMessage dm = new DebugMessage();
-			dm.setOrigin_table(Constants.TitlesTabs.GLOBALQ.description);
+			dm.setOrigin_table(Constants.TitlesTabs.GLOBALQ.getDescription());
 		    dm.setOrigin_col(ex.getColumn());
 		    dm.setOrigin_row(nrow);
 			dm.setProblem(ex.getMessage());
@@ -4362,27 +4540,27 @@ public class MultiModel {
 		
 		/*if(CellParsers.isNaN(expression)) {
 			  DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.GLOBALQ.description);
+				dm.setOrigin_table(Constants.TitlesTabs.GLOBALQ.getDescription());
 			    dm.setOrigin_col(Constants.GlobalQColumns.EXPRESSION.index);
 			    dm.setOrigin_row(nrow);
 				dm.setProblem("NaN value - will be exported as (undefined) in the SBML/Copasi model");
 			    dm.setPriority(DebugConstants.PriorityType.MINOR.priorityCode);
 				MainGui.addDebugMessage_ifNotPresent(dm);
 		} else {*/
-			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.GLOBALQ.description, Constants.GlobalQColumns.EXPRESSION.index, DebugConstants.PriorityType.MINOR.priorityCode);
+			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.GLOBALQ.getDescription(), Constants.GlobalQColumns.EXPRESSION.index, DebugConstants.PriorityType.MINOR.priorityCode);
 		//}
 		
 		
 	/*	if(CellParsers.isNaN(value)) {
 			  DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.GLOBALQ.description);
+				dm.setOrigin_table(Constants.TitlesTabs.GLOBALQ.getDescription());
 			    dm.setOrigin_col(Constants.GlobalQColumns.VALUE.index);
 			    dm.setOrigin_row(nrow);
 				dm.setProblem("NaN value - will be exported as () in the SBML/Copasi model");
 			    dm.setPriority(DebugConstants.PriorityType.MINOR.priorityCode);
 				MainGui.addDebugMessage_ifNotPresent(dm);
 		}else {*/
-			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.GLOBALQ.description, Constants.GlobalQColumns.VALUE.index, DebugConstants.PriorityType.MINOR.priorityCode);
+			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.GLOBALQ.getDescription(), Constants.GlobalQColumns.VALUE.index, DebugConstants.PriorityType.MINOR.priorityCode);
 		//}
 		
 		speciesDB.recalculateSpeciesWithVariableRanges();
@@ -4405,7 +4583,7 @@ public class MultiModel {
 		
 			if(CellParsers.isMultistateSpeciesName_withUndefinedStates(name)) {
 				   DebugMessage dm = new DebugMessage();
-					dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+					dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 				    dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
 				    dm.setOrigin_row(nrow);
 					dm.setProblem("Multistate species with undefined states");
@@ -4421,7 +4599,7 @@ public class MultiModel {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
 				ex.printStackTrace();
 		    DebugMessage dm = new DebugMessage();
-			dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+			dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 		   if(ex.getColumn()!= -1) dm.setOrigin_col(ex.getColumn());
 		   else dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
 		    dm.setOrigin_row(nrow);
@@ -4435,26 +4613,26 @@ public class MultiModel {
 		
 		/*if(expression.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) == 0) {
 			  DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 			    dm.setOrigin_col(Constants.SpeciesColumns.EXPRESSION.index);
 			    dm.setOrigin_row(nrow);
 				dm.setProblem("NaN value - will be exported as (undefined) in the SBML/Copasi model");
 			    dm.setPriority(DebugConstants.PriorityType.MINOR.priorityCode);
 				MainGui.addDebugMessage_ifNotPresent(dm);
 		} else {*/
-			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.EXPRESSION.index, DebugConstants.PriorityType.MINOR.priorityCode);
+			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.EXPRESSION.index, DebugConstants.PriorityType.MINOR.priorityCode);
 		//}
 		
 	/*	if(initialQ.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) == 0) {
 			  DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 			    dm.setOrigin_col(Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			    dm.setOrigin_row(nrow);
 				dm.setProblem("NaN value - will be exported as (undefined) in the SBML/Copasi model");
 			    dm.setPriority(DebugConstants.PriorityType.MINOR.priorityCode);
 				MainGui.addDebugMessage_ifNotPresent(dm);
 		}else {*/
-			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.INITIAL_QUANTITY.index, DebugConstants.PriorityType.MINOR.priorityCode);
+			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.INITIAL_QUANTITY.index, DebugConstants.PriorityType.MINOR.priorityCode);
 		//}
 		
 		Vector rows = new Vector();
@@ -4494,7 +4672,7 @@ public class MultiModel {
 		
 			if(CellParsers.isMultistateSpeciesName_withUndefinedStates(name)) {
 				   DebugMessage dm = new DebugMessage();
-					dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+					dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 				    dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
 				    dm.setOrigin_row(nrow);
 					dm.setProblem("Multistate species with undefined states");
@@ -4521,26 +4699,26 @@ public class MultiModel {
 		
 		/*if(expression.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) == 0) {
 			  DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 			    dm.setOrigin_col(Constants.SpeciesColumns.EXPRESSION.index);
 			    dm.setOrigin_row(nrow);
 				dm.setProblem("NaN value - will be exported as (undefined) in the SBML/Copasi model");
 			    dm.setPriority(DebugConstants.PriorityType.MINOR.priorityCode);
 				MainGui.addDebugMessage_ifNotPresent(dm);
 		} else {*/
-			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.EXPRESSION.index, DebugConstants.PriorityType.MINOR.priorityCode);
+			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.EXPRESSION.index, DebugConstants.PriorityType.MINOR.priorityCode);
 		//}
 		
 	/*	if(initialQ.compareTo(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.NAN)) == 0) {
 			  DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 			    dm.setOrigin_col(Constants.SpeciesColumns.INITIAL_QUANTITY.index);
 			    dm.setOrigin_row(nrow);
 				dm.setProblem("NaN value - will be exported as (undefined) in the SBML/Copasi model");
 			    dm.setPriority(DebugConstants.PriorityType.MINOR.priorityCode);
 				MainGui.addDebugMessage_ifNotPresent(dm);
 		}else {*/
-			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.INITIAL_QUANTITY.index, DebugConstants.PriorityType.MINOR.priorityCode);
+			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.INITIAL_QUANTITY.index, DebugConstants.PriorityType.MINOR.priorityCode);
 		//}
 		
 		Vector rows = new Vector();
@@ -4706,12 +4884,12 @@ public class MultiModel {
 				/*if(CellParsers.isMultistateSpeciesName_withUndefinedStates(name)) {
 					throw new MySyntaxException(Constants.SpeciesColumns.NAME.index, 
 												"Multistate species with undefined states", 
-												Constants.TitlesTabs.SPECIES.description);
+												Constants.TitlesTabs.SPECIES.getDescription());
 					
 				}*/
 				if(CellParsers.isMultistateSpeciesName_withUndefinedStates(name)) {
 				   DebugMessage dm = new DebugMessage();
-					dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+					dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 				    dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
 				    dm.setOrigin_row(nrow);
 					dm.setProblem("Multistate species with undefined states");
@@ -4776,7 +4954,7 @@ public class MultiModel {
 			String cmpLabel = CellParsers.extractCompartmentLabel(s);
 			if(cmpLabel.trim().length() == 0) {
 				DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+				dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 				dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
 				dm.setOrigin_row(nrow);
 				String message = "Species "+sp+" exists in more than one compartment. \n The reaction should specify which one to use between: \n";
@@ -4799,7 +4977,7 @@ public class MultiModel {
 		} catch(MySyntaxException ex) {
 				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 			    DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.COMPARTMENTS.description);
+				dm.setOrigin_table(Constants.TitlesTabs.COMPARTMENTS.getDescription());
 			    dm.setOrigin_col(ex.getColumn());
 			    dm.setOrigin_row(nrow);
 				dm.setProblem(ex.getMessage());
@@ -4816,13 +4994,13 @@ public class MultiModel {
 			boolean okTrigger = ConsistencyChecks.isOkEventTriggerExpression(trigger);
 			if(!okTrigger) {
 				throw new MySyntaxException(Constants.EventsColumns.TRIGGER.index, 
-						"The trigger expression does not contain a proper boolean expression.\nCommon mistakes:\n * using = instead of ==, \n * missing relational operator (==, >=, <=),\n * using & or | instead of && and ||",Constants.TitlesTabs.EVENTS.description);
+						"The trigger expression does not contain a proper boolean expression.\nCommon mistakes:\n * using = instead of ==, \n * missing relational operator (==, >=, <=),\n * using & or | instead of && and ||",Constants.TitlesTabs.EVENTS.getDescription());
 			}
 			return ret;
 		} catch(MySyntaxException ex) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) ex.printStackTrace();
 		    DebugMessage dm = new DebugMessage();
-			dm.setOrigin_table(Constants.TitlesTabs.EVENTS.description);
+			dm.setOrigin_table(Constants.TitlesTabs.EVENTS.getDescription());
 		    dm.setOrigin_col(ex.getColumn());
 		    dm.setOrigin_row(nrow);
 			dm.setProblem(ex.getMessage());
@@ -5077,9 +5255,9 @@ public class MultiModel {
 		String ret = new String();
 		
 		
-		if(((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).compareTo(Constants.ReactionType.USER_DEFINED.description)==0) { foundUserDefFunction = true; }
-		else if(((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).compareTo(Constants.ReactionType.PRE_DEFINED.description)==0) { foundPredefinedFunction = true; }
-		else if(((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).compareTo(Constants.ReactionType.MASS_ACTION.description)==0) {  foundMassAction = true;    	 }
+		if(((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).compareTo(Constants.ReactionType.USER_DEFINED.getDescription())==0) { foundUserDefFunction = true; }
+		else if(((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).compareTo(Constants.ReactionType.PRE_DEFINED.getDescription())==0) { foundPredefinedFunction = true; }
+		else if(((String)tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.TYPE.index)).compareTo(Constants.ReactionType.MASS_ACTION.getDescription())==0) {  foundMassAction = true;    	 }
 
 	
 			
@@ -5087,7 +5265,7 @@ public class MultiModel {
 		String expr =new String();
 		if(listFunctionToCompact.size()!=0) {
 			if(listFunctionToCompact.size() == funDB.getAllFunctions().size()) {
-					expr = MainGui.getViewIn(Constants.TitlesTabs.REACTIONS.description,i,Constants.ReactionsColumns.KINETIC_LAW.index,Constants.Views.COMPRESSED.index);
+					expr = MainGui.getViewIn(Constants.TitlesTabs.REACTIONS.getDescription(),i,Constants.ReactionsColumns.KINETIC_LAW.index,Constants.Views.COMPRESSED.index);
 				}
 			else {
 				expr = tableReactionmodel.getValueAt(i, Constants.ReactionsColumns.KINETIC_LAW.index).toString();
@@ -5113,7 +5291,7 @@ public class MultiModel {
 			} while(true);
 			}
 		} else {
-			expr = MainGui.getViewIn(Constants.TitlesTabs.REACTIONS.description,i,Constants.ReactionsColumns.KINETIC_LAW.index,Constants.Views.EXPANDED.index);
+			expr = MainGui.getViewIn(Constants.TitlesTabs.REACTIONS.getDescription(),i,Constants.ReactionsColumns.KINETIC_LAW.index,Constants.Views.EXPANDED.index);
 		}
 		 
 		ret = expr;
@@ -5296,6 +5474,10 @@ public class MultiModel {
 		return new Vector(this.eventsDB.getAllEvents());
 	}
 	
+	public Vector<Reaction> getAllReactions() {
+		return new Vector(this.reactionDB.getAllReactions());
+	}
+	
 
 	public boolean containsSpecies(String name) {
 		return speciesDB.containsSpecies(name);
@@ -5303,12 +5485,12 @@ public class MultiModel {
 
 	public String getEditableExpression(String table, int row, int column) {
 		String editableString = new String("getEditableExpression_TO_BE_IMPLEMENTED");
-		if(table.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) { editableString = reactionDB.getEditableExpression(row, column);} 
-		else if(table.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {		editableString = speciesDB.getEditableExpression(row, column); }
-		else if(table.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) { 	editableString = globalqDB.getEditableExpression(row, column);}
-		else if(table.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {editableString = compDB.getEditableExpression(row, column);}
-	/*	else if(table.compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) { 	editableString = (String) MainGui.tableFunctionsmodel.getValueAt(row, column);}
-		else if(table.compareTo(Constants.TitlesTabs.EVENTS.description)==0) { 		editableString = (String) MainGui.tableEventsmodel.getValueAt(row, column);}*/
+		if(table.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) { editableString = reactionDB.getEditableExpression(row, column);} 
+		else if(table.compareTo(Constants.TitlesTabs.SPECIES.getDescription())==0) {		editableString = speciesDB.getEditableExpression(row, column); }
+		else if(table.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())==0) { 	editableString = globalqDB.getEditableExpression(row, column);}
+		else if(table.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())==0) {editableString = compDB.getEditableExpression(row, column);}
+	/*	else if(table.compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription())==0) { 	editableString = (String) MainGui.tableFunctionsmodel.getValueAt(row, column);}
+		else if(table.compareTo(Constants.TitlesTabs.EVENTS.getDescription())==0) { 		editableString = (String) MainGui.tableEventsmodel.getValueAt(row, column);}*/
 		else editableString = new String("");
 		return editableString;
 	}
@@ -5412,7 +5594,7 @@ public Integer getGlobalQIndex(String name) {
 		if(extensions.size() ==0 ) {
 			if(!checkingAllRoles) {
 				DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+				dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 			    dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
 			    dm.setOrigin_row(row+1);
 				dm.setProblem("Site specification has to be in the form of SpeciesName.siteName");
@@ -5442,7 +5624,7 @@ public Integer getGlobalQIndex(String name) {
 			if(speciesName.compareTo(element1_justName_ifMultistate) == 0) {
 				if(!(this.getSpecies(element1_justName_ifMultistate) instanceof MultistateSpecies)) {
 					DebugMessage dm = new DebugMessage();
-					dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+					dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 				    dm.setOrigin_col(Constants.ReactionsColumns.KINETIC_LAW.index);
 				    dm.setOrigin_row(row+1);
 					dm.setProblem("Site not available for a non-multistate Species!");
@@ -5502,10 +5684,7 @@ public Integer getGlobalQIndex(String name) {
 		return reactionDB.getAllNames();
 	}
 
-	public String getModelName() {
-		return copasiDataModel.getModel().getObjectName();
-	}
-
+	
 	public void removeRateLawMappingForRow(int row) {
 		funDB.removeRateLawMappingForRow(row);
 		
@@ -5530,7 +5709,7 @@ public Integer getGlobalQIndex(String name) {
 		HashMap<String, String> entry_q = new HashMap<String, String>();
 		entry_q.put(name,initialQuantity);
 		try {
-			this.globalqDB.addChangeGlobalQ(-1, name, initialQuantity, Constants.GlobalQType.FIXED.description, new String(), new String());
+			this.globalqDB.addChangeGlobalQ(-1, name, initialQuantity, Constants.GlobalQType.FIXED.getDescription(), new String(), new String());
 		} catch (Throwable e) {
 				//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 				throw new Exception("Error adding the new Global Quantity: "+e.getMessage());
@@ -5543,10 +5722,26 @@ public Integer getGlobalQIndex(String name) {
 		this.copasiDataModel_key = copasiKey;
 	}
 	
-	public void setCopasiModelName(String copasiModelName) {
+	public void setModelName(String copasiModelName) {
 		this.copasiDataModel_modelName = copasiModelName;
 	}
+	
+	public void setModelDefinition(String modelDefinition) {
+		this.copasiDataModel_modelDefinition = modelDefinition;
+	}
 
+	
+	public String getModelName() {
+		//return copasiDataModel.getModel().getObjectName();
+		return 	this.copasiDataModel_modelName;
+	}
+	
+	public String getModelDefinition() {
+		return 	this.copasiDataModel_modelDefinition;
+	}
+
+	
+	
 	public void addInvisibleSpecies(String name, String initialQuantity,
 			String compartment) throws Exception {
 		this.speciesDB.addInvisibleSpecies(name, initialQuantity, compartment);
@@ -5591,7 +5786,7 @@ public Integer getGlobalQIndex(String name) {
 	}
 
 	public void updateSBMLid_fromCopasiDataModel(String table, String name, String compartment) {
-		if(table.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {
+		if(table.compareTo(Constants.TitlesTabs.SPECIES.getDescription())==0) {
 			try {
 				int index = findMetabolite(name, compartment, false);
 				if(index != -1) {
@@ -5603,7 +5798,7 @@ public Integer getGlobalQIndex(String name) {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		} else if(table.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {
+		} else if(table.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())==0) {
 			try {
 				int index = findGlobalQ(name,  false);
 				if(index != -1) {
@@ -5709,22 +5904,24 @@ public Integer getGlobalQIndex(String name) {
 
 	
 	HashMap<String, HashMap<String, String>> listOfAnnotations = new HashMap<String, HashMap<String, String>>();
+
+
 	
 	public void saveAnnotations(Vector<Vector<MutablePair<String, String>>> annotationToSave) {
 		Vector<MutablePair<String, String>> elements = annotationToSave.get(0); //species
-		String type = Constants.TitlesTabs.SPECIES.description;
+		String type = Constants.TitlesTabs.SPECIES.getDescription();
 		HashMap<String, String> group = new HashMap<String, String>();
 		for(MutablePair<String, String> el : elements) {	group.put(el.left, el.right); }
 		listOfAnnotations.put(type, group);
 		
 		elements = annotationToSave.get(1); //reaction
-		type = Constants.TitlesTabs.REACTIONS.description;
+		type = Constants.TitlesTabs.REACTIONS.getDescription();
 		group = new HashMap<String, String>();
 		for(MutablePair<String, String> el : elements) {	group.put(el.left, el.right);	}
 		listOfAnnotations.put(type, group);
 		
 		elements = annotationToSave.get(2); //global quantities
-		type = Constants.TitlesTabs.GLOBALQ.description;
+		type = Constants.TitlesTabs.GLOBALQ.getDescription();
 		group = new HashMap<String, String>();
 		for(MutablePair<String, String> el : elements) {	group.put(el.left, el.right);	}
 		listOfAnnotations.put(type, group);
@@ -5742,6 +5939,9 @@ public Integer getGlobalQIndex(String name) {
 		String ret = annotation.replaceAll(oldId, newId);
 		return ret;
 	}
+
+	
+
 	
 	
 	

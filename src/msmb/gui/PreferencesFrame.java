@@ -165,7 +165,7 @@ public class PreferencesFrame extends JDialog {
 					PreferencesFrame frame = new PreferencesFrame(null);
 					//frame.setExpressionAndShow("a+b");
 					
-					frame.revalidate();
+					//frame.revalidate();
 					frame.pack();
 					frame.setLocationRelativeTo(null);
 					frame.setVisible(true);
@@ -532,8 +532,8 @@ public class PreferencesFrame extends JDialog {
 				MainGui.compartment_default_for_dialog_window = s;
 		
 				//MOVE THOSE COMMANDS AFTER THE USER CLICK OK!!!
-				MainGui.updateDefaultValue(Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.index, MainGui.compartment_default_for_dialog_window);
-				MainGui.updateDefaultValue(Constants.TitlesTabs.COMPARTMENTS.description, Constants.CompartmentsColumns.NAME.index, MainGui.compartment_default_for_dialog_window);
+				MainGui.updateDefaultValue(Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.COMPARTMENT.index, MainGui.compartment_default_for_dialog_window);
+				MainGui.updateDefaultValue(Constants.TitlesTabs.COMPARTMENTS.getDescription(), Constants.CompartmentsColumns.NAME.index, MainGui.compartment_default_for_dialog_window);
 			}
 		});
 
@@ -551,7 +551,7 @@ public class PreferencesFrame extends JDialog {
 
 			public void updateDefault() {
 				MainGui.globalQ_defaultValue_for_dialog_window = defaultGlobalQValue.getText();
-				MainGui.updateDefaultValue(Constants.TitlesTabs.GLOBALQ.description, Constants.GlobalQColumns.VALUE.index, MainGui.globalQ_defaultValue_for_dialog_window);
+				MainGui.updateDefaultValue(Constants.TitlesTabs.GLOBALQ.getDescription(), Constants.GlobalQColumns.VALUE.index, MainGui.globalQ_defaultValue_for_dialog_window);
 			}
 		});
 
@@ -572,7 +572,7 @@ public class PreferencesFrame extends JDialog {
 				MainGui.species_defaultInitialValue = defaultSpeciesInitialValue.getText
 
 						();
-				MainGui.updateDefaultValue(Constants.TitlesTabs.SPECIES.description, 
+				MainGui.updateDefaultValue(Constants.TitlesTabs.SPECIES.getDescription(), 
 
 						Constants.SpeciesColumns.INITIAL_QUANTITY.index, MainGui.species_defaultInitialValue);
 			}
@@ -595,7 +595,7 @@ public class PreferencesFrame extends JDialog {
 				MainGui.compartment_defaultInitialValue = 
 
 						defaultCompartmentInitialValue.getText();
-				MainGui.updateDefaultValue(Constants.TitlesTabs.COMPARTMENTS.description, 
+				MainGui.updateDefaultValue(Constants.TitlesTabs.COMPARTMENTS.getDescription(), 
 
 						Constants.CompartmentsColumns.INITIAL_SIZE.index, MainGui.compartment_defaultInitialValue);
 			}
@@ -1104,26 +1104,26 @@ public class PreferencesFrame extends JDialog {
 		if(pref.size() == 0) return;
 		for(int i = 0; i < pref.size(); i++) {
 			String element = pref.get(i);
-			StringTokenizer st = new StringTokenizer(element, Constants.Preferences.SEPARATOR.description);
+			StringTokenizer st = new StringTokenizer(element, Constants.Preferences.SEPARATOR.getDescription());
 			String name = st.nextToken().trim();
 			String value = new String();
 			if(st.hasMoreTokens())  value = st.nextToken();
 			
 			
-			if(name.compareTo(Constants.Preferences.AUTOCOMPLETE.description)==0) {
-				if(value.compareTo(Constants.Preferences.CHECKED.description)==0) jCheckBoxAutocomplete.setSelected(true);
+			if(name.compareTo(Constants.Preferences.AUTOCOMPLETE.getDescription())==0) {
+				if(value.compareTo(Constants.Preferences.CHECKED.getDescription())==0) jCheckBoxAutocomplete.setSelected(true);
 				else jCheckBoxAutocomplete.setSelected(false);
 				continue;
 			} 
 
 
-/*			if(name.compareTo(Constants.Preferences.SHOW_ALL_FUNCTIONS.description)==0) {
-				if(value.compareTo(Constants.Preferences.CHECKED.description)==0) jCheckBoxShowAllAvailableFunctions.setSelected(true);
+/*			if(name.compareTo(Constants.Preferences.SHOW_ALL_FUNCTIONS.getDescription())==0) {
+				if(value.compareTo(Constants.Preferences.CHECKED.getDescription())==0) jCheckBoxShowAllAvailableFunctions.setSelected(true);
 				else jCheckBoxShowAllAvailableFunctions.setSelected(false);
 				continue;
 			} */
 
-			/*if(name.compareTo(Constants.Preferences.AUTOCOMPLETION_DELAY.description)==0) {
+			/*if(name.compareTo(Constants.Preferences.AUTOCOMPLETION_DELAY.getDescription())==0) {
 				try{
 					Integer val = new Integer(value);
 					Integer max = new Integer((Integer) ((SpinnerNumberModel)spinnerAutocompletionDelay.getModel()).getMaximum());
@@ -1137,53 +1137,53 @@ public class PreferencesFrame extends JDialog {
 				}
 			} */
 
-			if(name.compareTo(Constants.Preferences.COMP_NAME.description)==0) {
+			if(name.compareTo(Constants.Preferences.COMP_NAME.getDescription())==0) {
 				defaultCompName.setText(value);
 				continue;
 			} 
-			if(name.compareTo(Constants.Preferences.INITIAL_COMP_SIZE.description)==0) {
+			if(name.compareTo(Constants.Preferences.INITIAL_COMP_SIZE.getDescription())==0) {
 				defaultCompartmentInitialValue.setText(value);
 				continue;
 			}
-			if(name.compareTo(Constants.Preferences.INITIAL_GLOBALQ_VALUE.description)==0) {
+			if(name.compareTo(Constants.Preferences.INITIAL_GLOBALQ_VALUE.getDescription())==0) {
 				defaultGlobalQValue.setText(value);
 				continue;
 			}
-			if(name.compareTo(Constants.Preferences.INITIAL_SPECIES_VALUE.description)==0) {
+			if(name.compareTo(Constants.Preferences.INITIAL_SPECIES_VALUE.getDescription())==0) {
 				defaultSpeciesInitialValue.setText(value);
 				continue;
 			}
-			if(name.compareTo(Constants.Preferences.POPUP_AUTOCOMPLETE.description)==0) {
-				if(value.compareTo(Constants.Preferences.CHECKED.description)==0) jCheckBoxDialogWindow.setSelected(true);
+			if(name.compareTo(Constants.Preferences.POPUP_AUTOCOMPLETE.getDescription())==0) {
+				if(value.compareTo(Constants.Preferences.CHECKED.getDescription())==0) jCheckBoxDialogWindow.setSelected(true);
 				else jCheckBoxDialogWindow.setSelected(false);
 				continue;
 			} 
-			if(name.compareTo(Constants.Preferences.RENAMING.description)==0) {
-				if(value.compareTo(Constants.Preferences.RENAME_AUTO.description)==0) jRadioButton1.setSelected(true);
-				else if(value.compareTo(Constants.Preferences.RENAME_CUSTOM.description)==0) jRadioButton2.setSelected(true);
-				else if(value.compareTo(Constants.Preferences.RENAME_NONE.description)==0) jRadioButton3.setSelected(true);
+			if(name.compareTo(Constants.Preferences.RENAMING.getDescription())==0) {
+				if(value.compareTo(Constants.Preferences.RENAME_AUTO.getDescription())==0) jRadioButton1.setSelected(true);
+				else if(value.compareTo(Constants.Preferences.RENAME_CUSTOM.getDescription())==0) jRadioButton2.setSelected(true);
+				else if(value.compareTo(Constants.Preferences.RENAME_NONE.getDescription())==0) jRadioButton3.setSelected(true);
 				continue;
 			} 
 
-			if(name.compareTo(Constants.Preferences.COLOR_DEFAULTS.description)==0) {
+			if(name.compareTo(Constants.Preferences.COLOR_DEFAULTS.getDescription())==0) {
 				labelDefaults.setBorder(new LineBorder(new Color(Integer.parseInt(value),true), 3));
 				GraphicalProperties.color_border_defaults = new Color(Integer.parseInt(value),true);
 				continue;
 			} 
 
-			if(name.compareTo(Constants.Preferences.COLOR_HIGHLIGHT.description)==0) {
+			if(name.compareTo(Constants.Preferences.COLOR_HIGHLIGHT.getDescription())==0) {
 				labelHightlight.setBackground(new Color(Integer.parseInt(value),true));
 				GraphicalProperties.color_cell_to_highlight = new Color(Integer.parseInt(value),true);
 				continue;
 			} 
 
-			if(name.compareTo(Constants.Preferences.COLOR_MAJOR.description)==0) {
+			if(name.compareTo(Constants.Preferences.COLOR_MAJOR.getDescription())==0) {
 				labelMajourIssues.setBackground(new Color(Integer.parseInt(value),true));
 				GraphicalProperties.color_cell_with_errors = new Color(Integer.parseInt(value),true);
 				continue;
 			} 
 			
-			if(name.compareTo(Constants.Preferences.COLOR_MINOR.description)==0) {
+			if(name.compareTo(Constants.Preferences.COLOR_MINOR.getDescription())==0) {
 				if(value.compareTo("null")==0) {
 					jCheckBoxHighlightCellOpenIssues.setSelected(false);
 					GraphicalProperties.color_cell_with_minorIssues =null;
@@ -1194,22 +1194,22 @@ public class PreferencesFrame extends JDialog {
 				continue;
 			} 
 			
-			if(name.compareTo(Constants.Preferences.FONT_SIZE.description)==0) {
+			if(name.compareTo(Constants.Preferences.FONT_SIZE.getDescription())==0) {
 				slider.setValue(Integer.parseInt(value));
 				GraphicalProperties.customFont = GraphicalProperties.customFont.deriveFont(Float.parseFloat(value));
 				continue;
 			} 
-			if(name.compareTo(Constants.Preferences.AUTOSAVE_PATH.description)==0) {
+			if(name.compareTo(Constants.Preferences.AUTOSAVE_PATH.getDescription())==0) {
 				textFieldDirectoryAutosave.setText(value);
 				gui.setAutosaveDirectory(value);
 				continue;
 			} 
-			if(name.compareTo(Constants.Preferences.AUTOSAVE_TIME.description)==0) {
+			if(name.compareTo(Constants.Preferences.AUTOSAVE_TIME.getDescription())==0) {
 				spinner_1.setValue(Integer.parseInt(value));
 				gui.setAutosaveTimeMin(Integer.parseInt(value));
 				continue;
 			} 
-			if(name.compareTo(Constants.Preferences.AUTOSAVE_ACTIVE.description)==0) {
+			if(name.compareTo(Constants.Preferences.AUTOSAVE_ACTIVE.getDescription())==0) {
 				chckbxNewCheckBox.setSelected(Boolean.parseBoolean(value));
 				gui.setAutosaveActive(Boolean.parseBoolean(value));
 				continue;
@@ -1223,77 +1223,77 @@ public class PreferencesFrame extends JDialog {
 		try {
 			out = new BufferedWriter(new FileWriter(MainGui.file_preferences));
 
-			out.write(Constants.Preferences.AUTOCOMPLETE.description+Constants.Preferences.SEPARATOR.description);
-			if(jCheckBoxAutocomplete.isSelected()) out.write(Constants.Preferences.CHECKED.description);
-			else out.write(Constants.Preferences.UNCHECKED.description);
+			out.write(Constants.Preferences.AUTOCOMPLETE.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
+			if(jCheckBoxAutocomplete.isSelected()) out.write(Constants.Preferences.CHECKED.getDescription());
+			else out.write(Constants.Preferences.UNCHECKED.getDescription());
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.COMP_NAME.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.COMP_NAME.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(defaultCompName.getText());
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.INITIAL_COMP_SIZE.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.INITIAL_COMP_SIZE.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(defaultCompartmentInitialValue.getText());
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.INITIAL_GLOBALQ_VALUE.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.INITIAL_GLOBALQ_VALUE.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(defaultGlobalQValue.getText());
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.INITIAL_SPECIES_VALUE.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.INITIAL_SPECIES_VALUE.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(defaultSpeciesInitialValue.getText());
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.POPUP_AUTOCOMPLETE.description+Constants.Preferences.SEPARATOR.description);
-			if(jCheckBoxDialogWindow.isSelected()) out.write(Constants.Preferences.CHECKED.description);
-			else out.write(Constants.Preferences.UNCHECKED.description);
+			out.write(Constants.Preferences.POPUP_AUTOCOMPLETE.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
+			if(jCheckBoxDialogWindow.isSelected()) out.write(Constants.Preferences.CHECKED.getDescription());
+			else out.write(Constants.Preferences.UNCHECKED.getDescription());
 			out.write(System.getProperty("line.separator"));
 			
-			/*	out.write(Constants.Preferences.AUTOCOMPLETION_DELAY.description+Constants.Preferences.SEPARATOR.description);
+			/*	out.write(Constants.Preferences.AUTOCOMPLETION_DELAY.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(new String(new Integer(MainGui.delayAutocompletion).toString()));
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.SHOW_ALL_FUNCTIONS.description+Constants.Preferences.SEPARATOR.description);
-			if(jCheckBoxShowAllAvailableFunctions.isSelected()) out.write(Constants.Preferences.CHECKED.description);
-			else out.write(Constants.Preferences.UNCHECKED.description);
+			out.write(Constants.Preferences.SHOW_ALL_FUNCTIONS.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
+			if(jCheckBoxShowAllAvailableFunctions.isSelected()) out.write(Constants.Preferences.CHECKED.getDescription());
+			else out.write(Constants.Preferences.UNCHECKED.getDescription());
 			out.write(System.getProperty("line.separator"));
 */
-			out.write(Constants.Preferences.RENAMING.description+Constants.Preferences.SEPARATOR.description);
-			if(jRadioButton1.isSelected())	out.write(Constants.Preferences.RENAME_AUTO.description);
-			else if(jRadioButton2.isSelected())	out.write(Constants.Preferences.RENAME_CUSTOM.description);
-			else if(jRadioButton3.isSelected())	out.write(Constants.Preferences.RENAME_NONE.description);
+			out.write(Constants.Preferences.RENAMING.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
+			if(jRadioButton1.isSelected())	out.write(Constants.Preferences.RENAME_AUTO.getDescription());
+			else if(jRadioButton2.isSelected())	out.write(Constants.Preferences.RENAME_CUSTOM.getDescription());
+			else if(jRadioButton3.isSelected())	out.write(Constants.Preferences.RENAME_NONE.getDescription());
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.COLOR_DEFAULTS.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.COLOR_DEFAULTS.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(new Integer(GraphicalProperties.color_border_defaults.getRGB()).toString());
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.COLOR_MINOR.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.COLOR_MINOR.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			if(GraphicalProperties.color_cell_with_minorIssues==null)out.write("null");
 			else out.write(new Integer(GraphicalProperties.color_cell_with_minorIssues.getRGB()).toString());
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.COLOR_MAJOR.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.COLOR_MAJOR.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(new Integer(GraphicalProperties.color_cell_with_errors.getRGB()).toString());
 			out.write(System.getProperty("line.separator"));
 
-			out.write(Constants.Preferences.COLOR_HIGHLIGHT.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.COLOR_HIGHLIGHT.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(new Integer(GraphicalProperties.color_cell_to_highlight.getRGB()).toString());
 			out.write(System.getProperty("line.separator"));
 			
-			out.write(Constants.Preferences.FONT_SIZE.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.FONT_SIZE.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(new Integer(GraphicalProperties.customFont.getSize()).toString());
 			out.write(System.getProperty("line.separator"));
 			
-			out.write(Constants.Preferences.AUTOSAVE_ACTIVE.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.AUTOSAVE_ACTIVE.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(new Boolean(gui.isAutosaveActive()).toString());
 			out.write(System.getProperty("line.separator"));
 			
-			out.write(Constants.Preferences.AUTOSAVE_PATH.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.AUTOSAVE_PATH.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(gui.getAutosaveDirectory());
 			out.write(System.getProperty("line.separator"));
 			
-			out.write(Constants.Preferences.AUTOSAVE_TIME.description+Constants.Preferences.SEPARATOR.description);
+			out.write(Constants.Preferences.AUTOSAVE_TIME.getDescription()+Constants.Preferences.SEPARATOR.getDescription());
 			out.write(new Integer(gui.getAutosaveTimeMin()).toString());
 			out.write(System.getProperty("line.separator"));
 

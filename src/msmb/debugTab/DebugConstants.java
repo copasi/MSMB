@@ -42,6 +42,11 @@ public class DebugConstants {
 			    }
 			   return new String();
 		   }
+
+		public String getDescription() {
+		
+			return description;
+		}
 	}
 
 

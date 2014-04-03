@@ -3,37 +3,24 @@ package  msmb.gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import java.awt.Window.Type;
-import java.awt.Dialog.ModalityType;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.BorderFactory;
-import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.UIManager;
 
-import msmb.model.MultiModel;
 import msmb.utility.Constants;
 import msmb.utility.GraphicalProperties;
-import msmb.utility.SwingUtils;
-
-import org.apache.commons.lang3.tuple.MutablePair;
-
-
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JScrollPane;
@@ -64,7 +51,6 @@ public class FunctionFromExpressionDialog extends JDialog {
 		setAlwaysOnTop(true);
 		setModal(true);
 		setModalityType(ModalityType.APPLICATION_MODAL);
-		setType(Type.UTILITY);
 		setBounds(100, 100, 450, 164);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -209,7 +195,7 @@ public class FunctionFromExpressionDialog extends JDialog {
 				panel_singleElement_labels.setLayout(new GridLayout(0, 1, 0, 0));
 				{
 					JLabel lblNewLabel = null;
-					if(element.get(0).compareTo(Constants.TitlesTabs.FUNCTIONS.description)==0) {
+					if(element.get(0).compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription())==0) {
 						lblNewLabel = new JLabel("Function name: ");
 					
 					} else {

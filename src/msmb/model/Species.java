@@ -37,13 +37,13 @@ public class Species   implements Serializable{
 				MultistateSpecies ms = (MultistateSpecies)this;
 				Vector<MultistateSpecies> singles = ms.getExpandedSpecies(m, true);
 				for(MultistateSpecies single : singles) {
-					CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description,single);
+					CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.getDescription(),Constants.SpeciesColumns.EXPRESSION.getDescription(),single);
 				}
 			} else {
-				CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
+				CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.SPECIES.getDescription(),Constants.SpeciesColumns.EXPRESSION.getDescription());
 			}
 			MainGui.importFromSBMLorCPS = false;
-			this.expression = m.reprintExpression_forceCompressionElements(expression,Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.EXPRESSION.description);
+			this.expression = m.reprintExpression_forceCompressionElements(expression,Constants.TitlesTabs.SPECIES.getDescription(),Constants.SpeciesColumns.EXPRESSION.getDescription());
 		} catch (Exception ex) {
 
 			throw ex;
@@ -122,7 +122,7 @@ public class Species   implements Serializable{
 		} catch (Exception e) {// not a number, expression... so let's try to parse it
 				Vector<String> elements = new Vector<String>();
 				try {
-					elements = CellParsers.extractElementsInList(m,initialQ, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.INITIAL_QUANTITY.description);
+					elements = CellParsers.extractElementsInList(m,initialQ, Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.INITIAL_QUANTITY.getDescription());
 				} catch (MySyntaxException e1) {
 					e1.printStackTrace();
 				}
@@ -132,7 +132,7 @@ public class Species   implements Serializable{
 				
 				for(int i = 0; i < elements.size(); i++) {
 					try {
-						CellParsers.parseExpression_getUndefMisused(m,elements.get(i), Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.INITIAL_QUANTITY.description);
+						CellParsers.parseExpression_getUndefMisused(m,elements.get(i), Constants.TitlesTabs.SPECIES.getDescription(),Constants.SpeciesColumns.INITIAL_QUANTITY.getDescription());
 						this.initialQuantity.add(elements.get(i));
 					} catch (MySyntaxException e1) {
 						exToThrow.add(e1);
@@ -183,14 +183,14 @@ public class Species   implements Serializable{
 		return this.compartment; 
 	}
 	
-	public void setCompartment(MultiModel m, String compartment) throws MySyntaxException {	
+	public void setCompartment(MultiModel m, String compartment) throws Exception {	
 		if(compartment == null) return;
 		if(m==null) return;
 		if(compartment.compareTo(Constants.NOT_EDITABLE_VIEW) == 0) return;
 		if(compartment.length()==0) return;
 		try {
-			//Vector<Vector<String>> undef_misused = CellParsers.parseExpression_getUndefMisused(m,compartment, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.COMPARTMENT.description);
-			Vector<Vector<String>> undef_misused = CellParsers.parseListExpression_getUndefMisused(m,compartment, Constants.TitlesTabs.SPECIES.description,Constants.SpeciesColumns.COMPARTMENT.description);
+			//Vector<Vector<String>> undef_misused = CellParsers.parseExpression_getUndefMisused(m,compartment, Constants.TitlesTabs.SPECIES.getDescription(),Constants.SpeciesColumns.COMPARTMENT.getDescription());
+			Vector<Vector<String>> undef_misused = CellParsers.parseListExpression_getUndefMisused(m,compartment, Constants.TitlesTabs.SPECIES.getDescription(),Constants.SpeciesColumns.COMPARTMENT.getDescription());
 			
 		
 		} catch (Exception ex) {
@@ -202,7 +202,7 @@ public class Species   implements Serializable{
 		
 		Vector<String> names = new Vector<String>();
 		try {
-			names = CellParsers.extractNamesInList(m,compartment, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.description);
+			names = CellParsers.extractNamesInList(m,compartment, Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.COMPARTMENT.getDescription());
 		} catch (MySyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -212,7 +212,7 @@ public class Species   implements Serializable{
 			if(m.getComp(names.get(i))!=null) {
 				if(!this.compartment.contains(names.get(i))) this.compartment.add(names.get(i));	
 			} else {
-				throw new MySyntaxException(Constants.SpeciesColumns.COMPARTMENT.index, "Compartment  \""+ names.get(i)+"\" is not defined.", Constants.TitlesTabs.SPECIES.description);
+				throw new MySyntaxException(Constants.SpeciesColumns.COMPARTMENT.index, "Compartment  \""+ names.get(i)+"\" is not defined.", Constants.TitlesTabs.SPECIES.getDescription());
 			}
 		}
 		

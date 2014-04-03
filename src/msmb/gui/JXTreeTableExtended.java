@@ -63,13 +63,13 @@ public class JXTreeTableExtended extends JXTreeTable {
 
 	private void addComboBox_andRecursiveChildren(DefaultMutableTreeTableNode n) {
 		int row = this.getRowForPath(new TreePath(((TreeTableModel)this.getTreeTableModel()).getPathToRoot(n)));
-		JComboBox<String> comboBox = new JComboBox<String>();
+		JComboBox comboBox = new JComboBox();
 		for(int i = 0; i < Constants.deleteActions.size()-1; i++) { 
 			comboBox.addItem((String)Constants.deleteActions.get(i));
 		}
 		
 		FoundElementToDelete which = (FoundElementToDelete) n.getUserObject();
-		if(which.getTableDescription().compareTo(Constants.TitlesTabs.REACTIONS.description) !=0 || which.getCol() != Constants.ReactionsColumns.KINETIC_LAW.index) {
+		if(which.getTableDescription().compareTo(Constants.TitlesTabs.REACTIONS.getDescription()) !=0 || which.getCol() != Constants.ReactionsColumns.KINETIC_LAW.index) {
 			String newValue = Constants.DeleteActions.ASSIGN_NEW_VALUE.custom_description;
 			newValue = newValue.replace("\"\"", "\""+getParentName(n)+"\"");
 			comboBox.addItem(newValue);

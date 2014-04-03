@@ -56,7 +56,7 @@ public class CompartmentsDB {
 	/*public Vector<Compartment> getComp(String name) {
 		Vector<String> names;
 		try {
-			names = CellParsers.extractListElements(multiModel,name, Constants.TitlesTabs.SPECIES.description, Constants.SpeciesColumns.COMPARTMENT.description);
+			names = CellParsers.extractListElements(multiModel,name, Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.COMPARTMENT.getDescription());
 		} catch (MySyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -129,7 +129,7 @@ public class CompartmentsDB {
 				c.setExpression(multiModel,expression.trim());
 				c.setInitialVolume(multiModel,initial);
 				compVector.put(ind,c);
-				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind);
+				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.getDescription(), ind);
 				return compVector.size()-1;
 				
 			} else { //comp already defined
@@ -145,7 +145,7 @@ public class CompartmentsDB {
 
 				compVector.put(ind, c);
 
-				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind);
+				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.getDescription(), ind);
 				return ind;
 			}
 		} catch (MySyntaxException ex) {
@@ -208,7 +208,7 @@ public class CompartmentsDB {
 
 				compVector.put(compIndexes.get(name), c);
 
-				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.description, ind);
+				if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.COMPARTMENTS.getDescription(), ind);
 				return 0;//nothing to do?
 			}
 		

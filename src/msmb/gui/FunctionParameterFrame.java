@@ -168,7 +168,7 @@ public class FunctionParameterFrame extends JDialog {
 			newNameTextField.setText(paramNames.get(i));
 			newNameTextField.setName(jTextFieldName_alternativeName);
 	
-			JComboBox<String> types = new JComboBox<String>(pTypes);
+			JComboBox types = new JComboBox(pTypes);
 			String t = paramTypes.get(i);
 			types.setPreferredSize(new Dimension(50,20));
 			types.setMinimumSize(new Dimension(50,20));
@@ -197,7 +197,7 @@ public class FunctionParameterFrame extends JDialog {
 			}
 		}
 		
-		revalidate();
+		//revalidate();
 	}
 
 	private JButton getJButton() {
@@ -293,7 +293,7 @@ public class FunctionParameterFrame extends JDialog {
 				paramName = ((JLabel)current).getText();
 			}
 			if(current instanceof JComboBox) {
-				paramType = ((String)((JComboBox<?>)current).getSelectedItem());
+				paramType = ((String)((JComboBox)current).getSelectedItem());
 			}
 			if(paramName!= null && paramType != null && paramOrder != null && paramNameInTextField !=null) {
 				

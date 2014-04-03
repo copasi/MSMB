@@ -38,12 +38,12 @@ public class DebugMessage implements Comparable<DebugMessage>, Serializable{
 	
 	public String getShortDescription() {
 		String name_column = new String();
-		if(origin_table.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) name_column = Constants.ReactionsColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) name_column = Constants.SpeciesColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) name_column = Constants.GlobalQColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) name_column = Constants.CompartmentsColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) name_column = Constants.EventsColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) name_column = Constants.FunctionsColumns.getDescriptionFromIndex(origin_col);
+		if(origin_table.compareTo(Constants.TitlesTabs.REACTIONS.getDescription()) == 0) name_column = Constants.ReactionsColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.SPECIES.getDescription()) == 0) name_column = Constants.SpeciesColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription()) == 0) name_column = Constants.GlobalQColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription()) == 0) name_column = Constants.CompartmentsColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.EVENTS.getDescription()) == 0) name_column = Constants.EventsColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription()) == 0) name_column = Constants.FunctionsColumns.getDescriptionFromIndex(origin_col);
 		String s = new String(origin_table+"@("+origin_row+","+ name_column+"): " + DebugConstants.PriorityType.getDescriptionFromIndex(priority));
 		return s;
 	}
@@ -51,12 +51,12 @@ public class DebugMessage implements Comparable<DebugMessage>, Serializable{
 	public String getCompleteDescription() {
 		String s = new String();
 		String name_column = new String();
-		if(origin_table.compareTo(Constants.TitlesTabs.REACTIONS.description) == 0) name_column = Constants.ReactionsColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.SPECIES.description) == 0) name_column = Constants.SpeciesColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.GLOBALQ.description) == 0) name_column = Constants.GlobalQColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.COMPARTMENTS.description) == 0) name_column = Constants.CompartmentsColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.EVENTS.description) == 0) name_column = Constants.EventsColumns.getDescriptionFromIndex(origin_col);
-		else if(origin_table.compareTo(Constants.TitlesTabs.FUNCTIONS.description) == 0) name_column = Constants.FunctionsColumns.getDescriptionFromIndex(origin_col);
+		if(origin_table.compareTo(Constants.TitlesTabs.REACTIONS.getDescription()) == 0) name_column = Constants.ReactionsColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.SPECIES.getDescription()) == 0) name_column = Constants.SpeciesColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription()) == 0) name_column = Constants.GlobalQColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription()) == 0) name_column = Constants.CompartmentsColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.EVENTS.getDescription()) == 0) name_column = Constants.EventsColumns.getDescriptionFromIndex(origin_col);
+		else if(origin_table.compareTo(Constants.TitlesTabs.FUNCTIONS.getDescription()) == 0) name_column = Constants.FunctionsColumns.getDescriptionFromIndex(origin_col);
 		s+= "Issue in table " + origin_table + " at row " + origin_row + ", column \"" + name_column + "\"" + System.getProperty("line.separator");
 		s+= problem + System.getProperty("line.separator");
 		return s;

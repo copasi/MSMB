@@ -34,8 +34,6 @@ import java.awt.event.ItemListener;
 import java.awt.Color;
 import java.awt.GridLayout;
 import javax.swing.JRadioButton;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
 
 public class RenamingDialog extends JDialog {
 
@@ -133,7 +131,7 @@ public class RenamingDialog extends JDialog {
 		JPanel panel_newName = new JPanel();
 		panel_newName.setForeground(Color.WHITE);
 		contentPanel.add(panel_newName, BorderLayout.SOUTH);
-		if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description) == 0){
+		if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.getDescription()) == 0){
 			panel_newName.setLayout(new GridLayout(2, 0, 0, 0));
 		} else {
 			panel_newName.setLayout(new GridLayout(1, 0, 0, 0));
@@ -154,7 +152,7 @@ public class RenamingDialog extends JDialog {
 		ButtonGroup names = new ButtonGroup();
 		names.add(rdbtnNewSpeciesName);
 		
-		if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.description) == 0){
+		if(MainGui.cellTableEdited.compareTo(Constants.TitlesTabs.SPECIES.getDescription()) == 0){
 			JPanel panel_3 = new JPanel();
 			FlowLayout flowLayout_1 = (FlowLayout) panel_3.getLayout();
 			flowLayout_1.setAlignment(FlowLayout.LEFT);
@@ -233,28 +231,28 @@ public class RenamingDialog extends JDialog {
 			
 			
 			{
-				String cancelButtonText = new String();
 				if(actionsType == Constants.MERGE_SPECIES || actionsType == Constants.DELETE_SPECIES_AND_REDIRECT) {
-					cancelButtonText = "Use New Name";
+					JButton newName = new JButton("Use New Name");
+					
+					newName.addActionListener(new ActionListener() {
+							public void actionPerformed(ActionEvent e) {
+								useNewName();
+							}
+						});
+					
+					buttonPane.add(newName);
 				}
-				else cancelButtonText = "Cancel";
-				JButton cancelButton = new JButton(cancelButtonText);
-				if(cancelButtonText.compareTo("Cancel")==0)	{
-					cancelButton.addActionListener(new ActionListener() {
+				
+				JButton cancelButton = new JButton("Cancel");
+				cancelButton.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
 							cancelOption();
 						}
 					});
 					cancelButton.setActionCommand("Cancel");
-				} else {
-					cancelButton.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent e) {
-							useNewName();
-						}
-					});
-				}
-				
 				buttonPane.add(cancelButton);
+				
+				
 			}
 		}
 		panel_2 = new JPanel();

@@ -55,7 +55,7 @@ public class GlobalQ {
 		} catch (Throwable e) {// not a number, expression... so let's try to parse it
 			
 			try {
-				Vector<Vector<String>> undef_misused = CellParsers.parseExpression_getUndefMisused(m,initialValue, Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.VALUE.description);
+				Vector<Vector<String>> undef_misused = CellParsers.parseExpression_getUndefMisused(m,initialValue, Constants.TitlesTabs.GLOBALQ.getDescription(),Constants.GlobalQColumns.VALUE.getDescription());
 			} catch (Throwable ex) {
 				throw ex;
 			}
@@ -77,10 +77,10 @@ public class GlobalQ {
 		boolean oldImportFromSBMLorCPS = MainGui.importFromSBMLorCPS;
 		try {
 			this.expression = expr;	
-			 CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.EXPRESSION.description);
+			 CellParsers.parseExpression_getUndefMisused(m,expression, Constants.TitlesTabs.GLOBALQ.getDescription(),Constants.GlobalQColumns.EXPRESSION.getDescription());
 		
 				MainGui.importFromSBMLorCPS = false;
-				this.expression = m.reprintExpression_forceCompressionElements(expression,Constants.TitlesTabs.GLOBALQ.description,Constants.GlobalQColumns.EXPRESSION.description);
+				this.expression = m.reprintExpression_forceCompressionElements(expression,Constants.TitlesTabs.GLOBALQ.getDescription(),Constants.GlobalQColumns.EXPRESSION.getDescription());
 		
 		} catch (Throwable ex) {
 			throw ex;

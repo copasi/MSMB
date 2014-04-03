@@ -34,8 +34,6 @@ import  msmb.gui.*;
 
 public class CellParsers {
 	
-	//public static XJep parser  = new XJep();
-	//public static MR_grammar parser2 = null;
 	
 	private static HashMap<String, String> cleanedNames = new HashMap<String,String>();
 	
@@ -189,7 +187,6 @@ public class CellParsers {
 			 return v.isRealMultiStateSpecies(); 
 			 
 			} catch (Throwable e) {
-				//e.printStackTrace();
 				return false;
 			}
 		}
@@ -250,46 +247,48 @@ public static String evaluateExpressionWithDependentSum(String expression, Multi
 					}
 				  return ret;
 			} catch (Exception e) {
-				//e.printStackTrace();
-				return null;
+					return null;
 			}
 		}
 	
+public static Double evaluateExpression(String expression, MultiModel multiModel) throws Throwable {
+	
+	//	System.out.println("...........evaluateExpression..............");
+	//	System.out.println(expression);
+	//	System.out.println(".................................");
+	
+		if(expression.trim().length()==0) return null;
+		try {
+		  Double ret = new Double(0.0);
+	      ByteArrayInputStream is2 = new ByteArrayInputStream(expression.getBytes("UTF-8"));
+			  MR_Expression_Parser parser = new MR_Expression_Parser(is2,"UTF-8");
+		  	  CompleteExpression start = parser.CompleteExpression();
+		      EvaluateExpressionVisitor vis = new EvaluateExpressionVisitor(multiModel);
+		      start.accept(vis);
+			  if(vis.getExceptions().size() == 0) {
+				  ret  = vis.evaluateExpression_notTruncated();
+			  } else {
+						throw vis.getExceptions().get(0);
+				}
+			  return ret;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+
 	public static Integer evaluateExpression(String expression) throws Throwable {
-		
-		//	System.out.println("...........evaluateExpression..............");
-		//	System.out.println(expression);
-		//	System.out.println(".................................");
-		
-			if(expression.trim().length()==0) return null;
-			try {
-			  Integer ret = new Integer(0);
-		      ByteArrayInputStream is2 = new ByteArrayInputStream(expression.getBytes("UTF-8"));
-				  MR_Expression_Parser parser = new MR_Expression_Parser(is2,"UTF-8");
-			  	  CompleteExpression start = parser.CompleteExpression();
-			      EvaluateExpressionVisitor vis = new EvaluateExpressionVisitor(MainGui.multiModel);
-			      start.accept(vis);
-				  if(vis.getExceptions().size() == 0) {
-					  ret  = vis.evaluateExpression();
-				  } else {
-							throw vis.getExceptions().get(0);
-					}
-				  return ret;
-			} catch (Exception e) {
-				//e.printStackTrace();
-				return null;
-			}
+		  Double d = evaluateExpression(expression, MainGui.multiModel);
+		  Integer ret = new Long(Math.round(d)).intValue();
+		  return ret;
 		}
-	
-	
-	
 	
 	
 	public static String replaceVariableInExpression(String original, String find, String replacement, boolean isVariableIndexMultistate) {
 		
 		try {
-			System.out.println(".................................");
-			System.out.println("original = "+original+"; find = "+find + "; repl = "+replacement);
+		//	System.out.println(".................................");
+		//	System.out.println("original = "+original+"; find = "+find + "; repl = "+replacement);
 			if(find.compareTo(replacement)==0) return original;
 			InputStream is = new ByteArrayInputStream(original.getBytes("UTF-8"));
 			MR_Expression_Parser_ReducedParserException parser = new MR_Expression_Parser_ReducedParserException(is,"UTF-8");
@@ -298,8 +297,8 @@ public static String evaluateExpressionWithDependentSum(String expression, Multi
 			root.accept(mySV);
 			String newExpr = mySV.getNewExpression();
 			
-			System.out.println("newExpr1 "+newExpr);
-			System.out.println(".................................");
+	//		System.out.println("newExpr1 "+newExpr);
+	//		System.out.println(".................................");
 		
 			InputStream is2 = new ByteArrayInputStream(newExpr.getBytes("UTF-8"));
 			parser = new MR_Expression_Parser_ReducedParserException(is2,"UTF-8");
@@ -323,8 +322,8 @@ public static String evaluateExpressionWithDependentSum(String expression, Multi
 				MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(original, find,replacement, isVariableIndexMultistate);
 				complete.accept(mySV);
 				String newExpr = mySV.getNewMultistate();
-				System.out.println("newExpr3 "+newExpr);
-				System.out.println(".................................");
+		//		System.out.println("newExpr3 "+newExpr);
+		//		System.out.println(".................................");
 				return newExpr;
 			}catch (Throwable e22) {
 			
@@ -336,8 +335,8 @@ public static String evaluateExpressionWithDependentSum(String expression, Multi
 				root.accept(mySV);
 				String newExpr = mySV.getNewExpression();
 				
-				System.out.println("newExpr2 "+newExpr);
-				System.out.println(".................................");
+		//		System.out.println("newExpr2 "+newExpr);
+		//		System.out.println(".................................");
 		
 				return newExpr;
 				}catch (Throwable e2) {
@@ -351,16 +350,14 @@ public static String evaluateExpressionWithDependentSum(String expression, Multi
 	 }
 	
 	
-	public static String replaceSpeciesName_AfterTransferAssignment(String fullSpDefinition, String originalSpName, String replacementSpName, HashMap<String, String> aliases) {
-		
-		try{
+	public static String replaceSpeciesName_AfterTransferAssignment(String fullSpDefinition, String originalSpName, String replacementSpName, HashMap<String, String> aliases) {		try{
 		InputStream is = new ByteArrayInputStream(fullSpDefinition.getBytes("UTF-8"));
-		 MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
-		 CompleteMultistateSpecies_Operator complete = parser.CompleteMultistateSpecies_Operator();
-		 MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(fullSpDefinition,originalSpName,replacementSpName,aliases);
-		complete.accept(mySV);
-		String newExpr = mySV.getNewMultistate();
-		return newExpr;
+			 MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
+			 CompleteMultistateSpecies_Operator complete = parser.CompleteMultistateSpecies_Operator();
+			 MultistateSpecies_SubstitutionVisitor mySV = new MultistateSpecies_SubstitutionVisitor(fullSpDefinition,originalSpName,replacementSpName,aliases);
+			complete.accept(mySV);
+			String newExpr = mySV.getNewMultistate();
+			return newExpr;
 		}catch (Throwable e2) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)	e2.printStackTrace();
 			return null;
@@ -368,8 +365,7 @@ public static String evaluateExpressionWithDependentSum(String expression, Multi
  }
 	
 	
-public static String replaceNamesInMultistateAfterAssignment(String fullSpDefinition, String replacementSpName, HashMap<String, String> sitesName_origRepl, HashMap<String, String> aliases) {
-		
+	public static String replaceNamesInMultistateAfterAssignment(String fullSpDefinition, String replacementSpName, HashMap<String, String> sitesName_origRepl, HashMap<String, String> aliases) {
 			try{
 			InputStream is = new ByteArrayInputStream(fullSpDefinition.getBytes("UTF-8"));
 			 MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
@@ -386,7 +382,6 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 	 }
 
 	public static String replaceNamesInMultistate(String fullSpDefinition, String replacementSpName, HashMap<String, String> sitesName_origRepl) {
-		
 		try {
 			InputStream is = new ByteArrayInputStream(fullSpDefinition.getBytes("UTF-8"));
 			 MR_MultistateSpecies_Parser parser = new MR_MultistateSpecies_Parser(is);
@@ -420,11 +415,11 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		 expression = expression.trim();
 		 if(expression.length()==0) return ret;
 		 int column_tab = -1;
-			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.description)== 0) {
+			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.getDescription())== 0) {
 				column_tab = Constants.SpeciesColumns.getIndex(column_descr);
-			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)== 0) {
+			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())== 0) {
 				column_tab = Constants.GlobalQColumns.getIndex(column_descr);
-			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)== 0) {
+			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())== 0) {
 				column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
 			}
 		 try{
@@ -438,10 +433,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 				 ret = usedVisitor.getNamesUsed();
 			  }
 		 } catch (Exception e) {
-			 
-			 
-			 //e.printStackTrace();
-			 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
+				 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
 		}
 		return ret;
 	}
@@ -452,15 +444,15 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		 expression = expression.trim();
 		 if(expression.length()==0) return ret;
 		 int column_tab = -1;
-			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.description)== 0) {
+			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.getDescription())== 0) {
 				column_tab = Constants.SpeciesColumns.getIndex(column_descr);
-			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)== 0) {
+			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())== 0) {
 				column_tab = Constants.GlobalQColumns.getIndex(column_descr);
-			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)== 0) {
+			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())== 0) {
 				column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
 			} 
 		
-			if(table_descr.compareTo(Constants.TitlesTabs.EVENTS.description)!=0) {
+			if(table_descr.compareTo(Constants.TitlesTabs.EVENTS.getDescription())!=0) {
 					 try{
 						
 					  if(expression.length() >0) {
@@ -499,11 +491,11 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		 expression = expression.trim();
 		 if(expression.length()==0) return ret;
 		 int column_tab = -1;
-			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.description)== 0) {
+			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.getDescription())== 0) {
 				column_tab = Constants.SpeciesColumns.getIndex(column_descr);
-			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)== 0) {
+			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())== 0) {
 				column_tab = Constants.GlobalQColumns.getIndex(column_descr);
-			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)== 0) {
+			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())== 0) {
 				column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
 			}
 		 try{
@@ -525,35 +517,32 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 						if(undef.size() >0) {
 							 message += "Missing element definition: " + undef.toString();
 						}
-						if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
+						if(misused.size() > 0) message +=  "\n"+ "The following elements are misused: " +misused.toString();
 						throw new MySyntaxException(column_tab, message,table_descr);
 				  } 
 				  
 				
 			  }
 		 } catch (Exception e) {
-			 
-			 
-			 //e.printStackTrace();
-			 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
+				 throw new MySyntaxException(column_tab, e.getMessage(),table_descr);
 		}
 		return ret;
 	}
 	
-	public static Vector<Vector<String>> parseExpression_getUndefMisused_2(MultiModel m, String expression, String table_descr, String column_descr, MultistateSpecies multistateForDependentSum) throws MySyntaxException, Exception {
+	private static Vector<Vector<String>> parseExpression_getUndefMisused_2(MultiModel m, String expression, String table_descr, String column_descr, MultistateSpecies multistateForDependentSum) throws MySyntaxException, Exception {
 		 Vector ret = new Vector();
 		 expression = expression.trim();
 		 if(expression.length()==0) return ret;
 		 int column_tab = -1;
-			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.description)== 0) {
+			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.getDescription())== 0) {
 				column_tab = Constants.SpeciesColumns.getIndex(column_descr);
-			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)== 0) {
+			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())== 0) {
 				column_tab = Constants.GlobalQColumns.getIndex(column_descr);
-			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)== 0) {
+			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())== 0) {
 				column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
-			} else if(table_descr.compareTo(Constants.TitlesTabs.REACTIONS.description)== 0) {
+			} else if(table_descr.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())== 0) {
 				column_tab = Constants.ReactionsColumns.getIndex(column_descr);
-			}else if(table_descr.compareTo(Constants.TitlesTabs.EVENTS.description)== 0) {
+			}else if(table_descr.compareTo(Constants.TitlesTabs.EVENTS.getDescription())== 0) {
 				column_tab = Constants.EventsColumns.getIndex(column_descr);
 			}
 		
@@ -577,18 +566,14 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 						if(undef.size() >0 ) {
 							 message += "Missing element definition: " + undef.toString();
 						}
-						if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
+						if(misused.size() > 0) message += "\n" + "The following elements are misused: " +misused.toString();
 						throw new MySyntaxException(column_tab, message,table_descr);
 				  } 
 				  
 				
 			  }
 		 } catch (msmb.parsers.mathExpression.ParseException e) {
-			 
-			 
-			 //e.printStackTrace();
 			 throw e;
-			 //new MySyntaxException(column_tab, e.getMessage(),table_descr);
 		}
 		return ret;
 	}
@@ -597,14 +582,14 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 	public static Vector<Vector<String>> parseExpression_getUndefMisused(MultiModel m, String expression, String table_descr, String column_descr) throws Throwable {
 		return parseExpression_getUndefMisused(m,expression,table_descr,column_descr,null);
 	}
+	
 	public static Vector<Vector<String>> parseExpression_getUndefMisused(MultiModel m, String expression, String table_descr, String column_descr, MultistateSpecies multistateForDependentSum) throws Throwable {
-		
 		try {
 			return parseExpression_getUndefMisused_2(m, expression,table_descr,column_descr, multistateForDependentSum);
 		} catch (Throwable e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 			if(!(e instanceof MySyntaxException) ){
-				if(table_descr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {
+				if(table_descr.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 					Vector ret = new Vector();
 					 DebugMessage dm = new DebugMessage();
@@ -622,121 +607,15 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 				throw (MySyntaxException)e;
 			}
 		}
-		//return null;
-		
-	/*	if(expression.length() == 0) return new Vector();
-		Node parsedExpression = null;
-		try {
-			parsedExpression = FunctionsDB.parser.parse(expression);
-			if(parsedExpression==null) throw new ParseException();
-			ExpressionsVisitor visitor = new ExpressionsVisitor();
-			Vector<Vector<String>> undef_misused = visitor.getBothUndefinedAndMisusedElements(parsedExpression);
-			Vector<String> undef = undef_misused.get(0);
-			Vector<String> misused = undef_misused.get(1);
-			
-			if(undef.size() != 0 || misused.size() != 0) {
-				String message = new String();
-				if(undef.size() >0) message += "Missing element definition: " + undef.toString();
-				if(misused.size() > 0) message += System.lineSeparator() + "The following elements are misused: " +misused.toString();
-				int column_tab = -1;
-				if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.description)== 0) {
-					column_tab = Constants.SpeciesColumns.getIndex(column_descr);
-				} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)== 0) {
-					column_tab = Constants.GlobalQColumns.getIndex(column_descr);
-				}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)== 0) {
-					column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
-				}
-				throw new MySyntaxException(column_tab, message,table_descr);
-			}
-			return undef_misused;
-				
-		} catch (ParseException ex) {
-			//ex.printStackTrace();
-			//System.out.println("Problems with token:"+ex.currentToken);
-			String message = new String(ex.getErrorInfo());
-			if(ex.getErrorInfo().contains("Unexpected \",\"") || ex.getErrorInfo().contains("implicit multiplication")) {
-				message += System.lineSeparator() + "Are you maybe trying to use a function that has not been defined?";
-			}
-			int column_tab = -1;
-			if(table_descr.compareTo(Constants.TitlesTabs.SPECIES.description)== 0) {
-				column_tab = Constants.SpeciesColumns.getIndex(column_descr);
-			} else if(table_descr.compareTo(Constants.TitlesTabs.GLOBALQ.description)== 0) {
-				column_tab = Constants.GlobalQColumns.getIndex(column_descr);
-			}  else if(table_descr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)== 0) {
-				column_tab = Constants.CompartmentsColumns.getIndex(column_descr);
-			}
-			throw new MySyntaxException(column_tab, message,table_descr );
-		}*/
 	}
 	
-/*	public static String cleanName_2(String objectName) {
-		Object existing = cleanedNames.get(objectName);
-		if(existing != null) return existing.toString();
-		
-		InputStream is;
-		String ret = new String(objectName);
-		try {
-			is = new ByteArrayInputStream(new String("").getBytes("UTF-8"));
-			MR_Expression_Parser parser = new MR_Expression_Parser(is,"UTF-8");
-			for(int i = 0; i < parser.escapable.length; i++) {
-				ret = ret.replace(parser.escapable[i], '\\'+parser.escapable[i]);
-			}
-		} catch (UnsupportedEncodingException e) {
 
-			e.printStackTrace();
-		}
-		
-		ret = StringEscapeUtils.unescapeJava(ret);
-		cleanedNames.put(objectName, ret);
-		return ret;
-	}*/
-	
-	
-	/*public static String oldCleanName (String objectName, boolean species){
-		if(objectName.contains("(") && species) {
-			//existing names with ( could not be compliant to multiremi syntax
-			try {
-				MultistateSpecies temp = new MultistateSpecies(objectName);
-				return temp.printCompleteDefinition(); /// TOOOOOOOOOOOO CHECK
-			} catch (Exception e) {
-				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
-				objectName = objectName.replace("(","_");
-				objectName = objectName.replace(")", "_");
-				objectName = objectName.replace("{", "_");
-				objectName = objectName.replace("}", "_");
-				objectName = objectName.replace(":", "_");
-				objectName = objectName.replace(",", "_");
-			}
-			
-		}
-		
-		String ret = objectName.replaceAll(" ", "_");
-		
-		//because those names can be used in mathematical expressions
-		ret =  ret.replace("-", "_");
-		ret =  ret.replace("+", "_");
-		ret =  ret.replace("*", "_");
-		ret =  ret.replace("/", "_");
-		ret =  ret.replace("'", "_pr");
-		ret =  ret.replace("`", "_pr");
-		ret =  ret.replace("&", "_");
-				
-		if(!species) {
-			ret =  ret.replace("(", "_");
-			ret =  ret.replace(")", "_");
-		}
-		return ret;
-	}*/
-	
 	
 	public static String cleanName(String objectName, boolean species) {
-		//return cleanName_2(objectName);
-		//return oldCleanName(objectName, species);
 		try {
 			objectName = new String(objectName.getBytes("UTF-8"),"UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}
 		if(!objectName.startsWith("\"")) {
 			if(objectName.indexOf(' ')!=-1 ||
@@ -818,10 +697,6 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 	
 	public static String parseMultistateSpecies_product(String multiStateProd, HashMap multiStateReact) {
 			if(multiStateProd.contains("succ") || multiStateProd.contains("pred")) { 
-				// o il nome di un sito specifico senza il nuovo stato... 
-				//(cdh1[p]) significa che ci deve essere tra i reagenti... 
-				//se invece e cdh1[q^20] allora puo non esserci tra i reagenti
-				
 				StringTokenizer st = new StringTokenizer(multiStateProd, "[];");
 				String name = new String((String)st.nextToken());
 				if(!multiStateReact.containsKey(name))	{ return new String(); }			
@@ -839,9 +714,6 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 			    			MultistateSpecies react = (MultistateSpecies)multiStateReact.get(name);
 			    			if(!react.getSitesNames().contains(name_site)) { return new String(); }
 			  }
-				
-				
-				
 				return multiStateProd;
 			}
 			
@@ -884,14 +756,14 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		while(st_states.hasMoreTokens()) {
 				String s = (String)st_states.nextToken().trim();
 				if(BooleanType.isTrue(s)
-						//s.compareTo(Constants.BooleanType.TRUE.description) ==0 
-						//|| s.compareTo(Constants.BooleanType.TRUE_lower.description) ==0
+						//s.compareTo(Constants.BooleanType.TRUE.getDescription()) ==0 
+						//|| s.compareTo(Constants.BooleanType.TRUE_lower.getDescription()) ==0
 						){
 					foundTrue = true;
 				}
 				if(BooleanType.isFalse(s)
-						//s.compareTo(Constants.BooleanType.FALSE.description) ==0 
-						//|| s.compareTo(Constants.BooleanType.FALSE_lower.description) ==0
+						//s.compareTo(Constants.BooleanType.FALSE.getDescription()) ==0 
+						//|| s.compareTo(Constants.BooleanType.FALSE_lower.getDescription()) ==0
 						){
 					foundFalse = true;
 				}
@@ -957,7 +829,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		
 		
 		
-	//	MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.REACTIONS.description, Constants.ReactionsColumns.REACTION.index, DebugConstants.PriorityType.PARSING.priorityCode);
+	//	MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.REACTIONS.getDescription(), Constants.ReactionsColumns.REACTION.index, DebugConstants.PriorityType.PARSING.priorityCode);
 		
 		try {
 			InputStream is = new ByteArrayInputStream(reaction_complete.getBytes("UTF-8"));
@@ -977,7 +849,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 				ex.printStackTrace();
 			
 			 DebugMessage dm = new DebugMessage();
-			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+			 dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 			 dm.setProblem("Reaction not following the correct syntax. Common causes: missing blank separator or quotes. "+ex.getMessage());
 			 dm.setOrigin_row(row);
 			 dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
@@ -1058,7 +930,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 			Vector prod = new Vector();
 			Vector mod = new Vector();
 			
-			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.REACTIONS.description, Constants.ReactionsColumns.REACTION.index, DebugConstants.PriorityType.PARSING.priorityCode);
+			MainGui.clear_debugMessages_relatedWith_table_col_priority(Constants.TitlesTabs.REACTIONS.getDescription(), Constants.ReactionsColumns.REACTION.index, DebugConstants.PriorityType.PARSING.priorityCode);
 			
 			
 		String modifiers = new String();
@@ -1082,7 +954,7 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 		
 		if(!reaction.contains("->")) {
 		    DebugMessage dm = new DebugMessage();
-		    dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.description);
+		    dm.setOrigin_table(Constants.TitlesTabs.REACTIONS.getDescription());
 		   dm.setProblem("Reaction not following the correct syntax: missing -> element");
 		   dm.setOrigin_row(row);
 		   dm.setOrigin_col(Constants.ReactionsColumns.REACTION.index);
@@ -1441,13 +1313,13 @@ public static String replaceNamesInMultistateAfterAssignment(String fullSpDefini
 	public static String extractKindQuantifier_fromExtensions(Vector<String> extensions) {
 		for(int i = 0; i < extensions.size(); i++) {
 			String ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_COMPARTMENT);
-			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.COMPARTMENTS.description;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.COMPARTMENTS.getDescription();	} 
 			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_SPECIES);
-			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.SPECIES.description;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.SPECIES.getDescription();	} 
 			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_GLOBALQ);
-			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.GLOBALQ.description;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.GLOBALQ.getDescription();	} 
 			ext = MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstants.EXTENSION_REACTION);
-			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.REACTIONS.description;	} 
+			if(extensions.get(i).compareTo(ext)==0) {	return Constants.TitlesTabs.REACTIONS.getDescription();	} 
 		}
 		return null;
 	}

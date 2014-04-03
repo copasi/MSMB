@@ -27,6 +27,7 @@ import msmb.utility.Constants;
 public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		Vector<String> missing;
 		Vector<String> misused;
+		Vector<String> parents;
 		Vector<MutablePair<String,String>> usedAs;
 		private String returnName;
 		private boolean getSubName;
@@ -40,6 +41,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 	   public Look4UndefinedMisusedVisitor(MultiModel mm)  {
 		   missing = new Vector<String>();
 		   misused = new Vector<String>();
+		   parents = new Vector<String>();
 		   usedAs = new Vector<MutablePair<String,String>>();
 		   multiModel = mm;
 	   }
@@ -52,6 +54,7 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 			   this.multistateForDependentSum = multistateForDependentSum;
 	}
 
+		public Vector<String> getParents() {	return parents;	}
 		public Vector<String> getMisusedElements() {	return misused;	}
 		public Vector<String> getUndefinedElements() {	return missing;	}
 		public Vector<MutablePair<String,String>>  getUsedAsElements() { return usedAs;}
@@ -67,6 +70,9 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		@Override
 		public void visit(Name n) {
 			returnName = ToStringVisitor.toString(n.nodeChoice.choice);
+			if(returnName.startsWith(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR))) {
+				parents.add(returnName.substring(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR).length()));
+			}
 			if(n.nodeChoice.which ==0) {
 				super.visit(n);
 				if(getSubName) {
@@ -80,6 +86,10 @@ public class Look4UndefinedMisusedVisitor extends DepthFirstVoidVisitor {
 		
 		@Override
 		public void visit(PossibleExtensions n) {
+			String ext = ToStringVisitor.toString(n);
+			if(ext.startsWith(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR))) {
+				parents.add(ext.substring(MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR).length()));
+			}
 			getSubName = true;
 		}
 	

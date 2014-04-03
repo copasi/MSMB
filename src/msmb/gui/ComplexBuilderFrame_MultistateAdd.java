@@ -141,7 +141,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 					panel_2.setLayout(new GridLayout(++totSites, 1, 0, 3));
 				} else {++totSites;}
 				panel_2.add(panel_new);
-				revalidate();
+				//revalidate();
 			}
 		});
 		
@@ -335,7 +335,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 				try {
 					fixStatesString(originSite, states);
 					textField.setBackground(Color.WHITE);
-				} catch (Exception ex) {
+				} catch (Throwable ex) {
 					//something wrong in the format, color textfield to show the problem
 					textField.setBackground(GraphicalProperties.color_cell_with_errors);
 				}
@@ -354,7 +354,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 		return panel_4;
 	}
 
-	protected String fixStatesString(String originalSiteName, String current) throws Exception {
+	protected String fixStatesString(String originalSiteName, String current) throws Throwable {
 		current = current.trim();
 		if(current.length() == 0) return current;
 		if(current.startsWith("{")) {	current = current.substring(1);	}
@@ -524,7 +524,7 @@ public class ComplexBuilderFrame_MultistateAdd extends JDialog implements Window
 			panel_2.add(panel_new);
 			
 		}
-		revalidate();
+		//revalidate();
 		
 	}
 
@@ -635,7 +635,7 @@ class FocusListener_withComboBox implements FocusListener{
 			current = parent.fixStatesString(site.getSelectedItem().toString(), current);
 			
 			textField.setBackground(Color.WHITE);
-		} catch (Exception ex) {
+		} catch (Throwable ex) {
 			//something wrong in the format, color textfield to show the problem
 			JOptionPane.showMessageDialog(null, ex.getMessage(), "Error in states",JOptionPane.ERROR_MESSAGE);
 

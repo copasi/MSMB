@@ -23,6 +23,7 @@ set(SRC
 	${MSMB_SOURCE_DIR}/src/msmb/parsers/multistateSpecies/*.java
 	${MSMB_SOURCE_DIR}/src/msmb/parsers/multistateSpecies/syntaxtree/*.java
 	${MSMB_SOURCE_DIR}/src/msmb/parsers/multistateSpecies/visitor/*.java
+#	${MSMB_SOURCE_DIR}/src/msmb/runManager/*.java
 )
 
 

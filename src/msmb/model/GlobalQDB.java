@@ -136,7 +136,7 @@ public class GlobalQDB {
 				globalQVector.put(index,c);
 				multiModel.addNamedElement(name, Constants.TitlesTabs.GLOBALQ.index);
 					
-				if(!MainGui.donotCleanDebugMessages && ind!=null) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.GLOBALQ.description, ind);
+				if(!MainGui.donotCleanDebugMessages && ind!=null) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.GLOBALQ.getDescription(), ind);
 				return index;
 			}
 		} catch (MySyntaxException ex) {
@@ -194,7 +194,7 @@ public class GlobalQDB {
 			//return -1; 
 		} catch (Throwable e) {
 			e.printStackTrace();
-			MySyntaxException ex = new MySyntaxException(columnToAnalyze, "Problem parsing the expression.", Constants.TitlesTabs.GLOBALQ.description);
+			MySyntaxException ex = new MySyntaxException(columnToAnalyze, "Problem parsing the expression.", Constants.TitlesTabs.GLOBALQ.getDescription());
 			throw ex;
 		}
 
@@ -225,7 +225,7 @@ public class GlobalQDB {
 			globalQVector.put(ind,c);
 			if(!MainGui.importFromSBMLorCPS) multiModel.addNamedElement(c.getName(), Constants.TitlesTabs.GLOBALQ.index);
 			
-			if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.GLOBALQ.description, ind);
+			if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.GLOBALQ.getDescription(), ind);
 			return ind;
 		}
 			

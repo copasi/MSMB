@@ -379,7 +379,7 @@ public String getClosingOperation() {
 			}
 		}
 		
-		revalidate();
+		//revalidate();  
 	}
 
 	static String replaceAllWords(String original, String find, String replacement,boolean isVariableIndexInMultistate) {

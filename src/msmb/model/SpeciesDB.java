@@ -161,7 +161,7 @@ public class SpeciesDB {
 					speciesVector.put(ind,m_old);
 					speciesIndexes.put(m_old.getSpeciesName(), ind);
 					multiModel.addNamedElement(m_old.getSpeciesName(), Constants.TitlesTabs.SPECIES.index);
-					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.description, ind);
+					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.getDescription(), ind);
 					return -ind;
 				} else {
 					if(old instanceof Species && speciesIndexes.containsKey(old.getSpeciesName())) {
@@ -267,7 +267,7 @@ public class SpeciesDB {
 					if(oldName.compareTo(name)!=0) {
 						speciesIndexes.remove(oldName);
 					}
-					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.description, index);
+					if(!MainGui.donotCleanDebugMessages) MainGui.clear_debugMessages_defaults_relatedWith(Constants.TitlesTabs.SPECIES.getDescription(), index);
 					return index;	//o 000000?
 				} 
 				
@@ -391,7 +391,7 @@ public class SpeciesDB {
 					} catch (Throwable e) {
 						if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES)e.printStackTrace();
 						 DebugMessage dm = new DebugMessage();
-							dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+							dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 						    dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);
 						    dm.setOrigin_row(speciesIndex);
 							dm.setProblem("Problems with ranges using variables");
@@ -749,7 +749,7 @@ public class SpeciesDB {
 		Species s = this.speciesVector.get(ind);
 		try {
 			s.setCompartment(multiModel, cmpName);
-		} catch (MySyntaxException e) {
+		} catch (Exception e) {
 			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
 		}
 		this.speciesVector.put(ind, s);		
@@ -864,14 +864,14 @@ public class SpeciesDB {
 		for(Integer complex_index : indexesComplexSpecies) {
 			ComplexSpecies c = (ComplexSpecies) speciesVector.get(complex_index);
 			boolean replaced = false;
-			MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.SPECIES.description, DebugConstants.PriorityType.INCONSISTENCIES.priorityCode, complex_index, Constants.SpeciesColumns.NAME.index);
+			MainGui.clear_debugMessages_relatedWith(Constants.TitlesTabs.SPECIES.getDescription(), DebugConstants.PriorityType.INCONSISTENCIES.priorityCode, complex_index, Constants.SpeciesColumns.NAME.index);
 			try {
 				replaced = c.replaceMultistateElementInComplex(oldMultiSpecies, sp,renamed_sites);
 			} catch(Exception ex) {
 				//previous tracking not coherent with new multistate
 				//	ex.printStackTrace();
 				DebugMessage dm = new DebugMessage();
-				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.description);
+				dm.setOrigin_table(Constants.TitlesTabs.SPECIES.getDescription());
 				dm.setProblem(ex.getMessage());
 				dm.setPriority(DebugConstants.PriorityType.INCONSISTENCIES.priorityCode);
 				dm.setOrigin_col(Constants.SpeciesColumns.NAME.index);

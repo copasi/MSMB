@@ -171,7 +171,7 @@ public class BiomodelTest {
 
 			if(collectStatisticsMode) initializeCollectStatistics();
 			
-			MainGui m = new MainGui();
+			MainGui m = new MainGui(false);
 			m.setFullBracketExpression(FULL_BRACKET_EXPRESSION);
 			BioModelsWSClient client = new BioModelsWSClient();
 			System.out.println("... WS retrieval of all curated IDs ...");

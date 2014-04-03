@@ -5,7 +5,7 @@ import msmb.utility.Constants;
 
 public class FoundElementToDelete extends FoundElement {
 	
-	String actionToTake = new String(Constants.DeleteActions.SELECT.description);
+	String actionToTake = new String(Constants.DeleteActions.SELECT.getDescription());
 	String newValue = new String();
 	String oldValue = new String();
 
@@ -19,27 +19,27 @@ public class FoundElementToDelete extends FoundElement {
 
 	public FoundElementToDelete(String tableDescr, int row, int col) {
 		super(tableDescr, row, col);
-		if(tableDescr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && this.getCol()==Constants.ReactionsColumns.REACTION.index) actionToTake=Constants.DeleteActions.DELETE.description;
+		if(tableDescr.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0 && this.getCol()==Constants.ReactionsColumns.REACTION.index) actionToTake=Constants.DeleteActions.DELETE.getDescription();
 		
 		
-		/*if(tableDescr.compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	newValue = MainGui.species_defaultInitialValue;	}
-		else if(tableDescr.compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {newValue = MainGui.compartment_defaultInitialValue;	}
-		else if(tableDescr.compareTo(Constants.TitlesTabs.EVENTS.description)==0) {	newValue = "";	}
-		else if(tableDescr.compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {	newValue = MainGui.globalQ_defaultValue_for_dialog_window;	}
-		else if(tableDescr.compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {	newValue = "";		}*/
+		/*if(tableDescr.compareTo(Constants.TitlesTabs.SPECIES.getDescription())==0) {	newValue = MainGui.species_defaultInitialValue;	}
+		else if(tableDescr.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())==0) {newValue = MainGui.compartment_defaultInitialValue;	}
+		else if(tableDescr.compareTo(Constants.TitlesTabs.EVENTS.getDescription())==0) {	newValue = "";	}
+		else if(tableDescr.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())==0) {	newValue = MainGui.globalQ_defaultValue_for_dialog_window;	}
+		else if(tableDescr.compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) {	newValue = "";		}*/
 
 	}
 
 	public FoundElementToDelete(FoundElement el) {
 		super(el.getTableDescription(), el.getRow(), el.getCol());	
-		if(this.getTableDescription().compareTo(Constants.TitlesTabs.REACTIONS.description)==0 && this.getCol()==Constants.ReactionsColumns.REACTION.index) 
-			actionToTake=Constants.DeleteActions.DELETE.description;
+		if(this.getTableDescription().compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0 && this.getCol()==Constants.ReactionsColumns.REACTION.index) 
+			actionToTake=Constants.DeleteActions.DELETE.getDescription();
 		
-	/*	if(this.getTableDescription().compareTo(Constants.TitlesTabs.SPECIES.description)==0) {	newValue = MainGui.species_defaultInitialValue;	}
-		else if(this.getTableDescription().compareTo(Constants.TitlesTabs.COMPARTMENTS.description)==0) {newValue = MainGui.compartment_defaultInitialValue;	}
-		else if(this.getTableDescription().compareTo(Constants.TitlesTabs.EVENTS.description)==0) {	newValue = "";	}
-		else if(this.getTableDescription().compareTo(Constants.TitlesTabs.GLOBALQ.description)==0) {	newValue = MainGui.globalQ_defaultValue_for_dialog_window;	}
-		else if(this.getTableDescription().compareTo(Constants.TitlesTabs.REACTIONS.description)==0) {	newValue = "";		}*/
+	/*	if(this.getTableDescription().compareTo(Constants.TitlesTabs.SPECIES.getDescription())==0) {	newValue = MainGui.species_defaultInitialValue;	}
+		else if(this.getTableDescription().compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription())==0) {newValue = MainGui.compartment_defaultInitialValue;	}
+		else if(this.getTableDescription().compareTo(Constants.TitlesTabs.EVENTS.getDescription())==0) {	newValue = "";	}
+		else if(this.getTableDescription().compareTo(Constants.TitlesTabs.GLOBALQ.getDescription())==0) {	newValue = MainGui.globalQ_defaultValue_for_dialog_window;	}
+		else if(this.getTableDescription().compareTo(Constants.TitlesTabs.REACTIONS.getDescription())==0) {	newValue = "";		}*/
 	
 	}
 	
