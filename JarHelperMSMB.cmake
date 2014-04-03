@@ -299,22 +299,23 @@ Main-Class: msmb.gui.MainGui
                 ${CMAKE_JAVA_CLASS_OUTPUT_PATH}
     )
 
-# on linux, for unknown reasons, the addLibrary from inside the MSMB does not seem to work
+	
+# on linux and MAC, for unknown reasons, the addLibrary from inside the MSMB does not seem to work
 # so we need to explicitly set the library path to the libs folder.
 # We created a "launcher" script that set the path according to the compilation setup.
 # If the final directory is moved, it is the user responsibility to change the parameter in the script accordingly.
- 
-if(${COPASI_DIR_OS} MATCHES "linux")
+ if(${COPASI_DIR_OS} MATCHES "linux")
               execute_process(COMMAND echo "export LD_LIBRARY_PATH=./libs:$LD_LIBRARY_PATH \njava -jar" ${_TARGET_NAME}.jar
 WORKING_DIRECTORY ${CMAKE_JAVA_TARGET_OUTPUT_DIR}
 OUTPUT_FILE "${_TARGET_NAME}_launcher.sh")
 endif(${COPASI_DIR_OS} MATCHES "linux")
 
-if(${COPASI_DIR_OS} MATCHES "Darwin")
-      execute_process(COMMAND echo `
-	  `SOURCE="${BASH_SOURCE[0]}"\nwhile [ -h "$SOURCE" ]; do \nDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"\nSOURCE="$(readlink "$SOURCE")"\n  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"\ndone\nDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"\ncd "$DIR"\njava -Djava.library.path=./libs -jar\n` ${_TARGET_NAME}.jar
-WORKING_DIRECTORY ${CMAKE_JAVA_TARGET_OUTPUT_DIR}
-OUTPUT_FILE "${_TARGET_NAME}_launcher.command")
-endif(${COPASI_DIR_OS} MATCHES "Darwin")
+if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
+	#Copy the main script to reset the working directory of the launcher file 
+	file(COPY ${COPASI_DIR_OS}/scriptToRunJar.txt 
+		DESTINATION ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/${_TARGET_NAME}_launcher.command
+		FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ)
+ 	file(APPEND "${_TARGET_NAME}_launcher.command" java -Djava.library.path=./libs -jar ${_TARGET_NAME}.jar" )
+endif(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
 
 endfunction(create_jar)
