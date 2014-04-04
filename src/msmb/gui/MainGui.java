@@ -3847,6 +3847,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 								tableGlobalQmodel.setValueAt_withoutUpdate(cellValueBeforeChange, row, Constants.GlobalQColumns.NAME.index);
 								//name = cellValueBeforeChange;
 								renamingOption = oldRenamingOption;
+								MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(MSMB_Element.CANCEL);
+								changeToReport.setElementBefore(null);
+								changeToReport.setElementAfter(null);
+						        MainGui.setChangeToReport(changeToReport);
 							}
 			
 					
@@ -4414,6 +4418,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						tableSpeciesmodel.setValueAt(cellValueBeforeChange, row, Constants.SpeciesColumns.NAME.index);
 						renamingOption = oldRenamingOption;
 						addedByReaction = false;
+						MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(MSMB_Element.CANCEL);
+						changeToReport.setElementBefore(null);
+						changeToReport.setElementAfter(null);
+				        MainGui.setChangeToReport(changeToReport);
 					}
 	
 					if(CellParsers.isMultistateSpeciesName(name)) {
@@ -4655,17 +4663,43 @@ public class MainGui extends JFrame implements MSMB_Interface {
 						
 						if(newName.compareTo("NEW_NAME")==0) {
 							String spcName = dialog.getNewSpeciesName();
+							
 							String cmpName = dialog.getNewCompartmentName();
-							if(spcName.length() >0) {
+							if(spcName!= null && spcName.length() >0) {
 								tableSpeciesmodel.setValueAt(spcName, row, Constants.SpeciesColumns.NAME.index);
+								name = spcName;
 							} else {
-								if(cmpName.length() > 0) {
+								if(cmpName!= null&& cmpName.length() > 0) {
 									tableSpeciesmodel.setValueAt_withoutUpdate("TO_BE_DELETED", row, Constants.SpeciesColumns.NAME.index);
 									jTableSpecies.setRowSelectionInterval(row, row);
 									jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
 									addedByReaction = true;
 									deleteSelected();
-									multiModel.addCompartmentToSpecies(name, cmpName);
+									Species existingSp = multiModel.getSpecies(name);
+									if(!existingSp.alreadyInComp(cmpName)) {
+										//change each reference that before didn't have a compartment, to the complex string with the original compartment
+										if(existingSp.getCompartments().size()==1) {
+											String originalCmp = existingSp.getCompartments().get(0);
+											String newSpeciesString = CellParsers.addCompartmentLabel(name, originalCmp);
+											MainGui.donotCleanDebugMessages = true;
+											boolean oldAutocompleteOption = autocompleteWithDefaults;
+											boolean oldShowMessage = show_defaults_dialog_window;
+											autocompleteWithDefaults = false;
+											show_defaults_dialog_window = false;
+											findAndReplace_excludeTableColumn(name, row, newSpeciesString,Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.NAME.index,Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.NAME.index);
+											MainGui.donotCleanDebugMessages = false;
+											autocompleteWithDefaults = oldAutocompleteOption;
+											show_defaults_dialog_window = oldShowMessage;
+										}
+										//change the variable name so that the following findAndReplace will replace the right element with the new complex string
+										int existing = multiModel.getSpeciesIndex(name);
+										String compList = new String();
+										compList = existingSp.getCompartment_listString();
+										compList += ", " + cmpName; 
+										tableSpeciesmodel.setValueAt(compList, existing-1, Constants.SpeciesColumns.COMPARTMENT.index);
+										name = CellParsers.addCompartmentLabel(name, cmpName);
+									}
+							
 								}
 								else {
 									tableSpeciesmodel.setValueAt_withoutUpdate(cellValueBeforeChange, row, Constants.SpeciesColumns.NAME.index);
@@ -4679,6 +4713,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 
 				if(newName == null  || newName.length() == 0){ // user select cancel 
 					tableSpeciesmodel.setValueAt_withoutUpdate(cellValueBeforeChange, row, Constants.SpeciesColumns.NAME.index);
+					MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(MSMB_Element.CANCEL);
+					changeToReport.setElementBefore(null);
+					changeToReport.setElementAfter(null);
+			        MainGui.setChangeToReport(changeToReport);
 				}
 			}
 		} catch (ClassNotFoundException ex){
@@ -4697,7 +4735,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				dialog.dispose();
 				if(newName == null  || newName.length() == 0){ // user select cancel 
 					tableSpeciesmodel.setValueAt_withoutUpdate(cellValueBeforeChange, row, Constants.SpeciesColumns.NAME.index);
-					//			return;
+					MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(MSMB_Element.CANCEL);
+					changeToReport.setElementBefore(null);
+					changeToReport.setElementAfter(null);
+			        MainGui.setChangeToReport(changeToReport);
 				}
 				else if ((newName != null) && (newName.length() > 0) ) {
 					//String old_value = ((String)tableSpeciesmodel.getValueAt(row, Constants.SpeciesColumns.NAME.index)).trim();
@@ -4706,18 +4747,43 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					
 					if(newName.compareTo("NEW_NAME")==0) {
 						String spcName = dialog.getNewSpeciesName();
+						
 						String cmpName = dialog.getNewCompartmentName();
-						if(spcName.length() >0) {
+						if(spcName!= null && spcName.length() >0) {
 							tableSpeciesmodel.setValueAt(spcName, row, Constants.SpeciesColumns.NAME.index);
+							name = spcName;
 						} else {
-							if(cmpName.length() > 0) {
-								
+							if(cmpName!= null&& cmpName.length() > 0) {
 								tableSpeciesmodel.setValueAt_withoutUpdate("TO_BE_DELETED", row, Constants.SpeciesColumns.NAME.index);
 								jTableSpecies.setRowSelectionInterval(row, row);
 								jTabGeneral.setSelectedIndex(Constants.TitlesTabs.SPECIES.index);
 								addedByReaction = true;
 								deleteSelected();
-								multiModel.addCompartmentToSpecies(name, cmpName);
+								Species existingSp = multiModel.getSpecies(name);
+								if(!existingSp.alreadyInComp(cmpName)) {
+									//change each reference that before didn't have a compartment, to the complex string with the original compartment
+									if(existingSp.getCompartments().size()==1) {
+										String originalCmp = existingSp.getCompartments().get(0);
+										String newSpeciesString = CellParsers.addCompartmentLabel(name, originalCmp);
+										MainGui.donotCleanDebugMessages = true;
+										boolean oldAutocompleteOption = autocompleteWithDefaults;
+										boolean oldShowMessage = show_defaults_dialog_window;
+										autocompleteWithDefaults = false;
+										show_defaults_dialog_window = false;
+										findAndReplace_excludeTableColumn(name, row, newSpeciesString,Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.NAME.index,Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.NAME.index);
+										MainGui.donotCleanDebugMessages = false;
+										autocompleteWithDefaults = oldAutocompleteOption;
+										show_defaults_dialog_window = oldShowMessage;
+									}
+									//change the variable name so that the following findAndReplace will replace the right element with the new complex string
+									int existing = multiModel.getSpeciesIndex(name);
+									String compList = new String();
+									compList = existingSp.getCompartment_listString();
+									compList += ", " + cmpName; 
+									tableSpeciesmodel.setValueAt(compList, existing-1, Constants.SpeciesColumns.COMPARTMENT.index);
+									name = CellParsers.addCompartmentLabel(name, cmpName);
+								}
+						
 							}
 							else {
 								tableSpeciesmodel.setValueAt_withoutUpdate(cellValueBeforeChange, row, Constants.SpeciesColumns.NAME.index);
@@ -8492,18 +8558,30 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 			comboBox_unitVolume.addActionListener( new  ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					 MainGui.volumeUnit = Constants.UnitTypeVolume.getCopasiTypeFromDescription((String)comboBox_unitVolume.getSelectedItem());
+					int newVal = Constants.UnitTypeVolume.getCopasiTypeFromDescription((String)comboBox_unitVolume.getSelectedItem());
+					if(newVal != MainGui.volumeUnit) {
+						MainGui.volumeUnit = newVal;
+						fireSomethingChanged();
 					}
+				}
 			});
 			comboBox_unitTime.addActionListener(new  ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					 MainGui.timeUnit = Constants.UnitTypeTime.getCopasiTypeFromDescription((String)comboBox_unitTime.getSelectedItem());
+					int newVal = Constants.UnitTypeTime.getCopasiTypeFromDescription((String)comboBox_unitTime.getSelectedItem());
+					if(newVal != MainGui.timeUnit) {
+					 MainGui.timeUnit = newVal;
+					 fireSomethingChanged();
 					}
+				}
 			});
 			comboBox_unitQuantity.addActionListener(new  ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					 MainGui.quantityUnit = Constants.UnitTypeQuantity.getCopasiTypeFromDescription((String)comboBox_unitQuantity.getSelectedItem());
+					int newVal = Constants.UnitTypeQuantity.getCopasiTypeFromDescription((String)comboBox_unitQuantity.getSelectedItem());
+					if(newVal != MainGui.quantityUnit) {
+					 MainGui.quantityUnit = newVal;
+					 fireSomethingChanged();
 					}
+				}
 			});
 			
 			comboBox_unitVolume.setSelectedIndex(0);
@@ -8532,6 +8610,14 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	
 	private void updateStatusExportConcentration() {
 		updateStatusExportConcentration(jCheckBoxExportConcentration.isSelected());
+		
+	}
+	
+	private void fireSomethingChanged() {
+		MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(MSMB_Element.SOMETHING_CHANGED);
+		changeToReport.setElementBefore(null);
+		changeToReport.setElementAfter(null);
+      	if(!MainGui.donotFireSomethingChange) MainGui.setChangeToReport(changeToReport);
 	}
 	
 	public void updateModelProperties() {
@@ -8546,7 +8632,11 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 	
 	public void updateStatusExportConcentration(boolean val) {
-		exportConcentration  = val;
+		if(exportConcentration!= val) { 
+			fireSomethingChanged();
+			exportConcentration  = val;
+		}
+		
 	}
 	
 	private void updateStatusQuantityIsConcentration() {
@@ -8554,7 +8644,10 @@ public class MainGui extends JFrame implements MSMB_Interface {
 	}
 	
 	public void updateStatusQuantityIsConcentration(boolean val) {
-		quantityIsConc  = val;
+		if(quantityIsConc != val) {
+			quantityIsConc  = val;
+			fireSomethingChanged();
+		}
 	}
 	
 

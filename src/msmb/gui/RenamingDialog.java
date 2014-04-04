@@ -31,6 +31,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.Color;
 import java.awt.GridLayout;
 import javax.swing.JRadioButton;
@@ -53,7 +56,7 @@ public class RenamingDialog extends JDialog {
 	
 	String returnString = new String();
 	//private String speciesOldName;
-	static MultiModel multiModel = null;
+	static MultiModel multiModel = MainGui.multiModel;
 	private JTextField textField_1;
 	private JTextField textField_2;
 	private JRadioButton rdbtnNewSpeciesName;
@@ -83,6 +86,13 @@ public class RenamingDialog extends JDialog {
 		this.textIfADifferent = "If a different name is NOT provided, the current "+MainGui.cellTableEdited+" \r"+elementRow+"\r\nwill be DELETED and " +
 				"all the references to "+elementOldName+" will be redirected to "+clashingName+".";
 		setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+		addWindowListener(
+				 new WindowAdapter() {
+			            @Override
+			            public void windowClosing(WindowEvent e) {
+			            	cancelOption();
+			            }
+			        });
 		setModal(true);
 		setResizable(false);
 		setTitle("Existing name");
@@ -231,7 +241,9 @@ public class RenamingDialog extends JDialog {
 			
 			
 			{
-				if(actionsType == Constants.MERGE_SPECIES || actionsType == Constants.DELETE_SPECIES_AND_REDIRECT) {
+				if(actionsType == Constants.MERGE_SPECIES 
+						|| actionsType == Constants.DELETE_SPECIES_AND_REDIRECT
+						|| actionsType == Constants.DUPLICATE_SPECIES_NAME) {
 					JButton newName = new JButton("Use New Name");
 					
 					newName.addActionListener(new ActionListener() {
@@ -321,7 +333,6 @@ public class RenamingDialog extends JDialog {
 			newCompartmentName = textField_2.getText();
 			newSpeciesName = null;
 			returnString = "NEW_NAME";
-		
 		} else {
 			newCompartmentName = null;
 			newSpeciesName = textField_1.getText();
