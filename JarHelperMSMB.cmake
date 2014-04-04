@@ -312,10 +312,11 @@ endif(${COPASI_DIR_OS} MATCHES "linux")
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
 	#Copy the main script to reset the working directory of the launcher file 
-	file(COPY ${COPASI_DIR_OS}/scriptToRunJar.txt 
-		DESTINATION ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/${_TARGET_NAME}_launcher.command 
+	file(COPY ${MSMB_SOURCE_DIR}/CopasiLibs/${COPASI_DIR_OS}${COPASI_DIR_ARCH}/scriptToRunJar.txt 
+		DESTINATION ${CMAKE_JAVA_TARGET_OUTPUT_DIR}
 		FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ)
- 	file(APPEND "${_TARGET_NAME}_launcher.command" "java -Djava.library.path=./libs -jar ${_TARGET_NAME}.jar")
+	file(RENAME ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/scriptToRunJar.txt ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/${_TARGET_NAME}_launcher.command )
+ 	file(APPEND ${CMAKE_JAVA_TARGET_OUTPUT_DIR}/${_TARGET_NAME}_launcher.command "\njava -Djava.library.path=./libs -jar ${_TARGET_NAME}.jar")
 endif(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
 
 endfunction(create_jar)
