@@ -4728,7 +4728,6 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					rowContent += tableSpeciesmodel.getValueAt(row,i)+" | ";
 				}
 				RenamingDialog dialog = new RenamingDialog(ex.getCause().getMessage());
-				//RenamingDialog dialog = new RenamingDialog(multiModel,name, rowContent, cellValueBeforeChange, Constants.DELETE_SPECIES_AND_REDIRECT);
 				
 				dialog.setVisible(true);
 				String newName = dialog.getReturnString();
@@ -4746,8 +4745,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 					//tableSpeciesmodel.setValueAt(old_value, row, Constants.SpeciesColumns.NAME.index);
 					
 					if(newName.compareTo("NEW_NAME")==0) {
+						autocompleteInProgress.add("NEW_NAME");
+						donotFireSomethingChange = true;
 						String spcName = dialog.getNewSpeciesName();
-						
 						String cmpName = dialog.getNewCompartmentName();
 						if(spcName!= null && spcName.length() >0) {
 							tableSpeciesmodel.setValueAt(spcName, row, Constants.SpeciesColumns.NAME.index);
@@ -4790,6 +4790,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 							}
 						} 
 					}
+					autocompleteInProgress.remove("NEW_NAME");
 				}
 			}
 			
@@ -4832,7 +4833,9 @@ public class MainGui extends JFrame implements MSMB_Interface {
 			
 			jTableSpecies.setRowSelectionInterval(row,row);
 			 jTableSpecies.revalidate();
-			 if(autocompleteInProgress.size()==0) donotFireSomethingChange = false;
+			 if(autocompleteInProgress.size()==0) {
+				 donotFireSomethingChange = false;
+			 }
 				
 		}
 	    // jListDebugShort.revalidate();
@@ -9538,12 +9541,8 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 		jTabGeneral.setSelectedIndex(original_focus);
 		revalidateAllTables();
-		donotFireSomethingChange = false;
+		if(autocompleteInProgress.size()==0) donotFireSomethingChange = false;
 		autocompleteWithDefaults = oldAutoCompletion;
-		MSMB_InterfaceChange changeToReport = new MSMB_InterfaceChange(MSMB_Element.DONE_WITH_CHANGES);
-		changeToReport.setElementBefore(null);
-		changeToReport.setElementAfter(null);
-        MainGui.setChangeToReport(changeToReport);
 	}
 	
 	
