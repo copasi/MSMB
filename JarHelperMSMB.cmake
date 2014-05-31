@@ -40,6 +40,7 @@ function(create_jar _TARGET_NAME)
 	
 	if("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Darwin")
 		 message("Darwin detected!!")
+		 set(COPASI_LIBRARY_NAME "libCopasiJava.jnilib")
 		 set(COPASI_DIR_OS "mac_universal")
 	endif("${CMAKE_HOST_SYSTEM_NAME}" MATCHES "Darwin")
 	
@@ -199,7 +200,7 @@ function(create_jar _TARGET_NAME)
 	# (because the libs directory in this case is in the same folder as the jar, while in the GitHub case, is downloaded in the partent folder)
     set(ManifestInfo 
 	"Manifest-Version: 1.0
-Class-Path: . libs/RCaller-2.1.0-SNAPSHOT.jar libs/autocomplete.jar libs/biomodels-wslib_standalone-1.21.jar libs/commons-lang3-3.1.jar libs/copasi.jar libs/djep-full-latest.jar libs/guava-r09.jar libs/itextpdf-5.2.1.jar libs/junit.jar libs/lablib-checkboxtree-3.2.jar libs/swingx-all-1.6.3.jar
+Class-Path: . libs/autocomplete.jar libs/biomodels-wslib_standalone-1.21.jar libs/commons-lang3-3.1.jar libs/copasi.jar libs/guava-r09.jar  libs/itextpdf-5.2.1.jar libs/jgraph.jar libs/jgrapht-jdk1.6.jar libs/l2fprod-common-all.jar libs/swingx-all-1.6.3.jar libs/RCaller-2.1.0-SNAPSHOT.jar 
 Main-Class: msmb.gui.MainGui
 "
 )

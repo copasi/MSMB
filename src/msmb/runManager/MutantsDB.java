@@ -26,6 +26,7 @@ import org.COPASI.ModelParameterSetVectorN;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.jgraph.graph.AttributeMap;
 import org.jgrapht.alg.CycleDetector;
+import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.*;
 import org.jgrapht.traverse.*;
 
@@ -271,7 +272,6 @@ public class MutantsDB
     	Iterator<Mutant> iterator = graphOfMutants.vertexSet().iterator();
     	try {
 			String copasiKey =  multiModel.saveCPS(true, null, MainGui.tableReactionmodel,null);
-		//	String baseModel =  multiModel.copasiDataModel.exportSBMLToString();
 			
 			while (iterator.hasNext()) {
 	       		Mutant mtnt = iterator.next();
@@ -310,7 +310,7 @@ public class MutantsDB
 			if(type.equals(MutantChangeType.GLQ_INITIAL_VALUE.getDescription())) {
 				CModelValue toChange = model.getModelValue(element_name);
 				if(toChange==null) {
-					System.err.println("PROBLEM: ELEMENT TO CHANGE not in the model");
+					System.err.println("PROBLEM: element "+element_name+" not in the model");
 				}
 				String initialValueExpression = mtnt.getCumulativeChanges().get(key).left;
 				try {
@@ -321,7 +321,7 @@ public class MutantsDB
 			} else if(type.equals(MutantChangeType.SPC_INITIAL_VALUE.getDescription())) {
 				 CMetab toChange = model.getMetabolite(element_name);
 				if(toChange==null) {
-					System.err.println("PROBLEM: ELEMENT TO CHANGE not in the model");
+					System.err.println("PROBLEM: element "+element_name+" not in the model");
 				}
 				String initialValueExpression = mtnt.getCumulativeChanges().get(key).left;
 				try {
@@ -334,7 +334,7 @@ public class MutantsDB
 			}else if(type.equals(MutantChangeType.COMP_INITIAL_VALUE.getDescription())) {
 				 CCompartment toChange = model.getCompartment(element_name);
 				if(toChange==null) {
-					System.err.println("PROBLEM: ELEMENT TO CHANGE not in the model");
+					System.err.println("PROBLEM: element "+element_name+" not in the model");
 				}
 				String initialValueExpression = mtnt.getCumulativeChanges().get(key).left;
 				try {
@@ -386,7 +386,6 @@ public class MutantsDB
 		CModelParameterSet newSet = null;
 		if(baseFileName!= null)	 {
 			sets = model.getModelParameterSets(); 
-			System.out.println("There are n sets: "+ sets.size());
 			newSet = new CModelParameterSet(mtnt.getName(), model);
 			newSet.createFromModel();
 		}
@@ -402,7 +401,9 @@ public class MutantsDB
 			String initialValueExpression = changes.get(key).left;
 			if(type.equals(MutantChangeType.GLQ_INITIAL_VALUE.getDescription())) {
 				 toChange = model.getModelValue(element_name);
-				  if(baseFileName== null) ((CModelValue)toChange).setInitialValue(RM_buildCopasiExpression(initialValueExpression, mtnt));
+				  if(baseFileName== null) {
+					  ((CModelValue)toChange).setInitialValue(RM_buildCopasiExpression(initialValueExpression, mtnt));
+				  }
 			} else if(type.equals(MutantChangeType.SPC_INITIAL_VALUE.getDescription())) {
 				  toChange = model.getMetabolite(element_name);
 				  if(baseFileName== null) ((CMetab)toChange).setInitialValue(RM_buildCopasiExpression(initialValueExpression, mtnt));
@@ -413,7 +414,7 @@ public class MutantsDB
 			if(sets!= null)	 {
 				CModelParameter inSet = newSet.getModelParameter(toChange.getCN().getString());
 				if(toChange==null || inSet == null) {
-					System.err.println("PROBLEM: ELEMENT TO CHANGE not in the model");
+					System.err.println("PROBLEM: element "+element_name+" not in the model");
 				}
 				inSet.setValue(RM_buildCopasiExpression(initialValueExpression, mtnt));
 			} 
@@ -422,8 +423,7 @@ public class MutantsDB
 		if(sets!= null)	 {
 			sets.add(newSet);
 		}
-        
-		
+    		
 	}
 
 	private Double RM_buildCopasiExpression(String initialValueExpression, Mutant exportingMutant) {
@@ -535,6 +535,49 @@ public class MutantsDB
 
 	public void setMultiModel(MultiModel mm) {
 		this.multiModel = mm;
+	}
+
+	public void rename(Mutant currentNode, String newName) {
+		if(currentNode.getName().compareTo(newName)==0) return;
+		
+		Vector<DefaultEdge> edgesToParents = getEdgesToParents(currentNode);		
+		Vector<Mutant> children = getChildren(currentNode);
+		graphOfMutants.removeVertex(currentNode);
+		
+		currentNode.name = newName;
+		graphOfMutants.addVertex(currentNode);
+		for(int i = 0; i < children.size(); ++i) {
+			addConnection(children.get(i), currentNode);
+		}
+		for(int i = 0; i < edgesToParents.size(); ++i) {
+			Mutant target = graphOfMutants.getEdgeTarget(edgesToParents.get(i));
+			addConnection(currentNode, target);
+		}
+		return;
+	}
+
+	public void  replaceMutant(String oldN, String newN) {
+		if(oldN.compareTo(newN)==0) return;
+		
+	  	Iterator<Mutant> iter =  new DepthFirstIterator<Mutant, DefaultEdge>(graphOfMutants);
+        while (iter.hasNext()) {
+        	Mutant vertex = iter.next();
+        	vertex.replaceMutantNameInExpression(oldN, newN, multiModel);
+        }
+        return;
+	}
+
+	public Vector<Mutant>  collectDescendants(Mutant root) {
+		Iterator<Mutant> iter =  new DepthFirstIterator<Mutant, DefaultEdge>(graphOfMutants);
+		Vector<Mutant> ret = new Vector<Mutant>();
+		while (iter.hasNext()) {
+			Mutant vertex = iter.next();
+        	List<DefaultEdge> path = DijkstraShortestPath.findPathBetween(graphOfMutants, vertex, root);
+        	if(path!=null && path.size() > 0) {
+        		ret.add(vertex);
+        	}
+        }
+         return ret;
 	}
 
 
