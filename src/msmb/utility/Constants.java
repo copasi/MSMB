@@ -1437,7 +1437,7 @@ public class Constants {
 				 
 			   private final static int numTabMSMB = 8;
 				
-			   private final String descriptionAC = "Module variables";
+			   private final String descriptionAC = "Module quantities";
 			   private final String description;
 			   public final int index;
 			   
