@@ -120,6 +120,9 @@ public class SinglePlotAddTimeSeriesFrame extends JDialog {
 		panel_4.add(lblAvailableParametersLists, BorderLayout.NORTH);
 		
 		JPanel panel_1 = new JPanel();
+		panel_1.setBorder(new EmptyBorder(9, 9, 9, 9));
+		panel_1.setLayout(new GridLayout(4, 1,9,9));
+		
 		panel.add(panel_1);
 		
 		JButton btnAddSelected = new JButton("Add selected ->");

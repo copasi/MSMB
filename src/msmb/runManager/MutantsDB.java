@@ -6,7 +6,10 @@ import java.io.InputStream;
 import java.util.*;
 
 import msmb.gui.MainGui;
+import msmb.model.Compartment;
+import msmb.model.GlobalQ;
 import msmb.model.MultiModel;
+import msmb.model.Species;
 import msmb.parsers.mathExpression.MR_Expression_Parser;
 import msmb.parsers.mathExpression.MR_Expression_ParserConstants;
 import msmb.parsers.mathExpression.MR_Expression_ParserConstantsNOQUOTES;
@@ -277,8 +280,6 @@ public class MutantsDB
 	       		Mutant mtnt = iterator.next();
 	       		exportMutant(mtnt, baseFileName);
 	       		ModelParameterSetVectorN sets = model.getModelParameterSets(); 
-	    		System.out.println("after export there are n sets: "+ sets.size());
-
 	       		
 	       		//to reset all the values as the initial ones... 
 	       		//multiModel.copasiDataModel.importSBMLFromString(baseModel);
@@ -465,9 +466,25 @@ public class MutantsDB
 										element_parent.left
 										+ extToReplace
 										+MR_Expression_ParserConstantsNOQUOTES.getTokenImage(MR_Expression_ParserConstantsNOQUOTES.MUTANT_PARENT_SEPARATOR)
-										+element_parent.right;
+										+element_parent.right; 
 								updateMultiModelWithCumulativeChanges(cumulativeChanges,mchangetype);
-								String toBeEvaluated = cumulativeChanges.get(Mutant.generateChangeKey(mchangetype, element_parent.left)).left;
+								MutablePair el = cumulativeChanges.get(Mutant.generateChangeKey(mchangetype, element_parent.left));
+								String toBeEvaluated = "";
+								//if the element has not be changed in the graph, the value needs to be taken from the initial msmb model
+								if(el!=null) toBeEvaluated =  el.left.toString();
+								else {
+									if(mchangetype == MutantChangeType.GLQ_INITIAL_VALUE) {
+										GlobalQ e = multiModel.getGlobalQ(element_parent.left);
+										toBeEvaluated = e.getInitialValue();
+									} else if(mchangetype == MutantChangeType.SPC_INITIAL_VALUE) {
+										Species e = multiModel.getSpecies(element_parent.left);
+										toBeEvaluated = e.getInitialQuantity_listString();
+									} else if(mchangetype == MutantChangeType.COMP_INITIAL_VALUE) {
+										Compartment e = multiModel.getComp(element_parent.left);
+										toBeEvaluated = e.getInitialVolume();
+									}
+								}
+								System.out.println("toBeEvaluatedtoBeEvaluated : "+toBeEvaluated);
 								Double replacement = CellParsers.evaluateExpression(toBeEvaluated, multiModel);
 								copasiExpr = copasiExpr.replaceAll(toBeReplaced, replacement.toString());
 						

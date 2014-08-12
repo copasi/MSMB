@@ -54,6 +54,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.ProgressMonitor;
 import javax.swing.Renderer;
 import javax.swing.SwingConstants;
@@ -160,6 +161,8 @@ import org.jgraph.graph.PortView;
 import org.jgrapht.ext.JGraphModelAdapter;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 public class RunManager  extends JFrame {
 	public static final Color colorCumulativeRedefinition = Color.green;
@@ -266,7 +269,7 @@ public class RunManager  extends JFrame {
 		GraphConstants.setLineColor(basicCell_attributeMap, Color.BLUE);
 		GraphConstants.setOpaque(basicCell_attributeMap, true);
 		GraphConstants.setLineEnd(basicCell_attributeMap, GraphConstants.ARROW_TECHNICAL);
-		GraphConstants.setBorder(basicCell_attributeMap, new LineBorder(Color.GRAY,1));
+		//GraphConstants.setBorder(basicCell_attributeMap, new LineBorder(Color.GRAY,1));
 		GraphConstants.setFont(basicCell_attributeMap, new Font("Tahoma", Font.BOLD, 12));
 		
 		initializeFrame();
@@ -1593,6 +1596,8 @@ private void initializePlotGraph() {
 							newFrame.setContentPane(contentPane);
 							JFreeChart chart = it.next();
 							ChartPanel chartPanel = new ChartPanel(chart);
+							addCustomItemsPopupMenu(chartPanel);
+					      	
 							newFrame.setTitle(chart.getTitle().getText());
 							contentPane.add(chartPanel, BorderLayout.CENTER);
 							newFrame.pack();
@@ -1627,10 +1632,10 @@ private void initializePlotGraph() {
 							    @Override
 							    public void windowClosing(WindowEvent evt) {
 							    	JFrame currentFrame = (JFrame)evt.getWindow();
-							    	ChartPanel chartBack = ((ChartPanel)((JPanel)currentFrame.getContentPane()).getComponent(0));
+							    	final ChartPanel chartPanel = ((ChartPanel)((JPanel)currentFrame.getContentPane()).getComponent(0));
 							      	JScrollPane scrollPane = new JScrollPane();
 							      	scrollPane.setPreferredSize(new Dimension(625, 475));
-							      	scrollPane.getViewport().add( chartBack );
+							      	scrollPane.getViewport().add( chartPanel );
 							      	panel_plots.add(scrollPane);
 							      	panel_plots.revalidate();
 							      	JMenuItem toRemove = separateWindows.get(currentFrame);
@@ -1648,6 +1653,159 @@ private void initializePlotGraph() {
 			}
 		});
 		
+	}
+	
+	void addCustomItemsPopupMenu(final ChartPanel chartPanel) {
+    	JPopupMenu popup = chartPanel.getPopupMenu();
+      	JMenuItem intervals = new JMenuItem("Plotting intervals...");
+      	intervals.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFreeChart chart = chartPanel.getChart();
+				MutablePair<Simulation, String> clicked = simInCharts.get(chart);
+				if(clicked == null) return;
+				Simulation s = clicked.left;
+				String mut = clicked.right;
+				LegendItemCollection legendItemsOld = chart.getPlot().getLegendItems();
+				Vector<String> included = new Vector<String>();
+				Iterator it = legendItemsOld.iterator();
+				XYSeriesCollection dataset =  (XYSeriesCollection) ((XYPlot)(chart.getPlot())).getDataset();
+				
+				String xname = ((XYPlot)(chart.getPlot())).getDomainAxis().getLabel();
+				if(xname.compareToIgnoreCase("TIME")==0) xname = "TIME";
+				Vector<Double> seriesX = s.getTimeSeries(mut, xname);
+				
+				HashMap<String, PlottedVariable> currentSet = plotProperties.get((XYPlot)(chart.getPlot()));
+				while(it.hasNext()) {
+					String varName = ((LegendItem)it.next()).getLabel();
+				/*	XYSeries old = dataset.getSeries(varName);
+					Integer everyXpoints = time.size() / old.getItemCount();*/
+					included.add(varName + " ("+currentSet.get(varName).getIntervalPlot()+")");
+				}
+				
+				Vector<String> newList = changeIntervalPlotFrame.setVariablesAndShow(included);
+				
+				if(newList!= null) {
+					Vector<String> variables = new Vector<String>();
+					Vector<Integer> intervalSize = new Vector<Integer>();
+					for(int i = 0; i < newList.size(); ++i) {
+						String current = newList.get(i);
+						int start = current.lastIndexOf("(");
+						int end = current.lastIndexOf(")");
+						int val = Integer.parseInt(current.substring(start+1,end).trim());
+						String varName = current.substring(0, start).trim();
+						variables.add(varName);
+						intervalSize.add(val);
+					}
+					changeIntervalSize(chart, xname, variables, intervalSize);
+				}
+				
+			
+			}
+		});
+      	popup.add(intervals);
+      	
+      	JMenuItem lines = new JMenuItem("Line style...");
+      	lines.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFreeChart chart = chartPanel.getChart();
+				MutablePair<Simulation, String> clicked = simInCharts.get(chart);
+				if(clicked == null) return;
+				Simulation s = clicked.left;
+				String mut = clicked.right;
+				Vector<PlottedVariable> included = new Vector<PlottedVariable>();
+				included.addAll(plotProperties.get((XYPlot)chart.getPlot()).values());
+				Vector<PlottedVariable> newList = changeLinePlotFrame.setVariablesAndShow(included);
+				
+				if(newList!= null) {
+					changeLineStyle(chart, newList);
+				}
+				
+			
+			}
+
+		
+		});
+      	popup.add(lines);
+      	
+      
+      	
+      	JMenuItem addRemoveVars = new JMenuItem("Add/Remove variable...");
+      	addRemoveVars.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFreeChart chart = chartPanel.getChart();
+				MutablePair<Simulation, String> clicked = simInCharts.get(chart);
+				if(clicked == null) return;
+				Simulation s = clicked.left;
+				String mut = clicked.right;
+				LegendItemCollection legendItemsOld = chart.getPlot().getLegendItems();
+				Set<String> included = new HashSet<String>();
+				Iterator it = legendItemsOld.iterator();
+				while(it.hasNext()) {
+					included.add(((LegendItem)it.next()).getLabel());
+				}
+				
+				Set<String> newList = addTimeSeriesFrame.setListAndShow(
+																s.getName() + " (" +mut+")", 
+																included);
+				if(newList!= null) {
+					addVariable(chart, newList);
+					Set<String> deleted = new HashSet<String>();
+					deleted.addAll(Sets.difference(included,newList));
+					removeVariable(chart, deleted);
+					XYSeriesCollection dataset =  (XYSeriesCollection) ((XYPlot)(chart.getPlot())).getDataset();
+					
+					fixColorsAfterRemove(dataset,(XYPlot)chart.getPlot());
+					
+				}
+				
+				
+			}
+		});
+      	popup.add(addRemoveVars);
+     	
+     	
+      	
+      	JMenuItem removeLegend = new JMenuItem("Hide legend");
+      	removeLegend.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				chartPanel.getChart().removeLegend();
+				legendShowing = false;
+			}
+		});
+      	popup.add(removeLegend);
+     	JMenuItem showLegend = new JMenuItem("Show legend");
+     	showLegend.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(legendShowing) return;
+				Plot plot = chartPanel.getChart().getPlot();
+				LegendItemCollection legendItemsOld = plot.getLegendItems();
+				final LegendItemCollection legendItemsNew = new LegendItemCollection();
+				Iterator it = legendItemsOld.iterator();
+				while(it.hasNext()) {
+					legendItemsNew.add((LegendItem) it.next());
+				}
+				LegendItemSource source = new LegendItemSource() {
+					LegendItemCollection lic = new LegendItemCollection();
+					{lic.addAll(legendItemsNew);}
+					public LegendItemCollection getLegendItems() {  
+					    return lic;
+					}
+					};
+					LegendTitle legendTitle = new LegendTitle(source);
+					legendTitle.setMargin(new RectangleInsets(1.0, 1.0, 1.0, 1.0));
+					legendTitle.setBorder(new BlockBorder());
+					legendTitle.setBackgroundPaint(Color.white);
+					legendTitle.setPosition(RectangleEdge.RIGHT);
+				   chartPanel.getChart().addLegend(legendTitle);
+				   legendShowing = true;
+			}
+		});
+      	popup.add(showLegend);
 	}
 
 	
@@ -1845,160 +2003,8 @@ private void initializePlotGraph() {
 	      	chartPanel.setPreferredSize(new java.awt.Dimension(200, 200));
 	      	chartPanel.setMouseZoomable(true, false);
 	      	
-	     
-	      	
-	      	JPopupMenu popup = chartPanel.getPopupMenu();
-	      	
-	      	JMenuItem intervals = new JMenuItem("Plotting intervals...");
-	      	intervals.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					JFreeChart chart = chartPanel.getChart();
-					MutablePair<Simulation, String> clicked = simInCharts.get(chart);
-					if(clicked == null) return;
-					Simulation s = clicked.left;
-					String mut = clicked.right;
-					LegendItemCollection legendItemsOld = chart.getPlot().getLegendItems();
-					Vector<String> included = new Vector<String>();
-					Iterator it = legendItemsOld.iterator();
-					XYSeriesCollection dataset =  (XYSeriesCollection) ((XYPlot)(chart.getPlot())).getDataset();
-					
-					String xname = ((XYPlot)(chart.getPlot())).getDomainAxis().getLabel();
-					if(xname.compareToIgnoreCase("TIME")==0) xname = "TIME";
-					Vector<Double> seriesX = s.getTimeSeries(mut, xname);
-					
-					HashMap<String, PlottedVariable> currentSet = plotProperties.get((XYPlot)(chart.getPlot()));
-					while(it.hasNext()) {
-						String varName = ((LegendItem)it.next()).getLabel();
-					/*	XYSeries old = dataset.getSeries(varName);
-						Integer everyXpoints = time.size() / old.getItemCount();*/
-						included.add(varName + " ("+currentSet.get(varName).getIntervalPlot()+")");
-					}
-					
-					Vector<String> newList = changeIntervalPlotFrame.setVariablesAndShow(included);
-					
-					if(newList!= null) {
-						Vector<String> variables = new Vector<String>();
-						Vector<Integer> intervalSize = new Vector<Integer>();
-						for(int i = 0; i < newList.size(); ++i) {
-							String current = newList.get(i);
-							int start = current.lastIndexOf("(");
-							int end = current.lastIndexOf(")");
-							int val = Integer.parseInt(current.substring(start+1,end).trim());
-							String varName = current.substring(0, start).trim();
-							variables.add(varName);
-							intervalSize.add(val);
-						}
-						changeIntervalSize(chart, xname, variables, intervalSize);
-					}
-					
-				
-				}
-			});
-	      	popup.add(intervals);
-	      	
-	      	JMenuItem lines = new JMenuItem("Line style...");
-	      	lines.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					JFreeChart chart = chartPanel.getChart();
-					MutablePair<Simulation, String> clicked = simInCharts.get(chart);
-					if(clicked == null) return;
-					Simulation s = clicked.left;
-					String mut = clicked.right;
-					Vector<PlottedVariable> included = new Vector<PlottedVariable>();
-					included.addAll(plotProperties.get((XYPlot)chart.getPlot()).values());
-					Vector<PlottedVariable> newList = changeLinePlotFrame.setVariablesAndShow(included);
-					
-					if(newList!= null) {
-						changeLineStyle(chart, newList);
-					}
-					
-				
-				}
-
-			
-			});
-	      	popup.add(lines);
-	      	
-	      
-	      	
-	      	JMenuItem addRemoveVars = new JMenuItem("Add/Remove variable...");
-	      	addRemoveVars.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					JFreeChart chart = chartPanel.getChart();
-					MutablePair<Simulation, String> clicked = simInCharts.get(chart);
-					if(clicked == null) return;
-					Simulation s = clicked.left;
-					String mut = clicked.right;
-					LegendItemCollection legendItemsOld = chart.getPlot().getLegendItems();
-					Set<String> included = new HashSet<String>();
-					Iterator it = legendItemsOld.iterator();
-					while(it.hasNext()) {
-						included.add(((LegendItem)it.next()).getLabel());
-					}
-					
-					Set<String> newList = addTimeSeriesFrame.setListAndShow(
-																	s.getName() + " (" +mut+")", 
-																	included);
-					if(newList!= null) {
-						addVariable(chart, newList);
-						Set<String> deleted = new HashSet<String>();
-						deleted.addAll(Sets.difference(included,newList));
-						removeVariable(chart, deleted);
-						XYSeriesCollection dataset =  (XYSeriesCollection) ((XYPlot)(chart.getPlot())).getDataset();
-						
-						fixColorsAfterRemove(dataset,(XYPlot)chart.getPlot());
-						
-					}
-					
-					
-				}
-			});
-	      	popup.add(addRemoveVars);
-	     	
-	     	
-	      	
-	      	JMenuItem removeLegend = new JMenuItem("Hide legend");
-	      	removeLegend.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					chartPanel.getChart().removeLegend();
-					legendShowing = false;
-				}
-			});
-	      	popup.add(removeLegend);
-	     	JMenuItem showLegend = new JMenuItem("Show legend");
-	     	showLegend.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					if(legendShowing) return;
-					Plot plot = chartPanel.getChart().getPlot();
-					LegendItemCollection legendItemsOld = plot.getLegendItems();
-					final LegendItemCollection legendItemsNew = new LegendItemCollection();
-					Iterator it = legendItemsOld.iterator();
-					while(it.hasNext()) {
-						legendItemsNew.add((LegendItem) it.next());
-					}
-					LegendItemSource source = new LegendItemSource() {
-						LegendItemCollection lic = new LegendItemCollection();
-						{lic.addAll(legendItemsNew);}
-						public LegendItemCollection getLegendItems() {  
-						    return lic;
-						}
-						};
-						LegendTitle legendTitle = new LegendTitle(source);
-						legendTitle.setMargin(new RectangleInsets(1.0, 1.0, 1.0, 1.0));
-						legendTitle.setBorder(new BlockBorder());
-						legendTitle.setBackgroundPaint(Color.white);
-						legendTitle.setPosition(RectangleEdge.RIGHT);
-					   chartPanel.getChart().addLegend(legendTitle);
-					   legendShowing = true;
-				}
-			});
-	      	popup.add(showLegend);
-	      	
+	      	addCustomItemsPopupMenu(chartPanel);
+	     	      
 	      	JScrollPane scrollPane = new JScrollPane();
 	      	scrollPane.setPreferredSize(new Dimension(625, 475));
 	      	scrollPane.getViewport().add( chartPanel );
@@ -2189,7 +2195,20 @@ private void initializePlotGraph() {
 			listModel_plot= new DefaultListModel();
 			JList jList = new JList(listModel_plot);
 	    	scrollPane.setViewportView(jList);
-			
+	    	jList.addListSelectionListener(new ListSelectionListener() {
+	    	    public void valueChanged(ListSelectionEvent event) {
+	    	        if (!event.getValueIsAdjusting()){
+	    	            JList source = (JList)event.getSource();
+	    	            Object[] selected = source.getSelectedValues();
+	    	            ArrayList<Object> selectedGraphNodes = new ArrayList<Object>();
+	    	            for(int i = 0; i < selected.length; ++i) {
+	    	            	selectedGraphNodes.add(m_jgAdapter_plot.getVertexCell(selected[i]));
+	    	            } 
+	    	            jgraph_graph_plot.setSelectionCells(selectedGraphNodes.toArray());
+	    	        }
+	    	    }
+	    	});
+	    		
 	    	
 	    	JPanel panel_right= new JPanel();
 	    	panel_right.setLayout(new BorderLayout(3, 3));
@@ -2318,7 +2337,20 @@ private void initializePlotGraph() {
 			listModel_analysis1= new DefaultListModel();
 			JList jListAnalysis = new JList(listModel_analysis1);
 	    	scrollPane.setViewportView(jListAnalysis);
-			
+	    	jListAnalysis.addListSelectionListener(new ListSelectionListener() {
+	    	    public void valueChanged(ListSelectionEvent event) {
+	    	        if (!event.getValueIsAdjusting()){
+	    	            JList source = (JList)event.getSource();
+	    	            Object[] selected = source.getSelectedValues();
+	    	            ArrayList<Object> selectedGraphNodes = new ArrayList<Object>();
+	    	            for(int i = 0; i < selected.length; ++i) {
+	    	            	selectedGraphNodes.add(m_jgAdapter_analysis1.getVertexCell(selected[i]));
+	    	            } 
+	    	            jgraph_graph_analysis1.setSelectionCells(selectedGraphNodes.toArray());
+	    	        }
+	    	    }
+	    	});
+	    		
 	    	
 	    	JPanel panel_right= new JPanel();
 	    	panel_right.setLayout(new BorderLayout(3, 3));
@@ -2478,7 +2510,19 @@ private void initializePlotGraph() {
 		listModel_mutants= new DefaultListModel();
 		JList jListMutants = new JList(listModel_mutants);
     	scrollPane.setViewportView(jListMutants);
-		
+    	jListMutants.addListSelectionListener(new ListSelectionListener() {
+    	    public void valueChanged(ListSelectionEvent event) {
+    	        if (!event.getValueIsAdjusting()){
+    	            JList source = (JList)event.getSource();
+    	            Object[] selected = source.getSelectedValues();
+    	            ArrayList<Object> selectedGraphNodes = new ArrayList<Object>();
+    	            for(int i = 0; i < selected.length; ++i) {
+    	            	selectedGraphNodes.add(m_jgAdapter.getVertexCell(selected[i]));
+    	            } 
+    	            jgraph_graph_parameters.setSelectionCells(selectedGraphNodes.toArray());
+    	        }
+    	    }
+    	});
     	
     	JPanel panel_right= new JPanel();
     	panel_right.setLayout(new BorderLayout(3, 3));

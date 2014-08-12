@@ -118,7 +118,7 @@ public class CustomJTable_SingleMutant extends CustomJTable {
 				c.setBackground(original);
 			}
 		}
-		if(isCellWithError(rowIndex,vColIndex)) {
+		if(isCellWithError(convertRowIndexToModel(rowIndex),vColIndex)) {
 			Border compound = null;
 			Border redline = BorderFactory.createLineBorder(GraphicalProperties.color_cell_with_errors,3);
 			compound = BorderFactory.createCompoundBorder(redline, compound);

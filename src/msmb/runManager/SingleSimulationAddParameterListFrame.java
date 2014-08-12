@@ -128,6 +128,8 @@ public class SingleSimulationAddParameterListFrame extends JDialog {
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1);
+		panel_1.setBorder(new EmptyBorder(9, 9, 9, 9));
+		panel_1.setLayout(new GridLayout(5, 1,9,9));
 		
 		JButton btnAddSelected = new JButton("Add selected ->");
 		btnAddSelected.addActionListener(new ActionListener() {

@@ -511,6 +511,7 @@ public class ChangeChartPropertiesFrame extends JDialog {
 							{
 								JPanel panel_11 = new JPanel();
 								panel_11.setBorder(new EmptyBorder(9, 9, 9, 9));
+								panel_11.setLayout(new GridLayout(4, 1,9,9));
 								panel_2_1.add(panel_11);
 								{
 									JButton button = new JButton("Add selected ->");
