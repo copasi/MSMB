@@ -855,42 +855,18 @@ class DynamicTree extends JPanel {
 			popup.add(changeMultistate);
 			
 			
-			changeAlias = new JMenuItem("Change alias");
+			/*changeAlias = new JMenuItem("Change alias");
 			changeAlias.addActionListener(new ActionListener() {
 				 public void actionPerformed(ActionEvent arg0) {
 					 String prefix = "Change ";
 					 String postfix = " alias";
 					 String label = changeMultistate.getText();
 					 System.out.println("TO BE COMPLETED");
-					/* String multistateChosen = label.substring(prefix.length(), label.length()-postfix.length());
-		
-					 String multistateTracked = parentDialog.trackableMultistate.get(CellParsers.extractMultistateName(multistateChosen));
-					try {
-						Vector<Vector<String>> trackedTriplets = parentDialog.complexSpecies.getTrackedTriplets(CellParsers.extractMultistateName(multistateChosen));
-						parentDialog.fromChangeMenu = true;
-						ComplexSpecies old = parentDialog.getCurrentComplex();
-						parentDialog.clearReferencesTo(multistateTracked);
-						parentDialog.multistateAdd_frame.setMultistateSpecies(new MultistateSpecies(null, multistateTracked), parentDialog.complexSpecies.getSiteNamesUsed());
-						parentDialog.multistateAdd_frame.setMultistateTracking(trackedTriplets);
-						parentDialog.multistateAdd_frame.setVisible(true);
-						
-						if(parentDialog.multistateAdd_frame.exitOption == ExitOption.CANCEL) {
-							parentDialog.setComplexSpecies(old);
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					} finally{
-						parentDialog.fromChangeMenu = false;
-						tree.updateUI();
-					}
-					*/
 				 }
 
 			});
-			
-			
 			popup.add(changeMultistate);
-			
+			*/
 		
 	}
 

@@ -905,7 +905,7 @@ public class SpeciesDB {
 				ret.add(new Integer(ind));
 				 ret.add(((ComplexSpecies)speciesVector.get(ind)).getSerializedInfo());
 			} else {
-				System.out.println("in indexesComplexSpecies index " +ind +" is not an existing species" );
+				//System.out.println("in indexesComplexSpecies index " +ind +" is not an existing species" );
 			}
 		}
 		return ret;

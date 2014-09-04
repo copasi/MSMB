@@ -1245,8 +1245,8 @@ public class Constants {
 		}
 		
 		public static final Vector<String> quantityUnits;
-		public static final String TOOL_NAME = new String("MSMB");
-		public static final String TOOL_NAME_FULL = "MultiState Model Builder (MSMB)";
+		public static final String TOOL_NAME = new String("JCMSMB");
+		public static final String TOOL_NAME_FULL = "JigCell MultiState Model Builder (MSMB)";
 		
 		public static final String RECENT_FILE_NAME = new String(TOOL_NAME+"_recents.cfg");
 		public static final String PREFERENCES_FILE_NAME = new String(TOOL_NAME+"_preferences.cfg");

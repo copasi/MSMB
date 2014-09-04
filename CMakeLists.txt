@@ -43,4 +43,4 @@ file(APPEND version.txt "major=2\n")
 file(APPEND version.txt "minor=0\n")
 
 # create an executable jar
-create_jar(MSMB ${SRC})
+create_jar(JCMSMB ${SRC})

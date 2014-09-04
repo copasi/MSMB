@@ -1,5 +1,6 @@
 package  msmb.gui;
 
+import java.awt.geom.Point2D;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Vector;
@@ -141,14 +142,16 @@ public class ExportMultistateFormat {
 			out.writeObject(mutantsGraph);
 			out.flush();
 		
-	
+			 Vector<MutablePair<Point2D, Double>> mutantsGraphCenterScale = MainGui.runManager.getCenterAndScale();
+			out.writeObject(mutantsGraphCenterScale);
+			out.flush();
+		
 			out.close();
 			if(mainW!=null)mainW.progress(100);
 			
 			return byteOutputStream.toByteArray();
 		} catch (Exception e) {
-			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 
-				e.printStackTrace();
+			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
 		}
 		return null;
 	}
@@ -221,12 +224,8 @@ public class ExportMultistateFormat {
 			MainGui.debugMessages.putAll(debugMessages);
 			
 			multistateInitials = tables_multistateInitials.right;
-			
-					
-			Vector<String> modelProperties = (Vector<String>)in.readObject();
-			
 
-		
+			Vector<String> modelProperties = (Vector<String>)in.readObject();
 			
 			MainGui.multiModel.setModelName(modelProperties.get(0));
 			MainGui.volumeUnit = Integer.parseInt(modelProperties.get(1));
@@ -253,9 +252,15 @@ public class ExportMultistateFormat {
 				if(mutantsGraph!=null) {
 					MainGui.runManager.initializeMutantsGraph_fromSavedMSMB(mutantsGraph);
 				}
+				
+				 Vector<MutablePair<Point2D, Double>> mutantsGraphCenterAndScale =  ( Vector<MutablePair<Point2D, Double>>) in.readObject();
+				if(mutantsGraphCenterAndScale!=null) {
+					MainGui.runManager.initializeCenterAndScale(mutantsGraphCenterAndScale);
+				}
 			} catch(Exception e) {
 				//problems reading mutantsDB, it's ok for old msmb files
-				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	 e.printStackTrace();
+				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	
+					e.printStackTrace();
 			}
 			
 			in.close();

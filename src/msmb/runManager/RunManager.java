@@ -107,6 +107,7 @@ import javax.swing.JButton;
 import javax.swing.JSplitPane;
 import javax.swing.JList;
 import javax.swing.border.BevelBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -266,10 +267,10 @@ public class RunManager  extends JFrame {
 		GraphConstants.setInset(basicCell_attributeMap, 10);
 		GraphConstants.setBackground(basicCell_attributeMap, Color.DARK_GRAY);
 		GraphConstants.setForeground(basicCell_attributeMap, Color.white);
-		GraphConstants.setLineColor(basicCell_attributeMap, Color.BLUE);
+		GraphConstants.setLineColor(basicCell_attributeMap, Color.lightGray);
 		GraphConstants.setOpaque(basicCell_attributeMap, true);
 		GraphConstants.setLineEnd(basicCell_attributeMap, GraphConstants.ARROW_TECHNICAL);
-		//GraphConstants.setBorder(basicCell_attributeMap, new LineBorder(Color.GRAY,1));
+		GraphConstants.setBorder(basicCell_attributeMap, BorderFactory.createEmptyBorder());
 		GraphConstants.setFont(basicCell_attributeMap, new Font("Tahoma", Font.BOLD, 12));
 		
 		initializeFrame();
@@ -321,6 +322,8 @@ public class RunManager  extends JFrame {
 					public void actionPerformed(ActionEvent e) {
 						JGraphHierarchicalLayout h = new JGraphHierarchicalLayout();
 						h.setOrientation(SwingConstants.SOUTH);
+						h.setCompactLayout(false);
+						h.setInterRankCellSpacing(200);
 						execute(h,currentGraph);
 					}
 				});
@@ -433,14 +436,14 @@ public class RunManager  extends JFrame {
 				
 				taskGroup.add(new AbstractAction("Zoom in") {
 					public void actionPerformed(ActionEvent e) {
-						currentGraph.setScale(currentGraph.getScale()+0.5);
+						currentGraph.setScale(currentGraph.getScale()+0.2);
 					}
 				});
 				
 				
 				taskGroup.add(new AbstractAction("Zoom out") {
 					public void actionPerformed(ActionEvent e) {
-						currentGraph.setScale(currentGraph.getScale()-0.5);
+						currentGraph.setScale(currentGraph.getScale()-0.2);
 					}
 				});
 				
@@ -450,6 +453,7 @@ public class RunManager  extends JFrame {
 				taskGroup.add(new AbstractAction("Actual Size") {
 					public void actionPerformed(ActionEvent e) {
 						currentGraph.setScale(1);
+						
 					}
 				});
 				taskGroup.add(new AbstractAction("Fit Window") {
@@ -696,6 +700,9 @@ public class RunManager  extends JFrame {
 		loadSavedView(defaultViewName,jgraph_graph_plot);
 		 chartForExport = new HashSet<JFreeChart>();
 		 separateWindows = HashBiMap.create();
+		
+		 
+		 
 		this.pack();
 		
 	}
@@ -756,13 +763,16 @@ public class RunManager  extends JFrame {
 		        screen.x + (screen.width - getWidth()) / 2,
 		        screen.y + (screen.height - getHeight()) / 2 ); 
 		
-		
-		
 		loadSavedView(defaultViewName,jgraph_graph_parameters);
 		loadSavedView(defaultViewName,jgraph_graph_analysis1);
 		loadSavedView(defaultViewName,jgraph_graph_plot);
 		panel_plots.removeAll();
 		jTabRM.setSelectedIndex(0);
+		if(centersAndScales.size() > 0) {
+			jgraph_graph_analysis1.setScale(centersAndScales.get(0).right, centersAndScales.get(0).left);
+			jgraph_graph_parameters.setScale(centersAndScales.get(1).right, centersAndScales.get(1).left);
+			jgraph_graph_plot.setScale(centersAndScales.get(2).right, centersAndScales.get(2).left);
+		}
 		setVisible(true);
 
 	}
@@ -2736,9 +2746,12 @@ private void initializePlotGraph() {
 								}
 							});
 						} catch (Exception e) {
-							e.printStackTrace();
-							JOptionPane
-									.showMessageDialog(currentGraph, e.getMessage());
+							//e.printStackTrace();
+							if(e.getMessage().contains("Comparison method violates its general contract!")) {
+								JOptionPane.showMessageDialog(null, "Java 6/7 compatibility issue with hierarchical layout.\nPlease see RM user manual for more details.");
+							} else {
+								JOptionPane.showMessageDialog(null, e.getMessage());
+							}
 						}
 					}
 				}
@@ -2773,66 +2786,8 @@ private void initializePlotGraph() {
 			e.printStackTrace();
 		}
 		RunManager frame = new RunManager();
-		//frame.initializeCopasiModel()
 	}
 	
-	/*private void styleSetup(mxGraph graph)
-	{
-		mxStylesheet styleSheet = graph.getStylesheet();
-		Map<String, Object> basicSetup = new HashMap<String, Object>();
-		
-		Map<String, Object> specificSetup = new HashMap<String, Object>();
-		 mxConstants.SHADOW_OFFSETX = 5;
-		 mxConstants.SHADOW_OFFSETY = 5;
-		 basicSetup.put(mxConstants.STYLE_STROKECOLOR, "blue");
-		 basicSetup.put(mxConstants.STYLE_FILLCOLOR, "white");
-		 basicSetup.put(mxConstants.STYLE_STROKEWIDTH, "2.0");
-		 basicSetup.put(mxConstants.STYLE_ALIGN, mxConstants.ALIGN_CENTER);
-		 basicSetup.put(mxConstants.STYLE_VERTICAL_ALIGN, mxConstants.ALIGN_MIDDLE);
-		 basicSetup.put(mxConstants.STYLE_VERTICAL_LABEL_POSITION, mxConstants.ALIGN_MIDDLE);
-		 basicSetup.put(mxConstants.STYLE_FONTFAMILY, "Times New Roman");
-		 basicSetup.put(mxConstants.STYLE_FONTSIZE, "12");
-		 basicSetup.put(mxConstants.STYLE_FONTSTYLE, "1");
-		 basicSetup.put(mxConstants.STYLE_FONTCOLOR, "black");
-		 basicSetup.put(mxConstants.STYLE_FOLDABLE, "0");
-		 basicSetup.put(mxConstants.STYLE_SHADOW, "true");
-		 basicSetup.put(mxConstants.STYLE_AUTOSIZE, "1"); 
-		 basicSetup.put(mxConstants.STYLE_EDITABLE, "0"); 
-		 
-		 basicSetup.put(mxConstants.STYLE_ORTHOGONAL, true);
-		 basicSetup.put(mxConstants.STYLE_BENDABLE, false);
-		 basicSetup.put(mxConstants.STYLE_EDGE, mxConstants.EDGESTYLE_SEGMENT);
-		 
-		 specificSetup.putAll(basicSetup);
-		 specificSetup.put(mxConstants.STYLE_SHAPE, mxConstants.SHAPE_ELLIPSE);
-		 specificSetup.put(mxConstants.STYLE_ROUNDED, "true");
-		styleSheet.putCellStyle(MUTANT_BASIC, specificSetup);
-		
-	
-		
-		specificSetup = new HashMap<String, Object>();
-		 specificSetup.putAll(basicSetup);
-		 specificSetup.put(mxConstants.STYLE_SHAPE, mxConstants.SHAPE_TRIANGLE);
-		 specificSetup.put(mxConstants.STYLE_ROUNDED, "true");
-		styleSheet.putCellStyle(SIMULATION_BASIC, specificSetup);
-		
-	}
-
-	static public mxGraphComponent getGraphComponent()
-	{
-		return graphComponent_mutants;
-	}
-	
-	protected void showGraphPopupMenu(MouseEvent e)
-	{
-		Point pt = SwingUtilities.convertPoint(e.getComponent(), e.getPoint(),graphComponent_mutants);
-		PopupMenuNode menu = new PopupMenuNode();
-		menu.show(graphComponent_mutants, pt.x, pt.y);
-		graphComponent_mutants.getGraph().setSelectionCell(graphComponent_mutants.getCellAt(pt.x, pt.y));
-		graphComponent_mutants.getGraph().refresh();
-		e.consume();
-	}
-*/
 
 	//
 	// Custom MarqueeHandler
@@ -2865,7 +2820,6 @@ private void initializePlotGraph() {
 		 */
 		protected JComponent createHighlight() {
 			JPanel panel = new JPanel();
-		//	panel.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 			panel.setVisible(false);
 			panel.setOpaque(false);
 			return panel;
@@ -3674,6 +3628,7 @@ public void saveCurrentView(String name, JGraph jgraph_graph) {
 			if(currentCell!=null && currentCell.getUserObject()!=null) {
 				//the userObject is a Mutant for vertex
 				AttributeMap savedAttr = new AttributeMap(currentCell.getAttributes());
+			
 				currentView.put(currentCell.getUserObject(), savedAttr);
 			} else if(currentCell instanceof DefaultEdge){
 				currentView.put(currentCell, new AttributeMap(currentCell.getAttributes()));
@@ -3697,19 +3652,71 @@ public void loadSavedView(String name, JGraph jgraph_graph) {
 	if(view==null) return;
 	for(int i = 0; i < all.length; i++) {
 		DefaultGraphCell currentCell = (DefaultGraphCell) all[i];
-		if(currentCell!=null && currentCell.getUserObject()!=null) {
+		if((currentCell!=null && currentCell.getUserObject()!=null)) {
 			AttributeMap allAttributes = currentCell.getAttributes();
 			AttributeMap savedAttr = view.get(currentCell.getUserObject());
 			if(savedAttr != null) {
 				if(GraphConstants.getBounds(savedAttr)!=null) GraphConstants.setBounds(allAttributes, GraphConstants.getBounds(savedAttr));
 				if(GraphConstants.getBackground(savedAttr)!= null) GraphConstants.setBackground(allAttributes, GraphConstants.getBackground(savedAttr));
-				if(GraphConstants.getLineColor(savedAttr)!=null) GraphConstants.setLineColor(allAttributes, GraphConstants.getLineColor(savedAttr));
+				if(GraphConstants.getLineColor(savedAttr)!=null) { GraphConstants.setLineColor(allAttributes, GraphConstants.getLineColor(savedAttr)); }
 				GraphConstants.setLineStyle(allAttributes, GraphConstants.getLineStyle(savedAttr));
 			}
 			nested.put(currentCell, allAttributes);
+		} 
+	}	
+	jgraph_graph.getGraphLayoutCache().edit(nested, null, null, null);
+}
+
+public void removeBorderFromMap(String name, JGraph jgraph_graph) {
+	HashMap<Object, AttributeMap> view = savedView.get(name+jgraph_graph.getName());
+	Object[] all = JGraphModelAdapter.getAll(jgraph_graph.getModel());	
+	for(int i = 0; i < all.length; i++) {
+		DefaultGraphCell currentCell = (DefaultGraphCell) all[i];
+		if(currentCell!=null && currentCell.getUserObject()!=null) {
+			AttributeMap allAttributes = currentCell.getAttributes();
+			allAttributes.remove("border");
 		}
 	}
-	jgraph_graph.getGraphLayoutCache().edit(nested, null, null, null);
+	
+}
+
+public void checkMap(JGraph jgraph_graph) {
+	Iterator<String> it2 = savedView.keySet().iterator(); 
+	while(it2.hasNext()) {
+		String viewName = it2.next();
+		HashMap<Object, AttributeMap> view = savedView.get(viewName+jgraph_graph.getName());
+		Object[] all = JGraphModelAdapter.getAll(jgraph_graph.getModel());	
+		
+		for(int i = 0; i < all.length; i++) {
+			DefaultGraphCell currentCell = (DefaultGraphCell) all[i];
+			if(currentCell!=null && currentCell.getUserObject()!=null) {
+				System.out.println("DEBUG TO CHECK");
+				Iterator it = currentCell.getAttributes().keySet().iterator();
+			while(it.hasNext()) {
+				System.out.println(it.next());
+			}
+			}
+		}
+	}
+}
+
+Vector<MutablePair<Point2D, Double>> centersAndScales = new Vector<MutablePair<Point2D, Double>>();
+
+public void initializeCenterAndScale(Vector<MutablePair<Point2D, Double>> r) {
+	centersAndScales.clear();
+	centersAndScales.addAll(r);
+	jgraph_graph_analysis1.setScale(r.get(0).right, r.get(0).left);
+	jgraph_graph_parameters.setScale(r.get(1).right, r.get(1).left);
+	jgraph_graph_plot.setScale(r.get(2).right, r.get(2).left);
+	return;
+}
+
+public Vector<MutablePair<Point2D, Double>> getCenterAndScale() {
+	Vector<MutablePair<Point2D, Double>> ret = new Vector<MutablePair<Point2D, Double>>();
+	ret.add(new MutablePair<Point2D, Double>(jgraph_graph_analysis1.getCenterPoint(), jgraph_graph_analysis1.getScale()));
+	ret.add(new MutablePair<Point2D, Double>(jgraph_graph_parameters.getCenterPoint(), jgraph_graph_parameters.getScale()));
+	ret.add(new MutablePair<Point2D, Double>(jgraph_graph_plot.getCenterPoint(), jgraph_graph_plot.getScale()));
+	return ret;
 }
 
 public HashMap<String, HashMap<Object, AttributeMap>> getMutantsGraphToSave() {
@@ -3718,9 +3725,12 @@ public HashMap<String, HashMap<Object, AttributeMap>> getMutantsGraphToSave() {
 		loadSavedView(defaultViewName,jgraph_graph_analysis1);
 		loadSavedView(defaultViewName,jgraph_graph_parameters);
 		loadSavedView(defaultViewName,jgraph_graph_plot);
+		removeBorderFromMap(defaultViewName,jgraph_graph_analysis1);
+		removeBorderFromMap(defaultViewName,jgraph_graph_parameters);
+		removeBorderFromMap(defaultViewName,jgraph_graph_plot);
 	}
 	ret.putAll(savedView);
-	return savedView;
+	return ret;
 }
 
 public static String RM_applyRenameAncestorInExpression(MultiModel multiModel, String expression, String from, String replacement) {

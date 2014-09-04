@@ -2632,7 +2632,7 @@ public class MainGui extends JFrame implements MSMB_Interface {
 		
 			runManager = new RunManager();
 			
-			JMenu test = new JMenu("Run Manager");
+			JMenu test = new JMenu("JigCell Run Manager 2.0");
 			jMenuBar.add(test);
 	
 			JMenuItem rm = new JMenuItem("Open Run Manager...");
@@ -10327,13 +10327,9 @@ public static Vector<Vector<String>> getProductsSelectedReaction() {
 				  GetElementBeforeSpecialExtension name = new GetElementBeforeSpecialExtension();
 				  root.accept(name);
 				  String funName = name.getElementName();
-				  //System.out.println("updateAutocompletionContext FUNCTION NAME: "+funName);
 				  if(funName != null && funName.trim().length()>0) {
 					  Function f = multiModel.getFunctionByName(funName);
-					 // System.out.println("updateAutocompletionContext paramNumber: "+paramNumber);
-					                 
 					  if(f!= null) type = f.getParametersTypes().get(paramNumber);
-					  
 				  }
 				} catch (Throwable e) {
 					if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) e.printStackTrace();
