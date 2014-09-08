@@ -1,5 +1,5 @@
-Multi-State Model Builder (MSMB)
-==
+JigCell Multi-State Model Builder (MSMB)
+========================================
 
 ----
 System requirements:
