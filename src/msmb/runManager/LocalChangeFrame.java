@@ -15,10 +15,13 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.JRadioButton;
+
 import java.awt.GridLayout;
+import java.util.Collections;
 import java.util.Vector;
 
 import javax.swing.JComboBox;
+
 import msmb.runManager.RunManager.NotesLabels;
 import msmb.utility.GraphicalProperties;
 
@@ -70,7 +73,13 @@ public class LocalChangeFrame extends JDialog {
 	
 	public MutablePair<Integer, String> initializeAndShow(Vector<String> parents, String currentValue, String changesFrom_noteLabel) {
 		comboBoxParents.removeAllItems();
-		for (String p : parents) {
+		int selected = 0;
+		Collections.sort(parents);
+		for (int i = 0; i < parents.size();++i) {
+			String p = parents.get(i);
+			if(p.startsWith(changesFrom_noteLabel.substring(changesFrom_noteLabel.indexOf("@")+1)+" (")) {
+				selected = i;
+			}
 			comboBoxParents.addItem(p);
 		}
 
@@ -87,7 +96,7 @@ public class LocalChangeFrame extends JDialog {
 		switch (which) {
 		case FROM_ANCESTOR: 
 			radioButtonPickValueFromParent.setSelected(true);
-			comboBoxParents.setSelectedItem(changesFrom_noteLabel.substring(0, changesFrom_noteLabel.indexOf("@")));
+			comboBoxParents.setSelectedIndex(selected);
 			break;
 		case FROM_BASESET:
 			radioButtonBaseSet.setSelected(true);

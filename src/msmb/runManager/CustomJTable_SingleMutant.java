@@ -36,6 +36,7 @@ public class CustomJTable_SingleMutant extends CustomJTable {
 	HashSet<Integer> localRedefinition = new HashSet<Integer>(); //only rowIndex
 	HashSet<Integer> fromBaseSet = new HashSet<Integer>(); //only rowIndex
 	HashMap<Integer, String> cumulativeRedefinition = new HashMap<Integer,String>(); //rowIndex and mutant name
+	HashMap<Integer, String> fromParent = new HashMap<Integer,String>(); //rowIndex and mutant name
 	String tableName = new String();
 	private TableRowSorter<TableModel> sorter;
 	
@@ -111,7 +112,8 @@ public class CustomJTable_SingleMutant extends CustomJTable {
 			if(localRedefinition.contains(new Integer(convertRowIndexToModel(rowIndex)))) {
 				c.setBackground(RunManager.colorLocalRedefinition);
 			}
-			else 	if(cumulativeRedefinition.containsKey(new Integer(convertRowIndexToModel(rowIndex)))) {
+			else 	if(cumulativeRedefinition.containsKey(new Integer(convertRowIndexToModel(rowIndex))) 
+						|| fromParent.containsKey(new Integer(convertRowIndexToModel(rowIndex))) ) {
 				c.setBackground(RunManager.colorCumulativeRedefinition);
 			} 
 			else {
@@ -207,6 +209,7 @@ public class CustomJTable_SingleMutant extends CustomJTable {
 		//is from baseSet
 		cumulativeRedefinition.remove(new Integer(row));
 		localRedefinition.remove(new Integer(row));
+		fromParent.remove(new Integer(row));
 		fromBaseSet.add(row);
 	}
 	
@@ -214,7 +217,20 @@ public class CustomJTable_SingleMutant extends CustomJTable {
 	public void addLocalRedefinition(int rowIndex) {
 		localRedefinition.add(new Integer(rowIndex));
 		cumulativeRedefinition.remove(new Integer(rowIndex));
+		fromParent.remove(new Integer(rowIndex));
 	}
+	
+	
+	public void addFromParent(int rowIndex, String sourceMutant) {
+		fromParent.put(new Integer(rowIndex), sourceMutant);
+		localRedefinition.remove(new Integer(rowIndex));
+		cumulativeRedefinition.remove(new Integer(rowIndex));
+	}
+	
+	public void clearFromParent() {
+		fromParent.clear();
+	}
+
 	
 	public void addCumulativeRedefinition(int rowIndex, String sourceMutant) {
 		cumulativeRedefinition.put(new Integer(rowIndex), sourceMutant);
@@ -239,6 +255,9 @@ public class CustomJTable_SingleMutant extends CustomJTable {
 		int row = rowAtPoint(event.getPoint());
 		if(cumulativeRedefinition.containsKey(new Integer(row))) {
 			return cumulativeRedefinition.get(new Integer(row));
+		}
+		if(fromParent.containsKey(new Integer(row))) {
+			return fromParent.get(new Integer(row));
 		}
 		return super.getToolTipText(event);
 	}
@@ -269,8 +288,7 @@ public class CustomJTable_SingleMutant extends CustomJTable {
 		
 		for (Integer row: localRedefinition) {
 			String name = Mutant.generateChangeKey(mchangetype, dataModel.getValueAt(row, nameColumn).toString());
-			local.put(name,
-					dataModel.getValueAt(row, columnToChange).toString());
+			local.put(name,	dataModel.getValueAt(row, columnToChange).toString());
 		}
 		
 		//key: element changed, value: new expression, mutant that the change comes from
@@ -289,9 +307,19 @@ public class CustomJTable_SingleMutant extends CustomJTable {
 			baseSet.add(name);
 		}
 		
+		//key: element changed, value: new expression, mutant that the change comes from
+		HashMap<String, MutablePair<String, String>> parent = new HashMap<String, MutablePair<String, String>>();
+		for (Integer row: fromParent.keySet()) {
+			MutablePair<String, String> element = new MutablePair<String, String>();
+			String name = Mutant.generateChangeKey(mchangetype, dataModel.getValueAt(row, nameColumn).toString());
+			element.left = dataModel.getValueAt(row, columnToChange).toString();
+			element.right = fromParent.get(row);
+			parent.put(name, element);
+		}
 		ret.add(local);
 		ret.add(cumulative);
 		ret.add(baseSet);
+		ret.add(parent);
 		return ret;
 	}
 

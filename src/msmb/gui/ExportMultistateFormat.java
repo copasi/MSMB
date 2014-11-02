@@ -151,7 +151,8 @@ public class ExportMultistateFormat {
 			
 			return byteOutputStream.toByteArray();
 		} catch (Exception e) {
-			if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	e.printStackTrace();
+			//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	
+				e.printStackTrace();
 		}
 		return null;
 	}
@@ -259,7 +260,7 @@ public class ExportMultistateFormat {
 				}
 			} catch(Exception e) {
 				//problems reading mutantsDB, it's ok for old msmb files
-				if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	
+				//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	
 					e.printStackTrace();
 			}
 			

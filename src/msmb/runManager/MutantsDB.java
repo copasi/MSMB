@@ -117,6 +117,8 @@ public class MutantsDB
     	return anc;
     }
     
+    
+    
     public Vector<Mutant> collectAncestors(Mutant startVertex) {
     	Vector<Mutant> ret = new Vector<Mutant>();
     	
@@ -136,33 +138,45 @@ public class MutantsDB
     	if(parents.size() <= 1) return conflicts; 
         
     	Vector<Set<String>> keySets = new Vector<Set<String>>();
-    	Set<String> keyInCurrent = startVertex.getChanges().keySet();
-    	Vector<Set<String>> keySetsCumulative = new Vector<Set<String>>();
-    	//conflict only if conflict between local redefinition of parents OR cumulative redefinition of parents
-    	//NOT if intersection between local of one and cumulative of another one
-		for (Mutant mutant : parents) {
-			mutant.clearCumulativeChanges();
-    		accumulateChanges(mutant);
-    		Set<String> keyInParents_cumulative = mutant.getCumulativeChanges().keySet();
-			
-    		Set<String> keyInParents = mutant.getChanges().keySet();
-    		keySets.add(Sets.difference(keyInParents, keyInCurrent));
-    		keySetsCumulative.add(Sets.difference(Sets.difference(keyInParents_cumulative, keyInCurrent),keyInParents));
- 		}
-		
-		for(int i = 0; i < parents.size()-1; i++) {
-    		for(int j = i+1; j < parents.size(); j++) {
-    			if(!Sets.intersection(keySets.get(i), keySets.get(j)).isEmpty()) {
-    				  SetView<String> conf = Sets.intersection(keySets.get(i), keySets.get(j));		
-   					  conflicts.addAll(conf);
-   					}
-    			if(!Sets.intersection(keySetsCumulative.get(i), keySetsCumulative.get(j)).isEmpty()) { 
-    				   SetView<String> conf = Sets.intersection(keySetsCumulative.get(i), keySetsCumulative.get(j));		
-   					  conflicts.addAll(conf);
-   					}
-    		}
-    	}
+    	HashSet<String> keyInCurrent = new HashSet<String>();
+    	keyInCurrent.addAll(startVertex.getChanges().keySet());
+    	keyInCurrent.addAll(startVertex.getChangesFromParent().keySet());
     	
+       	Vector<Set<String>> keySetsCumulative = new Vector<Set<String>>();
+	   	//conflict only if conflict between local redefinition of parents OR cumulative redefinition of parents
+	   	//NOT if intersection between local of one and cumulative of another one
+       	
+       for (Mutant mutant : parents) {
+				mutant.clearCumulativeChanges();
+	    		accumulateChanges(mutant);
+	    		Set<String> keyInParents_cumulative = mutant.getCumulativeChanges().keySet();
+				
+	    		Set<String> keyInParents = mutant.getChanges().keySet();
+	    		keySets.add(Sets.difference(keyInParents, keyInCurrent));
+	    		keySetsCumulative.add(Sets.difference(Sets.difference(keyInParents_cumulative, keyInCurrent),keyInParents));
+	 		}
+       
+       for(int i = 0; i < parents.size()-1; i++) {
+	    		for(int j = i+1; j < parents.size(); j++) {
+	    			if(!Sets.intersection(keySets.get(i), keySets.get(j)).isEmpty()) {
+	    				  SetView<String> conf = Sets.intersection(keySets.get(i), keySets.get(j));		
+	   					  conflicts.addAll(conf);
+	   					}
+	    			if(!Sets.intersection(keySetsCumulative.get(i), keySetsCumulative.get(j)).isEmpty()) { 
+	    				   SetView<String> conf = Sets.intersection(keySetsCumulative.get(i), keySetsCumulative.get(j));		
+	   					  conflicts.addAll(conf);
+	   					}
+	    		}
+	    	}
+    	
+		Iterator<String> it = startVertex.fromBaseSet.iterator();
+			while(it.hasNext()) {
+				String key = it.next();
+				conflicts.remove(key);
+			}
+			
+	
+			
     	return conflicts;
     }
     
@@ -251,7 +265,20 @@ public class MutantsDB
     		
     		
  			startVertex.addCumulativeChanges(startVertex.getChanges(), startVertex.getName());
- 		   
+ 			
+ 			Iterator<String> it = startVertex.fromBaseSet.iterator();
+ 			while(it.hasNext()) {
+ 				String key = it.next();
+ 				startVertex.removeCumulativeChange(key);
+ 			}
+ 			
+ 			if(startVertex.changesFromParent != null) {
+	 			Iterator<String> it2 = startVertex.changesFromParent.keySet().iterator();
+	 			while(it2.hasNext()) {
+	 				String key = it2.next();
+	 				startVertex.removeCumulativeChange(key);
+	 			}
+ 			}
     	}
    }
    

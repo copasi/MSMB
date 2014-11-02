@@ -217,6 +217,13 @@ public class RMPlotDB
    					}
     		}
     	}
+		
+		Iterator<String> it = startVertex.fromBaseSet.iterator();
+		while(it.hasNext()) {
+			String key = it.next();
+			conflicts.remove(key);
+		}
+		
     	return conflicts;
     }
     

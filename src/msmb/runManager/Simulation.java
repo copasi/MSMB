@@ -186,11 +186,7 @@ public class Simulation extends Mutant{
 		fromBaseSet.remove(generateChangeKey(ty, ""));
 	}
 	
-	public void removeCumulativeChange(String k) {
-		cumulativeChanges.remove(k);
-	}
-	
-	
+
 	
 	@Override
 	public boolean equals(Object obj) {

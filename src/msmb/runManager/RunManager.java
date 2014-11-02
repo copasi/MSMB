@@ -31,7 +31,9 @@ import org.jdesktop.swingx.*;
 import org.jdesktop.swingx.painter.*;
 
 import javax.swing.*;
+
 import java.awt.*;
+
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -81,6 +83,7 @@ import com.jgraph.layout.organic.JGraphSelfOrganizingOrganicLayout;
 import com.jgraph.layout.tree.JGraphCompactTreeLayout;
 import com.jgraph.layout.tree.JGraphRadialTreeLayout;
 import com.jgraph.layout.tree.JGraphTreeLayout;
+
 import javax.swing.JTabbedPane;
 
 import java.awt.BasicStroke;
@@ -143,7 +146,6 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.util.ShapeUtilities;
-
 import org.jgraph.JGraph;
 import org.jgraph.graph.AttributeMap;
 import org.jgraph.graph.BasicMarqueeHandler;
@@ -160,6 +162,7 @@ import org.jgraph.graph.GraphUndoManager;
 import org.jgraph.graph.Port;
 import org.jgraph.graph.PortView;
 import org.jgrapht.ext.JGraphModelAdapter;
+
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
@@ -814,6 +817,36 @@ public class RunManager  extends JFrame {
 		splitPaneGraph_plot.setRightComponent(taskPaneScrollPane);
 	}
 	
+	
+	private void revalidateConflictsAll(JGraph jgraph_graph) {
+		Object[] cells = jgraph_graph.getRoots();
+		//collect things to revalidate conflicts
+		HashSet<Mutant> children = new HashSet<Mutant>();
+		for(int i = 0; i < cells.length; ++i) {
+			DefaultGraphCell c = ((DefaultGraphCell)cells[i]);
+			if( c instanceof DefaultEdge ) {
+				DefaultEdge ed = (DefaultEdge)c;
+				DefaultGraphCell source = (DefaultGraphCell) ((DefaultPort)ed.getSource()).getParent();
+				children.add((Mutant) source.getUserObject());
+			} else if(c instanceof DefaultPort) {
+				//nothing
+			} else {
+				//is a vertex --> mutant
+				Mutant object = (Mutant)c.getUserObject();
+				if(object instanceof Simulation) {
+					children.addAll(simDB.getChildren((Simulation) object));
+				} else if (object instanceof RMPlot) {
+					children.addAll(plotDB.getChildren((RMPlot) object));
+				}
+				else {
+					children.addAll(mutantsDB.getChildren(object));
+				}
+			}
+		}
+		
+		revalidateConflicts(new Vector(Arrays.asList(children.toArray())));
+	}
+	
 	private void initializeMutantsGraph() {
 		
 		sortJListMutants();
@@ -918,6 +951,7 @@ public class RunManager  extends JFrame {
 		jgraph_graph_parameters.getGraphLayoutCache().edit(nested, null, null, null);
 		m_jgAdapter.setDefaultEdgeAttributes(new AttributeMap(basicCell_attributeMap));
 		m_jgAdapter.setDefaultVertexAttributes(new AttributeMap(basicCell_attributeMap));
+		revalidateConflictsAll(jgraph_graph_parameters);
 		
 	}
 	
@@ -1025,7 +1059,7 @@ public class RunManager  extends JFrame {
 		jgraph_graph_analysis1.getGraphLayoutCache().edit(nested, null, null, null);
 		m_jgAdapter_analysis1.setDefaultEdgeAttributes(new AttributeMap(basicCell_attributeMap));
 		m_jgAdapter_analysis1.setDefaultVertexAttributes(new AttributeMap(basicCell_attributeMap));
-		
+		revalidateConflictsAll(jgraph_graph_analysis1);
 	}
 	
 private void initializePlotGraph() {
@@ -1132,7 +1166,7 @@ private void initializePlotGraph() {
 		jgraph_graph_plot.getGraphLayoutCache().edit(nested, null, null, null);
 		m_jgAdapter_plot.setDefaultEdgeAttributes(new AttributeMap(basicCell_attributeMap));
 		m_jgAdapter_plot.setDefaultVertexAttributes(new AttributeMap(basicCell_attributeMap));
-		
+		revalidateConflictsAll(jgraph_graph_plot);
 	}
 	
 	public static Set<Mutant> getAllMutants_parametersList() {
@@ -3462,7 +3496,6 @@ private void initializePlotGraph() {
 			  singleMutantFrame.setMutantAndShow(m, mutantsDB.collectAncestors(m), mutantsDB.detectConflict(m));
 			 mutantsDB.replaceMutant(nameBefore, m.getName());
 			 
-			 revalidateConflicts(mutantsDB.getChildren(m));
 			 cell1 = m_jgAdapter.getVertexCell(m);
 				cell1.addPort();
 				Map nested = new Hashtable();
@@ -3470,6 +3503,7 @@ private void initializePlotGraph() {
 				jgraph_graph_parameters.getGraphLayoutCache().edit(nested, null, null, null);
 				
 				sortJListMutants();
+				revalidateConflictsAll(jgraph_graph_parameters);
 				jTabRM.setSelectedIndex(0);
 		}
 	}
@@ -3502,7 +3536,7 @@ private void initializePlotGraph() {
 			Map nested = new Hashtable();
 			nested.put(cell1, savedAttr);
 			jgraph_graph_analysis1.getGraphLayoutCache().edit(nested, null, null, null);
-			
+			revalidateConflictsAll(jgraph_graph_analysis1);	
 			sortJListAnalysis1();
 			jTabRM.setSelectedIndex(1);
 		
@@ -3585,7 +3619,7 @@ private void initializePlotGraph() {
 					Map nested = new Hashtable();
 					nested.put(cell1, savedAttr);
 					jgraph_graph_plot.getGraphLayoutCache().edit(nested, null, null, null);
-					
+					revalidateConflictsAll(jgraph_graph_plot);	
 					sortJListPlot();
 					jTabRM.setSelectedIndex(2);
 				}
@@ -3668,6 +3702,7 @@ public void loadSavedView(String name, JGraph jgraph_graph) {
 }
 
 public void removeBorderFromMap(String name, JGraph jgraph_graph) {
+	if(savedView==null || jgraph_graph==null) return;
 	HashMap<Object, AttributeMap> view = savedView.get(name+jgraph_graph.getName());
 	Object[] all = JGraphModelAdapter.getAll(jgraph_graph.getModel());	
 	for(int i = 0; i < all.length; i++) {
@@ -3713,9 +3748,9 @@ public void initializeCenterAndScale(Vector<MutablePair<Point2D, Double>> r) {
 
 public Vector<MutablePair<Point2D, Double>> getCenterAndScale() {
 	Vector<MutablePair<Point2D, Double>> ret = new Vector<MutablePair<Point2D, Double>>();
-	ret.add(new MutablePair<Point2D, Double>(jgraph_graph_analysis1.getCenterPoint(), jgraph_graph_analysis1.getScale()));
-	ret.add(new MutablePair<Point2D, Double>(jgraph_graph_parameters.getCenterPoint(), jgraph_graph_parameters.getScale()));
-	ret.add(new MutablePair<Point2D, Double>(jgraph_graph_plot.getCenterPoint(), jgraph_graph_plot.getScale()));
+	if(jgraph_graph_analysis1!= null) ret.add(new MutablePair<Point2D, Double>(jgraph_graph_analysis1.getCenterPoint(), jgraph_graph_analysis1.getScale()));
+	if(jgraph_graph_parameters!= null)ret.add(new MutablePair<Point2D, Double>(jgraph_graph_parameters.getCenterPoint(), jgraph_graph_parameters.getScale()));
+	if(jgraph_graph_plot!= null) ret.add(new MutablePair<Point2D, Double>(jgraph_graph_plot.getCenterPoint(), jgraph_graph_plot.getScale()));
 	return ret;
 }
 

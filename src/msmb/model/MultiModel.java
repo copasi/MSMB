@@ -5886,7 +5886,6 @@ public Integer getGlobalQIndex(String name) {
 	public boolean isRangeVariableInMultistate(String species, String elementToSearch ) {
 		
 		if(!CellParsers.isMultistateSpeciesName(species)) {
-			System.out.println("isRangeVariableInMultistate false");
 			return false;
 		}
 		

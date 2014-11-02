@@ -19,7 +19,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
-
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -30,6 +29,7 @@ import javax.swing.UIManager;
 import javax.swing.JButton;
 
 import org.apache.commons.lang3.tuple.MutablePair;
+
 import msmb.commonUtilities.tables.CustomTableModel;
 import msmb.commonUtilities.tables.EditableCellRenderer;
 import msmb.gui.CustomTableModel_MSMB;
@@ -63,7 +63,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
+
 import javax.swing.border.TitledBorder;
+
 import java.awt.Color;
 
 public class SingleMutantFrame extends JDialog {
@@ -462,13 +464,16 @@ public class SingleMutantFrame extends JDialog {
 			if(exitOption != ExitOption.CANCEL) {
 				while(!updateName()) {}
 				
+				currentMutant.clearChangesFromParent();
 				currentMutant.clearChanges();
 				currentMutant.clearCumulativeChanges();
+				currentMutant.fromBaseSet.clear();
 				currentMutant.updateChanges(jTableGLQ.getAllChanges());
 				currentMutant.updateChanges(jTableSPC.getAllChanges());
 				currentMutant.updateChanges(jTableCMP.getAllChanges());
 				
 				mutDB.rename(currentMutant, textFieldName.getText().trim());
+				
 			}
 			
 			
@@ -613,7 +618,7 @@ public class SingleMutantFrame extends JDialog {
 	   HashMap<String, String> changes = userObject.getChanges();
 	   HashMap<String, MutablePair<String, String>> all_changes = userObject.getCumulativeChanges();
 	   HashSet<String> fromBaseSet = userObject.getFromBaseSet();
-	   
+	   HashMap<String, MutablePair<String, String>> fromParents = userObject.getChangesFromParent();	   
 	   
        for (int i = 0;i < rows.size();i++) {
     	   Vector r = (Vector)rows.get(i);
@@ -639,12 +644,17 @@ public class SingleMutantFrame extends JDialog {
     		   else if(fromBaseSet.contains(key)) {
       			   r.set(Constants.SpeciesColumns.NOTES.index-1, RunManager.NotesLabels.FROM_BASESET.getLabel());
     		   } 
-    		   else  if(all_changes.containsKey(key)) {
+    		   else if(fromParents.containsKey(key)) {
+    			   MutablePair<String, String> expression_origin = fromParents.get(key);
+    			   r.set(Constants.SpeciesColumns.INITIAL_QUANTITY.index-1, expression_origin.left);
+    			   jTableSPC.addFromParent(i, expression_origin.right);
+    			   r.set(Constants.SpeciesColumns.NOTES.index-1, RunManager.NotesLabels.FROM_ANCESTOR.getLabel()+expression_origin.right);
+    		   }else  if(all_changes.containsKey(key)) {
     			   MutablePair<String, String> expression_origin = all_changes.get(key);
     			   r.set(Constants.SpeciesColumns.INITIAL_QUANTITY.index-1, expression_origin.left);
     			   jTableSPC.addCumulativeRedefinition(i, expression_origin.right);
     			   r.set(Constants.SpeciesColumns.NOTES.index-1, RunManager.NotesLabels.FROM_ANCESTOR.getLabel()+expression_origin.right);
-    		   } else {
+    		   }  else {
     			   r.set(Constants.SpeciesColumns.NOTES.index-1, RunManager.NotesLabels.FROM_BASESET.getLabel());
     		   }
     	   
@@ -668,7 +678,8 @@ public class SingleMutantFrame extends JDialog {
 	   HashMap<String, String> changes = userObject.getChanges();
 	   HashMap<String, MutablePair<String, String>> all_changes = userObject.getCumulativeChanges();
 	   HashSet<String> fromBaseSet = userObject.getFromBaseSet();
-	   
+	   HashMap<String, MutablePair<String, String>> fromParents = userObject.getChangesFromParent();	   
+		
        for (int i = 0;i < rows.size();i++) {
     	   Vector r = (Vector)rows.get(i);
     	   if(userObject!= null) {
@@ -693,7 +704,12 @@ public class SingleMutantFrame extends JDialog {
     		   else if(fromBaseSet.contains(key)) {
       			   r.set(Constants.CompartmentsColumns.NOTES.index-1, RunManager.NotesLabels.FROM_BASESET.getLabel());
     		   } 
-    		   else  if(all_changes.containsKey(key)) {
+    		   else if(fromParents.containsKey(key)) {
+    			   MutablePair<String, String> expression_origin = fromParents.get(key);
+    			   r.set(Constants.CompartmentsColumns.INITIAL_SIZE.index-1, expression_origin.left);
+    			   jTableCMP.addFromParent(i, expression_origin.right);
+    			   r.set(Constants.CompartmentsColumns.NOTES.index-1, RunManager.NotesLabels.FROM_ANCESTOR.getLabel()+expression_origin.right);
+    		   } else  if(all_changes.containsKey(key)) {
     			   MutablePair<String, String> expression_origin = all_changes.get(key);
     			   r.set(Constants.CompartmentsColumns.INITIAL_SIZE.index-1, expression_origin.left);
     			   jTableCMP.addCumulativeRedefinition(i, expression_origin.right);
@@ -784,7 +800,8 @@ public class SingleMutantFrame extends JDialog {
 	   HashMap<String, String> changes = userObject.getChanges();
 	   HashMap<String, MutablePair<String, String>> all_changes = userObject.getCumulativeChanges();
 	   HashSet<String> fromBaseSet = userObject.getFromBaseSet();
-	   
+	   HashMap<String, MutablePair<String, String>> fromParents = userObject.getChangesFromParent();	   
+		 
 	   
        for (int i = 0;i < rows.size();i++) {
     	   Vector r = (Vector)rows.get(i);
@@ -810,12 +827,17 @@ public class SingleMutantFrame extends JDialog {
     		   else if(fromBaseSet.contains(key)) {
       			   r.set(Constants.GlobalQColumns.NOTES.index-1, RunManager.NotesLabels.FROM_BASESET.getLabel());
     		   } 
-    		   else  if(all_changes.containsKey(key)) {
+    		   else if(fromParents.containsKey(key)) {
+    			   MutablePair<String, String> expression_origin = fromParents.get(key);
+    			   r.set(Constants.GlobalQColumns.VALUE.index-1, expression_origin.left);
+    			   jTableGLQ.addFromParent(i, expression_origin.right);
+    			   r.set(Constants.GlobalQColumns.NOTES.index-1, RunManager.NotesLabels.FROM_ANCESTOR.getLabel()+expression_origin.right);
+    		   } else  if(all_changes.containsKey(key)) {
     			   MutablePair<String, String> expression_origin = all_changes.get(key);
     			   r.set(Constants.GlobalQColumns.VALUE.index-1, expression_origin.left);
     			   jTableGLQ.addCumulativeRedefinition(i, expression_origin.right);
     			   r.set(Constants.GlobalQColumns.NOTES.index-1, RunManager.NotesLabels.FROM_ANCESTOR.getLabel()+expression_origin.right);
-    		   } else {
+    		   }  else {
     			   r.set(Constants.GlobalQColumns.NOTES.index-1, RunManager.NotesLabels.FROM_BASESET.getLabel());
     		   }
     	   
@@ -905,16 +927,22 @@ public class SingleMutantFrame extends JDialog {
       
           if(ret==null || ret.left == 0) return;
 
-	
+          whichTable.cell_no_errors(row, columnToChange);
+          
          if(ret.left == RunManager.NotesLabels.FROM_ANCESTOR.getOption()) {
 	         String returned = ret.right;
              int indexSepStart = returned.indexOf("(");
              int indexSepEnd = returned.lastIndexOf(")");
              String value = returned.substring(indexSepStart+1, indexSepEnd).trim();
              String parent = returned.substring(0, indexSepStart).trim();
-             dataModel.setValueAt(value, row, columnToChange);
-             whichTable.addCumulativeRedefinition(row, ret.right);
-        	  dataModel.setValueAt(RunManager.NotesLabels.FROM_ANCESTOR.getLabel()+parent, row, noteColumn);
+       		clear_debugMessages_relatedWith(tableName, DebugConstants.PriorityType.PARSING.priorityCode, row+1, columnToChange);
+   			clear_debugMessages_relatedWith(tableName, DebugConstants.PriorityType.INCONSISTENCIES.priorityCode, row+1, columnToChange);
+   			clear_debugMessages_relatedWith(tableName, DebugConstants.PriorityType.MISSING.priorityCode, row+1, columnToChange);
+	
+   		  	 dataModel.setValueAt(value, row, columnToChange);
+             whichTable.addFromParent(row, parent);
+        	 dataModel.setValueAt(RunManager.NotesLabels.FROM_ANCESTOR.getLabel()+parent, row, noteColumn);
+        	  
        } else if(ret.left == RunManager.NotesLabels.LOCAL.getOption()){
     	   String newExpression = ret.right;
     	   	try {
@@ -936,17 +964,25 @@ public class SingleMutantFrame extends JDialog {
 			dataModel.setValueAt(RunManager.NotesLabels.LOCAL.getLabel(), row, noteColumn);
 		} else if(ret.left == RunManager.NotesLabels.FROM_BASESET.getOption()){
 			String valueFromBaseSet = new String();
-			if(tableName.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription()) == 0){
+			clear_debugMessages_relatedWith(tableName, DebugConstants.PriorityType.PARSING.priorityCode, row+1, columnToChange);
+   			clear_debugMessages_relatedWith(tableName, DebugConstants.PriorityType.INCONSISTENCIES.priorityCode, row+1, columnToChange);
+   			clear_debugMessages_relatedWith(tableName, DebugConstants.PriorityType.MISSING.priorityCode, row+1, columnToChange);
+	   		if(tableName.compareTo(Constants.TitlesTabs.GLOBALQ.getDescription()) == 0){
 				valueFromBaseSet = multiModel.getGlobalQ(element).getInitialValue();
 			}else 	if(tableName.compareTo(Constants.TitlesTabs.SPECIES.getDescription()) == 0){
 				valueFromBaseSet = multiModel.getSpecies(element).getInitialQuantity_listString();
 			}else 	if(tableName.compareTo(Constants.TitlesTabs.COMPARTMENTS.getDescription()) == 0){
 				valueFromBaseSet = multiModel.getComp(element).getInitialVolume();
 			}
+			
 			dataModel.setValueAt(valueFromBaseSet, row, columnToChange);
 			whichTable.removeLocalCumulativeRedefinition(row);
+			
 			dataModel.setValueAt(RunManager.NotesLabels.FROM_BASESET.getLabel(), row, noteColumn);
 		}
+         
+         whichTable.validate();
+         whichTable.repaint();
           
 	}
 

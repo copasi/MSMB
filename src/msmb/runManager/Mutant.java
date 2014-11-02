@@ -31,6 +31,8 @@ public class Mutant implements Comparable, Serializable{
 		//to store the keys of the element explicitly requested to be taken from the MSMB model
 		protected HashSet<String> fromBaseSet = new HashSet<String>();
 		
+		//to store the elements explicitly requested to be taken from the specific parent (as cumulative is implicit inheritance)
+		protected HashMap<String, MutablePair<String, String>> changesFromParent = new HashMap<String,MutablePair<String, String>>();
 		protected HashMap<String, String> changes = new HashMap<String,String>();
 		
 		//key: element changed, value: new expression, mutant that the change comes from
@@ -38,15 +40,24 @@ public class Mutant implements Comparable, Serializable{
 		
 		public String getName() { return name;}
 		public HashMap<String, String> getChanges() { return new HashMap<String, String>(changes);}
-		public HashSet<String> getFromBaseSet() { return new HashSet<String>(fromBaseSet);}
+		public HashMap<String, MutablePair<String, String>> getChangesFromParent() { if(changesFromParent==null) changesFromParent = new HashMap<String,MutablePair<String, String>>();
+																return new HashMap<String, MutablePair<String, String>>(changesFromParent);}
+			public HashSet<String> getFromBaseSet() { return new HashSet<String>(fromBaseSet);}
 		public HashMap<String, MutablePair<String, String>> getCumulativeChanges() { return new HashMap<String, MutablePair<String, String>>(cumulativeChanges);}
-	
-		public void clearCumulativeChanges(){
-			cumulativeChanges.clear();
-		}
+		
+		
+		public void removeCumulativeChange(String k) {		cumulativeChanges.remove(k);		}
+		public void removeChangeFromParent(String k) {		changesFromParent.remove(k);		}
+		
+		
+		public void clearCumulativeChanges(){	cumulativeChanges.clear();	}
 		
 		public void clearChanges(){
 			changes.clear();
+		}
+		
+		public void clearChangesFromParent(){
+			changesFromParent.clear();
 		}
 		
 		public void addCumulativeChanges(HashMap<String, String> localChanges, String fromMutant) {
@@ -71,6 +82,10 @@ public class Mutant implements Comparable, Serializable{
 			changes.put(generateChangeKey(ty, element_name), element_new_value);
 		}
 		
+		
+		public void addChangeFromParent(MutantChangeType ty, String element_name, MutablePair<String,String> expr_from) {
+			changesFromParent.put(generateChangeKey(ty, element_name), expr_from);
+		}
 		public static String generateChangeKey(MutantChangeType ty, String element_name) {
 			return new String(ty.getDescription()+"%"+CellParsers.cleanName(element_name));
 		}
@@ -89,6 +104,7 @@ public class Mutant implements Comparable, Serializable{
 			ret +="MUTANT: "+name+"\n";
 			//System.out.println("Parents: "+parents);
 			ret +="Changes: "+changes+"\n";
+			ret +="From parent: "+changesFromParent+"\n";
 			ret +="From base set: "+fromBaseSet+"\n";
 			ret +="^^^^^^^^^^^^^^^^^^^^"+"\n";
 			return ret;
@@ -132,11 +148,9 @@ public class Mutant implements Comparable, Serializable{
 		
 		public void updateChanges(Vector<HashMap> allChanges) {
 			changes.putAll(allChanges.get(0));
-			
-			cumulativeChanges.putAll(allChanges.get(1));
-			
-			fromBaseSet.clear();
 			fromBaseSet.addAll((Collection<? extends String>) allChanges.get(2));
+			changesFromParent.putAll(allChanges.get(3));
+			
 		}
 		
 		
