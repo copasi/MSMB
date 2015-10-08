@@ -1,5 +1,7 @@
-JigCell Multi-State Model Builder (MSMB)
+JigCell Multi-State Model Builder (JC-MSMB)
 ========================================
+Latest Version:  2.0 (includes JC-Run Manager extension)
+
 
 ----
 System requirements:
