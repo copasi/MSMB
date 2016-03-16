@@ -4527,7 +4527,13 @@ public class MainGui extends JFrame implements MSMB_Interface {
 				cellValueBeforeChange.length() > 0 && isNewNameDifferentFromOld(name) && renamingOption != Constants.RENAMING_OPTION_NONE && actionInColumnName  == true) {
 			
 				String n = findAndReplace(cellValueBeforeChange,row, name, Constants.TitlesTabs.SPECIES.getDescription(), Constants.SpeciesColumns.NAME.index);
-				if(n!=null) name = n;
+				if(n!=null)
+				{
+					name = n;
+					// the value of actionInColumnName may have changed during the call to findAndReplace,
+					// reset it to true
+					actionInColumnName = true;
+				}
 			}
 		} 
 		

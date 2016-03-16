@@ -261,7 +261,7 @@ public class ExportMultistateFormat {
 			} catch(Exception e) {
 				//problems reading mutantsDB, it's ok for old msmb files
 				//if(MainGui.DEBUG_SHOW_PRINTSTACKTRACES) 	
-					e.printStackTrace();
+					//e.printStackTrace();
 			}
 			
 			in.close();
