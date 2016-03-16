@@ -92,7 +92,7 @@ public class GlobalQDB {
 		//	if(ind == null) {//it is a new globalq
 			
 			if(!globalQIndexes.containsKey(name) && 
-					(index >= globalQIndexes.size() || index == -1)) { //it is a new globalq
+					(index >= globalQVector.size() || index == -1)) { //it is a new globalq
 				MSMB_InterfaceChange changeToReport_IntfGlq = new MSMB_InterfaceChange(MSMB_Element.GLOBAL_QUANTITY);
 				changeToReport_IntfGlq.setElementBefore(null);
 				changeToReport_IntfGlq.setElementAfter(new ChangedElement(name,MSMB_Element.GLOBAL_QUANTITY));
