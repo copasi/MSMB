@@ -121,7 +121,13 @@ public class GlobalQDB {
 					MSMB_InterfaceChange changeToReport_IntfGlq = new MSMB_InterfaceChange(MSMB_Element.GLOBAL_QUANTITY);
 					changeToReport_IntfGlq.setElementBefore(new ChangedElement(oldName,MSMB_Element.GLOBAL_QUANTITY));
 					changeToReport_IntfGlq.setElementAfter(new ChangedElement(name,MSMB_Element.GLOBAL_QUANTITY));
-					if(MainGui.actionInColumnName) MainGui.setChangeToReport(changeToReport_IntfGlq);
+					//if(MainGui.actionInColumnName) MainGui.setChangeToReport(changeToReport_IntfGlq);
+					/*
+					 * There is no need to check actionInColumnName.
+					 * If oldName is different than name then the name has changed
+					 * and msmb should fire an event.
+					 */
+					MainGui.setChangeToReport(changeToReport_IntfGlq);
 				}
 				c.setName(name);
 				
