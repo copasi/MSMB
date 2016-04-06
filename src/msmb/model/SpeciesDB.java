@@ -251,7 +251,13 @@ public class SpeciesDB {
 						MSMB_InterfaceChange changeToReport_IntfSpecies = new MSMB_InterfaceChange(MSMB_Element.SPECIES);
 						changeToReport_IntfSpecies.setElementBefore(new ChangedElement(oldName,MSMB_Element.SPECIES));
 						changeToReport_IntfSpecies.setElementAfter(new ChangedElement(name,MSMB_Element.SPECIES));
-						if(MainGui.actionInColumnName)  MainGui.setChangeToReport(changeToReport_IntfSpecies);
+						//if(MainGui.actionInColumnName)  MainGui.setChangeToReport(changeToReport_IntfSpecies);
+						/*
+						 * There is no need to check actionInColumnName.
+						 * If oldName is different than name then the name has changed
+						 * and msmb should fire an event.
+						 */ 
+						MainGui.setChangeToReport(changeToReport_IntfSpecies);
 					}
 					s.setName(name);
 					s.setCompartment(multiModel,compartment);
