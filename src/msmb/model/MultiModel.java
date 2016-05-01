@@ -5089,12 +5089,12 @@ public class MultiModel {
 				//odes.add("d"+s.getSpeciesName()+"/dt="+expr);
 				odes.add(displayedExpression);
 				notOdes.add(s.getSpeciesName());
-				System.out.println(s.getSpeciesName());
+				//System.out.println(s.getSpeciesName());
 			}
 			if(s.getType()== Constants.SpeciesType.FIXED.copasiType) {
 				odes.add("d"+s.getSpeciesName()+"/dt=0");
 				notOdes.add(s.getSpeciesName());
-				System.out.println(s.getSpeciesName());
+				//System.out.println(s.getSpeciesName());
 			}
 			
 		}
