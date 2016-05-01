@@ -5080,12 +5080,21 @@ public class MultiModel {
 					throw vis.getExceptions().get(0);
 				}
 				
-				odes.add("d"+s.getSpeciesName()+"/dt="+expr);
+				String displayedExpression = null;
+				if(s.getType()== Constants.SpeciesType.ASSIGNMENT.copasiType) {
+					displayedExpression = s.getName()+"="+expr;
+				} else {
+					displayedExpression = "d"+s.getName()+"/dt="+expr;
+				} 
+				//odes.add("d"+s.getSpeciesName()+"/dt="+expr);
+				odes.add(displayedExpression);
 				notOdes.add(s.getSpeciesName());
+				System.out.println(s.getSpeciesName());
 			}
 			if(s.getType()== Constants.SpeciesType.FIXED.copasiType) {
 				odes.add("d"+s.getSpeciesName()+"/dt=0");
 				notOdes.add(s.getSpeciesName());
+				System.out.println(s.getSpeciesName());
 			}
 			
 		}
